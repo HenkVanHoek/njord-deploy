@@ -67,7 +67,11 @@ class ProxmoxClient:
             verify=self.verify_ssl,
             timeout=15,
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error(f"HTTP Error: {response.status_code} - {response.text}")
+            raise RuntimeError(f"{e} (Response: {response.text})") from e
         return response.json()
 
     def delete(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> dict:

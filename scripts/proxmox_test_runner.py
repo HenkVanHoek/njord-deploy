@@ -246,15 +246,32 @@ def run_proxmox_tests(args) -> int:
             new_vmid = proxmox_client.get_next_vmid()
             test_record["vmid"] = new_vmid
             logger.info(f"Cloning master template VMID {template_id} to {new_vmid}...")
-            proxmox_client.clone_vm(
-                node=node,
-                vmid=template_id,
-                newid=new_vmid,
-                name=f"pish-test-{comp_id}",
-                full=False,  # Linked clone
-            )
+            try:
+                proxmox_client.clone_vm(
+                    node=node,
+                    vmid=template_id,
+                    newid=new_vmid,
+                    name=f"pish-test-{comp_id}",
+                    full=False,  # Linked clone
+                )
+            except Exception as e:
+                if "Linked clone feature is not supported" in str(e):
+                    logger.warning(
+                        "Linked clone not supported, falling back to full clone..."
+                    )
+                    proxmox_client.clone_vm(
+                        node=node,
+                        vmid=template_id,
+                        newid=new_vmid,
+                        name=f"pish-test-{comp_id}",
+                        full=True,  # Full clone
+                    )
+                else:
+                    raise
 
             # 2. Configure Cloud-Init (injecting our local SSH Key)
+            import urllib.parse
+
             logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
             proxmox_client.configure_vm(
                 node=node,
@@ -262,8 +279,11 @@ def run_proxmox_tests(args) -> int:
                 config_data={
                     "ciuser": vm_user,
                     "cipassword": vm_pass,
-                    "sshkeys": ssh_public_key,
+                    "sshkeys": urllib.parse.quote(ssh_public_key),
                     "ipconfig0": "ip=dhcp",
+                    "agent": "enabled=1",
+                    "ide2": "local-lvm:cloudinit",
+                    "net0": "virtio,bridge=vmbr0,firewall=1",
                 },
             )
 
