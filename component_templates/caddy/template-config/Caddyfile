@@ -1,0 +1,8 @@
+# Caddyfile for PiSelfhosting Caddy deployment
+#
+# You can customize your reverse proxy or web server settings here.
+
+:80 {
+    # Set up a simple responder page by default
+    respond "Welcome to PiSelfhosting Caddy Service!"
+}

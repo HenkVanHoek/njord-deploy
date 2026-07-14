@@ -1,0 +1,199 @@
+<html>
+<head>
+<title>rename_plan.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #c77dbb; font-style: italic;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+rename_plan.md</font>
+</center></td></tr></table>
+<pre><span class="s0"># </span><span class="s2">Migratieplan</span><span class="s1">: </span><span class="s2">Hernoemen van NjordDeploy naar SBCDeploy</span>
+
+<span class="s2">Dit document beschrijft de stappen om het project </span><span class="s1">&quot;</span><span class="s2">NjordDeploy</span><span class="s1">&quot; </span><span class="s2">te hernoemen naar </span><span class="s1">&quot;</span><span class="s2">SBCDeploy</span><span class="s1">&quot;</span><span class="s2">. Dit plan omvat het aanpassen van de bestandsstructuur, configuratiebestanden, broncode, documentatie en testomgeving.</span>
+
+<span class="s0">## </span><span class="s2">Doelstellingen</span>
+
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Consistentie</span><span class="s1">**: </span><span class="s2">Alle verwijzingen naar </span><span class="s1">&quot;</span><span class="s2">NjordDeploy</span><span class="s1">&quot; </span><span class="s2">of </span><span class="s1">&quot;</span><span class="s2">njorddeploy</span><span class="s1">&quot; </span><span class="s2">worden hernoemd naar respectievelijk </span><span class="s1">&quot;</span><span class="s2">SBCDeploy</span><span class="s1">&quot; </span><span class="s2">of </span><span class="s1">&quot;</span><span class="s2">sbcdeploy</span><span class="s1">&quot;</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Behoud van Functionaliteit</span><span class="s1">**: </span><span class="s2">De applicatie moet na de migratie correct blijven functioneren, inclusief de configurator_app en editor_app.</span>
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Eenvoud</span><span class="s1">**: </span><span class="s2">De migratie wordt in logische fasen uitgevoerd om de kans op fouten te minimaliseren.</span>
+
+<span class="s0">## </span><span class="s2">Overzicht van Wijzigingen</span>
+
+<span class="s0">```</span><span class="s3">mermaid</span>
+<span class="s4">graph TD</span>
+    <span class="s4">A[&quot;Fase 0: Projectmap &amp; IDE-configuratie&quot;] --&gt; B[&quot;Fase 1: Bestanden &amp; Mappen Hernoemen&quot;]</span>
+    <span class="s4">B --&gt; C[&quot;Fase 2: Metadata &amp; Configs Aanpassen&quot;]</span>
+    <span class="s4">C --&gt; D[&quot;Fase 3: Codebase Aanpassingen&quot;]</span>
+    <span class="s4">D --&gt; E[&quot;Fase 4: Frontend &amp; UI Updates&quot;]</span>
+    <span class="s4">E --&gt; F[&quot;Fase 5: Documentatie &amp; Wiki Updates&quot;]</span>
+    <span class="s4">F --&gt; G[&quot;Fase 6: Validatie &amp; Testen&quot;]</span>
+<span class="s0">```</span>
+
+<span class="s0">---</span>
+
+<span class="s0">## </span><span class="s2">Migratie Stappenplan</span>
+
+<span class="s0">### </span><span class="s2">Fase 0</span><span class="s1">: </span><span class="s2">Projectmap en IDE-configuratie</span>
+
+<span class="s2">De naam van de hoofdmap van het project op het bestandssysteem en de instellingen in uw IDE </span><span class="s1">(</span><span class="s2">PyCharm</span><span class="s1">) </span><span class="s2">moeten worden aangepast om een naadloze ontwikkelomgeving te behouden.</span>
+
+<span class="s0">1. </span><span class="s1">**</span><span class="s2">Hernoemen van de Projectmap</span><span class="s1">**:</span>
+   <span class="s0">* </span><span class="s2">De lokale map `/home/hvhoek/PycharmProjects/NjordDeploy` moet worden hernoemd naar `/home/hvhoek/PycharmProjects/SBCDeploy`.</span>
+
+<span class="s0">2. </span><span class="s1">**</span><span class="s2">Aanpassen van PyCharm Run Configurations</span><span class="s1">**:</span>
+   <span class="s2">In het bestand </span><span class="s1">[</span><span class="s2">.run/configurator_app.run.xml</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/.run/configurator_app.run.xml</span><span class="s1">):</span>
+   <span class="s0">* </span><span class="s2">Wijzig `</span><span class="s1">&lt;module name=&quot;NjordDeploy&quot; /&gt;</span><span class="s2">` naar `</span><span class="s1">&lt;module name=&quot;SBCDeploy&quot; /&gt;</span><span class="s2">`.</span>
+   <span class="s0">* </span><span class="s2">Wijzig `</span><span class="s1">&lt;option name=&quot;SDK_NAME&quot; value=&quot;Python 3.12 (NjordDeploy)&quot; /&gt;</span><span class="s2">` naar `</span><span class="s1">&lt;option name=&quot;SDK_NAME&quot; value=&quot;Python 3.12 (SBCDeploy)&quot; /&gt;</span><span class="s2">`.</span>
+
+<span class="s0">3. </span><span class="s1">**</span><span class="s2">Virtuele Omgeving </span><span class="s1">(</span><span class="s2">venv</span><span class="s1">) </span><span class="s2">en IDE Metadata</span><span class="s1">**:</span>
+   <span class="s0">* </span><span class="s2">Omdat PyCharm projectinstellingen opslaat in de niet-getrackte map </span><span class="s1">&quot;</span><span class="s2">.idea</span><span class="s1">&quot;</span><span class="s2">, is het aanbevolen om het project opnieuw in PyCharm te openen na het hernoemen van de map. PyCharm zal dan de nieuwe mapnaam als modulenaam registreren.</span>
+   <span class="s0">* </span><span class="s2">De virtuele Python-omgeving moet mogelijk opnieuw worden gekoppeld of hernoemd in de PyCharm-instellingen naar </span><span class="s1">&quot;</span><span class="s2">Python 3.12 </span><span class="s1">(</span><span class="s2">SBCDeploy</span><span class="s1">)&quot;</span><span class="s2">.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 1</span><span class="s1">: </span><span class="s2">Bestanden en Mappen Hernoemen</span>
+
+<span class="s2">De volgende bestanden en mappen moeten fysiek worden hernoemd op het bestandssysteem</span><span class="s1">:</span>
+
+<span class="s0">| </span><span class="s1">Huidige Naam </span><span class="s0">| </span><span class="s1">Nieuwe Naam </span><span class="s0">| </span><span class="s1">Doel </span><span class="s0">|</span>
+<span class="s0">| :--- | :--- | :--- |</span>
+<span class="s0">| </span><span class="s1">[njorddeploy_installer.py](file:///home/hvhoek/PycharmProjects/NjordDeploy/njorddeploy_installer.py) </span><span class="s0">| </span><span class="s1">&quot;sbcdeploy_installer.py&quot; </span><span class="s0">| </span><span class="s1">Installatiescript van het project </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">[NjordDeployInstaller.spec](file:///home/hvhoek/PycharmProjects/NjordDeploy/NjordDeployInstaller.spec) </span><span class="s0">| </span><span class="s1">&quot;SBCDeployInstaller.spec&quot; </span><span class="s0">| </span><span class="s1">PyInstaller specificatiebestand </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">[NjordDeploy.Modelfile](file:///home/hvhoek/PycharmProjects/NjordDeploy/NjordDeploy.Modelfile) </span><span class="s0">| </span><span class="s1">&quot;SBCDeploy.Modelfile&quot; </span><span class="s0">| </span><span class="s1">LLM modeldefinitiebestand </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">[linux/njorddeploy-Configurator.desktop](file:///home/hvhoek/PycharmProjects/NjordDeploy/linux/njorddeploy-Configurator.desktop) </span><span class="s0">| </span><span class="s1">&quot;linux/sbcdeploy-Configurator.desktop&quot; </span><span class="s0">| </span><span class="s1">Linux desktop configuratiebestand </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">&quot;images/njorddeploy-icon512x512.png&quot; </span><span class="s0">| </span><span class="s1">&quot;images/sbcdeploy-icon512x512.png&quot; </span><span class="s0">| </span><span class="s1">App icoon 512x512 </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">&quot;images/njorddeploy-icon192x192.png&quot; </span><span class="s0">| </span><span class="s1">&quot;images/sbcdeploy-icon192x192.png&quot; </span><span class="s0">| </span><span class="s1">App icoon 192x192 </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">&quot;images/njorddeploy-apple.icns&quot; </span><span class="s0">| </span><span class="s1">&quot;images/sbcdeploy-apple.icns&quot; </span><span class="s0">| </span><span class="s1">macOS icoon </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">&quot;component_templates/njorddeploy-service-maintenance&quot; </span><span class="s0">| </span><span class="s1">&quot;component_templates/sbcdeploy-service-maintenance&quot; </span><span class="s0">| </span><span class="s1">Service onderhoudscomponent template </span><span class="s0">|</span>
+<span class="s0">| </span><span class="s1">&quot;component_templates/njorddeploy-docs&quot; </span><span class="s0">| </span><span class="s1">&quot;component_templates/sbcdeploy-docs&quot; </span><span class="s0">| </span><span class="s1">Documentatiecomponent template </span><span class="s0">|</span>
+
+<span class="s0">&gt; </span><span class="s1">[!</span><span class="s2">IMPORTANT</span><span class="s1">]</span>
+<span class="s0">&gt; </span><span class="s2">Na het hernoemen moeten alle importverwijzingen en bestandspaden in de code direct worden bijgewerkt om breuken in de imports te voorkomen.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 2</span><span class="s1">: </span><span class="s2">Metadata en Configuratie Aanpassen</span>
+
+<span class="s2">In deze fase passen we de projectconfiguratie aan</span><span class="s1">:</span>
+
+<span class="s0">1. </span><span class="s1">**</span><span class="s2">Project Definitie</span><span class="s1">**:</span>
+   <span class="s2">Aanpassen van </span><span class="s1">[</span><span class="s2">pyproject.toml</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/pyproject.toml</span><span class="s1">):</span>
+   <span class="s0">* </span><span class="s2">Hernoem </span><span class="s1">&quot;</span><span class="s2">name</span><span class="s1">&quot; </span><span class="s2">onder de sectie </span><span class="s1">&quot;</span><span class="s2">project</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">SBCDeploy</span><span class="s1">&quot;</span><span class="s2">.</span>
+   <span class="s0">* </span><span class="s2">Hernoem references naar de </span><span class="s1">&quot;</span><span class="s2">bump-my-version</span><span class="s1">&quot; </span><span class="s2">en </span><span class="s1">&quot;</span><span class="s2">mypy</span><span class="s1">&quot; </span><span class="s2">overrides.</span>
+
+<span class="s0">2. </span><span class="s1">**</span><span class="s2">Componenten Metadata</span><span class="s1">**:</span>
+   <span class="s2">Aanpassen van </span><span class="s1">[</span><span class="s2">config/components_metadata.json</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/config/components_metadata.json</span><span class="s1">):</span>
+   <span class="s0">* </span><span class="s2">Wijzig de hoofdsleutel </span><span class="s1">&quot;_</span><span class="s2">njorddeploy</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;_</span><span class="s2">sbcdeploy</span><span class="s1">&quot;</span><span class="s2">.</span>
+   <span class="s0">* </span><span class="s2">Hernoem de default groepen en specifieke variabelen </span><span class="s1">(</span><span class="s2">bijvoorbeeld van </span><span class="s1">&quot;</span><span class="s2">PISelfhosting_HOST_IP</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">SBCDeploy_HOST_IP</span><span class="s1">&quot;)</span><span class="s2">.</span>
+   <span class="s0">* </span><span class="s2">Werk de repository URL bij naar de nieuwe Git-locatie.</span>
+
+<span class="s0">&gt; </span><span class="s1">[!</span><span class="s2">WARNING</span><span class="s1">]</span>
+<span class="s0">&gt; </span><span class="s2">Wijzigingen in </span><span class="s1">[</span><span class="s2">config/components_metadata.json</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/config/components_metadata.json</span><span class="s1">) </span><span class="s2">moeten zorgvuldig worden gecontroleerd om de consistentie met de editor_app te behouden.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 3</span><span class="s1">: </span><span class="s2">Codebase Symbolen en Paden Aanpassen</span>
+
+<span class="s2">Vervangen van alle voorkomens van </span><span class="s1">&quot;</span><span class="s2">NjordDeploy</span><span class="s1">&quot; </span><span class="s2">en </span><span class="s1">&quot;</span><span class="s2">njorddeploy</span><span class="s1">&quot; </span><span class="s2">in de Python broncode.</span>
+
+<span class="s0">#### </span><span class="s2">1. Gebruikersdata Directory en SSH-sleutels</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/utils/resource_utils.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/utils/resource_utils.py</span><span class="s1">):</span>
+  <span class="s2">Hernoem de app-datamap en de omgevingsvariabele naar </span><span class="s1">&quot;</span><span class="s2">SBCDEPLOY_COMPONENTS_DIR</span><span class="s1">&quot;</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/managers/ssh_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/ssh_manager.py</span><span class="s1">):</span>
+  <span class="s2">Pas </span><span class="s1">&quot;</span><span class="s2">NjordDeploy</span><span class="s1">&quot; </span><span class="s2">aan naar </span><span class="s1">&quot;</span><span class="s2">SBCDeploy</span><span class="s1">&quot; </span><span class="s2">in de </span><span class="s1">&quot;</span><span class="s2">user_data_dir</span><span class="s1">&quot; </span><span class="s2">van de klasse </span><span class="s1">[</span><span class="s2">SSHManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/ssh_manager.py#L13</span><span class="s1">) </span><span class="s2">en verander de sleutelnaam naar </span><span class="s1">&quot;</span><span class="s2">id_ed25519_sbcdeploy</span><span class="s1">&quot;</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/managers/sync_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/sync_manager.py</span><span class="s1">):</span>
+  <span class="s2">Pas de cache en git directories aan in de klasse </span><span class="s1">[</span><span class="s2">SyncManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/sync_manager.py#L17</span><span class="s1">)</span><span class="s2">. Hernoem </span><span class="s1">&quot;</span><span class="s2">PI_SELFHOSTING_COMPONENTS_REPO</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">SBCDEPLOY_COMPONENTS_REPO</span><span class="s1">&quot;</span><span class="s2">.</span>
+
+<span class="s0">#### </span><span class="s2">2. Component Manager en Deployment</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/managers/component_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/component_manager.py</span><span class="s1">):</span>
+  <span class="s0">* </span><span class="s2">Update </span><span class="s1">&quot;</span><span class="s2">CONFIG_BASE_PATH</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">../sbcdeploy_data</span><span class="s1">&quot; </span><span class="s2">in de klasse </span><span class="s1">[</span><span class="s2">ComponentManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/component_manager.py#L17</span><span class="s1">)</span><span class="s2">.</span>
+  <span class="s0">* </span><span class="s2">Update </span><span class="s1">&quot;</span><span class="s2">DATA_ROOT</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">/opt/sbcdeploy/data</span><span class="s1">&quot;</span><span class="s2">.</span>
+  <span class="s0">* </span><span class="s2">Update de container-prefix validatie van </span><span class="s1">&quot;</span><span class="s2">njorddeploy-</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">sbcdeploy-</span><span class="s1">&quot;</span><span class="s2">.</span>
+  <span class="s0">* </span><span class="s2">Update labels van </span><span class="s1">&quot;</span><span class="s2">njorddeploy.component.id</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">sbcdeploy.component.id</span><span class="s1">&quot;</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/managers/deployment_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/deployment_manager.py</span><span class="s1">):</span>
+  <span class="s0">* </span><span class="s2">Verander </span><span class="s1">&quot;</span><span class="s2">self.</span><span class="s1">_</span><span class="s2">docker_prefix</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">sbcdeploy</span><span class="s1">_&quot; </span><span class="s2">in de klasse </span><span class="s1">[</span><span class="s2">DeploymentManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/deployment_manager.py#L20</span><span class="s1">)</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/setup.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/setup.py</span><span class="s1">):</span>
+  <span class="s0">* </span><span class="s2">Verander </span><span class="s1">&quot;</span><span class="s2">GLOBAL_DATA_ROOT</span><span class="s1">&quot; </span><span class="s2">naar </span><span class="s1">&quot;</span><span class="s2">/opt/sbcdeploy/data</span><span class="s1">&quot;</span><span class="s2">.</span>
+  <span class="s0">* </span><span class="s2">Verander de default databasegebruiker naar </span><span class="s1">&quot;</span><span class="s2">sbcdeploy_user</span><span class="s1">&quot;</span><span class="s2">.</span>
+
+<span class="s0">#### </span><span class="s2">3. AI en Hulpfunctionaliteiten</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/utils/ai_generator.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/utils/ai_generator.py</span><span class="s1">):</span>
+  <span class="s2">Pas de systeeminstructies aan zodat de AI </span><span class="s1">&quot;</span><span class="s2">sbcdeploy-</span><span class="s1">&quot; </span><span class="s2">prefixes gebruikt voor container_name en netwerken.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/utils/generation_logger.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/utils/generation_logger.py</span><span class="s1">):</span>
+  <span class="s2">Update de logtitel.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/utils/dashy_updater.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/utils/dashy_updater.py</span><span class="s1">):</span>
+  <span class="s2">Update de dashboardtitel.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 4</span><span class="s1">: </span><span class="s2">Frontend en UI Aanpassen</span>
+
+<span class="s0">* </span><span class="s1">[</span><span class="s2">src/editor_app/templates/editor.html</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/editor_app/templates/editor.html</span><span class="s1">) </span><span class="s2">en configurator templates</span><span class="s1">:</span>
+  <span class="s2">Pas alle zichtbare teksten, titels en links aan die verwijzen naar NjordDeploy.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">windows/start.bat</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/windows/start.bat</span><span class="s1">):</span>
+  <span class="s2">Pas de opstartberichten aan.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 5</span><span class="s1">: </span><span class="s2">Documentatie Bijwerken</span>
+
+<span class="s2">Werk alle documentatiebestanden bij naar de nieuwe projectnaam</span><span class="s1">:</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">README.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/README.md</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">GEMINI.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/GEMINI.md</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">AGENTS.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/AGENTS.md</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">docs/ARCHITECTURE.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/docs/ARCHITECTURE.md</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">docs/DATA_CONTRACTS.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/docs/DATA_CONTRACTS.md</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">docs/FUNCTIONAL_SPEC.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/docs/FUNCTIONAL_SPEC.md</span><span class="s1">)</span>
+
+<span class="s0">---</span>
+
+<span class="s0">### </span><span class="s2">Fase 6</span><span class="s1">: </span><span class="s2">Validatie en Testen</span>
+
+<span class="s2">Na het doorvoeren van alle wijzigingen moet een uitgebreid verificatieproces worden doorlopen om eventuele regressies of brekende wijzigingen op te sporen.</span>
+
+<span class="s0">#### </span><span class="s2">1. Unit- en Integratietesten </span><span class="s1">(</span><span class="s2">Python</span><span class="s1">)</span>
+<span class="s2">De volledige testsuite moet succesvol draaien. Aangezien diverse testen expliciet mocken of paden verifiëren die </span><span class="s1">&quot;</span><span class="s2">njorddeploy</span><span class="s1">&quot; </span><span class="s2">bevatten, moeten de volgende testbestanden specifiek gecontroleerd en bijgewerkt worden</span><span class="s1">:</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_component_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_component_manager.py</span><span class="s1">): </span><span class="s2">Controleer op container-prefix validaties en metadata tests.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_deployment_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_deployment_manager.py</span><span class="s1">): </span><span class="s2">Controleer of de docker container-prefixes en Ansible-paden correct worden getest.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_ssh_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_ssh_manager.py</span><span class="s1">): </span><span class="s2">Controleer op de juiste paden voor sleutelopslag.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_sync_manager.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_sync_manager.py</span><span class="s1">): </span><span class="s2">Controleer of de externe repository en git-paden correct worden gemockt.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_resource_utils.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_resource_utils.py</span><span class="s1">): </span><span class="s2">Controleer op het laden van de juiste resource-directories onder de nieuwe naam.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/test_installer.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/test_installer.py</span><span class="s1">): </span><span class="s2">Valideer of het installatieproces correct functioneert onder de nieuwe naam.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/configurator_app/test_configurator_app.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/configurator_app/test_configurator_app.py</span><span class="s1">): </span><span class="s2">Controleer of Flask routes en endpoints correct werken.</span>
+<span class="s0">* </span><span class="s1">[</span><span class="s2">tests/editor_app/test_editor_app_api.py</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/editor_app/test_editor_app_api.py</span><span class="s1">): </span><span class="s2">Valideer de API-endpoints voor componenten-metadata.</span>
+
+<span class="s0">&gt; </span><span class="s1">[!</span><span class="s2">TIP</span><span class="s1">]</span>
+<span class="s0">&gt; </span><span class="s2">Draai de tests met het commando</span><span class="s1">:</span>
+<span class="s1">&gt; </span><span class="s0">```</span><span class="s3">bash</span>
+<span class="s1">&gt; </span><span class="s4">pytest</span>
+<span class="s0">&gt; ```</span>
+
+<span class="s0">#### </span><span class="s2">2. Statische Code Analyse en Type Checks</span>
+<span class="s2">Zorg ervoor dat alle statische analyses slagen onder de nieuwe modulenaam</span><span class="s1">:</span>
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Mypy</span><span class="s1">**: </span><span class="s2">Voer type-verificatie uit en controleer of de overrides in </span><span class="s1">[</span><span class="s2">pyproject.toml</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/pyproject.toml</span><span class="s1">) </span><span class="s2">correct worden toegepast op de nieuwe package/module structuren.</span>
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Flake8 &amp; Black</span><span class="s1">**: </span><span class="s2">Controleer op PEP 8 compliance en correcte formattering.</span>
+<span class="s0">* </span><span class="s1">**</span><span class="s2">Pre-commit</span><span class="s1">**: </span><span class="s2">Voer alle pre-commit hooks uit</span><span class="s1">:</span>
+  <span class="s0">```</span><span class="s3">bash</span>
+  <span class="s4">pre-commit run --all-files</span>
+  <span class="s0">```</span>
+
+<span class="s0">#### </span><span class="s2">3. E2E UI Testen </span><span class="s1">(</span><span class="s2">Playwright</span><span class="s1">)</span>
+<span class="s2">Controleer of de frontend interface correct interacteert met de backend na de naamsverandering</span><span class="s1">:</span>
+<span class="s0">* </span><span class="s2">Draai de Playwright tests in </span><span class="s1">[</span><span class="s2">tests/editor_app/playwright/editor_v2.spec.js</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/editor_app/playwright/editor_v2.spec.js</span><span class="s1">) </span><span class="s2">en </span><span class="s1">[</span><span class="s2">tests/editor_app/playwright/ui_render_utils.spec.js</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/tests/editor_app/playwright/ui_render_utils.spec.js</span><span class="s1">)</span><span class="s2">.</span>
+<span class="s0">* </span><span class="s2">Controleer of specifieke selectoren of HTML elementtitels die </span><span class="s1">&quot;</span><span class="s2">NjordDeploy</span><span class="s1">&quot; </span><span class="s2">verwachtten, nu succesvol matchen met </span><span class="s1">&quot;</span><span class="s2">SBCDeploy</span><span class="s1">&quot;</span><span class="s2">.</span>
+
+<span class="s0">#### </span><span class="s2">4. Handmatige Installatie &amp; Rooktest </span><span class="s1">(</span><span class="s2">Smoke Tests</span><span class="s1">)</span>
+<span class="s0">* </span><span class="s2">Voer het hernoemde installatiescript </span><span class="s1">&quot;</span><span class="s2">sbcdeploy_installer.py</span><span class="s1">&quot; </span><span class="s2">uit in een schone virtuele omgeving of container om te verifiëren of de applicatie succesvol wordt geïnstalleerd.</span>
+<span class="s0">* </span><span class="s2">Start de </span><span class="s1">&quot;</span><span class="s2">configurator_app</span><span class="s1">&quot; </span><span class="s2">en controleer of de gebruikersinstellingen en SSH-sleutels correct worden opgeslagen in de nieuwe gebruikersdirectory </span><span class="s1">(</span><span class="s2">bijvoorbeeld </span><span class="s1">&quot;~</span><span class="s2">/.local/share/SBCDeploy</span><span class="s1">&quot; </span><span class="s2">op Linux</span><span class="s1">)</span><span class="s2">.</span>
+</pre>
+</body>
+</html>

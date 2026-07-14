@@ -1,0 +1,24 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  notify-push:
+    image: nextcloud:stable
+    container_name: notify-push
+    restart: unless-stopped
+    depends_on:
+      - nextcloud-app
+      - nextcloud-db
+      - nextcloud-redis
+    environment:
+      TZ: "{{ TZ }}"
+      PORT: "7867"
+      NEXTCLOUD_URL: "https://nextcloud.{{ DOMAIN }}"
+    volumes:
+      - "{{ NEXTCLOUD_DATA_PATH }}:/var/www/html"
+    entrypoint: [ "/var/www/html/custom_apps/notify_push/bin/aarch64/notify_push" ]
+    command: [ "/var/www/html/config/config.php" ]
+    networks:
+      - pi-services
+      - nextcloud-internal

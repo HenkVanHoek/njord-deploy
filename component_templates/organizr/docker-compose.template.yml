@@ -1,0 +1,23 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  organizr:
+    container_name: njorddeploy-organizr
+    image: lscr.io/linuxserver/organizr:{{ component_version }}
+    restart: unless-stopped
+    ports:
+      - "8095:80"
+    volumes:
+      - "{{DATA_ROOT}}/organizr/config:/config"
+    environment:
+      - "PUID={{PUID}}"
+      - "PGID={{PGID}}"
+      - "TZ={{TZ}}"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

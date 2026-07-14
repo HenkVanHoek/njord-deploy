@@ -1,0 +1,14 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: uptime-kuma
+    volumes:
+      - "{{ UPTIME_KUMA_DATA_PATH }}:/app/data"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    ports:
+      - "{{ UPTIME_KUMA_WEB_PORT }}:3001"
+    restart: unless-stopped

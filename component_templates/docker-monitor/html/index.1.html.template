@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docker Container Stats</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #333; }
+    </style>
+</head>
+<body class="p-4 sm:p-8 bg-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6 sm:p-8">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 mb-6 text-center">
+            Docker Container Statistics
+        </h1>
+        <div id="stats-container" class="space-y-4">
+            <div class="p-4 bg-blue-100 border border-blue-200 rounded-lg shadow-sm text-blue-800 text-center">
+                <p class="font-medium">Statistieken worden geladen. Dit wordt automatisch ververst door een cronjob.</p>
+                <p class="text-sm mt-1">Laatste update: <span id="last-update">N/A</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fetchStats() {
+            fetch('/stats.json') // The Nginx container will serve this file
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const container = document.getElementById('stats-container');
+                    container.innerHTML = `
+                        <div class="p-4 bg-blue-100 border border-blue-200 rounded-lg shadow-sm text-blue-800 text-center">
+                            <p class="font-medium">Statistieken worden geladen. Dit wordt automatisch ververst door een cronjob.</p>
+                            <p class="text-sm mt-1">Laatste update: <span id="last-update">N/A</span></p>
+                        </div>
+                    `; // Clear previous content except the info message
+
+                    const lastUpdateElement = document.getElementById('last-update');
+                    if (lastUpdateElement) {
+                        lastUpdateElement.textContent = new Date().toLocaleString('nl-NL', { // Changed to nl-NL locale
+                            year: 'numeric', month: 'numeric', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                        });
+                    }
+
+                    if (data.length === 0) {
+                        const noDataElement = document.createElement('div');
+                        noDataElement.className = 'p-4 bg-yellow-100 border border-yellow-200 rounded-lg shadow-sm text-yellow-800 text-center';
+                        noDataElement.innerHTML = '<p class="font-medium">Geen Docker container statistieken beschikbaar. Zijn er containers gestart?</p>';
+                        container.appendChild(noDataElement);
+                        return;
+                    }
+
+                    data.forEach(stat => {
+                        const card = document.createElement('div');
+                        card.className = 'bg-white p-4 sm:p-6 rounded-lg shadow-md border border-gray-200';
+                        card.innerHTML = `
+                            <h2 class="text-xl font-semibold text-gray-700 mb-2">${stat.name}</h2>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
+                                <p><span class="font-medium">Status:</span> <span class="${stat.status.includes('Up') ? 'text-green-600' : 'text-red-600'}">${stat.status}</span></p>
+                                <p><span class="font-medium">Image:</span> ${stat.image}</p>
+                                <p><span class="font-medium">CPU Gebruik:</span> ${stat.cpu_usage}</p>
+                                <p><span class="font-medium">Geheugen Gebruik:</span> ${stat.memory_usage}</p>
+                                <p><span class="font-medium">Netwerk I/O:</span> ${stat.network_io}</p>
+                                <p><span class="font-medium">Blok I/O:</span> ${stat.block_io}</p>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading Docker statistics:', error);
+                    const container = document.getElementById('stats-container');
+                    container.innerHTML = `
+                        <div class="p-4 bg-red-100 border border-red-200 rounded-lg shadow-sm text-red-800 text-center">
+                            <p class="font-medium">Fout bij het laden van statistieken: ${error.message}. Controleer Nginx logs.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Fetch stats immediately and then every 30 seconds
+        fetchStats();
+        setInterval(fetchStats, 30000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+# file: .pre-commit-config.yaml
+
+# Exclusion: Directories containing old scripts or generated files.
+# The regex matches any path starting with 'scripts_oud/' OR 'docker/'.
+exclude: '(^scripts_oud/|^docker/)'
+
+repos:
+# --- 1. GENERAL UTILITY AND CONSISTENCY CHECKS ---
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+    # Fixes CRLF/LF issues and ensures a single newline at EOF.
+    -   id: end-of-file-fixer
+    # Removes trailing whitespace (spaces/tabs at the end of lines).
+    -   id: trailing-whitespace
+    # Checks for YAML syntax validity.
+    -   id: check-yaml
+        # FIX: Exclude the component_templates directory, as it contains
+        # Jinja2-templated YAML files that are not valid raw YAML.
+        exclude: '^component_templates/'
+    # Checks for JSON syntax validity.
+    -   id: check-json
+    # Checks for TOML syntax validity (good for pyproject.toml).
+    -   id: check-toml
+    # Prevents committing files with merge conflict markers.
+    -   id: check-merge-conflict
+
+# --- 2. CODE CLEANUP: REMOVE UNUSED IMPORTS/VARIABLES ---
+# Run autoflake first to clean up the code before formatting.
+-   repo: https://github.com/PyCQA/autoflake
+    rev: v2.3.1
+    hooks:
+    -   id: autoflake
+        args: ["--remove-all-unused-imports", "--in-place"]
+
+# --- 3. FORMATTING: BLACK (Code Style) ---
+# Black should run second to format the code structure.
+-   repo: https://github.com/psf/black
+    rev: 24.4.2
+    hooks:
+    -   id: black
+        # Black uses a max line length of 88 by default, aligning with your requirement.
+
+# --- 4. FORMATTING: ISORT (Import Sorting) ---
+# Isort runs third to sort imports, using Black's profile for compatibility.
+-   repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+    -   id: isort
+        name: isort (python)
+        # Use the Black profile to prevent conflicts between isort and Black.
+        args: ["--profile", "black"]
+
+# --- 5. LINTING AND QUALITY CHECKS ---
+
+# Run 'flake8' to catch any remaining style/logical issues.
+-   repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+    -   id: flake8
+        # Explicitly setting line length to 88, matching your preference and Black's default.
+        args: ["--max-line-length=88"]
+
+# Add 'mypy' for static type checking.
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v1.10.0'
+    hooks:
+    -   id: mypy
+        # Essential dependencies for MyPy to check third-party libraries correctly.
+        additional_dependencies: [types-requests, types-paramiko, types-PyYAML]
+
+# Add 'bandit' for security scanning.
+-   repo: https://github.com/PyCQA/bandit
+    rev: '1.7.9'
+    hooks:
+    -   id: bandit
+        # Assuming you have Bandit configured via pyproject.toml.
+        args: ["-c", "pyproject.toml"]
+        additional_dependencies: ["bandit[toml]"]

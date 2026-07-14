@@ -1,0 +1,27 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  dashy:
+    container_name: njorddeploy-dashy
+    image: lissy93/dashy:{{ DASHY_IMAGE_TAG | default('latest') }}
+    restart: unless-stopped
+    ports:
+      - "{{ DASHY_HTTP_PORT | default('8080') }}:80"
+      - "{{ DASHY_HTTPS_PORT | default('4443') }}:443"
+    volumes:
+      # THE DEFINITIVE FIX:
+      # We mount the entire host directory to the entire container directory.
+      # Docker will then correctly place the conf.yml file inside.
+      - "{{ PISelfhosting_DATA_PATH }}/dashy:/app/user-data"
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+      - NODE_ENV=production
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

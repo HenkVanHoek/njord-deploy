@@ -1,0 +1,13 @@
+#file: noinspection ComposeUnknownValues
+# docker-compose.template.yml
+
+# This is the base template for the NjordDeploy Docker Compose setup.
+# The njorddeploy_installer.py script will merge the selected component
+# templates into this file to generate the final docker-compose.yml.
+
+services:
+  # Services will be dynamically added here by the installer.
+
+networks:
+  njorddeploy-network:
+    driver: bridge

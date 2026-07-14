@@ -1,0 +1,22 @@
+{
+    "variables": [
+        {
+            "default": "80",
+            "description": "The external HTTP port for Caddy.",
+            "id": "CADDY_HTTP_PORT",
+            "label": "HTTP Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "443",
+            "description": "The external HTTPS port for Caddy.",
+            "id": "CADDY_HTTPS_PORT",
+            "label": "HTTPS Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

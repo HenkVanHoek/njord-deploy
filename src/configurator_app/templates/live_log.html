@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Live Installation Log</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #1e1e1e; color: #d4d4d4; margin: 0; padding: 0; }
+        .container { padding: 2em; }
+        h1 { color: #4ec9b0; border-bottom: 1px solid #333; padding-bottom: 0.5em; }
+        #log-output {
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            background-color: #252526;
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 1em;
+            height: 70vh;
+            overflow-y: auto;
+        }
+        #status { font-style: italic; margin-top: 1em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Installation Log</h1>
+        <pre id="log-output">Connecting to server to begin installation...</pre>
+        <p id="status">Status: In Progress...</p>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const logOutput = document.getElementById('log-output');
+        const statusDiv = document.getElementById('status');
+        let initialMessage = true;
+
+        // Create a connection to the streaming endpoint
+        const eventSource = new EventSource("{{ url_for('install_stream') }}");
+
+        // Handle incoming messages from the server
+        eventSource.onmessage = function(event) {
+            if (initialMessage) {
+                logOutput.textContent = ''; // Clear the "Connecting..." message
+                initialMessage = false;
+            }
+
+            // Check for our special "finished" message
+            if (event.data.includes("--- SCRIPT FINISHED ---")) {
+                logOutput.textContent += "\n" + event.data;
+                statusDiv.textContent = 'Status: Complete! You can now close this window.';
+                eventSource.close(); // Close the connection
+            } else {
+                logOutput.textContent += event.data + '\n';
+                logOutput.scrollTop = logOutput.scrollHeight; // Auto-scroll to the bottom
+            }
+        };
+
+        // Handle any errors
+        eventSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            statusDiv.textContent = 'Status: Error! Connection to server lost.';
+            logOutput.textContent += "\n--- CONNECTION ERROR ---";
+            eventSource.close();
+        };
+    });
+</script>
+</body>
+</html>

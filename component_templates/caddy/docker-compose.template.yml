@@ -1,0 +1,23 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "{{ CADDY_HTTP_PORT }}:80"
+      - "{{ CADDY_HTTPS_PORT }}:443"
+      - "{{ CADDY_HTTPS_PORT }}:443/udp"
+    volumes:
+      - "{{ DATA_ROOT }}/caddy/Caddyfile:/etc/caddy/Caddyfile"
+      - "{{ DATA_ROOT }}/caddy/data:/data"
+      - "{{ DATA_ROOT }}/caddy/config:/config"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,82 @@
+{
+    "other_files": [
+        {
+            "destination": "traefik/dynamic/tls.yml",
+            "template": "template-config/tls.template.yml"
+        }
+    ],
+    "variables": [
+        {
+            "default": "self-signed",
+            "description": "Select the method for handling SSL certificates. 'self-signed' is the recommended default for local networks and requires no extra setup. 'lets-encrypt' provides a trusted certificate but requires you to own a domain name and forward port 80 from your router to this device.",
+            "id": "TRAEFIK_CERTIFICATE_METHOD",
+            "label": "Certificate Method",
+            "required": "always",
+            "source": "",
+            "type": "choice"
+        },
+        {
+            "default": "{{ DOTENV.LETS_ENCRYPT_REGISTRATION_EMAIL }}",
+            "description": "Your email address, used for Let's Encrypt registration and recovery.",
+            "id": "TRAEFIK_ADMIN_EMAIL",
+            "label": "Let's Encrypt Admin Email",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "8080",
+            "description": "The external port to access the Traefik dashboard (e.g., 8080).",
+            "id": "TRAEFIK_WEB_PORT",
+            "label": "Dashboard Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "INFO",
+            "description": "Logging verbosity. Options: DEBUG, INFO, WARN, ERROR.",
+            "id": "TRAEFIK_LOG_LEVEL",
+            "label": "Log Level",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/traefik/acme-storage",
+            "description": "Host directory for storing Let's Encrypt SSL certificates.",
+            "id": "TRAEFIK_ACME_STORAGE_PATH",
+            "label": "ACME Storage Path",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/traefik/config",
+            "description": "Host directory for Traefik's dynamic configuration files.",
+            "id": "TRAEFIK_CONFIG_PATH",
+            "label": "Config Path",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "njorddeploy.com",
+            "description": "Your public domain name for dashboard access (e.g., traefik.your.domain). Required for Let's Encrypt.",
+            "id": "DOMAIN_NAME",
+            "label": "Domain Name",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "admin:$apr1$526B9557$sKx5.cVfgrd3n2V3bV0S9/",
+            "description": "SECURITY CRITICAL: A 'user:hashed_password' pair for dashboard access. You MUST use a tool like 'htpasswd' to generate a compatible md5 hash (apr1 format). The default value is 'admin:password'. For production, generate a new hash, store it in your .env file (e.g., TRAEFIK_USERS_HASH=...), and reference it here using the macro: {{ DOTENV.TRAEFIK_USERS_HASH }}.",
+            "id": "TRAEFIK_DASHBOARD_USERS",
+            "label": "Dashboard Credentials",
+            "required": "always",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

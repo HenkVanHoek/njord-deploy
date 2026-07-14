@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "7878",
+            "description": "The external HTTP port to access the Radarr web interface.",
+            "id": "RADARR_WEB_PORT",
+            "label": "Radarr Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

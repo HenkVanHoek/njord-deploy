@@ -1,0 +1,101 @@
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.black]
+line_length = 88
+
+[tool.pytest.ini_options]
+pythonpath = [
+  "."
+]
+norecursedirs = ["scripts", "test_scanner.py"]
+# START OF FIX: Use precise regex filter to ignore external 'crypt' deprecation warning
+filterwarnings = [
+    "ignore:.*'crypt' is deprecated and slated for removal in Python 3.13.*:DeprecationWarning",
+    "ignore::DeprecationWarning:passlib.handlers.argon2"
+]
+# END OF FIX: Use precise regex filter to ignore external 'crypt' deprecation warning
+
+[project]
+name = "NjordDeploy"
+version = "0.4.46-Beta"
+description = "A project to self-host services on a Raspberry Pi."
+requires-python = ">=3.11"
+dependencies = [
+    "flask",
+    "python-dotenv",
+    "python-nmap",
+    "psutil",
+    "PyYAML",
+    "ansible-runner",
+    "jinja2",
+    "platformdirs",
+    "requests",
+    "keyring",
+    "appdirs",
+    "paramiko",
+    "argon2-cffi",
+    "passlib",
+    "cryptography",
+    "bcrypt"
+]
+
+[tool.setuptools]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["*egg-info*"]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
+dev = [
+    "bump-my-version",
+    "pre-commit",
+    "black",
+    "isort",
+    "flake8",
+    "bandit[toml]",
+    "pyinstaller",
+]
+
+[tool.bumpversion]
+current_version = "0.4.46-Beta"
+commit = true
+tag = true
+commit_args = "--no-verify"
+message = "chore(release): bump version to {new_version}"
+tag_name = "v{new_version}"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)(-(?P<release>[a-zA-Z0-9]+))?"
+serialize = [
+    "{major}.{minor}.{patch}-{release}",
+    "{major}.{minor}.{patch}"
+]
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.bumpversion.parts.release]
+values = ["Alpha", "Beta", "prod"]
+optional_value = "prod"
+
+[[tool.mypy.overrides]]
+module = [
+    "utils.resource_utils",
+    "managers.ssh_manager",
+    "onvif.*",
+    "appdirs",
+    "managers.component_manager",
+    "managers.deployment_manager",
+    "managers.setup_manager",
+    "pi_scanner",
+    "utils.proxmox_client",
+]
+ignore_missing_imports = true
+
+[tool.bandit]
+exclude_dirs = ["tests"]

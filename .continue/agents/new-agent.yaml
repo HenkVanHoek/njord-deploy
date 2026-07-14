@@ -1,0 +1,23 @@
+# Dit is een voorbeeld agent configuratie bestand
+name: NjordDeploy Agent
+version: 1.0.0
+schema: v1
+
+# Models define which AI models this agent can use
+# We definieren hier de lokale Ollama-verbinding.
+models:
+  # Definieer de verbinding met uw lokale Ollama server
+  - name: Llama 3 8B (Lokaal)
+    provider: ollama
+    model: llama3:8b
+    # CRUCIAAL: Vervang [UW_WINDOWS_IP] door het daadwerkelijke IP-adres
+    # van uw Windows werkstation dat de Ollama server draait.
+    apiBase: http://192.168.178.72:11434
+
+tools:
+  - uses: continue/editor-operations
+  - uses: continue/filesystem
+# MCP Servers the agent can use
+# U hoeft deze niet te gebruiken, maar u kunt de sectie weglaten
+# of leeg laten als u geen extra tools wilt toevoegen.
+mcpServers: []

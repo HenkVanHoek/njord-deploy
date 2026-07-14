@@ -1,0 +1,15 @@
+.env
+.env.*
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+secrets.yml
+config/credentials.yml
+
+# Infrastructure & Git
+.git/
+.idea/
+__pycache__/
+*.pyc

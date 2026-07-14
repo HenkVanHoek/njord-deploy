@@ -1,0 +1,19 @@
+[flake8]
+# Set the max line length to 88 characters, matching the 'black' formatter.
+max-line-length = 88
+# Ignore specific errors that conflict with black's formatting style.
+# E203: Whitespace before ':' (used in slicing)
+# W503: Line break before binary operator
+extend-ignore = E203, W503
+
+# Exclude directories from flake8 checks.
+# This aligns with .gitignore and pre-commit config for consistency.
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    .venv-win,
+    build,
+    dist,
+    scripts_oud,
+    docker

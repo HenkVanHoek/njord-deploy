@@ -1,0 +1,60 @@
+# V6.6 Session 01: Traefik Security, Hash Generator, and Frontend Refactor Pre-work
+
+## Status
+
+**Completed:** Backend implementation and testing for generic hash generation utility and Traefik component updates.
+**Stalled/Next Step:** Frontend integration and architectural refactoring of the main JavaScript file (`editor.v2.js`).
+
+---
+
+## I. Architectural & Security Decisions
+
+### 1. Traefik Dashboard Security
+
+**Decision:** The Traefik dashboard must be secured with Basic Authentication (username:hashed_password) for both external (HTTPS) and local network (Port 8080) access.
+
+*   **Implementation:** Added a new `traefik.http.middlewares.traefik-auth.basicauth.users` label to the Traefik Docker Compose template and applied it to the relevant internal and secure routers.
+*   **Security Standard:** Switched to using `passlib` (bcrypt) for secure hash generation, establishing a high-grade security standard for all future Basic Auth components.
+
+### 2. Single Source of Truth (SST) for Core Variables
+
+**Decision:** Core deployment and security values should be managed at the highest level (the user's `.env` file).
+
+*   **Action:** Changed the default source for two critical component variables in `config/components_metadata.json`:
+    *   `DOMAIN_NAME`: Now defaults to `{{ DOTENV.DOMAIN }}`.
+    *   `TRAEFIK_DASHBOARD_USERS`: Now defaults to `{{ DOTENV.TRAEFIK_DASHBOARD_USERS }}`.
+
+### 3. Traefik TLS Toggle
+
+**Decision:** To enable development and test environments where ports 80/443 may be closed, TLS (Let's Encrypt) must be configurable.
+
+*   **Implementation:** Introduced a boolean variable, `TRAEFIK_USE_TLS`, and wrapped all ACME-specific commands and `websecure` routers/ports in Jinja2 `{% if TRAEFIK_USE_TLS == "True" %}` blocks within the `docker-compose.template.yml`.
+
+---
+
+## II. New Feature Implementation (Backend)
+
+### 1. Generic Hash Generator Utility
+
+*   **File:** `src/utils/auth_utils.py`
+*   **Function:** `generate_basic_auth_hash(username, password)`
+*   **Test:** `tests/test_auth_utils.py` successfully implemented and passed, using a dedicated module for isolated, high-grade utility testing (TDD).
+
+### 2. Editor API Endpoint
+
+*   **File:** `src/editor_app/app.py`
+*   **Route:** `POST /api/generate_auth_hash`
+*   **Contract:** Takes `{"username": "...", "password": "..."}` and returns `{"hashed_user_string": "user:hash"}`.
+
+---
+
+## III. Maintainability & Next Step (Refactoring)
+
+**The immediate task is a structural refactoring driven by the "Keep It Simple, Stupid" principle and objective evidence from the IDE.**
+
+*   **Problem:** The file `src/editor_app/static/editor.v2.js` has grown too large and complex. Attempting to integrate new features led to an IDE warning on HTML-in-JS string literals, which is a symptom of poor code resilience and maintainability.
+*   **Decision:** Initiate an architectural refactor to move DOM rendering logic out of the core JavaScript file.
+*   **Next Action:** Start a new session to execute the following plan:
+    *   Create a new file: `src/editor_app/static/ui_render_utils.js`.
+    *   Extract large, DOM-generating functions (e.g., `renderVariablesPane`, `renderEditor`) into the new utility file.
+    *   Update `editor.v2.js` to import and utilize these functions.

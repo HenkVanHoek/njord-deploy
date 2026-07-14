@@ -1,0 +1,24 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "model": "ollama/deepseek-coder-v2:16b",
+    "provider": {
+        "ollama": {
+            "npm": "@ai-sdk/openai-compatible",
+            "name": "Ollama Remote",
+            "options": {
+                "baseURL": "http://192.168.178.72:11434/v1"
+            },
+            "models": {
+                "deepseek-coder-v2:16b": {
+                    "name": "deepseek-coder-v2:16b"
+                }
+            }
+        }
+    },
+    "permission": {
+        "edit": "ask",
+        "bash": "ask",
+        "write": "allow",
+        "webfetch": "allow"
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "variables": [
+        {
+            "default": "test",
+            "description": "Test Label 1",
+            "id": "TESTVAR 1",
+            "label": "test label 1",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "TEST",
+            "description": "Test Label 2",
+            "id": "TESTVAR 2",
+            "label": "test label 2",
+            "required": "",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

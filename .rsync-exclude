@@ -1,0 +1,15 @@
+# Git en IDE-specifieke mappen
+.git/
+.idea/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# De data-map! Deze wil je NOOIT overschrijven vanuit je werkstation.
+# Hierin staat de persistente data van je services (Dashy config, etc.)
+data/
+
+# Eventuele lokale virtuele environments
+venv/
+.venv/

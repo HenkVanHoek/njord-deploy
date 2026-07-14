@@ -1,0 +1,55 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+#
+# Docker Compose template for Vaultwarden
+#
+# This template is based on the official documentation and defines the
+# Vaultwarden service, its persistent data volume, and exposes the
+# necessary port for web access.
+#
+# Source: https://github.com/dani-garcia/vaultwarden
+#
+#
+# Docker Compose template for Vaultwarden
+#
+# This template is based on the official documentation and defines the
+# Vaultwarden service, its persistent data volume, and exposes the
+# necessary port for web access.
+#
+# Source: https://github.com/dani-garcia/vaultwarden
+#
+
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    volumes:
+      - '{{ CONFIG_BASE_PATH }}/vaultwarden:/data'
+      # Map the host's entropy source into the container. This is critical
+      # for cryptographic operations like the `hash` command, preventing a
+      # panic error by ensuring a reliable source of randomness is available.
+      - /dev/urandom:/dev/random:ro
+    ports:
+      - '{{ VAULTWARDEN_WEB_PORT }}:80'
+    environment:
+      - ADMIN_TOKEN_HASH={{ VAULTWARDEN_ADMIN_TOKEN }}
+      - SIGNUPS_ALLOWED={{ SIGNUPS_ALLOWED }}
+      - WEB_VAULT_ENABLED={{ WEB_VAULT_ENABLED }}
+
+# old:
+# services:
+#   vaultwarden:
+#     image: vaultwarden/server:latest
+#     container_name: vaultwarden
+#     restart: unless-stopped
+#     volumes:
+#       - '{{ CONFIG_BASE_PATH }}/vaultwarden:/data'
+#     ports:
+#       - '{{ VAULTWARDEN_WEB_PORT }}:80'
+#     environment:
+#       - ADMIN_TOKEN_HASH={{ VAULTWARDEN_ADMIN_TOKEN }}
+#       - SIGNUPS_ALLOWED={{ SIGNUPS_ALLOWED }}
+#       - WEB_VAULT_ENABLED={{ WEB_VAULT_ENABLED }}

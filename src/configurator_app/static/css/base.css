@@ -1,0 +1,234 @@
+/* NjordDeploy / SBCDeploy Glassmorphic Base Theme */
+
+:root {
+    --brand-green: #00e676; /* Neon Green */
+    --brand-blue: #00b0ff;  /* Glowing Neon Blue */
+    --brand-gray: #90a4ae;
+
+    /* Dark Theme Backgrounds */
+    --dark-bg-start: #0f172a;
+    --dark-bg-end: #020617;
+
+    /* Glassmorphic Tokens */
+    --glass-bg: rgba(30, 41, 59, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* General Body & Typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0;
+    background: radial-gradient(circle at top, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+    color: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+h1, h2, h3, h4 {
+    color: #ffffff;
+    font-family: 'Montserrat', sans-serif;
+}
+
+/* Header Styling */
+.app-header {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--glass-border);
+    color: #ffffff;
+    padding: 1.5em 2em;
+    text-align: center;
+}
+
+.app-header h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 2em;
+    font-weight: 300;
+}
+
+.app-header h1 strong {
+    font-weight: 600;
+    color: var(--brand-blue);
+}
+
+/* Main Content Area */
+main {
+    flex: 1;
+    padding: 2em;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    padding: 2em;
+    border-radius: 12px;
+}
+
+/* Common Form & Interactive Element Styles */
+.form-group {
+    margin-bottom: 1.5em;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    color: #cbd5e1;
+}
+
+input[type="text"], input[type="password"] {
+    width: calc(100% - 1.6em);
+    padding: 0.7em;
+    background-color: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    border-radius: 6px;
+    transition: all 0.2s ease-in-out;
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    outline: none;
+    border-color: var(--brand-blue);
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.35);
+    background-color: rgba(15, 23, 42, 0.8);
+}
+
+button, .button {
+    background: linear-gradient(135deg, #00b0ff, #0091ea);
+    color: white;
+    padding: 0.8em 1.2em;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+button:hover, .button:hover {
+    box-shadow: 0 0 25px rgba(0, 176, 255, 0.7);
+    transform: translateY(-1px);
+}
+
+/* Success Button Specifics (e.g. Start Installation) */
+a.button[style*="background-color: #27ae60"], a.button {
+    background: linear-gradient(135deg, #00e676, #00c853) !important;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.4) !important;
+}
+
+a.button[style*="background-color: #27ae60"]:hover, a.button:hover {
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.7) !important;
+}
+
+.loading {
+    display: none;
+    text-align: center;
+    padding: 1em;
+    font-size: 1.2em;
+    color: #cbd5e1;
+}
+
+.error {
+    color: #ff5252;
+    font-weight: bold;
+}
+
+/* Debug / Logs Output Styles */
+.debug-container, pre#log-output {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: #0f172a;
+    color: #f8fafc;
+    font-family: "Courier New", Courier, monospace;
+    border-radius: 8px;
+}
+
+.debug-container h3, .debug-container h4 {
+    color: #cbd5e1;
+    margin-top: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 5px;
+}
+
+.debug-container pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: #020617;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 6px;
+}
+
+.summary, .notice {
+    background-color: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 8px;
+    padding: 1em;
+}
+
+/* 8. Navigation Tabs (Bootstrap Overrides) */
+.nav-tabs {
+    border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.nav-tabs .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected tabs */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.08) transparent !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--brand-blue) !important; /* Neon blue text for selected tab */
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Subtle glass back */
+    border-color: var(--glass-border) var(--glass-border) transparent !important;
+    border-bottom: 2px solid var(--brand-blue) !important;
+    text-shadow: 0 0 8px rgba(0, 176, 255, 0.4);
+}
+
+/* 9. Navigation Pills (Bootstrap Overrides for Sidebar Tabs) */
+.nav-pills .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected pills */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--glass-border) !important;
+}
+
+.nav-pills .nav-link.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important; /* Neon blue gradient */
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.45) !important;
+    border-color: var(--glass-border) !important;
+    font-weight: 600;
+}

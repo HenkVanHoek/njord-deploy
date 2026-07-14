@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>UI Render Utils Test Harness</title>
+</head>
+<body>
+    <div id="metadata-pane"></div>
+    <div id="variables-pane"></div>
+    <div id="editor-title"></div>
+
+    <script type="module">
+        import { renderEditor, renderVariablesPane } from '/src/editor_app/static/ui_render_utils.js';
+        window.renderEditor = renderEditor;
+        window.renderVariablesPane = renderVariablesPane;
+        // CRITICAL FIX: Signal to Playwright that the harness is ready.
+        window.harnessReady = true;
+    </script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+# IDE / Editor / OS-specific files
+#-----------------------------------------
+.idea/
+!.idea/templates.xml
+*.swp
+*.swo
+*.bak
+
+# Log and environment files (SECRETS!)
+#-----------------------------------------
+*.log
+.env
+.env.*
+
+# Python-specific files
+#-----------------------------------------
+__pycache__/
+*.pyc
+.venv/
+.venv-win/
+
+# Build and test artifacts
+#-----------------------------------------
+build/
+dist/
+.pytest_cache/
+
+# Project-specific generated files
+#-----------------------------------------
+backups/
+certs/
+selected_components.txt
+
+# Fully generated Docker output directory
+#-----------------------------------------
+docker/
+
+# Chats for different AI models are stored in here.
+# Don't store them on github as they can contain
+# sensitive data like passwords and API keys.
+#-----------------------------------------
+/docs/Chats/
+/config/components_metadata.oud.json
+/CodeGPT-2.5.23-stable__1_/
+
+node_modules/
+*.egg-info
+/.agy/

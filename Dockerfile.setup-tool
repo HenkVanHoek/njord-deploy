@@ -1,0 +1,38 @@
+# Dockerfile.setup-tool
+
+# Use a lean base image for Python 3 on Alpine, suitable for ARM64 (Raspberry Pi 5)
+# Alpine images are much smaller and more efficient for embedded systems like the Pi.
+FROM python:3.12-alpine
+
+# Metadata labels (Open Container Initiative standard)
+LABEL maintainer="Henk Van Hoek <hvh@freedom.nl>"
+LABEL org.opencontainers.image.authors="Henk Van Hoek <hvh@freedom.nl>"
+LABEL org.opencontainers.image.source="https://github.com/HenkVanHoek/PiSelfhosting"
+LABEL org.opencontainers.image.description="Minimal Python environment for PiSelfhosting setup and configuration scripts."
+
+# Set the working directory inside the container
+# This is where your project files will be mounted via volume mapping at runtime
+WORKDIR /app
+
+# Install system dependencies needed for Python packages like Paramiko, PyYAML
+# For Alpine, 'apk add' is used, and package names are different.
+# build-base: provides basic build tools (gcc, make) needed for compiling some Python packages (like cryptography)
+# libffi-dev: a common dependency for 'cryptography' which paramiko uses
+RUN apk update && apk add --no-cache \
+    build-base \
+    libffi-dev \
+    # Add any other Alpine system packages required by your Python libraries if encountered.
+    # For now, this set should be sufficient for PyYAML and Paramiko.
+    && rm -rf /var/cache/apk/* # Clean up apk cache to keep image small
+
+# Copy requirements.txt into the build context and install Python dependencies
+# This step leverages Docker's build cache: if requirements.txt doesn't change,
+# this layer (and subsequent layers) won't be rebuilt.
+COPY requirements-pi.txt . /app/
+RUN pip install --no-cache-dir -r requirements-pi.txt
+
+# No CMD or ENTRYPOINT here. The command to run src/setup.py will be specified
+# directly via 'docker run' by the piselfhosting_installer.py script.
+# Example usage: docker run --rm -v /path/on/pi:/app piselfhosting-setup-tool python /app/src/setup.py
+
+# Cache busting comment: 2025-06-22-2

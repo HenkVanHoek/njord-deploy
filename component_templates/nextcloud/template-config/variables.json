@@ -1,0 +1,84 @@
+{
+  "variables": [
+    {
+      "id": "PORT_NEXTCLOUD",
+      "label": "Nextcloud HTTP Port",
+      "description": "Port to access the Nextcloud web interface.",
+      "type": "port",
+      "default": "8080",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_DATA_PATH",
+      "label": "Nextcloud Data Path",
+      "description": "Host path for storing Nextcloud application data and files.",
+      "type": "path",
+      "default": "{{ CONFIG_BASE_PATH }}/nextcloud/data",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_TRUSTED_DOMAINS",
+      "label": "Trusted Domains",
+      "description": "Space-separated list of domains Nextcloud will trust.",
+      "type": "string",
+      "default": "nextcloud.home.lan",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_FROM_ADDRESS",
+      "label": "Mail From Address",
+      "description": "The sender name for system notifications.",
+      "type": "string",
+      "default": "nextcloud",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_DOMAIN",
+      "label": "Mail Domain",
+      "description": "The email domain for system notifications.",
+      "type": "string",
+      "default": "example.com",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_SMTPHOST",
+      "label": "SMTP Host",
+      "description": "The SMTP server address for outgoing mails.",
+      "type": "string",
+      "default": "smtp.example.com",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_SMTPPORT",
+      "label": "SMTP Port",
+      "description": "The SMTP port (e.g. 587 or 465).",
+      "type": "port",
+      "default": "587",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_SMTPSECURE",
+      "label": "SMTP Security",
+      "description": "SMTP security layer (tls or ssl).",
+      "type": "string",
+      "default": "tls",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_SMTPNAME",
+      "label": "SMTP Username",
+      "description": "The email address used to log into the SMTP server.",
+      "type": "string",
+      "default": "notifications@example.com",
+      "required": ""
+    },
+    {
+      "id": "NEXTCLOUD_MAIL_SMTPPASSWORD",
+      "label": "SMTP Password",
+      "description": "The password for the SMTP user.",
+      "type": "password",
+      "default": "",
+      "required": ""
+    }
+  ]
+}

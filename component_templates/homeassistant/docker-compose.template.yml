@@ -1,0 +1,22 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# templates/homeassistant/docker-compose.template.yml
+services:
+  homeassistant:
+    container_name: njorddeploy-homeassistant
+    image: ghcr.io/home-assistant/home-assistant:{{ component_version }}
+    restart: unless-stopped
+    volumes:
+      - homeassistant_config:/config
+      - /etc/localtime:/etc/localtime:ro
+    network_mode: host # Home Assistant often requires host network mode for discovery
+
+volumes:
+  homeassistant_config:
+    name: njorddeploy-homeassistant-config
+
+networks:
+  njorddeploy_net:
+    external: true

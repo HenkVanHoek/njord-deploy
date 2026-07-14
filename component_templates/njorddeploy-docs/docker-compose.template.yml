@@ -1,0 +1,19 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# templates/njorddeploy-docs/docker-compose.template.yml
+services:
+  njorddeploy-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: njorddeploy-docs
+    restart: unless-stopped
+    ports:
+      - "8089:80" # Expose documentation on port 8089
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,30 @@
+mqtt:
+  host: mosquitto
+  topic_prefix: frigate
+  user: ${MQTT_USER}
+  password: ${MQTT_PASS}
+detectors:
+  cpu:
+    type: cpu
+detect:
+  max_disappeared: 50
+cameras:
+  placeholder_camera_127_0_0_1:
+    ffmpeg:
+      inputs:
+      - path: rtsp://admin:password@127.0.0.1:554/live
+        roles:
+        - detect
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+    enabled: false
+record:
+  enabled: true
+  events:
+    pre_capture: 5
+    post_capture: 5
+    required_zones: []
+rtmp:
+  enabled: true

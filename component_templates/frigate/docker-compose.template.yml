@@ -1,0 +1,47 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  frigate-configurator:
+    image: python:3.11-slim
+    container_name: njorddeploy-frigate-configurator
+    network_mode: host
+    volumes:
+      # Mount the configuration directory where the deployment files are placed
+      - "{{DATA_ROOT}}/frigate/config:/app/config:rw"
+    environment:
+      - "FRIGATE_RTSP_USERNAME=admin"
+      - "FRIGATE_RTSP_PASSWORD={{FRIGATE_RTSP_PASSWORD}}"
+    command: >
+      sh -c "apt-get update && apt-get install -y ffmpeg libglib2.0-0 &&
+             pip install --no-cache-dir pyyaml onvif-zeep-async zeep psutil &&
+             python /app/config/frigate_camera_config_tool.py"
+
+  frigate:
+    container_name: njorddeploy-frigate
+    image: ghcr.io/blakeblackshear/frigate:{{ component_version }}
+    privileged: true # Required for direct hardware access (e.g., /dev/bus/usb for Coral)
+    restart: unless-stopped
+    shm_size: "512mb" # Shared memory for FFmpeg
+    depends_on:
+      frigate-configurator:
+        condition: service_completed_successfully
+    devices:
+      - /dev/bus/usb:/dev/bus/usb # For Coral TPU
+    volumes:
+      # Corrected to use the FHS-compliant DATA_ROOT variable
+      - "{{DATA_ROOT}}/frigate/config:/config:rw"
+      - "{{DATA_ROOT}}/frigate/media:/media/frigate:rw"
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "{{PORT_FRIGATE_WEB}}:5000"   # Dynamically mapped Web UI port
+      - "{{PORT_FRIGATE_RTMP}}:1935"  # Dynamically mapped RTMP re-streaming port
+    environment:
+      - "FRIGATE_RTSP_PASSWORD={{FRIGATE_RTSP_PASSWORD}}"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

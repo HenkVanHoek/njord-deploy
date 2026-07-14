@@ -1,0 +1,31 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# templates/gitlab/docker-compose.template.yml
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:{{ component_version }}' # 'ce' stands for Community Edition, the free version.
+    container_name: njorddeploy-gitlab
+    restart: unless-stopped
+    hostname: '{{ DOMAIN }}' # GitLab needs a hostname to configure itself correctly.
+    environment:
+      GITLAB_OMNIBUS_CONFIG: "from_file('/etc/gitlab/gitlab.rb')"
+    ports:
+      - "{{ GITLAB_HTTP_PORT | default(10080) }}:80"   # Web UI (HTTP)
+      - "{{ GITLAB_HTTPS_PORT | default(10443) }}:443" # Web UI (HTTPS)
+      - "{{ GITLAB_SSH_PORT | default(10022) }}:22"   # Git over SSH
+    volumes:
+      # Mount the pre-configured gitlab.rb file into the container.
+      - ./templates/gitlab/template-config/gitlab.rb:/etc/gitlab/gitlab.rb
+      # Mount host directories for persistent data.
+      - '{{ DATA_ROOT }}/gitlab/config:/etc/gitlab'
+      - '{{ DATA_ROOT }}/gitlab/logs:/var/log/gitlab'
+      - '{{ DATA_ROOT }}/gitlab/data:/var/opt/gitlab'
+    shm_size: '256m' # Recommended to prevent issues with the built-in PostgreSQL.
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

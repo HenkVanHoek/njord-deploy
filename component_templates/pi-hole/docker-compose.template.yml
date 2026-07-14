@@ -1,0 +1,35 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# file: component_templates/pi-hole/docker-compose.template.yml
+services:
+  pi-hole:
+  container_name: njorddeploy-{{ component_id }}
+  image: pihole/pihole:latest
+    restart: unless-stopped
+    ports:
+      - "{{ PIHOLE_DNS_PORT }}:53/tcp"
+      - "{{ PIHOLE_DNS_PORT }}:53/udp"
+      - "{{ PIHOLE_WEB_PORT }}:80/tcp"
+    environment:
+      TZ: 'Etc/UTC'
+      FTLCONF_webserver_api_password: "{{ PIHOLE_WEB_PASSWORD }}"
+      FTLCONF_dns_listeningMode: "all"
+      VIRTUAL_HOST: "pi-hole.{{ DOMAIN_NAME }}"
+    volumes:
+      - "pihole_etc:/etc/pihole"
+      - "pihole_dnsmasq:/etc/dnsmasq.d"
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - njorddeploy_net
+volumes:
+  pihole_etc:
+    name: "njorddeploy-pihole-etc"
+  pihole_dnsmasq:
+    name: "njorddeploy-pihole-dnsmasq"
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,77 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# file: component_templates/traefik/docker-compose.template.yml
+services:
+  traefik-init:
+    image: busybox:1.36
+    container_name: njorddeploy-traefik-init
+    restart: "no"
+    volumes:
+      - "{{ TRAEFIK_ACME_STORAGE_PATH }}:/etc/traefik/acme"
+    command:
+      - "sh"
+      - "-c"
+      - "touch /etc/traefik/acme/acme.json && chmod 600 /etc/traefik/acme/acme.json"
+
+  traefik:
+    image: traefik:latest
+    container_name: njorddeploy-traefik
+    restart: unless-stopped
+    depends_on:
+      traefik-init:
+        condition: service_completed_successfully
+    security_opt:
+      - "no-new-privileges:true"
+
+    command:
+      - "--api.dashboard=true"
+      - "--log.level={{ TRAEFIK_LOG_LEVEL }}"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.dashboard.address=:8080"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      {%- if TRAEFIK_CERTIFICATE_METHOD == 'lets-encrypt' %}
+      - "--certificatesresolvers.letsencrypt.acme.email={{ TRAEFIK_ADMIN_EMAIL }}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      {%- endif %}
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "{{ TRAEFIK_WEB_PORT }}:8080"
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "{{ TRAEFIK_ACME_STORAGE_PATH }}:/etc/traefik/acme"
+      - "{{ TRAEFIK_CONFIG_PATH }}:/etc/traefik/dynamic/"
+      {%- if TRAEFIK_CERTIFICATE_METHOD == 'self-signed' %}
+      - "./traefik/certs:/etc/traefik/certs:ro"
+      {%- endif %}
+
+    networks:
+      - njorddeploy_net
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users={{ (TRAEFIK_DASHBOARD_USERS | default('')).replace('$', '$$') }}"
+      - "traefik.http.routers.traefik-dashboard-direct.entrypoints=dashboard"
+      - "traefik.http.routers.traefik-dashboard-direct.service=api@internal"
+      - "traefik.http.routers.traefik-dashboard-direct.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.traefik-dashboard-direct.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-dashboard-secure.rule=Host(`{{ component_id }}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.traefik-dashboard-secure.entrypoints=websecure"
+      - "traefik.http.routers.traefik-dashboard-secure.service=api@internal"
+      {%- if TRAEFIK_CERTIFICATE_METHOD == 'lets-encrypt' %}
+      - "traefik.http.routers.traefik-dashboard-secure.tls.certresolver=letsencrypt"
+      {%- else %}
+      - "traefik.http.routers.traefik-dashboard-secure.tls=true"
+      {%- endif %}
+      - "traefik.http.routers.traefik-dashboard-secure.middlewares=traefik-auth"
+      - "traefik.http.routers.traefik-dashboard-http.rule=Host(`{{ component_id }}.{{ DOMAIN_NAME }}`)"
+      - "traefik.http.routers.traefik-dashboard-http.entrypoints=web"

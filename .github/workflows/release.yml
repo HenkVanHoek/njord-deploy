@@ -1,0 +1,126 @@
+# .github/workflows/release.yml
+
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+# SECURITY FIRST: Restrict default GITHUB_TOKEN permissions to read-only
+permissions:
+  contents: read
+
+jobs:
+  build-executables:
+    name: Build for ${{ matrix.os-name }}
+    runs-on: ${{ matrix.os-runner }}
+    strategy:
+      matrix:
+        include:
+          - os-name: Linux
+            os-runner: ubuntu-latest
+            artifact-name: PiSelfhosting-Linux
+          - os-name: macOS
+            os-runner: macos-latest
+            artifact-name: PiSelfhosting-macOS
+          - os-name: Windows
+            os-runner: windows-latest
+            artifact-name: PiSelfhosting-Windows.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          # MODERNIZED CACHING: Tell pip cache to depend on the pyproject.toml
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install system dependencies (Linux)
+        if: matrix.os-name == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nmap
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os-name == 'macOS'
+        # OPTIMIZATION: Disable Homebrew auto-update to save 5-10 minutes in CI
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        run: brew install nmap
+
+      - name: Install system dependencies (Windows)
+        if: matrix.os-name == 'Windows'
+        run: choco install nmap
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev,test]
+          pip install pyinstaller
+
+      - name: Run tests with Pytest
+        run: pytest
+
+      - name: Build the executable with PyInstaller
+        shell: bash
+        run: |
+          rm -rf build dist
+          pyinstaller PiSelfhostingInstaller.spec
+
+      - name: Package the executable
+        shell: bash
+        # ROBUSTNESS: Explicit check avoids wildcards to prevent shell globbing errors
+        run: |
+          mkdir -p artifact
+          if [ -f "dist/PiSelfhostingInstaller.exe" ]; then
+            mv "dist/PiSelfhostingInstaller.exe" "artifact/${{ matrix.artifact-name }}"
+          elif [ -f "dist/PiSelfhostingInstaller" ]; then
+            mv "dist/PiSelfhostingInstaller" "artifact/${{ matrix.artifact-name }}"
+          else
+            echo "ERROR: Pyinstaller executable not found in dist/"
+            exit 1
+          fi
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os-name }}
+          path: artifact/
+
+  release:
+    name: Create GitHub Release
+    needs: build-executables
+    runs-on: ubuntu-latest
+    # ROBUSTNESS: Prevent accidental branch-named release creation on manual triggers
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: installers
+          pattern: installer-*
+          merge-multiple: true
+
+      - name: Zip installers for release
+        run: |
+          zip -j PiSelfhosting-Windows.zip installers/PiSelfhosting-Windows.exe
+          zip -j PiSelfhosting-macOS.zip installers/PiSelfhosting-macOS
+          zip -j PiSelfhosting-Linux.zip installers/PiSelfhosting-Linux
+
+      - name: Upload assets to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          file: "PiSelfhosting-*.zip"
+          file_glob: true
+          overwrite: true

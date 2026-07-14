@@ -1,0 +1,12 @@
+{
+  "variables": [
+    {
+      "id": "NEXTCLOUD_DB_DUMP_PATH",
+      "label": "Backup Storage Path",
+      "description": "Host path for storing Nextcloud DB backups.",
+      "type": "path",
+      "default": "{{ CONFIG_BASE_PATH }}/nextcloud/db_dumps",
+      "required": "always"
+    }
+  ]
+}

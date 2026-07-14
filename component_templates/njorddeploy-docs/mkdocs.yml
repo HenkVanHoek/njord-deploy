@@ -1,0 +1,29 @@
+site_name: NjordDeploy Documentation
+site_description: 'Official documentation for the NjordDeploy project.'
+
+theme:
+  name: material
+  palette:
+    # Palette toggle for light vs dark mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.top
+    - search.suggest
+    - search.highlight
+
+# This tells MkDocs where the source .md files will be inside the Docker build
+docs_dir: ./src-docs
+
+# Navigation structure of the website
+nav:
+  - 'Home': 'index.md'
+  - 'Helper Utilities': 'utilities.md'
+  - 'Contributing': 'contributing.md'

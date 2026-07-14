@@ -1,0 +1,24 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  heimdall:
+    container_name: njorddeploy-heimdall
+    image: lscr.io/linuxserver/heimdall:{{ component_version }}
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+      - "8490:443"
+    volumes:
+      - "{{DATA_ROOT}}/heimdall/config:/config"
+    environment:
+      - "PUID={{PUID}}"
+      - "PGID={{PGID}}"
+      - "TZ={{TZ}}"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

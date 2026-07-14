@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "The external port for the FluffyChat web interface.",
+            "id": "FLUFFYCHAT_WEB_PORT",
+            "label": "Web UI Port",
+            "type": "port"
+        },
+        {
+            "default": "/var/lib/njorddeploy",
+            "description": "The base directory for all persistent data. This component does not directly use it for volumes but it is a standard variable.",
+            "id": "DATA_ROOT",
+            "label": "Data Root Directory",
+            "type": "string"
+        },
+        {
+            "default": "latest",
+            "description": "The version tag for the FluffyChat Web Docker image.",
+            "id": "component_version",
+            "label": "Component Version",
+            "type": "string"
+        }
+    ]
+}

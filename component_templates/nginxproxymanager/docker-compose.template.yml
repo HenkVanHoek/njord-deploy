@@ -1,0 +1,32 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  nginxproxymanager:
+    container_name: njorddeploy-nginxproxymanager
+    image: 'jc21/nginx-proxy-manager:{{ component_version }}'
+    restart: unless-stopped
+    ports:
+      # Note: These ports conflict with Traefik if run on the same host.
+      - '80:80'   # Primary HTTP port
+      - '443:443' # Primary HTTPS port
+      - '81:81'   # Admin UI port
+    volumes:
+      - "{{DATA_ROOT}}/nginxproxymanager/data:/data"
+      - "{{DATA_ROOT}}/nginxproxymanager/letsencrypt:/etc/letsencrypt"
+    environment:
+      # Secrets now use Docker's native substitution
+      - "DB_MYSQL_HOST=mariadb"
+      - "DB_MYSQL_PORT=3306"
+      - "DB_MYSQL_USER=${DB_USER}"
+      - "DB_MYSQL_PASSWORD=${DB_PASS}"
+      - "DB_MYSQL_NAME=npm_database"
+    depends_on:
+      - mariadb
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

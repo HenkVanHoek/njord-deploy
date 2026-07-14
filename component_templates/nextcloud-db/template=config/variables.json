@@ -1,0 +1,44 @@
+{
+  "variables": [
+    {
+      "id": "NEXTCLOUD_DB_PATH",
+      "label": "Database Storage Path",
+      "description": "Host path for storing Nextcloud DB files.",
+      "type": "path",
+      "default": "{{ CONFIG_BASE_PATH }}/nextcloud/db",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_DB_ROOT_PASSWORD",
+      "label": "DB Root Password",
+      "description": "Root password for MariaDB database engine.",
+      "type": "password",
+      "default": "",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_DB_NAME",
+      "label": "Database Name",
+      "description": "Name of the Nextcloud database schema.",
+      "type": "string",
+      "default": "nextcloud",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_DB_USER",
+      "label": "Database User",
+      "description": "Username for Nextcloud DB connection.",
+      "type": "string",
+      "default": "nextcloud",
+      "required": "always"
+    },
+    {
+      "id": "NEXTCLOUD_DB_PASSWORD",
+      "label": "Database User Password",
+      "description": "Database user connection password.",
+      "type": "password",
+      "default": "",
+      "required": "always"
+    }
+  ]
+}

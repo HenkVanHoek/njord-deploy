@@ -1,0 +1,12 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# file: component_templates/traefik/template-config/tls.template.yml
+# This file provides TLS configuration for Traefik with self-signed certificates.
+{%- if TRAEFIK_CERTIFICATE_METHOD == 'self-signed' -%}
+tls:
+  certificates:
+    - certFile: "/etc/traefik/certs/self-signed.crt"
+      keyFile: "/etc/traefik/certs/self-signed.key"
+{%- endif -%}

@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Step 2: Select Components - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Step 2: Select Components</h1>
+    <p>Select the services you want to install on your Raspberry Pi at <strong>{{ pi_ip }}</strong>.</p>
+
+    <form action="/save-and-install" method="post" id="component-form">
+        {% for group_name, component_list in grouped_components.items() %}
+            <div class="component-group">
+                <h3>{{ group_name }}</h3>
+                {% for component in component_list %}
+                    <div class="pi-item">
+                        <label>
+                            <input type="checkbox" name="components" value="{{ component.id }}"
+                                   data-component-id="{{ component.id }}"
+                                   {% if component.data.uniqueness_group %}data-uniqueness-group="{{ component.data.uniqueness_group }}"{% endif %}
+                                   {% if component.id in default_components %}checked{% endif %}>
+                            <strong>{{ component.data.name }}</strong>
+                        </label>
+                        <p style="margin-left: 25px; font-size: 0.9em; color: #555;">{{ component.data.description }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="credentials-section" style="margin-top: 2em; padding-top: 1em; border-top: 1px solid #eee;">
+            <h3>SSH Credentials</h3>
+            <p>These credentials are used for the installation and will be stored securely on the Pi.</p>
+            <div class="form-group">
+                <label for="ssh_user">SSH Username</label>
+                <input type="text" id="ssh_user" name="ssh_user" value="pi" required>
+            </div>
+            <div class="form-group">
+                <label for="ssh_pass">SSH Password</label>
+                <input type="password" id="ssh_pass" name="ssh_pass" required>
+            </div>
+        </div>
+
+        <button type="submit" style="margin-top: 1em; width: 100%; padding: 1em;">Save and Proceed to Installation</button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('component-form');
+        const checkboxes = form.querySelectorAll('input[type="checkbox"][data-uniqueness-group]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', (event) => {
+                const target = /** @type {HTMLInputElement} */ (event.target);
+                if (!target.checked) {
+                    return; // Only enforce rules when checking a box
+                }
+
+                // Mitigation: getAttribute avoids PyCharm's dataset camelCase unresolved variable warning
+                const uniquenessGroup = target.getAttribute('data-uniqueness-group');
+                if (!uniquenessGroup) {
+                    return;
+                }
+
+                // Uncheck all other boxes in the same uniqueness group
+                checkboxes.forEach(otherCheckbox => {
+                    const otherInput = /** @type {HTMLInputElement} */ (otherCheckbox);
+                    if (otherInput !== target && otherInput.getAttribute('data-uniqueness-group') === uniquenessGroup) {
+                        otherInput.checked = false;
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

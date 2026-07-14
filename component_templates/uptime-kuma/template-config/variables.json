@@ -1,0 +1,22 @@
+{
+    "variables": [
+        {
+            "default": "3001",
+            "description": "The external port to access the Uptime Kuma web interface. The internal port is 3001.",
+            "id": "UPTIME_KUMA_WEB_PORT",
+            "label": "Uptime Kuma Web Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/uptime-kuma/data",
+            "description": "The host machine path where Uptime Kuma's configuration data will be stored.",
+            "id": "UPTIME_KUMA_DATA_PATH",
+            "label": "Uptime Kuma Data Path",
+            "required": "",
+            "source": "",
+            "type": "path"
+        }
+    ]
+}

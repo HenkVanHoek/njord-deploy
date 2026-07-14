@@ -1,0 +1,22 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# templates/mosquitto/docker-compose.template.yml
+services:
+  mosquitto:
+    image: eclipse-mosquitto:{{ component_version }}
+    container_name: njorddeploy-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+    - "{{DATA_ROOT}}/mosquitto/config:/mosquitto/config"
+    - "{{DATA_ROOT}}/mosquitto/data:/mosquitto/data"
+    - "{{DATA_ROOT}}/mosquitto/log:/mosquitto/log"
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

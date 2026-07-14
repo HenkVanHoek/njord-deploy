@@ -1,0 +1,20 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  web-notepad:
+    container_name: njorddeploy-web-notepad
+    image: pajikos/minimalist-web-notepad:{{ component_version }}
+    restart: unless-stopped
+    ports:
+      - "8083:80"
+    volumes:
+      - "{{DATA_ROOT}}/web-notepad/storage:/var/www/html/_storage"
+    # This simple image does not need PUID/PGID or extra_hosts
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

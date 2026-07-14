@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "8096",
+            "description": "The external HTTP port to access the Jellyfin web interface.",
+            "id": "JELLYFIN_WEB_PORT",
+            "label": "Jellyfin Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,27 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  sabnzbd:
+    image: lscr.io/linuxserver/sabnzbd:{{ component_version }}
+    container_name: njorddeploy-sabnzbd
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/sabnzbd/config:/config"
+      # This is the central downloads folder
+      - "{{ CONFIG_BASE_PATH }}/downloads:/downloads"
+      # Optional: for incomplete downloads
+      - "{{ CONFIG_BASE_PATH }}/downloads/incomplete:/incomplete-downloads"
+    ports:
+      - "{{ SABNZBD_WEB_PORT | default('8086') }}:8080"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

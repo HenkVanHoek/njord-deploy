@@ -1,0 +1,49 @@
+{
+    "variables": [
+        {
+            "default": "",
+            "description": "The main domain name for your Prosody server (e.g., example.com)",
+            "id": "XMPP_DOMAIN",
+            "label": "Domain Name",
+            "required": "clean-install",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "admin",
+            "description": "The JID for the Admin User.",
+            "id": "XMPP_ADMIN_USER",
+            "label": "Admin Username",
+            "required": "clean-install",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "",
+            "description": "The password for the administrator account. This will be securely stored in the configuration.",
+            "id": "XMPP_ADMIN_PASSWORD",
+            "label": "Admin Password",
+            "required": "clean-install",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "conference",
+            "description": "The subdomain used for group chats. This value needs to be added as an A or CNAME record for your domain.",
+            "id": "XMPP_MUC_PREFIX",
+            "label": "MUC Subdomain",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "upload",
+            "description": "The subdomain used for file sharing. This value needs to be added as an A or CNAME record for your domain.",
+            "id": "XMPP_UPLOAD_PREFIX",
+            "label": "Upload Subdomain",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

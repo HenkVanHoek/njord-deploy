@@ -1,0 +1,27 @@
+# status: "tested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  portainer:
+    # --- DEFINITIVE FIX: Rely on the context for the version tag ---
+    image: portainer/portainer-ce:lts
+    container_name: njorddeploy-portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    ports:
+      # --- DEFINITIVE FIX: Remove redundant defaults; rely on the context ---
+      - "{{ PORTAINER_WEB_PORT }}:9443"
+      - "{{ PORTAINER_EDGE_PORT }}:8000"
+    networks:
+      - njorddeploy_net
+
+volumes:
+  portainer_data:
+    name: njorddeploy-portainer-data
+
+networks:
+  njorddeploy_net:
+    external: true

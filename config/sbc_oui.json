@@ -1,0 +1,28 @@
+{
+  "vendors": {
+    "Raspberry Pi": [
+      "28:cd:c1",
+      "2c:cf:67",
+      "3a:35:41",
+      "7c:d3:0a",
+      "b8:27:eb",
+      "dc:a6:32",
+      "d8:3a:dd",
+      "e4:5f:01"
+    ],
+    "Pine64": [
+      "00:06:dc"
+    ],
+    "Hardkernel (ODROID)": [
+      "00:1e:06"
+    ],
+    "Orange Pi (Shenzhen Xunlong)": [
+      "cc:7b:35",
+      "80:c0:3b",
+      "c8:27:a7"
+    ],
+    "Radxa": [
+      "ac:ca:54"
+    ]
+  }
+}

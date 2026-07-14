@@ -1,0 +1,41 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:{{ component_version }}
+    container_name: njorddeploy-jellyfin
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+      # Optional: Set the public URL if you use a reverse proxy
+      # - "JELLYFIN_PublishedServerUrl={{DOMAIN}}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/jellyfin/config:/config"
+      # --- IMPORTANT ---
+      # Add your media library paths here.
+      # The path on the left is on your Raspberry Pi (host).
+      # The path on the right is how it appears inside Jellyfin (container).
+      - "{{ CONFIG_BASE_PATH }}/jellyfin/movies:/data/movies"
+      - "{{ CONFIG_BASE_PATH }}/jellyfin/tvshows:/data/tvshows"
+    ports:
+      - "{{ JELLYFIN_WEB_PORT | default('8096') }}:8096" # Web UI
+      - "8920:8920" # Optional: HTTPS, if you configure it in Jellyfin
+      - "7359:7359/udp" # Optional: For device discovery
+      - "1900:1900/udp" # Optional: For DLNA service
+    # --- Optional: Hardware Acceleration for Raspberry Pi ---
+    # Uncomment the following lines for better performance on a Pi 4/5
+    # devices:
+    #   - /dev/vchiq:/dev/vchiq
+    #   - /dev/video10:/dev/video10
+    #   - /dev/video11:/dev/video11
+    #   - /dev/video12:/dev/video12
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

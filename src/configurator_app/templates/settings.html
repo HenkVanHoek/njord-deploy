@@ -1,0 +1,338 @@
+<!-- src/configurator_app/templates/settings.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjordDeploy System Settings</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/configurator.css') }}?v=1.0">
+    <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
+    <style>
+        .settings-card {
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            transition: all 0.2s ease-in-out;
+        }
+        .settings-card:hover {
+            box-shadow: 0 6px 16px rgba(0,0,0,0.04);
+        }
+        .raw-textarea {
+            font-family: 'Fira Code', 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 6px;
+            border: 1px solid #3c3c3c;
+            padding: 15px;
+            min-height: 500px;
+        }
+        .raw-textarea:focus {
+            background-color: #1e1e1e;
+            color: #ffffff;
+            border-color: #007acc;
+            box-shadow: 0 0 8px rgba(0, 122, 204, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}"
+                 alt="NjordDeploy Logo"
+                 width="32"
+                 height="32"
+                 class="d-inline-block align-text-top me-3 rounded">
+            NjordDeploy Settings
+        </a>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa-solid fa-palette me-1"></i> Theme
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="themeDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
+                        <li><button class="dropdown-item" data-theme-value="futuristic-dark">Futuristic Dark</button></li>
+                        <li><button class="dropdown-item" data-theme-value="light">Standard Light</button></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--glass-border);"></li>
+                        <li><button class="dropdown-item" data-theme-value="high-contrast-dark">High Contrast Dark</button></li>
+                        <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="/"><i class="fa-solid fa-arrow-left me-1"></i> Back to Wizard</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-4" style="max-width: 1200px;">
+    <!-- Alert box for success/error messages -->
+    <div id="feedback-alert" class="alert alert-success d-none shadow-sm mb-4" role="alert"></div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white border-bottom py-3">
+            <ul class="nav nav-tabs card-header-tabs" id="settings-tab-list" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" id="form-tab" data-bs-toggle="tab" data-bs-target="#form-pane" type="button" role="tab">
+                        <i class="fa-solid fa-sliders me-2"></i> Configuration Form
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="raw-tab" data-bs-toggle="tab" data-bs-target="#raw-pane" type="button" role="tab">
+                        <i class="fa-solid fa-code me-2"></i> Edit Raw .env File
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="tab-content" id="settings-tab-content">
+
+                <!-- Form Configuration Pane -->
+                <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
+                    <form id="settings-form" class="row g-4">
+
+                        <!-- Section: Proxmox VE Integration -->
+                        <div class="col-12">
+                            <div class="card settings-card bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Proxmox VE Integration</h5>
+                                    <p class="text-muted small mb-4">Provide credentials to dynamically provision and build LXC containers directly on Proxmox VE nodes.</p>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="PROXMOX_HOST" class="form-label small fw-bold">Proxmox Host URL</label>
+                                            <input type="text" class="form-control" id="PROXMOX_HOST" value="{{ env_vars.get('PROXMOX_HOST', 'https://192.168.178.51:8006') }}" placeholder="https://<ip>:8006">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="PROXMOX_USER" class="form-label small fw-bold">API User</label>
+                                            <input type="text" class="form-control" id="PROXMOX_USER" value="{{ env_vars.get('PROXMOX_USER', 'root@pam') }}" placeholder="root@pam">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="PROXMOX_TOKEN_ID" class="form-label small fw-bold">API Token ID</label>
+                                            <input type="text" class="form-control" id="PROXMOX_TOKEN_ID" value="{{ env_vars.get('PROXMOX_TOKEN_ID', '') }}" placeholder="user@pam!tokenname">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="PROXMOX_TOKEN_SECRET" class="form-label small fw-bold">API Token Secret</label>
+                                            <input type="password" class="form-control" id="PROXMOX_TOKEN_SECRET" value="{{ env_vars.get('PROXMOX_TOKEN_SECRET', '') }}" placeholder="••••••••••••••••••••••••••••••••">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="PROXMOX_NODE" class="form-label small fw-bold">Default Target Node</label>
+                                            <input type="text" class="form-control" id="PROXMOX_NODE" value="{{ env_vars.get('PROXMOX_NODE', 'pve') }}" placeholder="pve">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Host & Network Defaults -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-network-wired me-2"></i> Host &amp; Network Defaults</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="DOMAIN" class="form-label small fw-bold">Base Domain</label>
+                                            <input type="text" class="form-control" id="DOMAIN" value="{{ env_vars.get('DOMAIN', 'njorddeploy.com') }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="TZ" class="form-label small fw-bold">System Timezone</label>
+                                            <input type="text" class="form-control" id="TZ" value="{{ env_vars.get('TZ', 'Europe/Amsterdam') }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="ADMIN_EMAIL" class="form-label small fw-bold">Administrator Email</label>
+                                            <input type="email" class="form-control" id="ADMIN_EMAIL" value="{{ env_vars.get('ADMIN_EMAIL', 'admin@example.com') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Pi Discovery & Credentials -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-server me-2"></i> Raspberry Pi Discovery</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="PI_SCANNER_USERNAME" class="form-label small fw-bold">Scanner SSH Username</label>
+                                            <input type="text" class="form-control" id="PI_SCANNER_USERNAME" value="{{ env_vars.get('PI_SCANNER_USERNAME', 'dummy') }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="PI_SCANNER_PASSWORD" class="form-label small fw-bold">Scanner SSH Password</label>
+                                            <input type="password" class="form-control" id="PI_SCANNER_PASSWORD" value="{{ env_vars.get('PI_SCANNER_PASSWORD', 'dummy') }}">
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="PUID" class="form-label small fw-bold">Docker PUID</label>
+                                            <input type="text" class="form-control" id="PUID" value="{{ env_vars.get('PUID', '1000') }}">
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="PGID" class="form-label small fw-bold">Docker PGID</label>
+                                            <input type="text" class="form-control" id="PGID" value="{{ env_vars.get('PGID', '1000') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Database Defaults -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-database me-2"></i> Database Defaults</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="DB_USER" class="form-label small fw-bold">Default DB User</label>
+                                            <input type="text" class="form-control" id="DB_USER" value="{{ env_vars.get('DB_USER', 'njorddeploy_user') }}">
+                                        </div>
+                                        <div class="col-12">
+                                            <label for="DB_PASS" class="form-label small fw-bold">Default DB Password</label>
+                                            <input type="password" class="form-control" id="DB_PASS" value="{{ env_vars.get('DB_PASS', 'secure_password') }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: AI Assistant API Integration -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-brain me-2"></i> AI Assistant Integration</h5>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="GEMINI_API_KEY" class="form-label small fw-bold">Gemini API Key</label>
+                                            <input type="password" class="form-control" id="GEMINI_API_KEY" value="{{ env_vars.get('GEMINI_API_KEY', '') }}" placeholder="AIzaSy...">
+                                            <div class="form-text small mt-1">Used by the component editor to generate software profiles automatically.</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Area -->
+                        <div class="col-12 text-center mt-4">
+                            <button type="button" id="save-form-btn" class="btn btn-primary btn-lg px-5">
+                                <i class="fa-solid fa-floppy-disk me-2"></i> Save Configuration
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Raw Textarea Pane -->
+                <div class="tab-pane fade" id="raw-pane" role="tabpanel" aria-labelledby="raw-tab">
+                    <div class="mb-3">
+                        <label for="raw_content_input" class="form-label small fw-bold text-muted">Directly Edit .env Content</label>
+                        <textarea class="form-control raw-textarea" id="raw_content_input" spellcheck="false" autocomplete="off">{{ raw_content }}</textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" id="save-raw-btn" class="btn btn-danger btn-lg px-5">
+                            <i class="fa-solid fa-file-code me-2"></i> Save Raw File
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const saveFormBtn = document.getElementById("save-form-btn");
+        const saveRawBtn = document.getElementById("save-raw-btn");
+        const alertBox = document.getElementById("feedback-alert");
+
+        const showAlert = (message, type = "success") => {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type} shadow-sm mb-4`;
+            alertBox.classList.remove("d-none");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            setTimeout(() => {
+                alertBox.classList.add("d-none");
+            }, 5000);
+        };
+
+        // Handle Save Form Settings
+        saveFormBtn.addEventListener("click", async () => {
+            saveFormBtn.disabled = true;
+            const originalHtml = saveFormBtn.innerHTML;
+            saveFormBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
+
+            const payload = {};
+            const inputs = document.querySelectorAll("#settings-form input");
+            inputs.forEach(input => {
+                if (input.value.trim()) {
+                    payload[input.id] = input.value.trim();
+                }
+            });
+
+            try {
+                const response = await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: "form", settings: payload })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert(result.message || "Settings updated and reloaded successfully!");
+                    // Refresh raw view
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(result.error || "Failed to save settings.", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert("An unexpected network error occurred.", "danger");
+            } finally {
+                saveFormBtn.disabled = false;
+                saveFormBtn.innerHTML = originalHtml;
+            }
+        });
+
+        // Handle Save Raw File Settings
+        saveRawBtn.addEventListener("click", async () => {
+            saveRawBtn.disabled = true;
+            const originalHtml = saveRawBtn.innerHTML;
+            saveRawBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
+
+            const rawVal = document.getElementById("raw_content_input").value;
+
+            try {
+                const response = await fetch("/api/settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: "raw", raw_content: rawVal })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showAlert("Raw .env file saved and reloaded successfully!");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showAlert(result.error || "Failed to save raw .env.", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showAlert("An unexpected network error occurred.", "danger");
+            } finally {
+                saveRawBtn.disabled = false;
+                saveRawBtn.innerHTML = originalHtml;
+            }
+        });
+    });
+</script>
+</body>
+</html>

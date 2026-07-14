@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Step 3: Ready to Install - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align: center;">
+    <h1>✔️ Configuration Saved!</h1>
+    <p>Your component selections and credentials have been successfully saved. The next step is to run the automated installation on your Raspberry Pi.</p>
+
+    <div class="summary" style="margin: 2em auto; padding: 1em; border: 1px solid #e0e0e0; border-radius: 5px; background-color: #fafafa; max-width: 600px;">
+        <h3>Installation Summary</h3>
+        <p><strong>Target Pi IP:</strong> {{ pi_ip }}</p>
+        <p><strong>Selected Components:</strong></p>
+        <ul style="list-style-type: none; padding: 0;">
+            {% for component in components %}
+                <li>{{ component }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <p style="font-weight: bold;">Click the button below to start the installation.</p>
+    <a href="{{ url_for('live_log') }}" class="button" style="display: inline-block; text-decoration: none; background-color: #27ae60; padding: 1em 2em; font-size: 1.2em;">
+        🚀 Start Installation
+    </a>
+
+    <div class="notice" style="margin-top: 2em; font-size: 0.9em; color: #555;">
+        <p>Please keep this browser window open during the installation process to see the live progress.</p>
+    </div>
+</div>
+{% endblock %}

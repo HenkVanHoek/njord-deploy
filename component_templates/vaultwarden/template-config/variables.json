@@ -1,0 +1,40 @@
+{
+    "variables": [
+        {
+            "default": "true",
+            "description": "Set to 'true' to allow new users to register, or 'false' to disable registration.",
+            "id": "SIGNUPS_ALLOWED",
+            "label": "Signups Allowed",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "true",
+            "description": "Set to 'true' to enable the web-based vault interface.",
+            "id": "WEB_VAULT_ENABLED",
+            "label": "Web access port enabled",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "8088",
+            "description": "The external TCP port for the Vaultwarden web interface.",
+            "id": "VAULTWARDEN_WEB_PORT",
+            "label": "Vaultwarden Web UI Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "{{ DOTENV.VAULTWARDEN_ADMIN_TOKEN }}",
+            "description": "Secure hashed token for the admin panel. Generate one via `docker exec -it vaultwarden ./vaultwarden hash`. For maximum security, leave this blank in your .env file to disable the admin panel entirely.",
+            "id": "VAULTWARDEN_ADMIN_TOKEN",
+            "label": "Admin Token",
+            "required": "",
+            "source": "dotenv",
+            "type": "password"
+        }
+    ]
+}

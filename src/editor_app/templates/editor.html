@@ -1,0 +1,815 @@
+<!-- src/editor_app/templates/editor.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NjordDeploy Component Editor</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/introjs.min.css" rel="stylesheet">
+    <link href="/static/css/njorddeploy-style.css?v=1.3" rel="stylesheet">
+    <script src="{{ url_for('static', filename='accessibility.js') }}?v=1.2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/monokai.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.css">
+    <style>
+        body, html { height: 100%; overflow: hidden; }
+        .main-container { display: flex; height: 100vh; padding-top: 56px; }
+        .sidebar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-right: 1px solid var(--glass-border) !important;
+            padding: 1rem;
+            width: 280px;
+            min-width: 200px;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: hidden;
+        }
+        .sidebar-header { flex-shrink: 0; }
+        #component-list { overflow-y: auto; flex-grow: 1; }
+        .content { flex-grow: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; }
+        #feedback-alert { position: fixed; top: 70px; right: 20px; z-index: 1050; }
+        #editor-wrapper { border: 1px solid var(--glass-border); border-radius: 0.25rem; flex-grow: 1; position: relative; }
+        /*noinspection CssUnusedSymbol*/
+        #editor-wrapper.drag-over { border: 2px dashed var(--brand-blue); background-color: rgba(0, 176, 255, 0.05); }
+        .resizer {
+            flex-shrink: 0;
+            width: 5px;
+            background-color: rgba(255, 255, 255, 0.05);
+            cursor: col-resize;
+            border-right: 1px solid var(--glass-border);
+        }
+        .resizer:hover { background-color: #0d6efd; }
+        /*noinspection CssUnusedSymbol*/
+        .group-header-exclusive { background-color: #fdf8e3; border-left: 4px solid #f0ad4e; }
+        /*noinspection CssUnusedSymbol*/
+        .nav-link.tab-dirty {
+            background-color: #f8d7da !important;
+            color: #58151c !important;
+            transition: background-color 0.2s ease-in-out;
+        }
+           /* Styling for the View Switcher (Groups/Packages) */
+        #view-tabs {
+            background-color: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid var(--glass-border) !important;
+            padding: 3px;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        #view-tabs .nav-link {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #cbd5e1 !important;
+            background: transparent !important;
+            border: none !important;
+            text-align: center !important;
+            margin-bottom: 0 !important;
+            border-radius: 0.375rem !important;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #view-tabs .nav-link:hover {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        #view-tabs .nav-link.active {
+            background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        /* Specific styling for Package headers in the sidebar */
+        /*noinspection CssUnusedSymbol*/
+        .group-header[data-group-id^="pkg-"] {
+            background-color: #e7f1ff;
+            border-left: 4px solid #0d6efd;
+            color: #084298;
+        }
+
+        /* Helper for empty sections */
+        .italic {
+            font-style: italic;
+        }
+
+        #git-diff-modal .modal-content {
+            resize: both;
+            overflow: auto;
+            min-width: 600px;
+            min-height: 400px;
+        }
+
+        .group-header .bi-chevron-down {
+            transition: transform 0.2s ease;
+        }
+        .group-header.collapsed .bi-chevron-down {
+            transform: rotate(-90deg);
+        }
+        .list-group-item {
+            background-color: transparent !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+        .list-group-item:hover {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+        }
+        .list-group-item.active {
+            background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+            color: #ffffff !important;
+            border-color: transparent !important;
+        }
+        .modal-content {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--glass-border) !important;
+            box-shadow: var(--glass-shadow) !important;
+            color: #cbd5e1 !important;
+        }
+        .modal-header, .modal-footer {
+            border-color: var(--glass-border) !important;
+        }
+        .btn-close {
+            filter: invert(1) grayscale(1) brightness(2);
+        }
+        .table {
+            color: #cbd5e1 !important;
+        }
+        .table th, .table td {
+            border-color: var(--glass-border) !important;
+        }
+        code {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+            color: var(--brand-blue) !important;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        /* Custom Dark/Neon Styling for Intro.js Tour Popups */
+        .introjs-tooltip {
+            background: rgba(15, 23, 42, 0.95) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid var(--brand-blue) !important;
+            box-shadow: 0 0 20px rgba(0, 176, 255, 0.25) !important;
+            border-radius: 12px !important;
+            color: #cbd5e1 !important;
+            min-width: 320px !important;
+        }
+
+        .introjs-tooltip-title {
+            color: #ffffff !important;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+        }
+
+        .introjs-tooltiptext {
+            color: #cbd5e1 !important;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* Buttons Styling inside Intro.js Tooltip */
+        .introjs-button {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #cbd5e1 !important;
+            text-shadow: none !important;
+            border-radius: 6px !important;
+            font-weight: 500 !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        .introjs-button:hover {
+            background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+            border-color: transparent !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(0, 176, 255, 0.4) !important;
+        }
+
+        .introjs-disabled {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            border-color: rgba(255, 255, 255, 0.05) !important;
+            color: #475569 !important;
+            opacity: 0.5;
+        }
+
+        /* Progress Bar Styling */
+        .introjs-progress {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            border-radius: 4px !important;
+        }
+
+        .introjs-progressbar {
+            background: linear-gradient(90deg, var(--brand-blue), #00e676) !important;
+            box-shadow: 0 0 8px rgba(0, 176, 255, 0.5) !important;
+        }
+
+        /* Skip Button Styling */
+        .introjs-skipbutton {
+            color: #94a3b8 !important;
+        }
+        .introjs-skipbutton:hover {
+            color: #f1f5f9 !important;
+        }
+
+        /* Tooltip Arrows Styling */
+        .introjs-arrow.top {
+            border-bottom-color: rgba(15, 23, 42, 0.95) !important;
+        }
+        .introjs-arrow.bottom {
+            border-top-color: rgba(15, 23, 42, 0.95) !important;
+        }
+        .introjs-arrow.left {
+            border-right-color: rgba(15, 23, 42, 0.95) !important;
+        }
+        .introjs-arrow.right {
+            border-left-color: rgba(15, 23, 42, 0.95) !important;
+        }
+
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="https://njorddeploy.com" target="_blank">
+            <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}" alt="NjordDeploy Logo" width="30" height="30" class="me-2">
+            NjordDeploy Component Editor
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-palette me-1"></i> Theme
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="themeDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
+                        <li><button class="dropdown-item" data-theme-value="futuristic-dark">Futuristic Dark</button></li>
+                        <li><button class="dropdown-item" data-theme-value="light">Standard Light</button></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--glass-border);"></li>
+                        <li><button class="dropdown-item" data-theme-value="high-contrast-dark">High Contrast Dark</button></li>
+                        <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link d-flex align-items-center" href="#" id="git-sync-btn"><i class="bi bi-git me-1"></i> Git Sync<span id="git-sync-badge" class="badge bg-danger ms-1 d-none" title="Globale metadata niet gepusht">!</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="git-upload-btn" title="Read-only: Checking permissions..." data-bs-toggle="tooltip"><i class="bi bi-cloud-arrow-up"></i> Upload to Repo</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn"><i class="bi bi-compass"></i> Quick Tour</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njorddeploy/wiki" target="_blank" id="help-link"><i class="bi bi-question-circle"></i> Help</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njord-deploy" target="_blank"><i class="bi bi-github"></i> GitHub</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njord-deploy/releases" target="_blank"><i class="bi bi-tag"></i> Releases</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div id="feedback-alert" role="alert"></div>
+
+<div class="main-container">
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h4>Components</h4>
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-sm btn-outline-primary me-1" id="expand-all-btn" title="Expand All"><i class="bi bi-chevron-double-down"></i></button>
+                    <button class="btn btn-sm btn-outline-primary me-2" id="collapse-all-btn" title="Collapse All"><i class="bi bi-chevron-double-up"></i></button>
+                    <button class="btn btn-sm btn-outline-secondary" id="manage-groups-btn" title="Manage Groups"><i class="bi bi-gear"></i></button>
+                    <button class="btn btn-sm btn-outline-info ms-1" id="manage-packages-btn" title="Manage Packages">
+                        <i class="bi bi-box-seam"></i>
+                    </button>
+                </div>
+            </div>
+            <hr>
+            <div class="d-grid gap-2 mb-3">
+                <button class="btn btn-primary" id="create-new-btn">Create New Component</button>
+                <button class="btn btn-outline-primary" id="create-new-ai-btn"><i class="bi bi-cpu"></i> Create with AI</button>
+                <button class="btn btn-success" id="git-upload-sidebar-btn" title="Read-only: Checking permissions..." data-bs-toggle="tooltip"><i class="bi bi-cloud-arrow-up"></i> Upload to Repo</button>
+            </div>
+            <div id="sidebar-controls" class="mb-3">
+                <div class="nav nav-pills nav-fill mb-2" id="view-tabs" role="tablist">
+                    <button class="nav-link active py-1" id="view-groups-tab" data-view="groups" type="button">Groups</button>
+                    <button class="nav-link py-1" id="view-packages-tab" data-view="packages" type="button">Packages</button>
+                </div>
+            </div>
+        </div>
+        <div class="list-group" id="component-list"></div>
+    </div>
+    <div class="resizer" id="drag-handle"></div>
+    <div class="content" id="editor-pane">
+        <div class="text-center text-muted h-100 d-flex flex-column justify-content-center align-items-center" id="placeholder-text">
+            <!-- Detailed startup Quickstart Onboarding Guide -->
+            <div id="welcome-detailed-guide" class="text-start w-100 p-4 d-none" style="max-width: 850px; margin: 0 auto; overflow-y: auto;">
+                <h3 class="mb-3 d-flex align-items-center">
+                    <i class="bi bi-rocket-takeoff-fill text-primary me-2"></i> Quick Start &amp; Concept Guide
+                </h3>
+                <p class="lead mb-4">
+                    Welcome to the NjordDeploy Component Editor! This workspace is used to customize the software stacks running on your target server.
+                </p>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-primary"><i class="bi bi-cpu me-2"></i> Components</h5>
+                                <p class="card-text small text-muted">
+                                    The atomic building blocks of your system. Each represents a single self-hosted service (e.g. Pi-hole, Nextcloud, AdGuard) containing direct Docker Compose definitions, variables, and packaging rules.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning"><i class="bi bi-box-seam me-2"></i> Packages</h5>
+                                <p class="card-text small text-muted">
+                                    Logical stacks consisting of grouped components. Perfect for designing coherent Multi-Container system architectures (like nextcloud stacks or database structures).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-success"><i class="bi bi-braces me-2"></i> Macros &amp; Variables</h5>
+                                <p class="card-text small text-muted">
+                                    Inject portable properties into your compose templates dynamically. Use <code>{% raw %}{{ CONFIG_BASE_PATH }}{% endraw %}</code> to declare clean local file systems, and <code>{% raw %}{{ DOTENV.YOUR_ENV_VAR }}{% endraw %}</code> to reference global environment configs safely.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-danger"><i class="bi bi-shield-lock-fill me-2"></i> Traefik SSL Routing</h5>
+                                <p class="card-text small text-muted">
+                                    Enable the "Has Traefik Support" switch to automatically inject secure HTTPS loadbalancer routing rules. No complex proxy labels are needed inside compose.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> AI Component Bootstrap</h5>
+                                <p class="card-text small text-muted">
+                                    Generate new components automatically via Google Gemini. Click "Create with AI" at the top of the sidebar, enter a GitHub repository URL with optional custom instructions, and Gemini will bootstrap the configuration templates, variables, and metadata.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 rounded d-flex justify-content-between align-items-center shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="hide-onboarding-checkbox">
+                        <label class="form-check-label small text-muted" for="hide-onboarding-checkbox">
+                            Don't show this onboarding guide on startup
+                        </label>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm me-3" id="start-tour-btn">
+                            <i class="bi bi-compass"></i> Start Interactive Tour
+                        </button>
+                        <span class="small text-secondary italic">Select a component to begin editing.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Minimal welcome text fall back -->
+            <div id="welcome-minimal" class="text-center d-none">
+                <h4>Welcome to the Component Editor</h4>
+                <p class="lead">Select a component from the list to begin editing its metadata, variables, and template.</p>
+                <button class="btn btn-link btn-sm text-decoration-none" id="show-onboarding-link">
+                    <i class="bi bi-info-circle"></i> Show Quick Start Guide
+                </button>
+                <button class="btn btn-link btn-sm text-decoration-none ms-3" id="start-tour-minimal-btn">
+                    <i class="bi bi-compass"></i> Start Interactive Tour
+                </button>
+            </div>
+        </div>
+        <div id="editor-content" class="d-none h-100 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 id="editor-title"></h3>
+                <div class="d-flex align-items-center" id="editor-actions">
+                    <button class="btn btn-outline-info btn-sm me-3" id="generate-hash-btn" title="Generate Secure Hash for Basic Auth" data-bs-toggle="modal" data-bs-target="#hashGeneratorModal">
+                        <i class="bi bi-lock"></i> Generate Hash
+                    </button>
+                    <label for="theme-selector" class="form-label me-2 mb-0">Theme:</label>
+                    <select class="form-select form-select-sm" id="theme-selector" style="width: auto;">
+                        <option value="material-darker">Material Darker</option>
+                        <option value="monokai">Monokai</option>
+                        <option value="dracula">Dracula</option>
+                        <option value="solarized light">Solarized Light</option>
+                    </select>
+                    <button class="btn btn-outline-warning btn-sm me-3" id="component-sync-btn" title="Sync / Diff with Repo">
+                        <i class="bi bi-git"></i> Sync &amp; Diff
+                    </button>
+                    <button class="btn btn-outline-secondary ms-3 d-none" id="discard-changes-btn"><i class="bi bi-arrow-counterclockwise"></i> Discard Changes</button>
+                    <button class="btn btn-primary ms-2" id="save-changes-btn"><i class="bi bi-save"></i> Save All Changes</button>
+                    <button class="btn btn-danger ms-2" id="delete-component-btn"><i class="bi bi-trash"></i> Delete Component</button>
+                </div>
+            </div>
+            <hr>
+            <ul class="nav nav-tabs" id="editorTabs" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#metadata-pane">Core Metadata</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#variables-pane">User Variables</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#template-pane">Docker Compose Template Editor</button></li>
+            </ul>
+            <div class="tab-content pt-3 d-flex flex-column flex-grow-1" id="editorTabsContent">
+                <div class="tab-pane fade show active" id="metadata-pane"></div>
+                <div class="tab-pane fade" id="variables-pane">
+                    <div class="alert alert-info small">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <strong>Hint:</strong> The <strong>Default Value</strong> field supports special macros.
+                        {% raw %}
+                        Use <code>{{ CONFIG_BASE_PATH }}/your-path</code> for portable data paths, and
+                        <code>{{ DOTENV.YOUR_GLOBAL_VAR }}</code> to bind the value to the user <strong>.env</strong> file.
+                        {% endraw %}
+                        <a href="https://github.com/HenkVanHoek/njord-deploy/blob/main/docs/ARCHITECTURE.md#25-the-variable-and-macro-system" target="_blank" class="alert-link">Learn More</a>.
+                    </div>
+                    <div id="variables-list" class="mt-3"></div>
+                    <button class="btn btn-secondary mt-3" id="add-variable-btn"><i class="bi bi-plus-circle"></i> Add New Variable</button>
+                </div>
+                <div class="tab-pane fade d-flex flex-column flex-grow-1" id="template-pane">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-sm btn-outline-success me-2" id="add-header-btn"><i class="bi bi-file-earmark-plus"></i> Add NjordDeploy Header</button>
+                        <button class="btn btn-sm btn-outline-info me-2" id="validate-template-btn"><i class="bi bi-check-circle"></i> Validate Template</button>
+                        <button class="btn btn-sm btn-outline-secondary" id="import-template-btn"><i class="bi bi-upload"></i> Import from File</button>
+                        <input type="file" id="template-file-input" accept=".yml,.yaml,.txt" style="display: none;" aria-label="Import template file">
+                    </div>
+                    <div id="editor-wrapper">
+                        <label for="template-editor" class="visually-hidden">Docker Compose Template Editor</label>
+                        <textarea id="template-editor"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage-packages-modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> Manage Packages</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3 border-bottom pb-3">
+                    <h6>Create New Package</h6>
+                    <div class="input-group">
+                        <input type="text" id="new-pkg-id" class="form-control form-control-sm" placeholder="ID (e.g., nextcloud-stack)" aria-label="Package ID">
+                        <input type="text" id="new-pkg-name" class="form-control form-control-sm" placeholder="Display Name" aria-label="Package Display Name">
+                        <button class="btn btn-primary btn-sm" id="create-pkg-submit">Create</button>
+                    </div>
+                </div>
+                <div id="manage-packages-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="create-component-modal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createModalLabel">Create New Component</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="create-component-form">
+                    <div class="mb-3">
+                        <label for="new-component-id-input" class="form-label">Component ID</label>
+                        <input type="text" class="form-control" id="new-component-id-input" required placeholder="e.g., my-new-service">
+                        <div class="form-text">A unique identifier. Use lowercase letters, numbers, and hyphens only.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="new-component-name" class="form-label">Component Name</label>
+                        <input type="text" class="form-control" id="new-component-name" required placeholder="e.g., My New Service">
+                        <div class="form-text">A human-friendly display name.</div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Create Component</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ai-component-modal" tabindex="-1" aria-labelledby="aiModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="aiModalLabel"><i class="bi bi-cpu-fill text-primary"></i> Create Component with AI</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Step 1: Input Form -->
+                <div id="ai-input-step">
+                    <form id="ai-generator-form">
+                        <div class="mb-3">
+                            <label for="ai-repo-url" class="form-label">GitHub Repository URL</label>
+                            <input type="url" class="form-control" id="ai-repo-url" required placeholder="https://github.com/caddyserver/caddy">
+                            <div class="form-text">The official or community GitHub repository URL of the application.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ai-instructions" class="form-label">Custom Instructions (Optional)</label>
+                            <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ai-api-key" class="form-label">Gemini API Key</label>
+                            <input type="password" class="form-control" id="ai-api-key"
+                                   placeholder="{% if has_gemini_key %}Gemini API key is configured (leave blank to keep){% else %}Enter Gemini API key{% endif %}">
+                            <div class="form-text">
+                                {% if has_gemini_key %}
+                                The configured GEMINI_API_KEY from the .env file will be used if this is left blank.
+                                {% else %}
+                                An API key is required to use the AI component generator.
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="ai-save-key">
+                            <label class="form-check-label text-secondary small" for="ai-save-key">
+                                Save API key to local .env file
+                            </label>
+                        </div>
+                        <div class="modal-footer px-0 pb-0">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary" id="ai-generate-btn">Generate Component</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Step 2: Loading State -->
+                <div id="ai-loading-step" class="d-none text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="text-dark">Generating Component...</h5>
+                    <p class="text-muted">Analyzing GitHub repository and generating configuration files. This may take up to a minute.</p>
+                </div>
+
+                <!-- Step 3: Preview and Review -->
+                <div id="ai-preview-step" class="d-none">
+                    <p class="text-secondary">Please review the AI-generated metadata and files before registering the component.</p>
+                    <ul class="nav nav-tabs mb-3" id="ai-preview-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="ai-meta-tab" data-bs-toggle="tab" data-bs-target="#ai-tab-meta" type="button" role="tab">Metadata</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ai-compose-tab" data-bs-toggle="tab" data-bs-target="#ai-tab-compose" type="button" role="tab">Docker Compose</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ai-vars-tab" data-bs-toggle="tab" data-bs-target="#ai-tab-vars" type="button" role="tab">Variables</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ai-config-tab" data-bs-toggle="tab" data-bs-target="#ai-tab-config" type="button" role="tab">Configs</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="ai-preview-tab-content">
+                        <!-- Metadata Preview -->
+                        <div class="tab-pane fade show active" id="ai-tab-meta" role="tabpanel">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Name</label>
+                                    <input type="text" class="form-control" id="ai-preview-name" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Group</label>
+                                    <input type="text" class="form-control" id="ai-preview-group" readonly>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Description</label>
+                                    <textarea class="form-control" id="ai-preview-desc" rows="2" readonly></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Docker Image</label>
+                                    <input type="text" class="form-control" id="ai-preview-image" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Conflicts With</label>
+                                    <input type="text" class="form-control" id="ai-preview-conflicts" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Docker Compose Preview -->
+                        <div class="tab-pane fade" id="ai-tab-compose" role="tabpanel">
+                            <textarea class="form-control font-monospace" id="ai-preview-compose" rows="12" readonly style="font-size: 0.85rem; background-color: #f8f9fa;"></textarea>
+                        </div>
+                        <!-- Variables Preview -->
+                        <div class="tab-pane fade" id="ai-tab-vars" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Label</th>
+                                            <th>Type</th>
+                                            <th>Default</th>
+                                            <th>Description</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ai-preview-vars-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <!-- Other Configs Preview -->
+                        <div class="tab-pane fade" id="ai-tab-config" role="tabpanel">
+                            <div class="mb-2">
+                                <select class="form-select form-select-sm" id="ai-preview-config-selector"></select>
+                            </div>
+                            <textarea class="form-control font-monospace" id="ai-preview-config-content" rows="10" readonly style="font-size: 0.85rem; background-color: #f8f9fa;"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer px-0 pb-0 mt-3">
+                        <button type="button" class="btn btn-secondary" id="ai-back-btn">Back</button>
+                        <button type="button" class="btn btn-success" id="ai-save-btn">Accept and Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="manage-groups-modal" tabindex="-1" aria-labelledby="manageGroupsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="manageGroupsLabel">Manage Groups</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">You can edit group names or delete any group that has no components assigned to it.</p>
+                <ul class="list-group" id="manage-groups-list"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="unsavedChangesModalLabel"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Unsaved Changes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>You have unsaved changes. How would you like to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel Navigation</button>
+                <button type="button" class="btn btn-outline-danger" id="discard-and-continue-btn">Discard and Continue</button>
+                <button type="button" class="btn btn-primary" id="save-and-continue-btn">Save and Continue</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New Modal for Basic Auth Hash Generator -->
+<div class="modal fade" id="hashGeneratorModal" tabindex="-1" aria-labelledby="hashGeneratorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="hashGeneratorModalLabel"><i class="bi bi-lock"></i> Basic Auth Hash Generator</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small" role="alert">
+                    Generates a secure, bcrypt-hashed 'username:password' string suitable for any component using Basic Authentication middleware.
+                </div>
+                <form id="hash-generator-form">
+                    <div class="mb-3">
+                        <label for="hash-username" class="form-label">Username</label>
+                        <input type="text" class="form-control" id="hash-username" required value="admin">
+                    </div>
+                    <div class="mb-3">
+                        <label for="hash-password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="hash-password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="hash-password-confirm" class="form-label">Confirm Password</label>
+                        <input type="password" class="form-control" id="hash-password-confirm" required>
+                        <div class="invalid-feedback" id="password-match-feedback">Passwords do not match.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success" id="generate-hash-submit-btn">Generate Hash</button>
+                    </div>
+                </form>
+                <div class="mt-4" id="hash-result-area" style="display: none;">
+                    <label for="hash-output" class="form-label">Generated Hash String</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="hash-output" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copy-hash-btn" title="Copy to Clipboard">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                    <div class="form-text mt-2">
+                        {% raw %}
+                        **CRITICAL:** Copy this string, update your global `.env` file (e.g., as `TRAEFIK_DASHBOARD_USERS`), and then reference it in this variable field using the macro: <code>{{ DOTENV.YOUR_ENV_KEY }}</code>.
+                        {% endraw %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Git Sync Manager Modal -->
+<div class="modal fade" id="git-sync-modal" tabindex="-1" aria-labelledby="gitSyncModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gitSyncModalLabel"><i class="bi bi-git"></i> Git Sync Manager</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-primary btn-sm" id="git-fetch-btn">
+                        <i class="bi bi-arrow-clockwise"></i> Fetch / Check Status
+                    </button>
+                    <div>
+                        <button class="btn btn-success btn-sm me-2" id="git-sync-all-btn" disabled>
+                            <i class="bi bi-check-all"></i> Sync All to Local
+                        </button>
+                        <button class="btn btn-warning btn-sm" id="git-upload-all-btn" disabled title="Read-only: Checking permissions..." data-bs-toggle="tooltip"><i class="bi bi-cloud-arrow-up"></i> Upload All to Remote</button>
+                    </div>
+                </div>
+                <div id="git-global-warning-alert" class="alert alert-danger small py-2 mb-3 d-none">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <strong>Waarschuwing:</strong> Globale metadata-wijzigingen (packages, groepregels of groepsvolgorde) zijn lokaal aangepast maar nog niet naar de remote repository gepusht. Gebruik de knop om alles te uploaden om deze te synchroniseren.
+                </div>
+                <div id="git-sync-info-alert" class="alert alert-secondary small py-2 mb-3">
+                    Click Fetch to retrieve the latest components from the Git repository.
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Component ID</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="git-sync-list">
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-3">No status data loaded. Click Fetch.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Git Diff Modal -->
+<div class="modal fade" id="git-diff-modal" tabindex="-1" aria-labelledby="gitDiffModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="gitDiffModalLabel"><i class="bi bi-git"></i> Component Differences</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="min-height: 550px; display: flex; flex-direction: column;">
+                <div id="diff-meta-comparison" class="mb-3"></div>
+                <div class="alert alert-info small py-2 mb-2">
+                    <strong>Note:</strong> Left is your Local version of <code>docker-compose.template.yml</code>. Right is the Remote Git repository version.
+                </div>
+                <div id="diff-view-container" style="flex-grow: 1; border: 1px solid #dee2e6; border-radius: 4px; overflow: hidden;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" id="diff-sync-action-btn"><i class="bi bi-cloud-arrow-down"></i> Sync This Component</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/diff-match-patch/20121111/diff_match_patch.js" integrity="sha384-ZSs6LKr2GoUPDyHrN+rCQgyHL1yUyok5xMniSrgeRG7rUvA6vTmxronM1eZOfjgz" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" integrity="sha384-ZYmwuq4n2gOcNxMSiJ6jyTj+BbIrilr7p6dlq6q5nmSWKmsH9UU4K1qqjycMkfmR" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.js" integrity="sha384-W8to3L7MykmlLyF9jWzrILmJdsl7pTjK9iVB9poPiy+tRKbSB6RChDmvV418vmK3" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/yaml/yaml.min.js" integrity="sha384-9q49Jm3hZMwxEMLImsxPxLiaptHpFz1PVa26Dg6SVIO+rj5kx0cgOM2+4ikKJFH9" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/intro.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" integrity="sha384-BSxuMLxX+FCbTdYec3TbXlnMGEEM2QXTFdtDaveen71o+jswm2J36+xFqp8k4VHM" crossorigin="anonymous"></script>
+<script type="module" src="{{ url_for('static', filename='ui_render_utils.js') }}" defer></script>
+<script type="module" src="{{ url_for('static', filename='editor.v2.js') }}" defer></script>
+</body>
+</html>

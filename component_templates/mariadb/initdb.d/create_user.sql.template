@@ -1,0 +1,28 @@
+-- create_user.sql
+-- Dit script wordt uitgevoerd door MariaDB bij de eerste containerstart
+-- vanuit het volume ./initdb.d gemount in docker-compose.yml.
+-- Het wordt gebruikt om de MySQL-gebruiker en -database aan te maken
+-- die nodig zijn voor toepassingen zoals Nextcloud.
+
+-- Voorkom fouten als de gebruiker al bestaat
+CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASS}';
+
+-- Maak de database aan als deze nog niet bestaat
+CREATE DATABASE IF NOT EXISTS piselfhosting;
+
+-- Verleen alle privileges op de 'piselfhosting' database aan de geconfigureerde gebruiker
+GRANT ALL PRIVILEGES ON piselfhosting.* TO '${DB_USER}'@'%';
+
+-- Update privileges (belangrijk na GRANT commando's)
+FLUSH PRIVILEGES;
+
+-- Optioneel: Maak hier eventueel specifieke gebruikers/databases aan voor andere apps
+-- Voorbeeld voor Nextcloud (als deze een aparte gebruiker nodig heeft)
+-- CREATE USER IF NOT EXISTS 'nextcloud_user'@'%' IDENTIFIED BY 'jouw_nextcloud_db_wachtwoord';
+-- GRANT ALL PRIVILEGES ON piselfhosting.* TO 'nextcloud_user'@'%';
+-- FLUSH PRIVILEGES;
+
+-- Optioneel: Meer database/gebruiker configuraties
+-- CREATE DATABASE IF NOT EXISTS frigate_db;
+-- GRANT ALL PRIVILEGES ON frigate_db.* TO '${DB_USER}'@'%'; -- Kan dezelfde gebruiker zijn
+-- FLUSH PRIVILEGES;

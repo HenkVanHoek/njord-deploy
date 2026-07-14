@@ -1,0 +1,22 @@
+{
+    "variables": [
+        {
+            "default": "9443",
+            "description": "The external HTTPS port for the Portainer web UI.",
+            "id": "PORTAINER_WEB_PORT",
+            "label": "Portainer Web Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "8000",
+            "description": "The external port for the Portainer Edge Agent tunnel server.",
+            "id": "PORTAINER_EDGE_PORT",
+            "label": "Portainer Edge Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

@@ -1,0 +1,20 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+    nginx-proxy-manager:
+        container_name: nginx-proxy-manager
+    image: jc21/nginx-proxy-manager:latest
+    restart: unless-stopped
+    ports:
+        - "80:80/tcp"
+        - "443:443/tcp"
+        - "5222:5222/tcp"
+        - "8181:81/tcp"
+        - "5269:5269/tcp"
+     volumes:
+            - {{ CONFIG_BASE_PATH }}/npm/data:/data
+            - {{ CONFIG_BASE_PATH }}/npm/letsencrypt:/etc/letsencrypt
+     networks:
+            - njorddeploy_net

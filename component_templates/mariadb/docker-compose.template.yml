@@ -1,0 +1,30 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+# templates/mariadb/docker-compose.template.yml
+services:
+  mariadb:
+    image: mariadb:{{ component_version }}
+    container_name: njorddeploy-mariadb
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=njorddeploy
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+    volumes:
+      - mariadb_data:/var/lib/mysql
+      - "{{DATA_ROOT}}/mariadb/initdb.d:/docker-entrypoint-initdb.d"
+    networks:
+      - njorddeploy_net
+
+volumes:
+  mariadb_data:
+    name: njorddeploy-mariadb-data
+
+networks:
+  njorddeploy_net:
+    external: true

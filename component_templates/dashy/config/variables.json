@@ -1,0 +1,58 @@
+[
+  {
+    "id": "DASHY_IMAGE_TAG",
+    "name": "Dashy Version Tag",
+    "description": "The Docker image tag to use for Dashy. 'latest' is usually fine.",
+    "type": "string",
+    "default": "latest"
+  },
+  {
+    "id": "DASHY_HTTP_PORT",
+    "name": "Dashy HTTP Port",
+    "description": "The external HTTP port for the Dashy dashboard.",
+    "type": "string",
+    "default": "8080"
+  },
+  {
+    "id": "DASHY_HTTPS_PORT",
+    "name": "Dashy HTTPS Port",
+    "description": "The external HTTPS port for the Dashy dashboard.",
+    "type": "string",
+    "default": "4443"
+  },
+  {
+    "id": "DATA_ROOT",
+    "name": "Data Root Directory",
+    "description": "The absolute path on the host where persistent data will be stored.",
+    "type": "string",
+    "default": "/srv/njorddeploy"
+  },
+  {
+    "id": "PUID",
+    "name": "User ID (PUID)",
+    "description": "The host user ID for file permissions. '1000' is standard for the default user.",
+    "type": "string",
+    "default": "1000"
+  },
+  {
+    "id": "TZ",
+    "name": "Timezone",
+    "description": "The timezone for the container, in TZ database format.",
+    "type": "string",
+    "default": "Europe/Amsterdam"
+  },
+  {
+    "id": "DOMAIN",
+    "name": "Local Domain Name",
+    "description": "The domain name used for local network access (e.g., 'home.arpa').",
+    "type": "string",
+    "default": "home.arpa"
+  },
+  {
+    "id": "HOST_IP",
+    "name": "Host IP Address",
+    "description": "The primary IP address of the host machine.",
+    "type": "string",
+    "default": "192.168.1.100"
+  }
+]

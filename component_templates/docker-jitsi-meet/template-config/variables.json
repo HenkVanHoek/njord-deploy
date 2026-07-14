@@ -1,0 +1,74 @@
+{
+    "variables": [
+        {
+            "default": "https://meet.example.com",
+            "description": "The public domain or IP address where Jitsi Meet will be accessible.",
+            "id": "JITSI_PUBLIC_URL",
+            "label": "Public URL",
+            "type": "string"
+        },
+        {
+            "default": "8000",
+            "description": "Host port for HTTP traffic.",
+            "id": "JITSI_HTTP_PORT",
+            "label": "Web HTTP Port",
+            "type": "port"
+        },
+        {
+            "default": "8443",
+            "description": "Host port for HTTPS traffic.",
+            "id": "JITSI_HTTPS_PORT",
+            "label": "Web HTTPS Port",
+            "type": "port"
+        },
+        {
+            "default": "10000",
+            "description": "The UDP port for media streaming routing (essential for audio/video connectivity).",
+            "id": "JITSI_JVB_PORT",
+            "label": "Media JVB Port (UDP)",
+            "type": "port"
+        },
+        {
+            "default": "changeme",
+            "description": "Secure password for internal signaling.",
+            "id": "JICOFO_AUTH_PASSWORD",
+            "label": "Jicofo Auth Password",
+            "type": "password"
+        },
+        {
+            "default": "changeme",
+            "description": "Secure password for internal media bridge authentication.",
+            "id": "JVB_AUTH_PASSWORD",
+            "label": "JVB Auth Password",
+            "type": "password"
+        },
+        {
+            "default": "changeme",
+            "description": "Secure component secret for XMPP server authentication.",
+            "id": "JICOFO_COMPONENT_SECRET",
+            "label": "Jicofo Component Secret",
+            "type": "password"
+        },
+        {
+            "default": "false",
+            "description": "If enabled, only registered users can create rooms. Guests can join without credentials.",
+            "id": "JITSI_ENABLE_AUTH",
+            "label": "Enable Room Authentication",
+            "type": "boolean"
+        },
+        {
+            "default": "false",
+            "description": "Enables collaborative real-time document editing during meetings.",
+            "id": "JITSI_ENABLE_ETHERPAD",
+            "label": "Enable Etherpad",
+            "type": "boolean"
+        },
+        {
+            "default": "false",
+            "description": "Enables call recording and streaming via Jibri. Increases CPU/RAM load.",
+            "id": "JITSI_ENABLE_RECORDING",
+            "label": "Enable Session Recording",
+            "type": "boolean"
+        }
+    ]
+}

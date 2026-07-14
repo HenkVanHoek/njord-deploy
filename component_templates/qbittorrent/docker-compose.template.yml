@@ -1,0 +1,29 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:{{ component_version }}
+    container_name: njorddeploy-qbittorrent
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+      - "WEBUI_PORT=8084"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/qbittorrent/config:/config"
+      # This is the central downloads folder that Sonarr/Radarr will also use
+      - "{{ CONFIG_BASE_PATH }}/downloads:/downloads"
+    ports:
+      - "{{ QBITTORRENT_WEB_PORT | default('8084') }}:8084"
+      # Port for incoming torrent connections
+      - "6881:6881"
+      - "6881:6881/udp"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

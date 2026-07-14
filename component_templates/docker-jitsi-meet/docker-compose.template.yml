@@ -1,0 +1,144 @@
+# status: beta
+# last_tested_version: stable
+# platform_notes: none
+# breaking_changes: none
+services:
+  prosody:
+    container_name: njorddeploy-jitsi-prosody
+    image: jitsi/prosody:stable
+    networks:
+      - njorddeploy_net
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/prosody/config:/config"
+      - "{{ DATA_ROOT }}/jitsi/prosody/plugins:/prosody-plugins-custom"
+    environment:
+      - XMPP_SERVER=prosody
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD={{ JICOFO_AUTH_PASSWORD }}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD={{ JVB_AUTH_PASSWORD }}
+      - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
+      - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
+      - JVB_PORT={{ JITSI_JVB_PORT }}
+{% if JITSI_ENABLE_AUTH %}
+      - ENABLE_AUTH=1
+      - ENABLE_GUEST_IS_GUEST=1
+      - AUTH_TYPE=internal
+{% endif %}
+
+  jicofo:
+    container_name: njorddeploy-jitsi-jicofo
+    image: jitsi/jicofo:stable
+    networks:
+      - njorddeploy_net
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/jicofo:/config"
+    environment:
+      - XMPP_SERVER=prosody
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD={{ JICOFO_AUTH_PASSWORD }}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD={{ JVB_AUTH_PASSWORD }}
+      - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
+      - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
+      - JVB_PORT={{ JITSI_JVB_PORT }}
+{% if JITSI_ENABLE_AUTH %}
+      - ENABLE_AUTH=1
+      - ENABLE_GUEST_IS_GUEST=1
+{% endif %}
+
+  jvb:
+    container_name: njorddeploy-jitsi-jvb
+    image: jitsi/jvb:stable
+    networks:
+      - njorddeploy_net
+    ports:
+      - "{{ JITSI_JVB_PORT }}:10000/udp"
+      - "3030:3030/tcp"
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/jvb:/config"
+    environment:
+      - XMPP_SERVER=prosody
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD={{ JICOFO_AUTH_PASSWORD }}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD={{ JVB_AUTH_PASSWORD }}
+      - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
+      - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
+      - JVB_PORT={{ JITSI_JVB_PORT }}
+
+  web:
+    container_name: njorddeploy-jitsi-web
+    image: jitsi/web:stable
+    networks:
+      - njorddeploy_net
+    ports:
+      - "{{ JITSI_HTTP_PORT }}:80"
+      - "{{ JITSI_HTTPS_PORT }}:443"
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/web:/config"
+    environment:
+      - XMPP_SERVER=prosody
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD={{ JICOFO_AUTH_PASSWORD }}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD={{ JVB_AUTH_PASSWORD }}
+      - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
+      - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
+      - JVB_PORT={{ JITSI_JVB_PORT }}
+{% if JITSI_ENABLE_AUTH %}
+      - ENABLE_AUTH=1
+      - ENABLE_GUEST_IS_GUEST=1
+      - AUTH_TYPE=internal
+{% endif %}
+{% if JITSI_ENABLE_ETHERPAD %}
+      - ETHERPAD_PUBLIC_URL={{ JITSI_PUBLIC_URL }}/etherpad
+{% endif %}
+
+{% if JITSI_ENABLE_ETHERPAD %}
+  etherpad:
+    container_name: njorddeploy-jitsi-etherpad
+    image: etherpad/etherpad:latest
+    networks:
+      - njorddeploy_net
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/etherpad:/opt/etherpad-lite/var"
+{% endif %}
+
+{% if JITSI_ENABLE_RECORDING %}
+  jibri:
+    container_name: njorddeploy-jitsi-jibri
+    image: jitsi/jibri:stable
+    networks:
+      - njorddeploy_net
+    volumes:
+      - "{{ DATA_ROOT }}/jitsi/jibri:/config"
+    environment:
+      - XMPP_SERVER=prosody
+      - XMPP_DOMAIN=meet.jitsi
+      - XMPP_AUTH_DOMAIN=auth.meet.jitsi
+      - XMPP_INTERNAL_MUC_DOMAIN=internal-muc.meet.jitsi
+      - JICOFO_AUTH_USER=jicofo
+      - JICOFO_AUTH_PASSWORD={{ JICOFO_AUTH_PASSWORD }}
+      - JVB_AUTH_USER=jvb
+      - JVB_AUTH_PASSWORD={{ JVB_AUTH_PASSWORD }}
+      - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
+      - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
+      - JVB_PORT={{ JITSI_JVB_PORT }}
+{% endif %}
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,49 @@
+{
+    "variables": [
+        {
+            "default": "8083",
+            "description": "Access to the dashboard of of Chirpstack",
+            "id": "CHIRPSTACK_WEB_UI_PORT",
+            "label": "CHIRPSTACK_WEB_UI_PORT",
+            "required": "always",
+            "source": "dotenv",
+            "type": "string"
+        },
+        {
+            "default": "18884",
+            "description": "Port for the MQTT broker",
+            "id": "LORA_MQTT_PORT",
+            "label": "LORA_MQTT_PORT",
+            "required": "always",
+            "source": "dotenv",
+            "type": "string"
+        },
+        {
+            "default": "1700",
+            "description": "",
+            "id": "LORA_GATEWAY_PORT",
+            "label": "LORA_GATEWAY_PORT",
+            "required": "always",
+            "source": "dotenv",
+            "type": "string"
+        },
+        {
+            "default": "",
+            "description": "",
+            "id": "CHIRPSTACK_DB_PASSWORD",
+            "label": "Chirpstack password",
+            "required": "clean-install",
+            "source": "dotenv",
+            "type": "string"
+        },
+        {
+            "default": "mosquitto_lora",
+            "description": "",
+            "id": "MQTT_BROKER",
+            "label": "",
+            "required": "always",
+            "source": "dotenv",
+            "type": "string"
+        }
+    ]
+}

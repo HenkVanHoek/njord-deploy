@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "8989",
+            "description": "The external HTTP port to access the Sonarr web interface.",
+            "id": "SONARR_WEB_PORT",
+            "label": "Sonarr Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

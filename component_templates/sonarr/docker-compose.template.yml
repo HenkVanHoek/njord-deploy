@@ -1,0 +1,27 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:{{ component_version }}
+    container_name: njorddeploy-sonarr
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/sonarr/config:/config"
+      # Point this to your TV shows library, should be the same as Jellyfin's TV folder
+      - "{{ CONFIG_BASE_PATH }}/jellyfin/tvshows:/tv"
+      # Point this to where your download client saves completed files
+      - "{{ CONFIG_BASE_PATH }}/downloads:/downloads"
+    ports:
+      - "{{ SONARR_WEB_PORT | default('8989') }}:8989"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

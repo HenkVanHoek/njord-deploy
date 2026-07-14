@@ -1,0 +1,25 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  nextcloud-db:
+    image: mariadb:10.11
+    container_name: nextcloud-db
+    restart: always
+    command: >
+      --transaction-isolation=READ-COMMITTED
+      --log-bin=binlog
+      --binlog-format=ROW
+    labels:
+      - "com.centurylinklabs.watchtower.enable=false"
+    networks:
+      - nextcloud-internal
+    volumes:
+      - "{{ NEXTCLOUD_DB_PATH }}:/var/lib/mysql"
+    environment:
+      TZ: "{{ TZ }}"
+      MYSQL_ROOT_PASSWORD: "{{ NEXTCLOUD_DB_ROOT_PASSWORD }}"
+      MYSQL_PASSWORD: "{{ NEXTCLOUD_DB_PASSWORD }}"
+      MYSQL_DATABASE: "{{ NEXTCLOUD_DB_NAME }}"
+      MYSQL_USER: "{{ NEXTCLOUD_DB_USER }}"

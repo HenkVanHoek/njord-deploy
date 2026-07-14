@@ -1,0 +1,179 @@
+/* Main Container and Layout */
+.main-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Step Wizard Navigation Tabs */
+.main-nav-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding: 15px 30px;
+    border: none;
+    background: none;
+}
+
+.main-nav-tabs .nav-link.active {
+    color: #007bff;
+    font-weight: 600;
+    border-bottom: 3px solid #007bff;
+    background: none;
+}
+
+/* Tab Content Area */
+.main-tab-content {
+    background: white;
+    border-radius: 0 0 8px 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    min-height: 600px;
+}
+
+/* Device Card Base Styles */
+.device-card {
+    transition: opacity 0.3s ease, transform 0.2s ease;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #ffffff;
+}
+
+.device-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.device-card .card-title {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.device-card .status-text {
+    font-size: 0.85rem;
+}
+
+/* Credentials and Override UI Area */
+.device-card .credentials-area {
+    padding: 10px;
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    margin-top: 5px;
+}
+
+/* Visual Feedback for Inherited (Disabled) Inputs */
+.device-card .device-username:disabled,
+.device-card .device-password:disabled {
+    background-color: #f8f9fa;
+    color: #adb5bd;
+    cursor: not-allowed;
+    border-color: #e9ecef;
+    font-style: italic;
+    opacity: 0.8;
+}
+
+/* Form Elements and Checkbox Styling */
+.form-check-input:checked {
+    background-color: var(--brand-green);
+    border-color: var(--brand-green);
+}
+
+/* Custom Terminals and Log Viewers */
+#install-log {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "Courier New", monospace;
+    height: 400px;
+    overflow-y: auto;
+    padding: 15px;
+    border-radius: 5px;
+    white-space: pre-wrap;
+}
+
+/* Logic and Utility Informational Boxes */
+.info-box {
+    background-color: #e8f4f8;
+    border-left: 4px solid #007bff;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+/* Badge Styles for UI Presence */
+.badge-ui {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.75rem;
+}
+
+/* Scanner Summary Styling */
+.network-detection-info {
+    margin: 1em 0;
+    padding: 1em;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid var(--brand-blue);
+}
+
+/* Theme-specific logo visibility and blending */
+.logo-light {
+    display: inline-block !important;
+}
+
+.logo-dark {
+    display: none !important;
+}
+
+html[data-theme="dark"] .logo-light,
+html[data-theme="futuristic-dark"] .logo-light,
+html[data-theme="high-contrast-dark"] .logo-light {
+    display: none !important;
+}
+
+html[data-theme="dark"] .logo-dark,
+html[data-theme="futuristic-dark"] .logo-dark,
+html[data-theme="high-contrast-dark"] .logo-dark {
+    display: inline-block !important;
+    filter: drop-shadow(0 0 15px rgba(0, 255, 242, 0.3));
+}
+
+/* Ensure the navbar and its dropdown menus sit on top of other content */
+.navbar {
+    position: relative;
+    z-index: 1030;
+}
+
+/* Sticky Action Bar for wizard navigation */
+.sticky-action-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--glass-bg, rgba(255, 255, 255, 0.95));
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 30px;
+    margin-left: -16px;
+    margin-right: -16px;
+    margin-bottom: -16px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    z-index: 1030;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+@media (min-width: 768px) {
+    .sticky-action-bar {
+        margin-left: -24px;
+        margin-right: -24px;
+        margin-bottom: -24px;
+    }
+}
+
+html[data-theme="dark"] .sticky-action-bar,
+html[data-theme="futuristic-dark"] .sticky-action-bar,
+html[data-theme="high-contrast-dark"] .sticky-action-bar {
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}

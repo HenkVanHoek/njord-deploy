@@ -1,0 +1,166 @@
+---
+- name: Deploy NjordDeploy Services
+  hosts: all
+  become: true
+  vars:
+    ansible_become_timeout: 60
+    # Destination path on the Pi for all configuration
+    project_config_dir: "/opt/njorddeploy"
+    # Map kernel architecture to Debian package architecture
+    debian_architecture_map:
+      x86_64: "amd64"
+      aarch64: "arm64"
+      armv7l: "armhf"
+      armv6l: "armhf"
+    # Map distribution names to Docker repository folder names
+    docker_distribution_map:
+      debian: "debian"
+      ubuntu: "ubuntu"
+      raspbian: "raspbian"
+      "raspberry pi os": "debian"
+      mx: "debian"
+      "mx linux": "debian"
+      "mx-linux": "debian"
+      "linux mint": "ubuntu"
+      "pop!_os": "ubuntu"
+
+  tasks:
+    - name: Pre flight check Ensure at least 2GB of free disk space is available
+      ansible.builtin.assert:
+        that:
+          - item.size_available > 2147483648  # 2 GB in bytes
+        fail_msg: >-
+          Deployment aborted: The Pi does not have enough free disk space on
+          {{ item.mount }}. Please clean up the device.
+        success_msg: "Disk space check passed on {{ item.mount }}."
+      loop: "{{ ansible_mounts }}"
+      when: item.mount == '/'
+
+# --- DOCKER ENGINE PROVISIONING (WITHOUT PIP OR Python LIBRARIES) ---
+    - name: Ensure prerequisites for Docker repository are installed
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - curl
+        state: present
+        update_cache: yes
+
+    - name: Ensure directory for Docker archive keyring exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: "0755"
+
+    - name: Download Docker official GPG key
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }}/gpg"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: "0644"
+
+    - name: Add Docker repository to Apt sources
+      ansible.builtin.apt_repository:
+        repo: "deb [arch={{ debian_architecture_map[ansible_architecture] | default(ansible_architecture) }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }} {{ ansible_distribution_release }} stable"
+        state: present
+        filename: docker
+
+    - name: Ensure Docker CE and Compose plugin are installed
+      ansible.builtin.apt:
+        name:
+          - docker-ce               # Official Docker CE
+          - docker-ce-cli           # Official Docker CE CLI
+          - containerd.io           # Official Containerd
+          - docker-compose-plugin   # Official Docker Compose V2 plugin
+        state: present
+        update_cache: yes
+
+    - name: Ensure SSH user is in docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+
+    # --- DIRECTORY & FILE DEPLOYMENT ---
+    - name: Ensure project directory exists
+      ansible.builtin.file:
+        path: "{{ project_config_dir }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0755"
+
+    - name: Copy all deployment files to the Pi (including .env and config folders)
+      ansible.builtin.copy:
+        # trailing slash is required to copy the content of the folder (/)
+        src: "{{ local_output_path }}/"
+        dest: "{{ project_config_dir }}"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "preserve"
+
+    - name: Perform Clean Install (Stop containers and remove volumes for selected components)
+      ansible.builtin.command:
+        cmd: "docker compose rm -f -s -v {{ item }}"
+        chdir: "{{ project_config_dir }}"
+      loop: "{{ components_to_clean | default([]) }}"
+      when: components_to_clean is defined and components_to_clean | length > 0
+      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      changed_when: "true"
+
+    # --- CLI-BASED DOCKER OPERATIONS (NO PYTHON REQUIRED) ---
+    - name: Ensure NjordDeploy Docker network exists
+      ansible.builtin.command:
+        cmd: "docker network create njorddeploy_net"
+      register: network_create
+      failed_when:
+        - network_create.rc != 0
+        - "'already exists' not in network_create.stderr"
+      changed_when: "network_create.rc == 0"
+
+    - name: Pull latest service images
+      ansible.builtin.command:
+        cmd: "docker compose pull --ignore-buildable"
+        chdir: "{{ project_config_dir }}"
+      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      changed_when: "true"
+
+    - name: Deploy services with Docker Compose
+      ansible.builtin.command:
+        cmd: "docker compose up -d"
+        chdir: "{{ project_config_dir }}"
+      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      changed_when: "true"
+
+    - name: Restart specifically requested components
+      ansible.builtin.command:
+        cmd: "docker compose restart {{ item }}"
+        chdir: "{{ project_config_dir }}"
+      loop: "{{ components_to_restart | default([]) }}"
+      when: components_to_restart is defined and components_to_restart | length > 0
+      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      changed_when: "true"
+
+    - name: Fetch Portainer container status
+      ansible.builtin.command:
+        cmd: "docker ps -a --filter name=njorddeploy-portainer --format '{{ '{{' }} .Names {{ '}}' }}'"
+      register: portainer_status
+      changed_when: false
+      failed_when: false
+
+    - name: Extract Portainer setup token from logs
+      ansible.builtin.command:
+        cmd: "docker logs njorddeploy-portainer"
+      register: portainer_logs
+      until: "'setup_token' in (portainer_logs.stdout + '\n' + portainer_logs.stderr)"
+      retries: 10
+      delay: 2
+      changed_when: false
+      failed_when: false
+      when: "'njorddeploy-portainer' in portainer_status.stdout"
+
+    - name: Display Portainer setup token if present
+      ansible.builtin.debug:
+        msg: "PORTAINER SETUP TOKEN: {{ item }}"
+      loop: "{{ ((portainer_logs.stdout | default('') + '\n' + portainer_logs.stderr | default('')) | split('\n')) if (portainer_logs is not skipped) else [] }}"
+      when:
+        - portainer_logs is not skipped
+        - "'setup_token' in item"

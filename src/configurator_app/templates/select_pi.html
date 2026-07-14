@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Step 1: Find Your Pi - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Step 1: Find Your Raspberry Pi</h1>
+    <p>Enter your network details to scan for Raspberry Pi devices.</p>
+
+    <form id="scan-form">
+        <div class="form-group">
+            <label for="subnet">Subnet to Scan (e.g., 192.168.1.0/24):</label>
+            <input type="text" id="subnet" name="subnet" value="{{ detected_subnet or '192.168.1.0/24' }}" required>
+        </div>
+        <div class="form-group">
+            <label for="ssh-user">SSH Username:</label>
+            <input type="text" id="ssh-user" name="username" value="pi" required>
+        </div>
+        <div class="form-group">
+            <label for="ssh-pass">SSH Password (optional, for key-based auth):</label>
+            <input type="password" id="ssh-pass" name="password" placeholder="Leave blank for key-based auth">
+        </div>
+        <button type="submit">Scan for Devices</button>
+    </form>
+
+    <div id="loading" class="loading">
+        <p>🔎 Scanning... This may take up to 3 minutes.</p>
+    </div>
+
+    <div id="results" class="pi-list"></div>
+
+    <div id="debug-output" class="debug-container" style="display: none;">
+        <h3>Nmap Debug Information</h3>
+        <h4>Standard Output:</h4>
+        <pre id="nmap-stdout"></pre>
+        <h4>Error Output:</h4>
+        <pre id="nmap-stderr"></pre>
+    </div>
+</div>
+
+<script>
+    const scanForm = document.getElementById('scan-form');
+    const loadingDiv = document.getElementById('loading');
+    const resultsDiv = document.getElementById('results');
+    const debugOutputDiv = document.getElementById('debug-output');
+    const nmapStdoutPre = document.getElementById('nmap-stdout');
+    const nmapStderrPre = document.getElementById('nmap-stderr');
+
+    // Simple HTML escape helper to prevent DOM-XSS
+    function escapeHTML(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#x27;');
+    }
+
+    scanForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        loadingDiv.style.display = 'block';
+        resultsDiv.innerHTML = '';
+        debugOutputDiv.style.display = 'none';
+        nmapStdoutPre.textContent = '';
+        nmapStderrPre.textContent = '';
+
+        const formData = new FormData(scanForm);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/scan', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            // Mitigation: Handle error directly and return early to avoid locally-caught throw warning
+            if (!response.ok) {
+                resultsDiv.innerHTML = '';
+                const p = document.createElement('p');
+                p.className = 'error';
+                p.textContent = `An unexpected error occurred: HTTP error! Status: ${response.status}`;
+                resultsDiv.appendChild(p);
+                return;
+            }
+
+            const resultData = await response.json();
+            displayResults(resultData);
+
+            if (resultData.debug) {
+                const stdout = resultData.debug.stdout;
+                const stderr = resultData.debug.stderr;
+
+                if (stdout || stderr) {
+                     nmapStdoutPre.textContent = stdout || '(No standard output captured)';
+                     nmapStderrPre.textContent = stderr || '(No standard error captured)';
+                     debugOutputDiv.style.display = 'block';
+                }
+            }
+
+        } catch (error) {
+            const err = /** @type {Error} */ (error);
+            resultsDiv.innerHTML = '';
+            const p = document.createElement('p');
+            p.className = 'error';
+            p.textContent = `An unexpected error occurred: ${err.message}`;
+            resultsDiv.appendChild(p);
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    });
+
+    function displayResults(data) {
+        let html = '<h2>Scan Results</h2>';
+
+        const hasSuccess = data.success && Object.keys(data.success).length > 0;
+        const hasFailed = data.failed && data.failed.length > 0;
+
+        if (!hasSuccess && !hasFailed) {
+             html += '<p>No devices found on the specified subnet. Check the debug output below for details.</p>';
+        }
+
+        if (hasSuccess) {
+            html += '<h3>✔️ Devices Ready to Configure</h3>';
+            for (const serial in data.success) {
+                const device = data.success[serial];
+                const safeModel = escapeHTML(device.model);
+                const safeIp = escapeHTML(device.connections[0].ip);
+                const safeMac = escapeHTML(device.connections[0].mac);
+                const safeSerial = escapeHTML(device.serial);
+
+                html += `<div class="pi-item">
+                           <p><strong>Model:</strong> ${safeModel}</p>
+                           <p><strong>IP Address:</strong> ${safeIp}</p>
+                           <p><strong>MAC Address:</strong> ${safeMac}</p>
+                           <p><strong>Serial:</strong> ${safeSerial}</p>
+                           <form action="/select-pi" method="post" style="margin-top: 1em;">
+                               <input type="hidden" name="pi_ip" value="${safeIp}">
+                               <button type="submit">Select this Pi</button>
+                           </form>
+                       </div>`;
+            }
+        }
+
+        if (hasFailed) {
+            html += '<h3>⚠️ Devices Found (Authentication Failed)</h3>';
+             data.failed.forEach(device => {
+                 const safeIp = escapeHTML(device.ip);
+                 const safeMac = escapeHTML(device.mac);
+
+                 html += `<div class="pi-item">
+                            <p><strong>IP Address:</strong> ${safeIp}</p>
+                            <p><strong>MAC Address:</strong> ${safeMac}</p>
+                            <p class="error">Could not connect via SSH. Please check username/password and network connectivity.</p>
+                        </div>`;
+             });
+        }
+
+        resultsDiv.innerHTML = html;
+    }
+</script>
+{% endblock %}

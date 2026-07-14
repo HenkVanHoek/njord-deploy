@@ -1,0 +1,22 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  unbound:
+    container_name: njorddeploy-unbound
+    image: mvance/unbound:{{ component_version }}
+    restart: unless-stopped
+    ports:
+      - "5335:5335/udp"
+      - "5335:5335/tcp"
+    volumes:
+      # This mounts a specific config file that we will generate
+      - "{{DATA_ROOT}}/unbound/config/unbound.conf:/opt/unbound/etc/unbound/unbound.conf"
+    # Unbound does not need PUID/PGID or extra_hosts
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

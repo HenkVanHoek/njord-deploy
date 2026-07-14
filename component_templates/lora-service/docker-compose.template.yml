@@ -1,0 +1,56 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+    chirpstack:
+        image: chirpstack/chirpstack:4
+        command: -c /etc/chirpstack
+        restart: unless-stopped
+        volumes:
+            - ./configuration/chirpstack:/etc/chirpstack
+        depends_on:
+            - postgres
+            - mosquitto_lora
+            - redis
+        environment:
+            - MQTT_SERVER=mosquitto_lora:1883
+            - POSTGRESQL_DSN=postgres://chirpstack:"{{ CHIRPSTACK_DB_PASSWORD }}"@postgres/chirpstack?sslmode=disable
+            - REDIS_URL=redis://redis:6379/0
+        ports:
+            - "{{ CHIRPSTACK_WEB_UI_PORT }}:8080"
+
+    mosquitto_lora:
+        image: eclipse-mosquitto:2
+        restart: unless-stopped
+        container_name: mosquitto_lora
+        ports:
+            - "{{ LORA_MQTT_PORT }}:1883"
+        volumes:
+            - ./configuration/mosquitto_lora/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+    chirpstack-gateway-bridge:
+        image: chirpstack/chirpstack-gateway-bridge:4
+        restart: unless-stopped
+        depends_on:
+            - mosquitto_lora
+        ports:
+            - "{{ LORA_GATEWAY_PORT }}:1700/udp"
+        environment:
+            - INTEGRATION__MQTT__AUTH__GENERIC__SERVER=tcp://mosquitto_lora:1883
+
+    postgres:
+        image: postgres:14-alpine
+        restart: unless-stopped
+        environment:
+            - POSTGRES_PASSWORD="{{ CHIRPSTACK_DB_PASSWORD }}"
+            - POSTGRES_USER=chirpstack
+            - POSTGRES_DB=chirpstack
+        volumes:
+            - ./data/postgres:/var/lib/postgresql/data
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        volumes:
+            - ./data/redis:/data

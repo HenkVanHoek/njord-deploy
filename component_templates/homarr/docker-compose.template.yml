@@ -1,0 +1,17 @@
+# status: "tested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  homarr:
+    container_name: njorddeploy-homarr
+    image: ghcr.io/ajnart/homarr:latest
+    restart: unless-stopped
+    ports:
+      - "{{ HOMARR_WEB_PORT }}:7575"
+    volumes:
+      - "{{ HOMARR_CONFIG_PATH }}/configs:/app/data/configs"
+      - "{{ HOMARR_CONFIG_PATH }}/icons:/app/public/icons"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - njorddeploy_net

@@ -1,0 +1,154 @@
+<html>
+<head>
+<title>proxmox_testing_plan.md</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cf8e6d;}
+.s1 { color: #bcbec4;}
+.s2 { color: #bcbec4;}
+.s3 { color: #c77dbb; font-style: italic;}
+.s4 { color: #6aab73;}
+</style>
+</head>
+<body bgcolor="#1e1f22">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+proxmox_testing_plan.md</font>
+</center></td></tr></table>
+<pre><span class="s0"># </span><span class="s2">Plan &amp; Feasibility Study</span><span class="s1">: </span><span class="s2">Proxmox Automated Testing Environment</span>
+
+<span class="s2">This document assesses the feasibility and details the design for creating a Proxmox-based testing skill. This skill will automate the cloning of a virtual machine template, deployment of NjordDeploy components, verification of their functionality, and subsequent teardown of the VM.</span>
+
+<span class="s0">## </span><span class="s2">1. Feasibility Assessment</span>
+
+<span class="s1">**</span><span class="s2">Conclusion</span><span class="s1">: </span><span class="s2">Highly Feasible and Architecturally Sound.</span><span class="s1">**</span>
+
+<span class="s2">Integrating a Proxmox testing flow is extremely viable and provides a high-fidelity testing method. Key assessment points</span><span class="s1">:</span>
+
+<span class="s0">1. </span><span class="s1">**</span><span class="s2">Reusability of Core Code</span><span class="s1">**: </span><span class="s2">We can directly import and reuse </span><span class="s1">[</span><span class="s2">SetupManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/setup_manager.py</span><span class="s1">) </span><span class="s2">and </span><span class="s1">[</span><span class="s2">DeploymentManager</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/deployment_manager.py</span><span class="s1">)</span><span class="s2">. This ensures that we test the </span><span class="s1">*</span><span class="s2">exact same</span><span class="s1">* </span><span class="s2">deployment pipeline and configuration files used by the production Flask app.</span>
+<span class="s0">2. </span><span class="s1">**</span><span class="s2">Proxmox VM Lifecycle</span><span class="s1">**: </span><span class="s2">Proxmox VE offers a robust CLI </span><span class="s1">(</span><span class="s2">`qm`</span><span class="s1">) </span><span class="s2">that is easily accessible via SSH or REST API. Since the controller machine has SSH capabilities, executing commands like `qm clone`, `qm start`, and `qm destroy` via SSH to the Proxmox host </span><span class="s1">(</span><span class="s2">`192.168.178.51`</span><span class="s1">) </span><span class="s2">is simple, secure, and requires no additional dependencies.</span>
+<span class="s0">3. </span><span class="s1">**</span><span class="s2">VM IP Discovery</span><span class="s1">**: </span><span class="s2">If the master template has the `qemu-guest-agent` installed, we can query its IP address using `qm guest cmd </span><span class="s1">&lt;vmid&gt; </span><span class="s2">network-get-interfaces`. Alternatively, we can use Proxmox's Cloud-Init integration to set a static IP before booting the VM.</span>
+<span class="s0">4. </span><span class="s1">**</span><span class="s2">Execution Time</span><span class="s1">**: </span><span class="s2">Deploying and testing all </span><span class="s1">~</span><span class="s2">38 components sequentially will take significant time </span><span class="s1">(</span><span class="s2">approx. 1 to 2 minutes per component, totaling 40–80 minutes</span><span class="s1">)</span><span class="s2">. Because this is a background process, we can run it as an asynchronous task using the `/goal` slash command.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">## </span><span class="s2">2. Architecture &amp; Workflow</span>
+
+<span class="s2">Here is how the automated test runner orchestrates the Proxmox host and the test VM</span><span class="s1">:</span>
+
+<span class="s0">```</span><span class="s3">mermaid</span>
+<span class="s4">sequenceDiagram</span>
+    <span class="s4">participant Runner as Test Runner Script (Local)</span>
+    <span class="s4">participant Proxmox as Proxmox Host (192.168.178.51)</span>
+    <span class="s4">participant VM as Cloned Test VM (Dynamic IP)</span>
+
+    <span class="s4">Runner-&gt;&gt;Proxmox: qm clone &lt;template_id&gt; &lt;vmid&gt; --name pish-test-vm --linked</span>
+    <span class="s4">Proxmox--&gt;&gt;Runner: VM Cloned</span>
+    <span class="s4">Runner-&gt;&gt;Proxmox: qm start &lt;vmid&gt;</span>
+    <span class="s4">Note over Runner,VM: Wait for VM Boot</span>
+    <span class="s4">loop Poll guest IP</span>
+        <span class="s4">Runner-&gt;&gt;Proxmox: qm guest cmd &lt;vmid&gt; network-get-interfaces</span>
+        <span class="s4">Proxmox--&gt;&gt;Runner: IP Address</span>
+    <span class="s4">end</span>
+
+    <span class="s4">loop For each component</span>
+        <span class="s4">Note over Runner: Generate config via SetupManager</span>
+        <span class="s4">Runner-&gt;&gt;VM: Copy files &amp; Run Ansible playbook (DeploymentManager)</span>
+        <span class="s4">VM--&gt;&gt;Runner: Deployment Logs</span>
+        <span class="s4">Note over Runner: Run Verification Checks (HTTP/Docker logs)</span>
+        <span class="s4">Runner-&gt;&gt;VM: Verify component status</span>
+    <span class="s4">end</span>
+
+    <span class="s4">Runner-&gt;&gt;Proxmox: qm stop &lt;vmid&gt; &amp;&amp; qm destroy &lt;vmid&gt; --purge</span>
+    <span class="s4">Proxmox--&gt;&gt;Runner: VM Destroyed</span>
+<span class="s0">```</span>
+
+<span class="s0">---</span>
+
+<span class="s0">## </span><span class="s2">3. Implementation Details</span>
+
+<span class="s0">### </span><span class="s2">A. Proxmox VM Control Commands</span>
+<span class="s2">Using SSH commands targeting `root@192.168.178.51`</span><span class="s1">:</span>
+
+<span class="s0">1. </span><span class="s1">**</span><span class="s2">Find template VM ID</span><span class="s1">**:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">qm list | grep pi-server-vm</span>
+   <span class="s0">```</span>
+<span class="s0">2. </span><span class="s1">**</span><span class="s2">Clone VM </span><span class="s1">(</span><span class="s2">Linked clone for extreme speed and low disk usage</span><span class="s1">)**:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">qm clone &lt;template_vmid&gt; &lt;test_vmid&gt; --name pish-test-vm --linked</span>
+   <span class="s0">```</span>
+<span class="s0">3. </span><span class="s1">**</span><span class="s2">Start VM</span><span class="s1">**:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">qm start &lt;test_vmid&gt;</span>
+   <span class="s0">```</span>
+<span class="s0">4. </span><span class="s1">**</span><span class="s2">Wait and Get IP Address</span><span class="s1">**:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">qm guest cmd &lt;test_vmid&gt; network-get-interfaces</span>
+   <span class="s0">```</span>
+<span class="s0">5. </span><span class="s1">**</span><span class="s2">Teardown</span><span class="s1">**:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">qm stop &lt;test_vmid&gt; &amp;&amp; qm destroy &lt;test_vmid&gt; --purge</span>
+   <span class="s0">```</span>
+
+<span class="s0">### </span><span class="s2">B. Integrating the Managers</span>
+<span class="s2">We will create a test runner script </span><span class="s1">(</span><span class="s2">e.g., `scripts/proxmox_test_runner.py`</span><span class="s1">) </span><span class="s2">which acts as the orchestrator</span><span class="s1">:</span>
+
+<span class="s0">```</span><span class="s3">python</span>
+<span class="s4">from pathlib import Path</span>
+<span class="s4">from src.managers.component_reader import ComponentReader</span>
+<span class="s4">from src.managers.setup_manager import SetupManager</span>
+<span class="s4">from src.managers.deployment_manager import DeploymentManager</span>
+
+<span class="s4"># Initialize managers</span>
+<span class="s4">reader = ComponentReader(metadata_path=&quot;config/components_metadata.json&quot;)</span>
+<span class="s4">setup_mgr = SetupManager(component_manager=reader, output_dir=Path(&quot;./tmp_proxmox_test&quot;))</span>
+<span class="s4">deploy_mgr = DeploymentManager(component_manager=reader)</span>
+
+<span class="s4"># Example sequence to prepare and deploy a component</span>
+<span class="s4">setup_mgr.prepare_deployment_package(</span>
+    <span class="s4">selected_components=[&quot;adguard-home&quot;],</span>
+    <span class="s4">user_variables={&quot;PISelfhosting_HOST_IP&quot;: vm_ip},</span>
+    <span class="s4">managed_devices=[{&quot;ip&quot;: vm_ip, &quot;username&quot;: &quot;hvhoek&quot;, &quot;password&quot;: &quot;...&quot;}]</span>
+<span class="s4">)</span>
+<span class="s0">```</span>
+
+<span class="s0">### </span><span class="s2">C. Component Verification Engine</span>
+<span class="s2">For each component deployed, the verification script will perform</span><span class="s1">:</span>
+<span class="s0">1. </span><span class="s1">**</span><span class="s2">Container Check</span><span class="s1">**: </span><span class="s2">Verify the container is running and healthy</span><span class="s1">:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">ssh hvhoek@&lt;vm_ip&gt; &quot;docker ps --filter name=njorddeploy-&lt;component_id&gt; --format '{{.Status}}'&quot;</span>
+   <span class="s0">```</span>
+<span class="s0">2. </span><span class="s1">**</span><span class="s2">Log Scan</span><span class="s1">**: </span><span class="s2">Check for common error signatures </span><span class="s1">(</span><span class="s2">e.g., `Traceback`, `Exception`, `Fatal`</span><span class="s1">) </span><span class="s2">in logs</span><span class="s1">:</span>
+   <span class="s0">```</span><span class="s3">bash</span>
+   <span class="s4">ssh hvhoek@&lt;vm_ip&gt; &quot;docker logs njorddeploy-&lt;component_id&gt; 2&gt;&amp;1&quot;</span>
+   <span class="s0">```</span>
+<span class="s0">3. </span><span class="s1">**</span><span class="s2">HTTP Port Check</span><span class="s1">**: </span><span class="s2">If `has_ui</span><span class="s1">: </span><span class="s2">true`, make an HTTP request to `http</span><span class="s1">:</span><span class="s2">//</span><span class="s1">&lt;</span><span class="s2">vm_ip</span><span class="s1">&gt;:&lt;port&gt;</span><span class="s2">` and assert success.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">## </span><span class="s2">4. Key Performance Optimizations</span>
+
+<span class="s2">To keep the run duration manageable, we can apply the following strategies</span><span class="s1">:</span>
+<span class="s0">- </span><span class="s1">**</span><span class="s2">Linked Clones</span><span class="s1">**: </span><span class="s2">Cloning the VM takes under 2 seconds.</span>
+<span class="s0">- </span><span class="s1">**</span><span class="s2">Docker Cache Mirroring</span><span class="s1">**: </span><span class="s2">If the VM template is pre-configured to use a local registry mirror or a docker registry pull-through cache, image downloading will be super fast and won't strain internet bandwidth.</span>
+<span class="s0">- </span><span class="s1">**</span><span class="s2">Incremental Cleanup vs. Fresh Installs</span><span class="s1">**:</span>
+  <span class="s0">- </span><span class="s2">We can reuse a single VM instance for multiple components that do not conflict, restarting the VM or performing docker volume pruning between components.</span>
+  <span class="s0">- </span><span class="s2">Or, to guarantee absolute isolation, we can clone a new VM, test a component, and destroy it. The script can support both modes via a `--fresh-vm-per-component` flag.</span>
+
+<span class="s0">---</span>
+
+<span class="s0">## </span><span class="s2">5. Skill Proposal</span><span class="s1">: </span><span class="s2">`proxmox-test`</span>
+
+<span class="s2">We can add a new skill to the project</span><span class="s1">: [</span><span class="s2">SKILL.md</span><span class="s1">](</span><span class="s2">file</span><span class="s1">:</span><span class="s2">///home/hvhoek/PycharmProjects/NjordDeploy/.agents/skills/proxmox-test/SKILL.md</span><span class="s1">) </span><span class="s2">containing the workflows, parameters, and troubleshooting guides for Proxmox-based automated component verification.</span>
+
+<span class="s0">### </span><span class="s2">Target Skill Outline</span><span class="s1">:</span>
+<span class="s0">- </span><span class="s1">**</span><span class="s2">Location</span><span class="s1">**: </span><span class="s2">`.agents/skills/proxmox-test/SKILL.md`</span>
+<span class="s0">- </span><span class="s1">**</span><span class="s2">Contents</span><span class="s1">**:</span>
+  <span class="s0">- </span><span class="s2">Configuration instructions </span><span class="s1">(</span><span class="s2">`.env` variables for Proxmox server credentials, master template ID</span><span class="s1">)</span><span class="s2">.</span>
+  <span class="s0">- </span><span class="s2">CLI usage examples to run the tests.</span>
+  <span class="s0">- </span><span class="s2">How to interpret the resulting test report </span><span class="s1">(</span><span class="s2">`docs/PROXMOX_TESTS.md`</span><span class="s1">)</span><span class="s2">.</span>
+</pre>
+</body>
+</html>

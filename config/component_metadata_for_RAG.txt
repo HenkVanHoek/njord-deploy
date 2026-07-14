@@ -1,0 +1,808 @@
+{
+  "_njorddeploy": {
+    "components_order": [
+      "homarr",
+      "heimdall",
+      "homer",
+      "organizr",
+      "jellyfin",
+      "radarr",
+      "sabnzbd",
+      "sonarr",
+      "qbittorrent",
+      "pi-hole",
+      "adguard-home",
+      "traefik",
+      "nginx-proxy-manager",
+      "gitlab",
+      "conduit",
+      "unbound",
+      "vaultwarden",
+      "web-notepad",
+      "uptime-kuma",
+      "portainer",
+      "njorddeploy-backup-tool",
+      "njorddeploy-service-maintenance",
+      "nextcloud",
+      "zigbee2mqtt",
+      "homeassistant",
+      "frigate",
+      "scrypted",
+      "unifi-controller"
+    ],
+    "default_group": "general",
+    "global_variables": [
+      "PISelfhosting_HOST_IP",
+      "PISelfhosting_DATA_PATH",
+      "CONFIG_BASE_PATH",
+      "service_name",
+      "DOTENV"
+    ],
+    "group_order": [
+      "dashboard & Homepages",
+      "Media Stack",
+      "dns_blocker",
+      "reverse_proxy",
+      "git_server",
+      "general",
+      "Smart Home & IoT",
+      "Security & Utilities",
+      "System Tools"
+    ],
+    "group_rules": {
+      "Home Automation": {
+        "is_exclusive": false,
+        "name": "Home Automation"
+      },
+      "Media Stack": {
+        "is_exclusive": false,
+        "name": "Media Stack"
+      },
+      "Security & Utilities": {
+        "is_exclusive": false,
+        "name": "Security & Utilities"
+      },
+      "Smart Home & IoT": {
+        "is_exclusive": false,
+        "name": "Smart Home & Iot"
+      },
+      "System Tools": {
+        "is_exclusive": false,
+        "name": "System Tools"
+      },
+      "dashboard": {
+        "is_exclusive": true,
+        "name": "Dashboard"
+      },
+      "dashboard & Homepages": {
+        "is_exclusive": false,
+        "name": "Dashboard & Homepages"
+      },
+      "dns_blocker": {
+        "is_exclusive": true,
+        "name": "DNS Blocker"
+      },
+      "general": {
+        "is_exclusive": false,
+        "name": "General Components"
+      },
+      "git_server": {
+        "is_exclusive": true,
+        "name": "Development Tools"
+      },
+      "reverse_proxy": {
+        "is_exclusive": true,
+        "name": "Reverse Proxy"
+      }
+    }
+  },
+  "components": {
+    "adguard-home": {
+      "component_version": "latest",
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "Network-wide ad & tracker blocking DNS server. An alternative to Pi-hole.",
+      "group": "dns_blocker",
+      "has_configuration": false,
+      "has_traefik_support": false,
+      "has_ui": true,
+      "image_name": "adguard/adguardhome",
+      "intent_questions": [],
+      "name": "AdGuard Home",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/AdguardTeam/AdGuardHome",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_internal_port": null
+    },
+    "conduit": {
+      "component_version": "latest",
+      "description": "A lightweight, next-generation Matrix homeserver, ideal for Raspberry Pi.",
+      "group": "general",
+      "has_ui": false,
+      "image_name": "matrixconduit/matrix-conduit",
+      "intent_questions": [],
+      "name": "Conduit (Matrix Server)",
+      "package_id": "general-stack",
+      "project_url": "https://conduit.rs/",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "frigate": {
+      "component_version": "stable",
+      "depends_on": [],
+      "description": "NVR with real-time object detection for IP cameras.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "blakeblackshear/frigate",
+      "intent_questions": [],
+      "name": "Frigate",
+      "package_id": "general-stack",
+      "project_url": "https://docs.frigate.video/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "gitlab": {
+      "component_version": "latest",
+      "description": "A complete DevOps platform for project planning, source code management, CI/CD, and monitoring.",
+      "group": "git_server",
+      "has_ui": true,
+      "image_name": "gitlab/gitlab-ce",
+      "intent_questions": [],
+      "name": "GitLab",
+      "package_id": "general-stack",
+      "project_url": "https://about.gitlab.com/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "heimdall": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A simple and elegant application dashboard.",
+      "group": "dashboard & Homepages",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/heimdall",
+      "intent_questions": [],
+      "name": "Heimdall",
+      "package_id": "general-stack",
+      "project_url": "https://heimdall.site/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "homarr": {
+      "component_version": "latest",
+      "conflicts_with": [],
+      "default": true,
+      "depends_on": [],
+      "description": "A simple, yet powerful dashboard for your server.",
+      "group": "dashboard & Homepages",
+      "has_configuration": true,
+      "has_traefik_support": false,
+      "has_ui": true,
+      "image_name": "ghcr.io/ajnart/homarr",
+      "intent_questions": [],
+      "name": "Homarr",
+      "package_id": "general-stack",
+      "project_url": "https://homarr.dev/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "high",
+        "ram": "high",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_internal_port": null,
+      "ui_port_variable": "HOMARR_WEB_PORT"
+    },
+    "homeassistant": {
+      "component_version": "stable",
+      "depends_on": [],
+      "description": "Open source home automation that puts local control and privacy first.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "homeassistant/home-assistant",
+      "intent_questions": [],
+      "name": "Home Assistant",
+      "package_id": "general-stack",
+      "project_url": "https://www.home-assistant.io/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "homer": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A dead simple, static homepage for your server.",
+      "group": "dashboard & Homepages",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "b4bz/homer",
+      "intent_questions": [],
+      "name": "Homer",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/bastienwirtz/homer",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "jellyfin": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A Free Software Media System that puts you in control of your media.",
+      "group": "Media Stack",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/jellyfin",
+      "intent_questions": [],
+      "name": "Jellyfin",
+      "package_id": "general-stack",
+      "project_url": "https://jellyfin.org/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "lora-service": {
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "",
+      "group": "general",
+      "has_configuration": true,
+      "has_traefik_support": false,
+      "has_ui": false,
+      "name": "LoRa Letterbox Notifier",
+      "package_id": "general-stack",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [],
+      "traefik_internal_port": null
+    },
+    "nextcloud": {
+      "component_version": "latest",
+      "depends_on": [
+        "mariadb"
+      ],
+      "description": "The self-hosted productivity platform that keeps you in control.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/nextcloud",
+      "intent_questions": [],
+      "name": "Nextcloud",
+      "package_id": "general-stack",
+      "project_url": "https://nextcloud.com/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "nginx-proxy-manager": {
+      "component_version": "latest",
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "An easy-to-use, Docker-based interface for managing Nginx proxy hosts with free SSL certificate support.",
+      "group": "reverse_proxy",
+      "has_configuration": true,
+      "has_traefik_support": false,
+      "has_ui": true,
+      "image_name": "jc21/nginx-proxy-manager",
+      "intent_questions": [],
+      "name": "Nginx Proxy Manager",
+      "package_id": "general-stack",
+      "project_url": "https://nginxproxymanager.com/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_internal_port": null
+    },
+    "organizr": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A full-featured server organizer with a tabbed interface.",
+      "group": "dashboard & Homepages",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/organizr",
+      "intent_questions": [],
+      "name": "Organizr",
+      "package_id": "general-stack",
+      "project_url": "https://organizr.app/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "pi-hole": {
+      "component_version": "latest",
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "A network-wide ad blocker that acts as a DNS sinkhole.",
+      "group": "dns_blocker",
+      "has_configuration": true,
+      "has_traefik_support": true,
+      "has_ui": true,
+      "image_name": "pihole/pihole",
+      "intent_questions": [],
+      "name": "Pi-hole",
+      "package_id": "general-stack",
+      "project_url": "https://pi-hole.net/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_host_variable": "VIRTUAL_HOST",
+      "traefik_internal_port": 80,
+      "ui_port_variable": "PIHOLE_WEB_PORT"
+    },
+    "njorddeploy-backup-tool": {
+      "component_version": "0.1.0",
+      "default": false,
+      "depends_on": [],
+      "description": "A simple tool to back up and restore all your persistent service data.",
+      "group": "System Tools",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "henkvanhoek/njorddeploy-backup-tool",
+      "intent_questions": [],
+      "name": "Backup & Restore Tool",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/HenkVanHoek/njord-deploy",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "ui_port_variable": "PISELFHOSTING_BACKUP_TOOL_WEB_PORT"
+    },
+    "njorddeploy-service-maintenance": {
+      "component_version": "0.1.0",
+      "default": false,
+      "depends_on": [],
+      "description": "Monitor status, updates and vulnerabilities.",
+      "group": "System Tools",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "henkvanhoek/njorddeploy-service-maintenance",
+      "intent_questions": [],
+      "name": "Service Maintenance",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/HenkVanHoek/njord-deploy",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "ui_port_variable": "PISELFHOSTING_SERVICE_MAINTENANCE_WEB_PORT"
+    },
+    "portainer": {
+      "component_version": "lts",
+      "default": true,
+      "depends_on": [],
+      "description": "A powerful management UI for Docker environments.",
+      "group": "System Tools",
+      "has_configuration": true,
+      "has_ui": true,
+      "image_name": "portainer/portainer-ce",
+      "intent_questions": [],
+      "name": "Portainer",
+      "package_id": "general-stack",
+      "post_install_restart_option": true,
+      "project_url": "https://www.portainer.io/",
+      "protocol": "https",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "ui_port_variable": "PORTAINER_WEB_PORT"
+    },
+    "prosody": {
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "Prosody is a modern, lightweight XMPP (Jabber) communication server designed for efficiency and extensibility.\n\nWithin the NjordDeploy ecosystem, this component provides a private and secure instant messaging platform. It allows users to host their own chat services, including:\n\nOne-to-one messaging: Secure, real-time private conversations.\n\nMulti-User Chat (MUC): Group chat capabilities for family or teams.\n\nHTTP File Upload: Seamless sharing of photos and files directly from your own hardware.\n\nModern Security: Automated TLS encryption using Let's Encrypt certificates via Nginx Proxy Manager.\n\nNote: This service requires port 5222 (client-to-server) and 5269 (server-to-server) to be forwarded in your router for external access.",
+      "group": "general",
+      "has_configuration": true,
+      "has_traefik_support": true,
+      "has_ui": false,
+      "intent_questions": [],
+      "name": "Prosody",
+      "package_id": "general-stack",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_internal_port": 80
+    },
+    "qbittorrent": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A lightweight and powerful BitTorrent client.",
+      "group": "Media Stack",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/qbittorrent",
+      "intent_questions": [],
+      "name": "qBittorrent",
+      "package_id": "general-stack",
+      "project_url": "https://www.qbittorrent.org/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "radarr": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A fork of Sonarr to work with movies.",
+      "group": "Media Stack",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/radarr",
+      "intent_questions": [],
+      "name": "Radarr",
+      "package_id": "general-stack",
+      "project_url": "https://radarr.video/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "sabnzbd": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "The popular and easy-to-use Usenet download client.",
+      "group": "Media Stack",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/sabnzbd",
+      "intent_questions": [],
+      "name": "SABnzbd",
+      "package_id": "general-stack",
+      "project_url": "https://sabnzbd.org/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "scrypted": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "High-performance video integration platform for smart homes.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "koush/scrypted",
+      "intent_questions": [],
+      "name": "Scrypted",
+      "package_id": "general-stack",
+      "project_url": "https://www.scrypted.app/",
+      "protocol": "https",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "sonarr": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "Smart PVR for newsgroup and bittorrent users to manage and download TV shows.",
+      "group": "Media Stack",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/sonarr",
+      "intent_questions": [],
+      "name": "Sonarr",
+      "package_id": "general-stack",
+      "project_url": "https://sonarr.tv/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "test-playwright": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "My first test of playwright",
+      "group": "general",
+      "has_configuration": true,
+      "has_ui": false,
+      "image_name": "mcr.microsoft.com/playwright",
+      "intent_questions": [],
+      "name": "Test Playwright",
+      "package_id": "general-stack",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "traefik": {
+      "component_version": "latest",
+      "conflicts_with": [],
+      "depends_on": [],
+      "description": "A modern, cloud-native reverse proxy and load balancer that automatically discovers services.",
+      "group": "reverse_proxy",
+      "has_configuration": true,
+      "has_traefik_support": false,
+      "has_ui": true,
+      "image_name": "traefik",
+      "intent_questions": [],
+      "name": "Traefik",
+      "package_id": "general-stack",
+      "project_url": "https://traefik.io/traefik/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "traefik_internal_port": null,
+      "ui_port_variable": "TRAEFIK_WEB_PORT"
+    },
+    "unbound": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A validating, recursive, and caching DNS resolver for maximum privacy.",
+      "group": "Security & Utilities",
+      "has_configuration": false,
+      "has_ui": false,
+      "image_name": "mvance/unbound",
+      "intent_questions": [],
+      "name": "Unbound",
+      "package_id": "general-stack",
+      "project_url": "https://www.nlnetlabs.nl/projects/unbound/about/",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "unifi-controller": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "Manage your UniFi networking devices from a central controller.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "lscr.io/linuxserver/unifi-controller",
+      "intent_questions": [],
+      "name": "UniFi Controller",
+      "package_id": "general-stack",
+      "project_url": "https://ui.com/wi-fi",
+      "protocol": "https",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "uptime-kuma": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": " A self-hosted monitoring tool for proactive health checks and notifications via email, Telegram, and more",
+      "group": "System Tools",
+      "has_configuration": true,
+      "has_ui": true,
+      "image_name": "louislam/uptime-kuma",
+      "intent_questions": [],
+      "name": "Uptime Kuma",
+      "package_id": "general-stack",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "ui_port_variable": "UPTIME_KUMA_WEB_PORT"
+    },
+    "vaultwarden": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "A lightweight, self-hosted password manager compatible with Bitwarden clients. It provides almost all of the features of the official server without the resource-heavy footprint.",
+      "group": "Security & Utilities",
+      "has_configuration": true,
+      "has_ui": true,
+      "image_name": "vaultwarden/server",
+      "intent_questions": [],
+      "name": "Vaultwarden",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/dani-garcia/vaultwarden",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    },
+    "web-notepad": {
+      "component_version": "latest",
+      "depends_on": [],
+      "description": "Simple notepad to display the post-install summary.",
+      "group": "Security & Utilities",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "dprandzioch/docker-http-notepad",
+      "intent_questions": [],
+      "name": "Web Notepad",
+      "package_id": "general-stack",
+      "project_url": "https://github.com/pajikos/minimalist-web-notepad",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ],
+      "ui_port_variable": "WEB_NOTEPAD_WEB_PORT"
+    },
+    "zigbee2mqtt": {
+      "component_version": "latest",
+      "depends_on": [
+        "mosquitto"
+      ],
+      "description": "Bridge the gap between your Zigbee devices and your MQTT broker.",
+      "group": "Smart Home & IoT",
+      "has_configuration": false,
+      "has_ui": true,
+      "image_name": "koenkk/zigbee2mqtt",
+      "intent_questions": [],
+      "name": "Zigbee2MQTT",
+      "package_id": "general-stack",
+      "project_url": "https://www.zigbee2mqtt.io/",
+      "protocol": "http",
+      "resource_profile": {
+        "cpu": "medium",
+        "ram": "medium",
+        "storage_type": "persistent"
+      },
+      "tags": [
+        "self-hosted"
+      ]
+    }
+  },
+  "packages": {
+    "general-stack": {
+      "description": "Security related packages",
+      "name": "secirity-stack",
+      "network_type": "bridge"
+    }
+  }
+}

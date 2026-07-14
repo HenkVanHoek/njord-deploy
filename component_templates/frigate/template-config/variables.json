@@ -1,0 +1,22 @@
+{
+  "variables": [
+    {
+      "name": "PORT_FRIGATE_WEB",
+      "description": "Web UI port for Frigate",
+      "type": "port",
+      "default": 5000
+    },
+    {
+      "name": "PORT_FRIGATE_RTMP",
+      "description": "RTMP streaming port for re-broadcasting streams",
+      "type": "port",
+      "default": 1935
+    },
+    {
+      "name": "FRIGATE_RTSP_PASSWORD",
+      "description": "Secure master password utilized for authenticated camera streams",
+      "type": "password",
+      "default": "changeme"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "The external port to access the FileBrowser web UI.",
+            "id": "FILEBROWSER_WEB_PORT",
+            "label": "FileBrowser Web Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

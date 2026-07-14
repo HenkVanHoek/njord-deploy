@@ -1,0 +1,27 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:{{ component_version }}
+    container_name: njorddeploy-radarr
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/radarr/config:/config"
+      # Point this to your movie library, should be the same as Jellyfin's movie folder
+      - "{{ CONFIG_BASE_PATH }}/jellyfin/movies:/movies"
+      # Point this to where your download client saves completed files
+      - "{{ CONFIG_BASE_PATH }}/downloads:/downloads"
+    ports:
+      - "{{ RADARR_WEB_PORT | default('7878') }}:7878"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

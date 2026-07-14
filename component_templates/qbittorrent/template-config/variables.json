@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "8084",
+            "description": "The external HTTP port to access the qBittorrent web interface.",
+            "id": "QBITTORRENT_WEB_PORT",
+            "label": "qBittorrent Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

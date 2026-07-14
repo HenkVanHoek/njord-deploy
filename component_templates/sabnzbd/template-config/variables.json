@@ -1,0 +1,13 @@
+{
+    "variables": [
+        {
+            "default": "8086",
+            "description": "The external HTTP port to access the SABnzbd web interface.",
+            "id": "SABNZBD_WEB_PORT",
+            "label": "SABnzbd Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        }
+    ]
+}

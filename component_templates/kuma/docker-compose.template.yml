@@ -1,0 +1,22 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:{{ component_version }}
+    container_name: njorddeploy-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001" # Port from metadata is 3001
+    volumes:
+      - "{{DATA_ROOT}}/uptime-kuma/data:/app/data"
+    environment:
+      # Uptime Kuma uses its own internal PUID/PGID
+      - "TZ={{TZ}}"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

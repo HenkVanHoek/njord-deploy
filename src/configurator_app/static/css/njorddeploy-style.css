@@ -1,0 +1,526 @@
+/* NjordDeploy / SBCDeploy Official Futuristic Glassmorphic Theme */
+
+:root, html[data-theme="dark"], html[data-theme="futuristic-dark"] {
+    /* Glowing Neon Accent Colors */
+    --brand-green: #00e676; /* Neon Green */
+    --brand-blue: #00b0ff;  /* Glowing Neon Blue */
+    --brand-gray: #90a4ae;  /* Soft Gray-Blue */
+
+    /* Dark Theme Backgrounds */
+    --dark-bg-start: #0a1128; /* Midnight Blue */
+    --dark-bg-end: #02040a;   /* Rich Dark Black */
+
+    /* Glassmorphic Tokens */
+    --glass-bg: rgba(30, 41, 59, 0.45); /* Semi-transparent dark slate */
+    --glass-border: rgba(255, 255, 255, 0.08); /* Soft white border highlight */
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 176, 255, 0.22);
+
+    /* Override Bootstrap's Root Variables */
+    --bs-body-bg: var(--dark-bg-end);
+    --bs-body-color: #f8fafc; /* Very light slate text */
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 176, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 144, 164, 174;
+
+    /* Theme-specific Overrides */
+    --bs-heading-color: #ffffff;
+    --navbar-bg: rgba(15, 23, 42, 0.7);
+    --navbar-color: #cbd5e1;
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-color: #f8fafc;
+    --text-muted-color: #94a3b8;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: rgba(15, 23, 42, 0.95);
+    --introjs-border: var(--brand-blue);
+    --introjs-text: #cbd5e1;
+    --introjs-title: #ffffff;
+    --introjs-btn-bg: rgba(255, 255, 255, 0.05);
+    --introjs-btn-border: rgba(255, 255, 255, 0.1);
+    --introjs-btn-text: #cbd5e1;
+}
+
+html[data-theme="light"] {
+    --brand-green: #00c853;
+    --brand-blue: #0d6efd;
+    --brand-gray: #6c757d;
+    --dark-bg-start: #f8f9fa;
+    --dark-bg-end: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    --bs-body-bg: var(--dark-bg-end);
+    --bs-body-color: #212529;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 13, 110, 253;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-heading-color: #212529;
+    --navbar-bg: rgba(248, 249, 250, 0.85);
+    --navbar-color: #212529;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-color: #212529;
+    --text-muted-color: #6c757d;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #ffffff;
+    --introjs-border: var(--brand-blue);
+    --introjs-text: #212529;
+    --introjs-title: #212529;
+    --introjs-btn-bg: #f8f9fa;
+    --introjs-btn-border: #ced4da;
+    --introjs-btn-text: #212529;
+}
+
+html[data-theme="high-contrast-dark"] {
+    --brand-green: #00e676;
+    --brand-blue: #00e5ff;
+    --brand-gray: #a1a1aa;
+    --dark-bg-start: #000000;
+    --dark-bg-end: #000000;
+    --glass-bg: #121212;
+    --glass-border: #ffffff;
+    --glass-shadow: none;
+    --bs-body-bg: #000000;
+    --bs-body-color: #ffffff;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 229, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 161, 161, 170;
+    --bs-heading-color: #ffffff;
+    --navbar-bg: #000000;
+    --navbar-color: #ffffff;
+    --input-bg: #000000;
+    --input-border: #ffffff;
+    --input-color: #ffffff;
+    --text-muted-color: #a1a1aa;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #000000;
+    --introjs-border: #ffffff;
+    --introjs-text: #ffffff;
+    --introjs-title: #ffffff;
+    --introjs-btn-bg: #000000;
+    --introjs-btn-border: #ffffff;
+    --introjs-btn-text: #ffffff;
+}
+
+html[data-theme="high-contrast-light"] {
+    --brand-green: #00c853;
+    --brand-blue: #0000ff;
+    --brand-gray: #4b5563;
+    --dark-bg-start: #ffffff;
+    --dark-bg-end: #ffffff;
+    --glass-bg: #ffffff;
+    --glass-border: #000000;
+    --glass-shadow: none;
+    --bs-body-bg: #ffffff;
+    --bs-body-color: #000000;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 0, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 75, 85, 99;
+    --bs-heading-color: #000000;
+    --navbar-bg: #ffffff;
+    --navbar-color: #000000;
+    --input-bg: #ffffff;
+    --input-border: #000000;
+    --input-color: #000000;
+    --text-muted-color: #4b5563;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #ffffff;
+    --introjs-border: #000000;
+    --introjs-text: #000000;
+    --introjs-title: #000000;
+    --introjs-btn-bg: #ffffff;
+    --introjs-btn-border: #000000;
+    --introjs-btn-text: #000000;
+}
+
+/* 1. Base Body & Background */
+body {
+    font-family: 'Roboto', sans-serif;
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMTc2LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScwLjUnPjxsaW5lIHgxPScxNScgeTE9JzE1JyB4Mj0nNzUnIHkyPSc0NScgLz48bGluZSB4MT0nNzUnIHkxPSc0NScgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nNDUnIHkyPScxMDUnIC8+PGxpbmUgeDE9JzQ1JyB5MT0nMTA1JyB4Mj0nMTUnIHkyPScxNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxMDUnIHkyPScxMjAnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPScxMDUnIHkxPScxMjAnIHgyPSc3NScgeTI9JzQ1JyAvPjwvZz48ZyBmaWxsPSdyZ2JhKDAsMTc2LDI1NSwwLjI1KSc+PGNpcmNsZSBjeD0nMTUnIGN5PScxNScgcj0nMS41JyAvPjxjaXJjbGUgY3g9Jzc1JyBjeT0nNDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTM1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc0NScgY3k9JzEwNScgcj0nMicgLz48Y2lyY2xlIGN4PScxMDUnIGN5PScxMjAnIHI9JzEuOCcgLz48L2c+PC9zdmc+") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+    color: var(--bs-body-color);
+    min-height: 100vh;
+}
+
+html[data-theme="dark"] body, html[data-theme="futuristic-dark"] body {
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMTc2LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScwLjUnPjxsaW5lIHgxPScxNScgeTE9JzE1JyB4Mj0nNzUnIHkyPSc0NScgLz48bGluZSB4MT0nNzUnIHkxPSc0NScgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nNDUnIHkyPScxMDUnIC8+PGxpbmUgeDE9JzQ1JyB5MT0nMTA1JyB4Mj0nMTUnIHkyPScxNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxMDUnIHkyPScxMjAnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPScxMDUnIHkxPScxMjAnIHgyPSc3NScgeTI9JzQ1JyAvPjwvZz48ZyBmaWxsPSdyZ2JhKDAsMTc2LDI1NSwwLjI1KSc+PGNpcmNsZSBjeD0nMTUnIGN5PScxNScgcj0nMS41JyAvPjxjaXJjbGUgY3g9Jzc1JyBjeT0nNDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTM1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc0NScgY3k9JzEwNScgcj0nMicgLz48Y2lyY2xlIGN4PScxMDUnIGN5PScxMjAnIHI9JzEuOCcgLz48L2c+PC9zdmc+") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+}
+
+html[data-theme="light"] body {
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMCwwLDAuMDIpJyBzdHJva2Utd2lkdGg9JzAuNSc+PGxpbmUgeDE9JzE1JyB5MT0nMTUnIHgyPSc3NScgeTI9JzQ1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nMTM1JyB5Mj0nMTUnIC8+PGxpbmUgeDE9Jzc1JyB5MT0nNDUnIHgyPSc0NScgeTI9JzEwNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc0NScgeTE9JzEwNScgeDI9JzEwNScgeTI9JzEyMCcgLz48bGluZSB4MT0nMTA1JyB5MT0nMTIwJyB4Mj0nMTM1JyB5Mj0nMTUnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9Jzc1JyB5Mj0nNDUnIC8+PC9nPjxnIGZpbGw9J3JnYmEoMCwwLDAsMC4wMyknPjxjaXJjbGUgY3g9JzE1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc3NScgY3k9JzQ1JyByPScyJyAvPjxjaXJjbGUgY3g9JzEzNScgY3k9JzE1JyByPScxLjUnIC8+PGNpcmNsZSBjeD0nNDUnIGN5PScxMDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTA1JyBjeT0nMTIwJyByPScxLjgnIC8+PC9nPjwvc3ZnPg==") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+}
+
+html[data-theme="high-contrast-dark"] body {
+    background: #000000 !important;
+}
+
+html[data-theme="high-contrast-light"] body {
+    background: #ffffff !important;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--bs-heading-color) !important;
+}
+
+/* 2. Glassmorphic Containers and Cards */
+.container, .card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: 12px !important;
+    transition: box-shadow 0.3s ease, transform 0.3s ease !important;
+}
+
+.card:hover {
+    box-shadow: 0 0 30px rgba(0, 176, 255, 0.45) !important;
+    transform: translateY(-2px);
+}
+
+html[data-theme="high-contrast-dark"] .card:hover,
+html[data-theme="high-contrast-light"] .card:hover {
+    transform: none;
+    box-shadow: none !important;
+}
+
+/* Override card header and footer back to transparent */
+.card-header, .card-footer {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: var(--glass-border) !important;
+    color: #cbd5e1 !important;
+}
+
+/* 3. Glowing Interactive Inputs */
+.form-control, input[type="text"], input[type="password"] {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    color: var(--input-color) !important;
+    border-radius: 6px;
+    padding: 0.6em;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control::placeholder,
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: var(--text-muted-color) !important;
+    opacity: 0.65 !important;
+}
+
+.form-control:focus, input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--brand-blue) !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.35) !important;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* 4. Neon Buttons & Overrides */
+.btn-primary {
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 25px rgba(0, 176, 255, 0.7);
+    transform: translateY(-1px);
+}
+
+.btn-accent {
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+    color: #ffffff !important;
+}
+
+.btn-accent:hover {
+    box-shadow: 0 0 25px rgba(0, 176, 255, 0.7);
+    color: #ffffff !important;
+}
+
+.btn-success, #begin-scan-btn, .button {
+    background: linear-gradient(135deg, #00e676, #00c853) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover, #begin-scan-btn:hover {
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.7);
+    transform: translateY(-1px);
+}
+
+/* 5. Progress Bar Neon Glow */
+.progress {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--brand-blue), #00e676) !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.7);
+}
+
+/* 6. Navigation Bar Glass */
+.navbar {
+    background: var(--navbar-bg) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.navbar .nav-link, .navbar-brand {
+    color: var(--navbar-color) !important;
+}
+
+/* 7. Typography Adjustments */
+.text-muted {
+    color: var(--text-muted-color) !important; /* Theme-specific gray text */
+}
+
+.bg-light {
+    background-color: transparent !important;
+}
+
+.bg-white {
+    background-color: var(--glass-bg) !important;
+}
+
+/* 8. Navigation Tabs (Bootstrap Overrides) */
+.nav-tabs {
+    border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.nav-tabs .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected tabs */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.08) transparent !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--brand-blue) !important; /* Neon blue text for selected tab */
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Subtle glass back */
+    border-color: var(--glass-border) var(--glass-border) transparent !important;
+    border-bottom: 2px solid var(--brand-blue) !important;
+    text-shadow: 0 0 8px rgba(0, 176, 255, 0.4);
+}
+
+/* 9. Navigation Pills (Bootstrap Overrides for Sidebar Tabs) */
+.nav-pills .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected pills */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--glass-border) !important;
+}
+
+.nav-pills .nav-link.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important; /* Neon blue gradient */
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.45) !important;
+    border-color: var(--glass-border) !important;
+    font-weight: 600;
+}
+
+/* Dropdown menu & item styling */
+.dropdown-menu {
+    background-color: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(16px);
+}
+.dropdown-menu .dropdown-item {
+    color: var(--navbar-color) !important;
+    transition: all 0.2s ease;
+}
+.dropdown-menu .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+html[data-theme="light"] .dropdown-menu .dropdown-item {
+    color: #212529 !important;
+}
+html[data-theme="light"] .dropdown-menu .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #000000 !important;
+}
+html[data-theme="high-contrast-light"] .dropdown-menu .dropdown-item {
+    color: #000000 !important;
+}
+html[data-theme="high-contrast-light"] .dropdown-menu .dropdown-item:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Tooltip styling */
+.tooltip-inner {
+    background-color: var(--introjs-bg) !important;
+    color: var(--introjs-text) !important;
+    border: 1px solid var(--introjs-border) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+.tooltip-arrow::before {
+    border-top-color: var(--introjs-bg) !important;
+    border-bottom-color: var(--introjs-bg) !important;
+}
+
+/* IntroJS Custom Styling */
+.introjs-tooltip {
+    background-color: var(--introjs-bg) !important;
+    border: 1px solid var(--introjs-border) !important;
+    color: var(--introjs-text) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+    border-radius: 12px !important;
+    min-width: 320px !important;
+}
+.introjs-tooltip-title {
+    color: var(--introjs-title) !important;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+.introjs-tooltiptext {
+    color: var(--introjs-text) !important;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.introjs-button {
+    background-color: var(--introjs-btn-bg) !important;
+    border: 1px solid var(--introjs-btn-border) !important;
+    color: var(--introjs-btn-text) !important;
+    text-shadow: none !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.introjs-button:hover {
+    background: var(--bs-primary) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.4) !important;
+}
+html[data-theme="high-contrast-light"] .introjs-button:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+.introjs-disabled {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    color: #475569 !important;
+    opacity: 0.5;
+}
+.introjs-progress {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px !important;
+}
+.introjs-progressbar {
+    background: linear-gradient(90deg, var(--brand-blue), #00e676) !important;
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.5) !important;
+}
+.introjs-skipbutton {
+    color: var(--text-muted-color) !important;
+}
+.introjs-skipbutton:hover {
+    color: var(--introjs-title) !important;
+}
+.introjs-arrow.top { border-bottom-color: var(--introjs-bg) !important; }
+.introjs-arrow.bottom { border-top-color: var(--introjs-bg) !important; }
+.introjs-arrow.left { border-right-color: var(--introjs-bg) !important; }
+.introjs-arrow.right { border-left-color: var(--introjs-bg) !important; }
+
+/* Sidebar Tabs (#view-tabs) */
+#view-tabs {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+}
+html[data-theme="light"] #view-tabs {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+html[data-theme="high-contrast-dark"] #view-tabs {
+    background-color: #000000 !important;
+    border: 1px solid #ffffff !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs {
+    background-color: #ffffff !important;
+    border: 1px solid #000000 !important;
+}
+#view-tabs .nav-link {
+    color: var(--text-muted-color) !important;
+}
+#view-tabs .nav-link.active {
+    background: var(--bs-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.35) !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs .nav-link.active {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs .nav-link {
+    color: #000000 !important;
+}
+
+/* Welcome detailed guide */
+#welcome-detailed-guide {
+    color: var(--bs-body-color) !important;
+}
+
+/* Disabled inputs and buttons contrast */
+.btn:disabled, .btn-success:disabled, .btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-muted-color) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+html[data-theme="high-contrast-dark"] .btn:disabled,
+html[data-theme="high-contrast-dark"] .btn-success:disabled,
+html[data-theme="high-contrast-dark"] .btn-primary:disabled {
+    background: #27272a !important;
+    color: #cbd5e1 !important;
+    border: 1px solid #ffffff !important;
+}
+html[data-theme="high-contrast-light"] .btn:disabled,
+html[data-theme="high-contrast-light"] .btn-success:disabled,
+html[data-theme="high-contrast-light"] .btn-primary:disabled {
+    background: #e4e4e7 !important;
+    color: #1f2937 !important;
+    border: 1px solid #000000 !important;
+}
+.nav-link.disabled {
+    color: var(--text-muted-color) !important;
+}
