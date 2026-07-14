@@ -55,3 +55,20 @@ python scripts/proxmox_test_runner.py --template-id 901 --node pve-node2
 
 * **JSON Rapport**: De ruwe testresultaten worden opgeslagen in `tests/proxmox_results.json`.
 * **Markdown Rapport**: Een leesbaar overzicht van de testrun met foutdetails wordt opgeslagen in `docs/PROXMOX_TESTS.md`.
+
+## 4. Problemen Oplossen (Troubleshooting)
+
+### A. QEMU Guest Agent is niet actief
+Als de test-runner time-out bij het ophalen van het IP-adres van de VM:
+* Zorg ervoor dat de `qemu-guest-agent` daemon is geïnstalleerd en ingeschakeld in het besturingssysteem van je master template VM:
+  ```bash
+  sudo apt-get update && sudo apt-get install -y qemu-guest-agent
+  sudo systemctl enable --now qemu-guest-agent
+  ```
+* De test-runner configureert de gekloonde VM automatisch met `agent: enabled=1` en koppelt een netwerkkaart (`net0`) en Cloud-Init drive (`ide2`), maar de daemon in de VM moet wel actief zijn om te reageren op API queries.
+
+### B. Geen ondersteuning voor Linked Clones
+Als je opslagpool (bijv. `local-lvm`) geen snapshots/linked clones ondersteunt, gooit Proxmox een API fout. De test-runner heeft een automatische fallback ingebouwd en zal in dat geval automatisch overschakelen naar een **Full Clone**. Dit duurt iets langer maar voorkomt dat de test faalt.
+
+### C. Master Template VMID
+Op de node `pve` is de master template VMID standaard ingesteld op `105` (`pi-master-template`). Als je een andere template wilt gebruiken, geef dit dan mee via de CLI optie `--template-id <id>`.

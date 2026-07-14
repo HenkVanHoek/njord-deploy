@@ -96,6 +96,20 @@ test-backend:
 # Run only the JavaScript frontend tests
 test-frontend:
 	npx playwright test
+
+## 4. Proxmox Component Integration Testing
+
+NjordDeploy features a high-fidelity automated test runner that validates components by deploying them on dynamically cloned VMs within a Proxmox VE server.
+
+This test runner performs the following steps:
+1. Clones a master template VM on the Proxmox host.
+2. Injects SSH keys and boots the VM using Cloud-Init.
+3. Retrieves the dynamic IP address of the booted VM.
+4. Generates deployment configurations and runs the Ansible deployment playbook.
+5. Performs HTTP and docker health verification checks.
+6. Automatically cleans up by destroying the temporary VM.
+
+For credentials, setup instructions, and advanced parameters, refer to the [.agents/skills/proxmox-test/SKILL.md](file:///home/hvhoek/PycharmProjects/njord-deploy/.agents/skills/proxmox-test/SKILL.md) skill file.
 ```
 
 With this in place, you can run `make test` to validate the entire application.
