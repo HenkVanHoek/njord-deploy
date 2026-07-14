@@ -12,7 +12,7 @@ src_path = os.path.join(project_root, "src")
 if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
-from pi_scanner import PiScanner  # noqa: E402
+from node_scanner import NodeScanner  # noqa: E402
 
 # Set up basic logging to see detailed messages
 logging.basicConfig(
@@ -42,7 +42,7 @@ def main():
     try:
         # 1. Initialize the scanner
         print(f"\nInitializing scanner for user: {pi_username}...")
-        scanner = PiScanner(username=pi_username, password=pi_password)
+        scanner = NodeScanner(username=pi_username, password=pi_password)
 
         # 2. Run the scan with auto-detection
         print("Starting network scan (auto-detecting subnet)...")

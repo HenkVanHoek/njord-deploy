@@ -7,9 +7,11 @@ line_length = 88
 
 [tool.pytest.ini_options]
 pythonpath = [
-  "."
+  ".",
+  "src"
 ]
 norecursedirs = ["scripts", "test_scanner.py"]
+addopts = "--ignore=test_scanner.py"
 # START OF FIX: Use precise regex filter to ignore external 'crypt' deprecation warning
 filterwarnings = [
     "ignore:.*'crypt' is deprecated and slated for removal in Python 3.13.*:DeprecationWarning",
