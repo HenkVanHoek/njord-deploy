@@ -1,21 +1,14 @@
 # Proxmox Automated Component Testing Report
 
-**Run Timestamp:** 2026-07-15 14:57:54
-**Total Tested:** 1 | **Passed:** 0 | **Failed:** 1
+**Run Timestamp:** 2026-07-15 15:13:17
+**Total Tested:** 1 | **Passed:** 1 | **Failed:** 0
 
 ## Results Table
 
 | Component ID | VM ID | IP Address | Deployment | Containers | HTTP | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `uptime-kuma` | 104 | N/A | failed | Stopped | N/A | **❌ FAIL** |
+| `uptime-kuma` | 104 | 192.168.178.41 | success | Running | OK | **✅ PASS** |
 
 ## Details & Failures
 
-### Component: `uptime-kuma`
-- **VMID:** 104
-- **IP:** N/A
-- **Deployment Outcome:** failed
-- **Error / Logs:**
-```
-Unable to retrieve IP address for cloned VM.
-```
+All components completed execution and verification successfully!

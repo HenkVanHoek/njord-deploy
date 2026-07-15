@@ -1,13 +1,13 @@
 [
     {
         "component_id": "uptime-kuma",
-        "status": "failed",
+        "status": "success",
         "vmid": 104,
-        "ip": null,
-        "deployment": "failed",
-        "running": false,
-        "http_ok": null,
+        "ip": "192.168.178.41",
+        "deployment": "success",
+        "running": true,
+        "http_ok": true,
         "error_logs": false,
-        "error_message": "Unable to retrieve IP address for cloned VM."
+        "error_message": ""
     }
 ]
