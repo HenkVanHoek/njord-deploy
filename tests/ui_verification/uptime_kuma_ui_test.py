@@ -6,7 +6,11 @@ import socket
 from pathlib import Path
 
 import pytest
-from playwright.sync_api import Page, expect
+
+# Skip this entire test module if playwright is not installed (e.g., in CI)
+pytest.importorskip("playwright")
+
+from playwright.sync_api import Page, expect  # noqa: E402 type: ignore
 
 
 def is_port_open(ip: str, port: int) -> bool:
