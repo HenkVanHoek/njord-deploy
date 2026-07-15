@@ -8,7 +8,7 @@ services:
     image: lscr.io/linuxserver/organizr:{{ component_version }}
     restart: unless-stopped
     ports:
-      - "8095:80"
+      - "{{ PORT_ORGANIZR | default(8095) }}:80"
     volumes:
       - "{{DATA_ROOT}}/organizr/config:/config"
     environment:

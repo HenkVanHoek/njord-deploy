@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_ORGANIZR",
+      "description": "Port to access the Organizr web interface.",
+      "type": "port",
+      "default": 8095
+    }
+  ]
 }
