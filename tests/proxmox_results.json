@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "sabnzbd",
+        "component_id": "scrypted",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.131",
+        "ip": "192.168.178.132",
         "deployment": "success",
         "running": true,
         "http_ok": true,
