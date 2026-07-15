@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_OCTOPRINT",
+      "description": "Port to access the OctoPrint web interface.",
+      "type": "port",
+      "default": 5000
+    }
+  ]
 }
