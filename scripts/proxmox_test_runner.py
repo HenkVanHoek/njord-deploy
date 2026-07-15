@@ -87,6 +87,7 @@ def verify_service_health(
         "http_ok": None,
         "details": "",
         "logs_error": False,
+        "detected_version": None,
     }
 
     # Initialize SSHManager to run checks
@@ -137,6 +138,50 @@ def verify_service_health(
             logs_content = "\n".join(log_lines).lower()
             if "traceback" in logs_content or "fatal" in logs_content:
                 results["logs_error"] = True
+
+            # Inspect container config to get the actual version
+            cmd_inspect = (
+                f"docker inspect {matched_container} --format '{{{{json .Config}}}}'"
+            )
+            inspect_exit, inspect_out = ssh_mgr.execute_command(
+                cmd_inspect,
+                lambda x: None,
+                check_exit_code=False,
+            )
+            if inspect_exit == 0 and inspect_out:
+                try:
+                    import json
+
+                    config_data = json.loads(inspect_out.strip())
+                    labels = config_data.get("Labels") or {}
+                    env_list = config_data.get("Env") or []
+
+                    # 1. Check org.opencontainers.image.version label
+                    ver = labels.get("org.opencontainers.image.version")
+                    # 2. Check other common labels
+                    if not ver:
+                        ver = labels.get("version")
+                    # 3. Check env variables
+                    if not ver:
+                        for env in env_list:
+                            if "=" in env:
+                                k, v = env.split("=", 1)
+                                if k.upper() in [
+                                    "VERSION",
+                                    "CADDY_VERSION",
+                                    "RADARR_VERSION",
+                                    "SONARR_VERSION",
+                                    "HA_VERSION",
+                                    "APP_VERSION",
+                                ]:
+                                    ver = v
+                                    break
+                    if ver:
+                        results["detected_version"] = ver.strip()
+                except Exception as inspect_ex:
+                    logger.warning(
+                        f"Failed to parse docker inspect output: {inspect_ex}"
+                    )
 
         # Check UI access if applicable
         if component_details.get("has_ui", False):
@@ -661,7 +706,9 @@ def run_proxmox_tests(args) -> int:
             ):
                 test_record["status"] = "success"
                 logger.info(f"✅ Component {comp_id} verified successfully!")
-                tested_ver = comp.get("component_version", "latest")
+                tested_ver = health.get("detected_version") or comp.get(
+                    "component_version", "latest"
+                )
                 if is_lxc:
                     notes = "Tested successfully on Proxmox LXC."
                 else:

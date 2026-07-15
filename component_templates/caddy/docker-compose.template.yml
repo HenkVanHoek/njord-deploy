@@ -4,7 +4,7 @@
 # breaking_changes: "None"
 services:
   caddy:
-    image: caddy:latest
+    image: caddy:{{ component_version }}
     container_name: caddy
     restart: unless-stopped
     ports:
