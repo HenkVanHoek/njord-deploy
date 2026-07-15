@@ -165,9 +165,9 @@ def verify_service_health(
                 protocol = component_details.get("protocol", "http")
                 url = f"{protocol}://{vm_ip}:{port}"
                 logger.info(
-                    f"Probing HTTP UI endpoint: {url} " "(retrying up to 6 times)..."
+                    f"Probing HTTP UI endpoint: {url} " "(retrying up to 15 times)..."
                 )
-                max_retries = 6
+                max_retries = 15
                 for attempt in range(1, max_retries + 1):
                     try:
                         res = requests.get(url, timeout=5, verify=False)  # nosec B501
