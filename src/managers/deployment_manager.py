@@ -274,6 +274,10 @@ class DeploymentManager:
 
                 # Execute Ansible and pass the local path and new flags as variables
                 try:
+                    from pathlib import Path
+
+                    Path(project_root, "artifacts").mkdir(parents=True, exist_ok=True)
+
                     runner = ansible_runner.run(
                         private_data_dir=project_root,
                         playbook=playbook_path,
