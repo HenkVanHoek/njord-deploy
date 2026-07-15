@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_SCRYPTED",
+      "description": "The secure HTTPS port to access the Scrypted web interface.",
+      "type": "port",
+      "default": 10443
+    }
+  ]
 }

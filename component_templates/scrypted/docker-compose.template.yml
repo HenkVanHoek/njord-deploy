@@ -2,4 +2,18 @@
 # last_tested_version: "none"
 # platform_notes: "None"
 # breaking_changes: "None"
-# Template for scrypted not found.
+services:
+  scrypted:
+    container_name: scrypted
+    image: koush/scrypted:{{ component_version }}
+    restart: unless-stopped
+    ports:
+      - "{{ PORT_SCRYPTED | default(10443) }}:10443"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/scrypted:/server/volume"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
