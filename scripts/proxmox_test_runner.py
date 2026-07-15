@@ -169,6 +169,144 @@ def verify_service_health(
     return results
 
 
+def update_template_status(
+    templates_path: Path,
+    component_id: str,
+    tested_version: str,
+    platform_notes: str,
+) -> None:
+    """Updates status, last tested version and platform notes in template."""
+    template_file = templates_path / component_id / "docker-compose.template.yml"
+    if not template_file.exists():
+        logger.warning(f"Template file not found to update status: {template_file}")
+        return
+
+    try:
+        content = template_file.read_text(encoding="utf-8")
+        lines = content.splitlines()
+
+        updated_lines = []
+        in_header = True
+        status_replaced = False
+        version_replaced = False
+        notes_replaced = False
+
+        for line in lines:
+            if in_header and line.startswith("#"):
+                stripped = line[1:].strip()
+                if stripped.startswith("status:"):
+                    updated_lines.append('# status: "tested"')
+                    status_replaced = True
+                elif stripped.startswith("last_tested_version:"):
+                    updated_lines.append(f'# last_tested_version: "{tested_version}"')
+                    version_replaced = True
+                elif stripped.startswith("platform_notes:"):
+                    updated_lines.append(f'# platform_notes: "{platform_notes}"')
+                    notes_replaced = True
+                else:
+                    updated_lines.append(line)
+            else:
+                in_header = False
+                updated_lines.append(line)
+
+        if not status_replaced or not version_replaced or not notes_replaced:
+            logger.warning(
+                f"Could not find standard headers in {template_file}, "
+                "skipping header update."
+            )
+            return
+
+        new_content = "\n".join(updated_lines) + "\n"
+        template_file.write_text(new_content, encoding="utf-8")
+        logger.info(
+            f"Updated template status headers for {component_id} to "
+            f"'tested' (version: {tested_version}, notes: {platform_notes})"
+        )
+    except Exception as e:
+        logger.error(f"Failed to update template status for {component_id}: {e}")
+
+
+def find_suitable_lxc_template(client: ProxmoxClient, node: str) -> str:
+    """Finds a Debian LXC template in active storage pools."""
+    storages = ["local"]
+    try:
+        storage_res = client.get(f"nodes/{node}/storage")
+        active_vztmpl_storages = []
+        for store in storage_res.get("data", []):
+            is_active = store.get("active")
+            content_types = store.get("content", "")
+            if is_active and "vztmpl" in content_types:
+                name = store.get("storage")
+                if name:
+                    active_vztmpl_storages.append(name)
+        if active_vztmpl_storages:
+            storages = sorted(active_vztmpl_storages, key=lambda x: x != "local")
+    except Exception as e:
+        logger.warning(f"Failed to list Proxmox storage pools: {e}")
+
+    templates = []
+    for s in storages:
+        try:
+            endpoint = f"nodes/{node}/storage/{s}/content"
+            res = client.get(endpoint, params={"content": "vztmpl"})
+            templates.extend(res.get("data", []))
+        except Exception as e:
+            logger.warning(f"Failed to query templates on storage '{s}': {e}")
+
+    if templates:
+        # Prioritize Debian templates
+        debian_templates = [
+            t for t in templates if "debian" in t.get("volid", "").lower()
+        ]
+        if debian_templates:
+            debian_templates.sort(key=lambda x: x.get("volid", ""), reverse=True)
+            newest_deb = next(iter(debian_templates), None)
+            if newest_deb:
+                volid = newest_deb.get("volid")
+                if volid:
+                    return volid
+
+    default_storage = next(iter(storages), "local")
+    return f"{default_storage}:vztmpl/debian-12-standard_12.12-1_amd64.tar.zst"
+
+
+def wait_for_lxc_ip(
+    client: ProxmoxClient, node: str, vmid: int, timeout_seconds: int = 120
+) -> str:
+    """Polls the Proxmox API until the container receives an IP address."""
+    logger.info(f"Waiting for container {vmid} to receive an IP address...")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            endpoint = f"nodes/{node}/lxc/{vmid}/interfaces"
+            res = client.get(endpoint)
+            interfaces = res.get("data", [])
+            for iface in interfaces:
+                name = iface.get("name")
+                inet = iface.get("inet")
+                if name == "eth0" and inet:
+                    parts = inet.split("/")
+                    ip_addr, *_ = parts
+                    if ip_addr and not ip_addr.startswith("127."):
+                        return ip_addr
+        except Exception as e:
+            logger.debug(f"Failed to get interfaces: {e}")
+        time.sleep(4)
+    raise TimeoutError("Container failed to acquire an IP address in time.")
+
+
+def start_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
+    return client.post(f"nodes/{node}/lxc/{vmid}/status/start")
+
+
+def stop_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
+    return client.post(f"nodes/{node}/lxc/{vmid}/status/stop")
+
+
+def destroy_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
+    return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1})
+
+
 def run_proxmox_tests(args) -> int:
     """Orchestrates cloning, deploying, verifying, and tearing down VMs."""
     load_dotenv()
@@ -240,65 +378,127 @@ def run_proxmox_tests(args) -> int:
             "error_message": "",
         }
 
+        is_lxc = getattr(args, "mode", "vm") == "lxc"
         new_vmid = None
+        vm_ip: str | None = None
         try:
-            # 1. Clone VM
-            new_vmid = proxmox_client.get_next_vmid()
-            test_record["vmid"] = new_vmid
-            logger.info(f"Cloning master template VMID {template_id} to {new_vmid}...")
-            try:
-                proxmox_client.clone_vm(
-                    node=node,
-                    vmid=template_id,
-                    newid=new_vmid,
-                    name=f"pish-test-{comp_id}",
-                    full=False,  # Linked clone
+            if is_lxc:
+                # 1. Create LXC
+                new_vmid = proxmox_client.get_next_vmid()
+                test_record["vmid"] = new_vmid
+                logger.info(f"Creating LXC container {new_vmid} on node '{node}'...")
+                ostemplate = find_suitable_lxc_template(proxmox_client, node)
+                logger.info(f"Using template: {ostemplate}")
+
+                net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
+                rootfs_config = "local-lvm:40"
+                features_config = "nesting=1"
+
+                create_data = {
+                    "vmid": new_vmid,
+                    "ostemplate": ostemplate,
+                    "cores": 4,
+                    "memory": 8192,
+                    "swap": 512,
+                    "rootfs": rootfs_config,
+                    "net0": net_config,
+                    "features": features_config,
+                    "unprivileged": 1,
+                    "password": vm_pass,
+                    "ssh-public-keys": ssh_public_key,
+                    "start": 1,
+                }
+                proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+
+                # 2. Wait for dynamic IP
+                vm_ip = wait_for_lxc_ip(proxmox_client, node, new_vmid)
+                test_record["ip"] = vm_ip
+                time.sleep(10)
+
+                # 3. Provision LXC with Docker
+                logger.info(
+                    f"Provisioning LXC container {new_vmid} (Installing Docker)..."
                 )
-            except Exception as e:
-                if "Linked clone feature is not supported" in str(e):
-                    logger.warning(
-                        "Linked clone not supported, falling back to full clone..."
-                    )
+                ssh = SSHManager(
+                    hostname=vm_ip,
+                    username="root",
+                    password=vm_pass,
+                    allow_auto_add=True,
+                )
+                connected, conn_msg = ssh.connect()
+                if not connected:
+                    raise RuntimeError(f"Failed to connect to LXC over SSH: {conn_msg}")
+
+                install_commands = [
+                    "apt-get update",
+                    "apt-get install -y curl ca-certificates gnupg",
+                    "curl -fsSL https://get.docker.com -o get-docker.sh",
+                    "sh get-docker.sh",
+                    "systemctl enable --now docker",
+                    "docker network create njorddeploy_net",
+                ]
+                for cmd in install_commands:
+                    ssh.execute_command(cmd, lambda msg: None)
+                ssh.close()
+
+            else:
+                # 1. Clone VM
+                new_vmid = proxmox_client.get_next_vmid()
+                test_record["vmid"] = new_vmid
+                logger.info(
+                    f"Cloning master template VMID {template_id} to {new_vmid}..."
+                )
+                try:
                     proxmox_client.clone_vm(
                         node=node,
                         vmid=template_id,
                         newid=new_vmid,
                         name=f"pish-test-{comp_id}",
-                        full=True,  # Full clone
+                        full=False,  # Linked clone
                     )
-                else:
-                    raise
+                except Exception as e:
+                    if "Linked clone feature is not supported" in str(e):
+                        logger.warning(
+                            "Linked clone not supported, falling back to full clone..."
+                        )
+                        proxmox_client.clone_vm(
+                            node=node,
+                            vmid=template_id,
+                            newid=new_vmid,
+                            name=f"pish-test-{comp_id}",
+                            full=True,  # Full clone
+                        )
+                    else:
+                        raise
 
-            # 2. Configure Cloud-Init (injecting our local SSH Key)
-            import urllib.parse
+                # 2. Configure Cloud-Init (injecting our local SSH Key)
+                import urllib.parse
 
-            logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
-            proxmox_client.configure_vm(
-                node=node,
-                vmid=new_vmid,
-                config_data={
-                    "ciuser": vm_user,
-                    "cipassword": vm_pass,
-                    "sshkeys": urllib.parse.quote(ssh_public_key),
-                    "ipconfig0": "ip=dhcp",
-                    "agent": "enabled=1",
-                    "ide2": "local-lvm:cloudinit",
-                    "net0": "virtio,bridge=vmbr0,firewall=1",
-                },
-            )
+                logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
+                proxmox_client.configure_vm(
+                    node=node,
+                    vmid=new_vmid,
+                    config_data={
+                        "ciuser": vm_user,
+                        "cipassword": vm_pass,
+                        "sshkeys": urllib.parse.quote(ssh_public_key),
+                        "ipconfig0": "ip=dhcp",
+                        "agent": "enabled=1",
+                        "ide2": "local-lvm:cloudinit",
+                        "net0": "virtio,bridge=vmbr0,firewall=1",
+                    },
+                )
 
-            # 3. Start VM
-            logger.info(f"Starting VMID {new_vmid}...")
-            proxmox_client.start_vm(node=node, vmid=new_vmid)
+                # 3. Start VM
+                logger.info(f"Starting VMID {new_vmid}...")
+                proxmox_client.start_vm(node=node, vmid=new_vmid)
 
-            # 4. Wait for dynamic IP
-            vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
-            if not vm_ip:
-                raise TimeoutError("Unable to retrieve IP address for cloned VM.")
-            test_record["ip"] = vm_ip
-
-            # Give cloud-init and network services a few seconds to settle
-            time.sleep(10)
+                # 4. Wait for dynamic IP
+                vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
+                if not vm_ip:
+                    raise TimeoutError("Unable to retrieve IP address for cloned VM.")
+                test_record["ip"] = vm_ip
+                time.sleep(10)
 
             # 5. Build configuration package locally
             logger.info(f"Generating deployment configurations for {comp_id}...")
@@ -343,7 +543,13 @@ def run_proxmox_tests(args) -> int:
                 task_id=task_id,
                 tasks=tasks_dict,
                 output_path=str(comp_output_dir),
-                devices=[{"ip": vm_ip, "username": vm_user, "password": vm_pass}],
+                devices=[
+                    {
+                        "ip": vm_ip,
+                        "username": "root" if is_lxc else vm_user,
+                        "password": vm_pass,
+                    }
+                ],
                 selected_components_data=[comp],
                 global_vars=user_vars,
             )
@@ -364,7 +570,7 @@ def run_proxmox_tests(args) -> int:
             logger.info("Running service health verification probe...")
             health = verify_service_health(
                 vm_ip=vm_ip,
-                vm_user=vm_user,
+                vm_user="root" if is_lxc else vm_user,
                 vm_pass=vm_pass,
                 component_id=comp_id,
                 component_details=comp,
@@ -380,11 +586,20 @@ def run_proxmox_tests(args) -> int:
             ):
                 test_record["status"] = "success"
                 logger.info(f"✅ Component {comp_id} verified successfully!")
+                tested_ver = comp.get("component_version", "latest")
+                if is_lxc:
+                    notes = "Tested successfully on Proxmox LXC."
+                else:
+                    notes = (
+                        "Tested successfully on Proxmox VM "
+                        f"(template {template_id})."
+                    )
+                update_template_status(templates_path, comp_id, tested_ver, notes)
             else:
                 test_record["status"] = "failed"
                 test_record["error_message"] = health["details"]
                 logger.error(
-                    f"❌ Component {comp_id} verification failed: {health['details']}"
+                    "❌ Component verification failed: " f"{health['details']}"
                 )
                 failed_count += 1
 
@@ -394,16 +609,21 @@ def run_proxmox_tests(args) -> int:
             test_record["error_message"] = str(ex)
             failed_count += 1
         finally:
-            # 8. Teardown (Stop and destroy the test VM)
+            # 8. Teardown (Stop and destroy the test VM/LXC)
             if new_vmid:
-                logger.info(f"Stopping and destroying test VMID {new_vmid}...")
+                logger.info(f"Stopping and destroying test ID {new_vmid}...")
                 try:
-                    proxmox_client.stop_vm(node, new_vmid)
-                    time.sleep(5)  # Let it shutdown
-                    proxmox_client.destroy_vm(node, new_vmid)
-                    logger.info(f"VMID {new_vmid} destroyed.")
+                    if is_lxc:
+                        stop_lxc(proxmox_client, node, new_vmid)
+                        time.sleep(5)
+                        destroy_lxc(proxmox_client, node, new_vmid)
+                    else:
+                        proxmox_client.stop_vm(node, new_vmid)
+                        time.sleep(5)
+                        proxmox_client.destroy_vm(node, new_vmid)
+                    logger.info(f"ID {new_vmid} destroyed.")
                 except Exception as ex:
-                    logger.error(f"Failed to destroy VMID {new_vmid}: {ex}")
+                    logger.error(f"Failed to destroy ID {new_vmid}: {ex}")
 
             # Cleanup local folder
             if new_vmid:
@@ -523,6 +743,13 @@ if __name__ == "__main__":
         "--template-id", type=str, help="VMID of the master template to clone."
     )
     parser.add_argument("--node", type=str, help="Proxmox node name.")
+    parser.add_argument(
+        "--mode",
+        type=str,
+        choices=["vm", "lxc"],
+        default="vm",
+        help="Testing mode: 'vm' or 'lxc' (default: vm)",
+    )
     args = parser.parse_args()
 
     exit_code = run_proxmox_tests(args)

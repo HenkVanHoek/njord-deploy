@@ -1,8 +1,8 @@
 [
     {
-        "component_id": "adguard-home",
+        "component_id": "uptime-kuma",
         "status": "failed",
-        "vmid": 101,
+        "vmid": 104,
         "ip": null,
         "deployment": "failed",
         "running": false,
