@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "pish-fluffychat-web",
+        "component_id": "radarr",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.130",
+        "ip": "192.168.178.147",
         "deployment": "success",
         "running": true,
         "http_ok": true,
