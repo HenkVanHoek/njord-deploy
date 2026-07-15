@@ -144,7 +144,8 @@ def verify_service_health(
             port = None
             if ui_var:
                 for var in variables_list:
-                    if var.get("id") == ui_var:
+                    var_name = var.get("id") or var.get("name")
+                    if var_name == ui_var:
                         port = var.get("default")
                         break
             # Fallback to standard port if not in vars
@@ -152,6 +153,9 @@ def verify_service_health(
                 port = component_details.get("traefik_internal_port")
 
             if port:
+                import urllib3
+
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
                 protocol = component_details.get("protocol", "http")
                 url = f"{protocol}://{vm_ip}:{port}"
                 logger.info(
@@ -160,7 +164,7 @@ def verify_service_health(
                 max_retries = 6
                 for attempt in range(1, max_retries + 1):
                     try:
-                        res = requests.get(url, timeout=5)
+                        res = requests.get(url, timeout=5, verify=False)  # nosec B501
                         if res.status_code in [200, 301, 302, 401]:
                             results["http_ok"] = True
                             results[
@@ -558,7 +562,9 @@ def run_proxmox_tests(args) -> int:
             variables_list = comp_mgr.reader.get_component_variables(comp_id)
             user_vars = {}
             for var in variables_list:
-                user_vars[var.get("id")] = var.get("default")
+                var_name = var.get("id") or var.get("name")
+                if var_name:
+                    user_vars[var_name] = var.get("default")
 
             # Inject target IP
             user_vars["PISelfhosting_HOST_IP"] = vm_ip

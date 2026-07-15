@@ -347,11 +347,26 @@ class DeploymentManager:
                         except Exception as ex:
                             logger.error(f"Failed to delete hosts: {ex}")
 
+                    if "runner" in locals() and runner:
+                        config = getattr(runner, "config", None)
+                        artifact_dir_path = getattr(config, "artifact_dir", None)
+                        if artifact_dir_path:
+                            specific_artifact_dir = Path(artifact_dir_path)
+                            if specific_artifact_dir.exists():
+                                try:
+                                    shutil.rmtree(specific_artifact_dir)
+                                except Exception as ex:
+                                    logger.error(
+                                        "Failed to delete specific artifacts: " f"{ex}"
+                                    )
+
                     if artifacts_dir.exists():
                         try:
-                            shutil.rmtree(artifacts_dir)
-                        except Exception as ex:
-                            logger.error(f"Failed to delete artifacts: {ex}")
+                            # Only delete root artifacts directory if it is empty
+                            if not any(artifacts_dir.iterdir()):
+                                artifacts_dir.rmdir()
+                        except Exception:  # nosec B110
+                            pass
 
             except Exception as e:
                 logger.error(f"Ansible execution error: {e}")
