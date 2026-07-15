@@ -5,7 +5,7 @@
 services:
   organizr:
     container_name: njorddeploy-organizr
-    image: lscr.io/linuxserver/organizr:{{ component_version }}
+    image: organizr/organizr:{{ component_version }}
     restart: unless-stopped
     ports:
       - "{{ PORT_ORGANIZR | default(8095) }}:80"
