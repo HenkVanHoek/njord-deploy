@@ -16,7 +16,7 @@ services:
       - "touch /etc/traefik/acme/acme.json && chmod 600 /etc/traefik/acme/acme.json"
 
   traefik:
-    image: traefik:latest
+    image: traefik:{{ component_version }}
     container_name: njorddeploy-traefik
     restart: unless-stopped
     depends_on:
@@ -75,3 +75,7 @@ services:
       - "traefik.http.routers.traefik-dashboard-secure.middlewares=traefik-auth"
       - "traefik.http.routers.traefik-dashboard-http.rule=Host(`{{ component_id }}.{{ DOMAIN_NAME }}`)"
       - "traefik.http.routers.traefik-dashboard-http.entrypoints=web"
+
+networks:
+  njorddeploy_net:
+    external: true
