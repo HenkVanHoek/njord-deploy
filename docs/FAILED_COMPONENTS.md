@@ -13,3 +13,8 @@ This document tracks components that failed verification or could not be tested/
 *   **Date**: 2026-07-15
 *   **Reason**: Both the metadata image (`dprandzioch/docker-http-notepad`) and the template image (`pajikos/minimalist-web-notepad`) are unavailable on the public Docker Hub registry, returning `pull access denied` (either deleted or made private).
 *   **Action**: Skipped. Needs a replacement public image.
+
+### `zigbee2mqtt`
+*   **Date**: 2026-07-15
+*   **Reason**: The component requires a physical USB Zigbee coordinator (e.g., `/dev/ttyUSB0`) to start up. Spawning a fresh Proxmox LXC container without a USB device passed through causes the container startup to fail with "no such file or directory" for the custom device path.
+*   **Action**: Skipped. Fundamentally requires physical hardware setup.

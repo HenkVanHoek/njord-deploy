@@ -1,13 +1,13 @@
 [
     {
-        "component_id": "web-notepad",
+        "component_id": "zigbee2mqtt",
         "status": "failed",
         "vmid": 104,
-        "ip": "192.168.178.141",
+        "ip": "192.168.178.126",
         "deployment": "failed",
         "running": false,
         "http_ok": null,
         "error_logs": false,
-        "error_message": "Deployment failed: non-zero return code | stderr:  Image pajikos/minimalist-web-notepad:latest Pulling \n Image pajikos/minimalist-web-notepad:latest Error pull access denied for pajikos/minimalist-web-notepad, repository does not exist or may require 'docker login'\nError response from daemon: pull access denied for pajikos/minimalist-web-notepad, repository does not exist or may require 'docker login'"
+        "error_message": "Deployment failed: non-zero return code | stderr:  Container njorddeploy-zigbee2mqtt Creating \n Container njorddeploy-zigbee2mqtt Created \n Container njorddeploy-zigbee2mqtt Starting \nError response from daemon: error gathering device information while adding custom device \"/dev/ttyUSB0\": no such file or directory"
     }
 ]
