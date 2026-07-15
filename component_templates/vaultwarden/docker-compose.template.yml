@@ -23,7 +23,7 @@
 
 services:
   vaultwarden:
-    image: vaultwarden/server:latest
+    image: vaultwarden/server:{{ component_version }}
     container_name: vaultwarden
     restart: unless-stopped
     volumes:
@@ -38,18 +38,9 @@ services:
       - ADMIN_TOKEN_HASH={{ VAULTWARDEN_ADMIN_TOKEN }}
       - SIGNUPS_ALLOWED={{ SIGNUPS_ALLOWED }}
       - WEB_VAULT_ENABLED={{ WEB_VAULT_ENABLED }}
+    networks:
+      - njorddeploy_net
 
-# old:
-# services:
-#   vaultwarden:
-#     image: vaultwarden/server:latest
-#     container_name: vaultwarden
-#     restart: unless-stopped
-#     volumes:
-#       - '{{ CONFIG_BASE_PATH }}/vaultwarden:/data'
-#     ports:
-#       - '{{ VAULTWARDEN_WEB_PORT }}:80'
-#     environment:
-#       - ADMIN_TOKEN_HASH={{ VAULTWARDEN_ADMIN_TOKEN }}
-#       - SIGNUPS_ALLOWED={{ SIGNUPS_ALLOWED }}
-#       - WEB_VAULT_ENABLED={{ WEB_VAULT_ENABLED }}
+networks:
+  njorddeploy_net:
+    external: true
