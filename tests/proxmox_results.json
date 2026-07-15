@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "sonarr",
+        "component_id": "traefik",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.133",
+        "ip": "192.168.178.148",
         "deployment": "success",
         "running": true,
         "http_ok": true,
