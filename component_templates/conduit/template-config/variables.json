@@ -1,3 +1,16 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_CONDUIT",
+      "description": "The port to access the Conduit Matrix homeserver.",
+      "type": "port",
+      "default": 6167
+    },
+    {
+      "name": "CONDUIT_SERVER_NAME",
+      "description": "The server name/domain name for the Matrix homeserver (e.g. yourdomain.com).",
+      "type": "string",
+      "default": "conduit.local"
+    }
+  ]
 }
