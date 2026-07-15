@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "unifi-controller",
+        "component_id": "vaultwarden",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.138",
+        "ip": "192.168.178.140",
         "deployment": "success",
         "running": true,
         "http_ok": true,

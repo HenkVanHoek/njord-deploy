@@ -1,13 +1,13 @@
 # Proxmox Automated Component Testing Report
 
-**Run Timestamp:** 2026-07-15 22:40:07
+**Run Timestamp:** 2026-07-15 23:15:18
 **Total Tested:** 1 | **Passed:** 1 | **Failed:** 0
 
 ## Results Table
 
 | Component ID | VM ID | IP Address | Deployment | Containers | HTTP | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `unifi-controller` | 104 | 192.168.178.138 | success | Running | OK | **✅ PASS** |
+| `vaultwarden` | 104 | 192.168.178.140 | success | Running | OK | **✅ PASS** |
 
 ## Details & Failures
 
