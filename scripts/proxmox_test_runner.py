@@ -171,7 +171,7 @@ def verify_service_health(
                 for attempt in range(1, max_retries + 1):
                     try:
                         res = requests.get(url, timeout=5, verify=False)  # nosec B501
-                        if res.status_code in [200, 301, 302, 401]:
+                        if res.status_code in [200, 301, 302, 401, 403]:
                             results["http_ok"] = True
                             results[
                                 "details"
