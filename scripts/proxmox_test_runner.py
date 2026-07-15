@@ -245,6 +245,25 @@ def update_template_status(
         logger.error(f"Failed to update template status for {component_id}: {e}")
 
 
+def get_template_status(templates_path: Path, component_id: str) -> str:
+    """Reads the status of a component from its template header."""
+    template_file = templates_path / component_id / "docker-compose.template.yml"
+    if not template_file.exists():
+        return "untested"
+    try:
+        content = template_file.read_text(encoding="utf-8")
+        for line in content.splitlines():
+            if line.startswith("#"):
+                stripped = line[1:].strip()
+                if stripped.startswith("status:"):
+                    parts = stripped.split(":", 1)
+                    if len(parts) == 2:
+                        return parts[1].strip().strip('"').strip("'")
+    except Exception:  # nosec B110
+        pass
+    return "untested"
+
+
 def find_suitable_lxc_template(client: ProxmoxClient, node: str) -> str:
     """Finds a Debian LXC template in active storage pools."""
     storages = ["local"]
@@ -353,6 +372,14 @@ def run_proxmox_tests(args) -> int:
         selected_ids = [c.strip() for c in args.components.split(",")]
         for comp in all_components:
             if comp.get("id") in selected_ids:
+                target_components.append(comp)
+    elif getattr(args, "untested_ui", False):
+        for comp in all_components:
+            comp_id = comp.get("id", "")
+            if (
+                comp.get("has_ui")
+                and get_template_status(templates_path, comp_id) != "tested"
+            ):
                 target_components.append(comp)
     else:
         target_components = all_components
@@ -768,6 +795,14 @@ if __name__ == "__main__":
         choices=["vm", "lxc"],
         default="vm",
         help="Testing mode: 'vm' or 'lxc' (default: vm)",
+    )
+    parser.add_argument(
+        "--untested-ui",
+        action="store_true",
+        help=(
+            "Automatically test all components that have a UI "
+            "and are not yet marked as 'tested'."
+        ),
     )
     args = parser.parse_args()
 
