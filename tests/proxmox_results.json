@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "radarr",
+        "component_id": "sabnzbd",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.147",
+        "ip": "192.168.178.131",
         "deployment": "success",
         "running": true,
         "http_ok": true,
