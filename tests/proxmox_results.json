@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "octoprint",
+        "component_id": "organizr",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.76",
+        "ip": "192.168.178.128",
         "deployment": "success",
         "running": true,
         "http_ok": true,
