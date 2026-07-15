@@ -13,3 +13,7 @@ services:
       TZ: "{{ TZ }}"
     networks:
       - nextcloud-internal
+
+networks:
+  nextcloud-internal:
+    name: nextcloud-internal

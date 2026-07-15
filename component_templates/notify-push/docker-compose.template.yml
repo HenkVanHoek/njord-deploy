@@ -22,3 +22,10 @@ services:
     networks:
       - pi-services
       - nextcloud-internal
+
+networks:
+  pi-services:
+    name: njorddeploy_net
+    external: true
+  nextcloud-internal:
+    name: nextcloud-internal

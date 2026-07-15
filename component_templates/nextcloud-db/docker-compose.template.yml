@@ -23,3 +23,7 @@ services:
       MYSQL_PASSWORD: "{{ NEXTCLOUD_DB_PASSWORD }}"
       MYSQL_DATABASE: "{{ NEXTCLOUD_DB_NAME }}"
       MYSQL_USER: "{{ NEXTCLOUD_DB_USER }}"
+
+networks:
+  nextcloud-internal:
+    name: nextcloud-internal

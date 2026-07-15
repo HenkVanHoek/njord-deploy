@@ -36,3 +36,10 @@ services:
       SMTP_AUTH: "true"
       SMTP_NAME: "{{ NEXTCLOUD_MAIL_SMTPNAME }}"
       SMTP_PASSWORD: "{{ NEXTCLOUD_MAIL_SMTPPASSWORD }}"
+
+networks:
+  pi-services:
+    name: njorddeploy_net
+    external: true
+  nextcloud-internal:
+    name: nextcloud-internal
