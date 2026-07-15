@@ -1,13 +1,13 @@
 [
     {
-        "component_id": "vaultwarden",
-        "status": "success",
+        "component_id": "web-notepad",
+        "status": "failed",
         "vmid": 104,
-        "ip": "192.168.178.140",
-        "deployment": "success",
-        "running": true,
-        "http_ok": true,
+        "ip": "192.168.178.141",
+        "deployment": "failed",
+        "running": false,
+        "http_ok": null,
         "error_logs": false,
-        "error_message": ""
+        "error_message": "Deployment failed: non-zero return code | stderr:  Image pajikos/minimalist-web-notepad:latest Pulling \n Image pajikos/minimalist-web-notepad:latest Error pull access denied for pajikos/minimalist-web-notepad, repository does not exist or may require 'docker login'\nError response from daemon: pull access denied for pajikos/minimalist-web-notepad, repository does not exist or may require 'docker login'"
     }
 ]

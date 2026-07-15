@@ -8,3 +8,8 @@ This document tracks components that failed verification or could not be tested/
 *   **Date**: 2026-07-15
 *   **Reason**: The component's docker-compose template (`component_templates/njorddeploy-service-maintenance/docker-compose.template.yml`) is completely empty and contains no service definitions or port mappings.
 *   **Action**: Skipped for further developer inspection.
+
+### `web-notepad`
+*   **Date**: 2026-07-15
+*   **Reason**: Both the metadata image (`dprandzioch/docker-http-notepad`) and the template image (`pajikos/minimalist-web-notepad`) are unavailable on the public Docker Hub registry, returning `pull access denied` (either deleted or made private).
+*   **Action**: Skipped. Needs a replacement public image.
