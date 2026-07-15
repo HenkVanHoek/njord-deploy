@@ -5,8 +5,8 @@
 # file: component_templates/pi-hole/docker-compose.template.yml
 services:
   pi-hole:
-  container_name: njorddeploy-{{ component_id }}
-  image: pihole/pihole:latest
+    container_name: njorddeploy-{{ component_id }}
+    image: pihole/pihole:latest
     restart: unless-stopped
     ports:
       - "{{ PIHOLE_DNS_PORT }}:53/tcp"
@@ -16,7 +16,7 @@ services:
       TZ: 'Etc/UTC'
       FTLCONF_webserver_api_password: "{{ PIHOLE_WEB_PASSWORD }}"
       FTLCONF_dns_listeningMode: "all"
-      VIRTUAL_HOST: "pi-hole.{{ DOMAIN_NAME }}"
+      VIRTUAL_HOST: "pi-hole.{{ DOMAIN }}"
     volumes:
       - "pihole_etc:/etc/pihole"
       - "pihole_dnsmasq:/etc/dnsmasq.d"
