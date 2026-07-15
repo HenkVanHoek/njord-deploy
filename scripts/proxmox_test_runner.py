@@ -566,19 +566,34 @@ def run_proxmox_tests(args) -> int:
             )
             setup_mgr.initialize_environment()
 
-            # Ensure we fetch appropriate variables
-            variables_list = comp_mgr.reader.get_component_variables(comp_id)
+            # Resolve dependencies (mirroring how the UI automatically includes
+            # depends_on)
+            all_components = comp_mgr.get_all_components()
+            comp_map = {c.get("id"): c for c in all_components if c.get("id")}
+            dependencies = comp.get("depends_on", [])
+            all_selected_ids = [comp_id]
+            for dep_id in dependencies:
+                if dep_id in comp_map and dep_id not in all_selected_ids:
+                    all_selected_ids.append(dep_id)
+
+            all_selected_data = [
+                comp_map[cid] for cid in all_selected_ids if cid in comp_map
+            ]
+
+            # Ensure we fetch appropriate variables for all selected components
             user_vars = {}
-            for var in variables_list:
-                var_name = var.get("id") or var.get("name")
-                if var_name:
-                    user_vars[var_name] = var.get("default")
+            for cid in all_selected_ids:
+                variables_list = comp_mgr.reader.get_component_variables(cid)
+                for var in variables_list:
+                    var_name = var.get("id") or var.get("name")
+                    if var_name:
+                        user_vars[var_name] = var.get("default")
 
             # Inject target IP
             user_vars["PISelfhosting_HOST_IP"] = vm_ip
 
             success, errors = setup_mgr.prepare_deployment_package(
-                selected_components=[comp_id],
+                selected_components=all_selected_ids,
                 user_variables=user_vars,
                 managed_devices=[{"ip": vm_ip}],
             )
@@ -588,7 +603,7 @@ def run_proxmox_tests(args) -> int:
 
             # Generate artifacts
             comp_mgr.generate_deployment_artifacts(
-                selected_components_data=[comp],
+                selected_components_data=all_selected_data,
                 global_vars=user_vars,
                 output_path=comp_output_dir,
             )
