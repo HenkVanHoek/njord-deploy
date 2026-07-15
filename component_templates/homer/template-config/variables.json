@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_HOMER",
+      "description": "Port for Homer dashboard",
+      "type": "port",
+      "default": 8085
+    }
+  ]
 }

@@ -5,10 +5,10 @@
 services:
   homer:
     container_name: njorddeploy-homer
-    image: bcpierce/homer:{{ component_version }}
+    image: b4bz/homer:{{ component_version }}
     restart: unless-stopped
     ports:
-      - "8085:8080"
+      - "{{ PORT_HOMER | default(8085) }}:8080"
     volumes:
       - "{{DATA_ROOT}}/homer/assets:/www/assets"
     # Homer is simple and does not need PUID/PGID/TZ

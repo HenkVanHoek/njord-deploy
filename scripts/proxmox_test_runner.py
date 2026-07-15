@@ -151,6 +151,12 @@ def verify_service_health(
             # Fallback to standard port if not in vars
             if not port:
                 port = component_details.get("traefik_internal_port")
+            # If still not found, check if there's any port variable in variables_list
+            if not port:
+                for var in variables_list:
+                    if var.get("type") == "port":
+                        port = var.get("default")
+                        break
 
             if port:
                 import urllib3
