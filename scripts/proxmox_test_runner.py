@@ -144,7 +144,7 @@ def verify_service_health(
             port = None
             if ui_var:
                 for var in variables_list:
-                    if var.get("name") == ui_var:
+                    if var.get("id") == ui_var:
                         port = var.get("default")
                         break
             # Fallback to standard port if not in vars
@@ -154,14 +154,33 @@ def verify_service_health(
             if port:
                 protocol = component_details.get("protocol", "http")
                 url = f"{protocol}://{vm_ip}:{port}"
-                logger.info(f"Probing HTTP UI endpoint: {url}")
-                try:
-                    res = requests.get(url, timeout=10)
-                    results["http_ok"] = res.status_code in [200, 301, 302, 401]
-                    results["details"] += f"\nHTTP Probe: {res.status_code} ({url})"
-                except Exception as ex:
-                    results["http_ok"] = False
-                    results["details"] += f"\nHTTP Probe failed: {ex} ({url})"
+                logger.info(
+                    f"Probing HTTP UI endpoint: {url} " "(retrying up to 6 times)..."
+                )
+                max_retries = 6
+                for attempt in range(1, max_retries + 1):
+                    try:
+                        res = requests.get(url, timeout=5)
+                        if res.status_code in [200, 301, 302, 401]:
+                            results["http_ok"] = True
+                            results[
+                                "details"
+                            ] += f"\nHTTP Probe: {res.status_code} ({url})"
+                            break
+                        else:
+                            results["http_ok"] = False
+                            results[
+                                "details"
+                            ] += f"\nHTTP Probe: {res.status_code} ({url})"
+                    except Exception as ex:
+                        results["http_ok"] = False
+                        if attempt == max_retries:
+                            results["details"] += (
+                                f"\nHTTP Probe failed after {max_retries} "
+                                f"attempts: {ex} ({url})"
+                            )
+                        else:
+                            time.sleep(5)
 
     finally:
         ssh_mgr.close()
@@ -512,7 +531,7 @@ def run_proxmox_tests(args) -> int:
             variables_list = comp_mgr.reader.get_component_variables(comp_id)
             user_vars = {}
             for var in variables_list:
-                user_vars[var.get("name")] = var.get("default")
+                user_vars[var.get("id")] = var.get("default")
 
             # Inject target IP
             user_vars["PISelfhosting_HOST_IP"] = vm_ip
