@@ -1,12 +1,12 @@
 [
     {
-        "component_id": "jellyfin",
+        "component_id": "nextcloud",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.135",
+        "ip": "192.168.178.137",
         "deployment": "success",
         "running": true,
-        "http_ok": true,
+        "http_ok": null,
         "error_logs": false,
         "error_message": ""
     }
