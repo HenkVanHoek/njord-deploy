@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "scrypted",
+        "component_id": "sonarr",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.132",
+        "ip": "192.168.178.133",
         "deployment": "success",
         "running": true,
         "http_ok": true,
