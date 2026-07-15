@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_UNIFI",
+      "description": "The secure HTTPS port to access the UniFi Controller web interface.",
+      "type": "port",
+      "default": 8443
+    }
+  ]
 }

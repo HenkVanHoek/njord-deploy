@@ -2,4 +2,26 @@
 # last_tested_version: "none"
 # platform_notes: "None"
 # breaking_changes: "None"
-# Template for unifi-controller not found.
+services:
+  unifi-controller:
+    container_name: unifi-controller
+    image: lscr.io/linuxserver/unifi-controller:{{ component_version }}
+    restart: unless-stopped
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+      - "MEM_LIMIT=1024"
+    ports:
+      - "{{ PORT_UNIFI | default(8443) }}:8443"
+      - "8080:8080"
+      - "3478:3478/udp"
+      - "10001:10001/udp"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/unifi-controller:/config"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
