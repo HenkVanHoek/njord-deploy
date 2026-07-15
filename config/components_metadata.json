@@ -232,9 +232,12 @@
             "docker_service_name": "web",
             "group": "Communications",
             "has_configuration": true,
+            "has_traefik_support": false,
             "has_ui": true,
             "image_name": "jitsi/web",
             "name": "jitsi-meet",
+            "package_id": "general-stack",
+            "protocol": "https",
             "resource_profile": {
                 "cpu": "high",
                 "ram": "high",
@@ -249,7 +252,8 @@
                 "communications",
                 "self-hosted"
             ],
-            "ui_port_variable": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "JITSI_HTTPS_PORT"
         },
         "filebrowser": {
             "component_version": "latest",
@@ -590,6 +594,33 @@
             ],
             "traefik_internal_port": null
         },
+        "njorddeploy-service-maintenance": {
+            "component_version": "0.1.0",
+            "conflicts_with": [],
+            "default": false,
+            "depends_on": [],
+            "description": "Monitor status, updates and vulnerabilities.",
+            "group": "System Tools",
+            "has_configuration": false,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "henkvanhoek/njorddeploy-service-maintenance",
+            "intent_questions": [],
+            "name": "Service Maintenance",
+            "package_id": null,
+            "project_url": "https://github.com/HenkVanHoek/njord-deploy",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "self-hosted"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "PISELFHOSTING_SERVICE_MAINTENANCE_WEB_PORT"
+        },
         "notify-push": {
             "conflicts_with": [],
             "depends_on": [
@@ -688,33 +719,6 @@
             "traefik_host_variable": "VIRTUAL_HOST",
             "traefik_internal_port": 80,
             "ui_port_variable": "PIHOLE_WEB_PORT"
-        },
-        "njorddeploy-service-maintenance": {
-            "component_version": "0.1.0",
-            "conflicts_with": [],
-            "default": false,
-            "depends_on": [],
-            "description": "Monitor status, updates and vulnerabilities.",
-            "group": "System Tools",
-            "has_configuration": false,
-            "has_traefik_support": false,
-            "has_ui": true,
-            "image_name": "henkvanhoek/njorddeploy-service-maintenance",
-            "intent_questions": [],
-            "name": "Service Maintenance",
-            "package_id": null,
-            "project_url": "https://github.com/HenkVanHoek/njord-deploy",
-            "protocol": "http",
-            "resource_profile": {
-                "cpu": "medium",
-                "ram": "medium",
-                "storage_type": "persistent"
-            },
-            "tags": [
-                "self-hosted"
-            ],
-            "traefik_internal_port": null,
-            "ui_port_variable": "PISELFHOSTING_SERVICE_MAINTENANCE_WEB_PORT"
         },
         "pish-fluffychat-web": {
             "conflicts_with": [],

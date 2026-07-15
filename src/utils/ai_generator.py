@@ -86,6 +86,13 @@ class AIGenerator:
             "    # last_tested_version: <appropriate version, e.g. stable>\n"
             "    # platform_notes: <brief compatibility notes>\n"
             "    # breaking_changes: none\n"
+            "12. If the service has a web UI (has_ui is true), you MUST specify the "
+            "`ui_port_variable` in the metadata, which should contain the EXACT ID "
+            "of the port variable defined in the variables list that exposes the web "
+            "UI (e.g., PORTAINER_WEB_PORT).\n"
+            "13. If the service has a web UI (has_ui is true), you MUST specify the "
+            "`protocol` in the metadata as either 'http' or 'https' (defaulting to "
+            "'http' unless the service natively requires/uses HTTPS).\n"
         )
 
         user_prompt = (
@@ -109,6 +116,8 @@ class AIGenerator:
                         "group": {"type": "STRING"},
                         "has_ui": {"type": "BOOLEAN"},
                         "has_configuration": {"type": "BOOLEAN"},
+                        "ui_port_variable": {"type": "STRING"},
+                        "protocol": {"type": "STRING"},
                         "conflicts_with": {
                             "type": "ARRAY",
                             "items": {"type": "STRING"},
