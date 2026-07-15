@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 # Skip this entire test module if playwright is not installed (e.g., in CI)
-pytest.importorskip("playwright")
+pytest.importorskip("playwright.sync_api")
 
 from playwright.sync_api import Page, expect  # noqa: E402 type: ignore
 
