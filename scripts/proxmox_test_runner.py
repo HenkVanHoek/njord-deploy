@@ -182,6 +182,8 @@ def verify_service_health(
                             results[
                                 "details"
                             ] += f"\nHTTP Probe: {res.status_code} ({url})"
+                            if attempt < max_retries:
+                                time.sleep(5)
                     except Exception as ex:
                         results["http_ok"] = False
                         if attempt == max_retries:
