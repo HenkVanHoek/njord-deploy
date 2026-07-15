@@ -1,12 +1,12 @@
 [
     {
-        "component_id": "nextcloud",
+        "component_id": "nginx-proxy-manager",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.137",
+        "ip": "192.168.178.139",
         "deployment": "success",
         "running": true,
-        "http_ok": null,
+        "http_ok": true,
         "error_logs": false,
         "error_message": ""
     }
