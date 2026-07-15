@@ -2,4 +2,32 @@
 # last_tested_version: "none"
 # platform_notes: "None"
 # breaking_changes: "None"
-# Template for zigbee2mqtt not found.
+services:
+  zigbee2mqtt:
+    container_name: njorddeploy-zigbee2mqtt
+    image: koenkk/zigbee2mqtt:{{ component_version }}
+    restart: unless-stopped
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/zigbee2mqtt:/app/data"
+      - /run/udev:/run/udev:ro
+    ports:
+      - "{{ ZIGBEE2MQTT_WEB_PORT | default(8080) }}:8080"
+    environment:
+      - "PUID={{ PUID | default('1000') }}"
+      - "PGID={{ PGID | default('1000') }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam') }}"
+      - "ZIGBEE2MQTT_CONFIG_MQTT_SERVER=mqtt://mosquitto:1883"
+      - "ZIGBEE2MQTT_CONFIG_FRONTEND=true"
+      - "ZIGBEE2MQTT_CONFIG_FRONTEND_PORT=8080"
+      - "ZIGBEE2MQTT_CONFIG_FRONTEND_HOST=0.0.0.0"
+      - "ZIGBEE2MQTT_CONFIG_SERIAL_PORT={{ ZIGBEE2MQTT_SERIAL_PORT | default('/dev/ttyUSB0') }}"
+    {%- if ZIGBEE2MQTT_USE_SERIAL | default('true') | string | lower == 'true' %}
+    devices:
+      - "{{ ZIGBEE2MQTT_SERIAL_PORT | default('/dev/ttyUSB0') }}:{{ ZIGBEE2MQTT_SERIAL_PORT | default('/dev/ttyUSB0') }}"
+    {%- endif %}
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,3 +1,22 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "ZIGBEE2MQTT_WEB_PORT",
+      "description": "The port to access the Zigbee2MQTT web interface.",
+      "type": "port",
+      "default": 8080
+    },
+    {
+      "name": "ZIGBEE2MQTT_SERIAL_PORT",
+      "description": "Path to your Zigbee USB adapter (e.g. /dev/ttyUSB0).",
+      "type": "string",
+      "default": "/dev/ttyUSB0"
+    },
+    {
+      "name": "ZIGBEE2MQTT_USE_SERIAL",
+      "description": "Set to 'true' to mount a physical USB adapter, or 'false' for network-based Zigbee coordinators (TCP).",
+      "type": "boolean",
+      "default": true
+    }
+  ]
 }
