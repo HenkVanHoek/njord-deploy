@@ -1,6 +1,6 @@
-# status: "untested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 # templates/gitlab/docker-compose.template.yml
 services:
@@ -17,7 +17,7 @@ services:
       - "{{ GITLAB_SSH_PORT | default(10022) }}:22"   # Git over SSH
     volumes:
       # Mount the pre-configured gitlab.rb file into the container.
-      - ./templates/gitlab/template-config/gitlab.rb:/etc/gitlab/gitlab.rb
+      - ./gitlab/template-config/gitlab.rb:/etc/gitlab/gitlab.rb
       # Mount host directories for persistent data.
       - '{{ DATA_ROOT }}/gitlab/config:/etc/gitlab'
       - '{{ DATA_ROOT }}/gitlab/logs:/var/log/gitlab'
