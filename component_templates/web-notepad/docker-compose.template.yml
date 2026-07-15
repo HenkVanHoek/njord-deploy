@@ -8,7 +8,7 @@ services:
     image: pajikos/minimalist-web-notepad:{{ component_version }}
     restart: unless-stopped
     ports:
-      - "8083:80"
+      - "{{ WEB_NOTEPAD_WEB_PORT | default(8083) }}:80"
     volumes:
       - "{{DATA_ROOT}}/web-notepad/storage:/var/www/html/_storage"
     # This simple image does not need PUID/PGID or extra_hosts

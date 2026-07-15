@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "WEB_NOTEPAD_WEB_PORT",
+      "description": "Port to access the Web Notepad interface.",
+      "type": "port",
+      "default": 8083
+    }
+  ]
 }
