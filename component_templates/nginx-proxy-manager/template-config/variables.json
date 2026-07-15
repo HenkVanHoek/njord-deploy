@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "PORT_NPM_ADMIN",
+      "description": "Port to access the Nginx Proxy Manager admin interface.",
+      "type": "port",
+      "default": 8181
+    }
+  ]
 }
