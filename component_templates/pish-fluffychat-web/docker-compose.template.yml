@@ -12,6 +12,9 @@ services:
     pull_policy: build
     ports:
       - "{{ FLUFFYCHAT_WEB_PORT }}:80"
+    environment:
+      - "CHAT_MODE={{ CHAT_MODE | default('your-own-domain') }}"
+      - "HOMESERVER_DOMAIN={{ HOMESERVER_DOMAIN | default('matrix.org') }}"
     restart: unless-stopped
     networks:
       - njorddeploy_net
