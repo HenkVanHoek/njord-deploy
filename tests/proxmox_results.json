@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "uptime-kuma",
+        "component_id": "pi-hole",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.41",
+        "ip": "192.168.178.123",
         "deployment": "success",
         "running": true,
         "http_ok": true,

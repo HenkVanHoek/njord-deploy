@@ -1,13 +1,13 @@
 # Proxmox Automated Component Testing Report
 
-**Run Timestamp:** 2026-07-15 15:13:17
+**Run Timestamp:** 2026-07-15 18:41:12
 **Total Tested:** 1 | **Passed:** 1 | **Failed:** 0
 
 ## Results Table
 
 | Component ID | VM ID | IP Address | Deployment | Containers | HTTP | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `uptime-kuma` | 104 | 192.168.178.41 | success | Running | OK | **✅ PASS** |
+| `pi-hole` | 104 | 192.168.178.123 | success | Running | OK | **✅ PASS** |
 
 ## Details & Failures
 
