@@ -3,4 +3,14 @@
 # platform_notes: "None"
 # breaking_changes: "None"
 services:
-  # Service for Test Playwright
+  test-playwright:
+    container_name: njorddeploy-test-playwright
+    image: mcr.microsoft.com/playwright:{{ 'v1.55.0-jammy' if component_version == 'latest' else component_version }}
+    restart: unless-stopped
+    command: tail -f /dev/null
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
