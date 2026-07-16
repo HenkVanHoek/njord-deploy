@@ -4,7 +4,7 @@
   become: true
   vars:
     ansible_become_timeout: 60
-    # Destination path on the Pi for all configuration
+    # Destination path on the target for all configuration
     project_config_dir: "/opt/njorddeploy"
     # Map kernel architecture to Debian package architecture
     debian_architecture_map:
@@ -30,7 +30,7 @@
         that:
           - item.size_available > 2147483648  # 2 GB in bytes
         fail_msg: >-
-          Deployment aborted: The Pi does not have enough free disk space on
+          Deployment aborted: The target host does not have enough free disk space on
           {{ item.mount }}. Please clean up the device.
         success_msg: "Disk space check passed on {{ item.mount }}."
       loop: "{{ ansible_mounts }}"
@@ -88,7 +88,7 @@
         group: "{{ ansible_user }}"
         mode: "0755"
 
-    - name: Copy all deployment files to the Pi (including .env and config folders)
+    - name: Copy all deployment files to the target (including .env and config folders)
       ansible.builtin.copy:
         # trailing slash is required to copy the content of the folder (/)
         src: "{{ local_output_path }}/"
