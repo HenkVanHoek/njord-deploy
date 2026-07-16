@@ -91,7 +91,13 @@ def verify_service_health(
     }
 
     # Initialize SSHManager to run checks
-    ssh_mgr = SSHManager(hostname=vm_ip, username=vm_user, password=vm_pass)
+    ssh_mgr = SSHManager(
+        hostname=vm_ip,
+        username=vm_user,
+        password=vm_pass,
+        allow_auto_add=True,
+        load_system_keys=False,
+    )
     connected, conn_msg = ssh_mgr.connect()
     if not connected:
         results["details"] = f"SSH verification failed: {conn_msg}"
@@ -559,8 +565,20 @@ def run_proxmox_tests(args) -> int:
                     username="root",
                     password=vm_pass,
                     allow_auto_add=True,
+                    load_system_keys=False,
                 )
-                connected, conn_msg = ssh.connect()
+                connected = False
+                conn_msg = ""
+                for attempt in range(6):
+                    connected, conn_msg = ssh.connect()
+                    if connected:
+                        break
+                    logger.info(
+                        f"SSH connection attempt {attempt + 1}/6 failed: {conn_msg}. "
+                        "Retrying in 5 seconds..."
+                    )
+                    time.sleep(5)
+
                 if not connected:
                     raise RuntimeError(f"Failed to connect to LXC over SSH: {conn_msg}")
 
