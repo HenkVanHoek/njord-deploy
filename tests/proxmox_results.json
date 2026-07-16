@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "conduit",
+        "component_id": "nextcloud-db",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.143",
+        "ip": "192.168.178.145",
         "deployment": "success",
         "running": true,
         "http_ok": null,
