@@ -773,7 +773,11 @@ def run_proxmox_tests(args) -> int:
     timestamp_fn = time.strftime("%Y%m%d_%H%M%S")
     title_suffix = ""
     if args.components:
-        comp_str = args.components.replace(",", "_")
+        comp_list = [c.strip() for c in args.components.split(",") if c.strip()]
+        if len(comp_list) > 3:
+            comp_str = f"{comp_list[0]}_to_{comp_list[-1]}_{len(comp_list)}runs"
+        else:
+            comp_str = "_".join(comp_list)
         title_suffix = args.components
         report_filename = f"PROXMOX_TESTS_{comp_str}_{timestamp_fn}.md"
     elif args.untested_ui:
