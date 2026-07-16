@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "nextcloud-db-dumper",
+        "component_id": "nextcloud-redis",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.152",
+        "ip": "192.168.178.153",
         "deployment": "success",
         "running": true,
         "http_ok": null,
