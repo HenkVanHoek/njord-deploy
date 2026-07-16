@@ -16,7 +16,13 @@ METADATA_FILE = PROJECT_ROOT / "config" / "components_metadata.json"
 TEMPLATES_DIR = PROJECT_ROOT / "component_templates"
 
 # Skipped components due to hardware, registry, or pre-existing state requirements
-SKIPPED_COMPONENTS = ["web-notepad", "zigbee2mqtt", "lora-service", "notify-push"]
+SKIPPED_COMPONENTS = [
+    "web-notepad",
+    "zigbee2mqtt",
+    "lora-service",
+    "notify-push",
+    "njorddeploy-service-maintenance",
+]
 
 
 def main():

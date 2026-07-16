@@ -281,11 +281,15 @@
         },
         "frigate": {
             "component_version": "stable",
+            "config_templates": {
+                "config.yml": "frigate/config/config.yml",
+                "frigate_camera_config_tool.py": "frigate/config/frigate_camera_config_tool.py"
+            },
             "conflicts_with": [],
             "depends_on": [],
             "description": "NVR with real-time object detection for IP cameras.",
             "group": "Smart Home & IoT",
-            "has_configuration": false,
+            "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "blakeblackshear/frigate",

@@ -20,12 +20,14 @@ class SSHManager:
         password: str,
         port: int = 22,
         allow_auto_add: bool = False,
+        load_system_keys: bool = True,
     ):
         self.hostname = hostname
         self.username = username
         self.password = password
         self.port = port
         self.allow_auto_add = allow_auto_add
+        self.load_system_keys = load_system_keys
         self.client: Optional[SSHClient] = None
         self.sftp: Optional[SFTPClient] = None
 
@@ -63,7 +65,8 @@ class SSHManager:
         """Establishes the SSH connection, preferring keys to passwords."""
         try:
             client = SSHClient()
-            client.load_system_host_keys()
+            if self.load_system_keys:
+                client.load_system_host_keys()
             if self.allow_auto_add:
                 client.set_missing_host_key_policy(
                     paramiko.AutoAddPolicy()

@@ -402,6 +402,35 @@ def destroy_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
     return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1})
 
 
+def wait_for_proxmox_task(
+    client: ProxmoxClient, node: str, upid: str, timeout_seconds: int = 180
+) -> None:
+    """Polls the Proxmox task status until it completes successfully."""
+    logger.info(f"Waiting for Proxmox task to complete: {upid}")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            endpoint = f"nodes/{node}/tasks/{upid}/status"
+            res = client.get(endpoint)
+            data = res.get("data", {})
+            status = data.get("status")
+            if status == "stopped":
+                exit_status = data.get("exitstatus")
+                if exit_status == "OK":
+                    logger.info("Proxmox task completed successfully.")
+                    return
+                else:
+                    raise RuntimeError(
+                        f"Proxmox task failed with status: {exit_status}"
+                    )
+        except Exception as e:
+            if "failed with status" in str(e):
+                raise e
+            logger.debug(f"Failed to query task status: {e}")
+        time.sleep(2)
+    raise TimeoutError("Proxmox task timed out.")
+
+
 def run_proxmox_tests(args) -> int:
     """Orchestrates cloning, deploying, verifying, and tearing down VMs."""
     load_dotenv()
@@ -511,7 +540,10 @@ def run_proxmox_tests(args) -> int:
                     "ssh-public-keys": ssh_public_key,
                     "start": 1,
                 }
-                proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+                create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+                upid = create_res.get("data")
+                if upid:
+                    wait_for_proxmox_task(proxmox_client, node, upid)
 
                 # 2. Wait for dynamic IP
                 vm_ip = wait_for_lxc_ip(proxmox_client, node, new_vmid)
@@ -552,25 +584,31 @@ def run_proxmox_tests(args) -> int:
                     f"Cloning master template VMID {template_id} to {new_vmid}..."
                 )
                 try:
-                    proxmox_client.clone_vm(
+                    clone_res = proxmox_client.clone_vm(
                         node=node,
                         vmid=template_id,
                         newid=new_vmid,
                         name=f"pish-test-{comp_id}",
                         full=False,  # Linked clone
                     )
+                    upid = clone_res.get("data")
+                    if upid:
+                        wait_for_proxmox_task(proxmox_client, node, upid)
                 except Exception as e:
                     if "Linked clone feature is not supported" in str(e):
                         logger.warning(
                             "Linked clone not supported, falling back to full clone..."
                         )
-                        proxmox_client.clone_vm(
+                        clone_res = proxmox_client.clone_vm(
                             node=node,
                             vmid=template_id,
                             newid=new_vmid,
                             name=f"pish-test-{comp_id}",
                             full=True,  # Full clone
                         )
+                        upid = clone_res.get("data")
+                        if upid:
+                            wait_for_proxmox_task(proxmox_client, node, upid)
                     else:
                         raise
 
@@ -736,13 +774,25 @@ def run_proxmox_tests(args) -> int:
                 logger.info(f"Stopping and destroying test ID {new_vmid}...")
                 try:
                     if is_lxc:
-                        stop_lxc(proxmox_client, node, new_vmid)
-                        time.sleep(5)
-                        destroy_lxc(proxmox_client, node, new_vmid)
+                        stop_res = stop_lxc(proxmox_client, node, new_vmid)
+                        upid = stop_res.get("data")
+                        if upid:
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+
+                        destroy_res = destroy_lxc(proxmox_client, node, new_vmid)
+                        upid = destroy_res.get("data")
+                        if upid:
+                            wait_for_proxmox_task(proxmox_client, node, upid)
                     else:
-                        proxmox_client.stop_vm(node, new_vmid)
-                        time.sleep(5)
-                        proxmox_client.destroy_vm(node, new_vmid)
+                        stop_res = proxmox_client.stop_vm(node, new_vmid)
+                        upid = stop_res.get("data")
+                        if upid:
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+
+                        destroy_res = proxmox_client.destroy_vm(node, new_vmid)
+                        upid = destroy_res.get("data")
+                        if upid:
+                            wait_for_proxmox_task(proxmox_client, node, upid)
                     logger.info(f"ID {new_vmid} destroyed.")
                 except Exception as ex:
                     logger.error(f"Failed to destroy ID {new_vmid}: {ex}")

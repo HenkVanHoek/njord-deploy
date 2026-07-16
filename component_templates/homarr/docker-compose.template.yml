@@ -15,3 +15,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
     networks:
       - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
