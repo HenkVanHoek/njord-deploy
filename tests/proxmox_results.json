@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "caddy",
+        "component_id": "conduit",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.142",
+        "ip": "192.168.178.143",
         "deployment": "success",
         "running": true,
         "http_ok": null,
