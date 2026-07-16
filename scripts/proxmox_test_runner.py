@@ -437,6 +437,40 @@ def wait_for_proxmox_task(
     raise TimeoutError("Proxmox task timed out.")
 
 
+def send_signal_message(message: str) -> None:
+    """Sends a Signal message using the configured Signal API in the environment."""
+    signal_api = os.getenv("SIGNAL_API")
+    signal_sender = os.getenv("SIGNAL_SENDER")
+    signal_recipient = os.getenv("SIGNAL_RECIPIENT")
+
+    if not (signal_api and signal_sender and signal_recipient):
+        logger.debug(
+            "Signal notification skipped: "
+            "SIGNAL_API, SIGNAL_SENDER, or SIGNAL_RECIPIENT not set."
+        )
+        return
+
+    logger.info("Sending Signal notification...")
+    try:
+        import requests
+
+        payload = {
+            "message": message,
+            "number": signal_sender,
+            "recipients": [signal_recipient],
+        }
+        res = requests.post(signal_api, json=payload, timeout=15)
+        if res.status_code in (200, 201):
+            logger.info("Signal notification sent successfully.")
+        else:
+            logger.error(
+                f"Failed to send Signal message. "
+                f"Status: {res.status_code}, Response: {res.text}"
+            )
+    except Exception as e:
+        logger.error(f"Error sending Signal message: {e}")
+
+
 def run_proxmox_tests(args) -> int:
     """Orchestrates cloning, deploying, verifying, and tearing down VMs."""
     load_dotenv()
@@ -858,6 +892,25 @@ def run_proxmox_tests(args) -> int:
     report_path = docs_dir / report_filename
     write_markdown_report(report_path, results_summary, failed_count, title_suffix)
     logger.info(f"Saved human-readable markdown report to: {report_path}")
+
+    # Send Signal Notification
+    overall_status = "✅ ALL SUCCESSFUL" if failed_count == 0 else "❌ FAILED"
+    passed_count = len(results_summary) - failed_count
+
+    signal_msg = (
+        f"🚢 NjordDeploy Proxmox Test Report\n"
+        f"Status: {overall_status}\n"
+        f"Total tested: {len(results_summary)}\n"
+        f"Passed: {passed_count}\n"
+        f"Failed: {failed_count}"
+    )
+    if failed_count > 0:
+        failed_list = [
+            r["component_id"] for r in results_summary if r["status"] != "success"
+        ]
+        signal_msg += f"\nFailed: {', '.join(failed_list)}"
+
+    send_signal_message(signal_msg)
 
     # Maintain copy at PROXMOX_TESTS.md for easy quick viewing
     latest_report_path = docs_dir / "PROXMOX_TESTS.md"
