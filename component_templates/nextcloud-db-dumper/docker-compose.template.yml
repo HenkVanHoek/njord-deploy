@@ -4,7 +4,7 @@
 # breaking_changes: "None"
 services:
   nextcloud-db-dumper:
-    image: databack/mysql-backup:latest
+    image: databack/mysql-backup:{{ component_version }}
     container_name: nextcloud-db-dumper
     restart: always
     labels:
@@ -24,3 +24,7 @@ services:
       - nextcloud-db
     volumes:
       - "{{ NEXTCLOUD_DB_DUMP_PATH }}:/backups"
+
+networks:
+  nextcloud-internal:
+    name: nextcloud-internal
