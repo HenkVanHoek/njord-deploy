@@ -4,7 +4,7 @@
 # breaking_changes: "None"
 services:
   nextcloud-redis:
-    image: redis:alpine
+    image: redis:{{ component_version }}
     container_name: nextcloud-redis
     restart: always
     labels:
