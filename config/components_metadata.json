@@ -624,7 +624,7 @@
         "notify-push": {
             "conflicts_with": [],
             "depends_on": [
-                "nextcloud-app",
+                "nextcloud",
                 "nextcloud-db",
                 "nextcloud-redis"
             ],
