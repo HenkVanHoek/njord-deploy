@@ -770,22 +770,53 @@ def run_proxmox_tests(args) -> int:
     logger.info(f"Saved raw test results to: {json_path}")
 
     # Generate Markdown Report
-    report_path = docs_dir / "PROXMOX_TESTS.md"
-    write_markdown_report(report_path, results_summary, failed_count)
+    timestamp_fn = time.strftime("%Y%m%d_%H%M%S")
+    title_suffix = ""
+    if args.components:
+        comp_str = args.components.replace(",", "_")
+        title_suffix = args.components
+        report_filename = f"PROXMOX_TESTS_{comp_str}_{timestamp_fn}.md"
+    elif args.untested_ui:
+        title_suffix = "untested_ui"
+        report_filename = f"PROXMOX_TESTS_untested_ui_{timestamp_fn}.md"
+    else:
+        title_suffix = "all"
+        report_filename = f"PROXMOX_TESTS_all_{timestamp_fn}.md"
+
+    report_path = docs_dir / report_filename
+    write_markdown_report(report_path, results_summary, failed_count, title_suffix)
     logger.info(f"Saved human-readable markdown report to: {report_path}")
+
+    # Maintain copy at PROXMOX_TESTS.md for easy quick viewing
+    latest_report_path = docs_dir / "PROXMOX_TESTS.md"
+    try:
+        if latest_report_path.exists():
+            latest_report_path.unlink()
+        import shutil
+
+        shutil.copy2(report_path, latest_report_path)
+    except Exception as sym_err:
+        logger.warning(f"Could not copy latest report to PROXMOX_TESTS.md: {sym_err}")
 
     return failed_count
 
 
 def write_markdown_report(
-    report_path: Path, results: List[Dict[str, Any]], failed_count: int
+    report_path: Path,
+    results: List[Dict[str, Any]],
+    failed_count: int,
+    title_suffix: str = "",
 ):
     """Writes a clean, formatted Markdown report of the test outcomes."""
     total_count = len(results)
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
+    title = "Proxmox Automated Component Testing Report"
+    if title_suffix:
+        title += f" - {title_suffix}"
+
     md_lines = [
-        "# Proxmox Automated Component Testing Report",
+        f"# {title}",
         "",
         f"**Run Timestamp:** {timestamp}",
         (
