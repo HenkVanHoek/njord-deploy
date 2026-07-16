@@ -7,7 +7,6 @@
             "lora-service",
             "octoprint",
             "prosody",
-            "test-playwright",
             "frigate",
             "homeassistant",
             "scrypted",
@@ -970,29 +969,6 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": "SONARR_WEB_PORT"
-        },
-        "test-playwright": {
-            "component_version": "latest",
-            "conflicts_with": [],
-            "depends_on": [],
-            "description": "My first test of playwright",
-            "group": "general",
-            "has_configuration": true,
-            "has_traefik_support": false,
-            "has_ui": false,
-            "image_name": "mcr.microsoft.com/playwright",
-            "intent_questions": [],
-            "name": "Test Playwright",
-            "package_id": null,
-            "resource_profile": {
-                "cpu": "medium",
-                "ram": "medium",
-                "storage_type": "persistent"
-            },
-            "tags": [
-                "self-hosted"
-            ],
-            "traefik_internal_port": null
         },
         "traefik": {
             "component_version": "latest",
