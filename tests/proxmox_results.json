@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "prosody",
+        "component_id": "unbound",
         "status": "success",
         "vmid": 104,
-        "ip": "192.168.178.155",
+        "ip": "192.168.178.157",
         "deployment": "success",
         "running": true,
         "http_ok": null,
