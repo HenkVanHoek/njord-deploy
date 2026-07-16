@@ -1,13 +1,13 @@
 [
     {
-        "component_id": "nextcloud-redis",
-        "status": "success",
+        "component_id": "notify-push",
+        "status": "failed",
         "vmid": 104,
-        "ip": "192.168.178.153",
-        "deployment": "success",
-        "running": true,
+        "ip": "192.168.178.154",
+        "deployment": "failed",
+        "running": false,
         "http_ok": null,
         "error_logs": false,
-        "error_message": ""
+        "error_message": "Deployment failed: non-zero return code | stderr:  Network nextcloud-internal Creating \n Network nextcloud-internal Created \n Container nextcloud-redis Creating \n Container nextcloud-db Creating \n Container nextcloud-db Created \n Container nextcloud-redis Created \n Container nextcloud-app Creating \n Container nextcloud-app Created \n Container notify-push Creating \n Container notify-push Created \n Container nextcloud-redis Starting \n Container nextcloud-db Starting \n Container nextcloud-db Started \n Container nextcloud-redis Started \n Container nextcloud-app Starting \n Container nextcloud-app Started \n Container notify-push Starting \nError response from daemon: failed to create task for container: failed to create shim task: OCI runtime create failed: runc create failed: unable to start container process: error during container init: exec: \"/var/www/html/custom_apps/notify_push/bin/aarch64/notify_push\": stat /var/www/html/custom_apps/notify_push/bin/aarch64/notify_push: no such file or directory"
     }
 ]

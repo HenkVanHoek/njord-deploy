@@ -23,3 +23,8 @@ This document tracks components that failed verification or could not be tested/
 *   **Date**: 2026-07-16
 *   **Reason**: Incomplete placeholder component. It lacks required metadata (no image_name or component_version defined in metadata) and its template mounts configurations (`chirpstack.toml`, `mosquitto.conf`) that do not exist in the repository, making it impossible to deploy.
 *   **Action**: Skipped. Needs complete stack templates and configuration files.
+
+### `notify-push` (Nextcloud High-Performance Push)
+*   **Date**: 2026-07-16
+*   **Reason**: The component is a sidecar/helper container that executes the Nextcloud Client Push binary (`notify_push`) located inside the shared Nextcloud data volume (`/var/www/html/custom_apps/notify_push/bin/aarch64/notify_push`). On a fresh/clean Proxmox LXC test container, this shared volume is empty, meaning the binary does not exist, causing the container startup to fail with "no such file or directory".
+*   **Action**: Skipped. Cannot be tested on a clean-slate environment; requires a pre-configured Nextcloud data directory.
