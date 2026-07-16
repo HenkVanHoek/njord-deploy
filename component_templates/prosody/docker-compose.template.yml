@@ -3,25 +3,25 @@
 # platform_notes: "None"
 # breaking_changes: "None"
 services:
-    prosody:
-        image: prosody/prosody:latest
-        container_name: prosody
-        restart: unless-stopped
-        networks:
-            - pi-services
-        ports:
-            - "5222:5222"
-            - "5269:5269"
-        volumes:
-            - {{ CONFIG_BASE_PATH }}/prosody/config:/etc/prosody
-            - {{ CONFIG_BASE_PATH }}/prosody/data:/var/lib/prosody
-        environment:
-            - DOMAIN={{ XMPP_DOMAIN }}
-            - ADMIN_USER={{ XMPP_ADMIN_USER }}
-            - ADMIN_PASS="{{ XMPP_ADMIN_PASSWORD }}"
-            - MUC_PREFIX={{ XMPP_MUC_PREFIX }}
-            - UPLOAD_PREFIX={{ XMPP_UPLOAD_PREFIX }}
+  prosody:
+    image: prosody/prosody:{{ component_version }}
+    container_name: prosody
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+    ports:
+      - "5222:5222"
+      - "5269:5269"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/prosody/config:/etc/prosody"
+      - "{{ CONFIG_BASE_PATH }}/prosody/data:/var/lib/prosody"
+    environment:
+      - DOMAIN={{ XMPP_DOMAIN | default('localhost') }}
+      - ADMIN_USER={{ XMPP_ADMIN_USER | default('admin') }}
+      - ADMIN_PASS="{{ XMPP_ADMIN_PASSWORD | default('adminpass') }}"
+      - MUC_PREFIX={{ XMPP_MUC_PREFIX | default('conference') }}
+      - UPLOAD_PREFIX={{ XMPP_UPLOAD_PREFIX | default('upload') }}
 
 networks:
-    pi-services:
-        external: true
+  njorddeploy_net:
+    external: true
