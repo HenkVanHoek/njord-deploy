@@ -18,3 +18,8 @@ This document tracks components that failed verification or could not be tested/
 *   **Date**: 2026-07-15
 *   **Reason**: The component requires a physical USB Zigbee coordinator (e.g., `/dev/ttyUSB0`) to start up. Spawning a fresh Proxmox LXC container without a USB device passed through causes the container startup to fail with "no such file or directory" for the custom device path.
 *   **Action**: Skipped. Fundamentally requires physical hardware setup.
+
+### `lora-service` (LoRa Letterbox Notifier)
+*   **Date**: 2026-07-16
+*   **Reason**: Incomplete placeholder component. It lacks required metadata (no image_name or component_version defined in metadata) and its template mounts configurations (`chirpstack.toml`, `mosquitto.conf`) that do not exist in the repository, making it impossible to deploy.
+*   **Action**: Skipped. Needs complete stack templates and configuration files.
