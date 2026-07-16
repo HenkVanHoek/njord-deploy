@@ -7,10 +7,18 @@ from pathlib import Path
 
 import pytest
 
-# Skip this entire test module if playwright is not installed (e.g., in CI)
-pytest.importorskip("playwright.sync_api")
+try:
+    from playwright.sync_api import Page, expect
 
-from playwright.sync_api import Page, expect  # noqa: E402 type: ignore
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+    Page = any  # type: ignore
+    expect = None
+
+pytestmark = pytest.mark.skipif(
+    not PLAYWRIGHT_AVAILABLE, reason="Playwright is not installed"
+)
 
 
 def is_port_open(ip: str, port: int) -> bool:
