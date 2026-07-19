@@ -95,26 +95,64 @@ def find_suitable_template(client: ProxmoxClient, node: str) -> str:
         return f"{default_storage}:vztmpl/debian-12-standard_12.2-1_" f"amd64.tar.zst"
 
 
-def wait_for_lxc_ip(client: ProxmoxClient, node: str, vmid: int) -> str:
-    """Polls the Proxmox API until the container receives an IP address."""
-    logger.info(f"Waiting for container {vmid} to receive an IP address...")
-    for _ in range(30):
+def wait_for_proxmox_task(
+    client: ProxmoxClient, node: str, upid: str, timeout_seconds: int = 180
+) -> None:
+    """Polls the Proxmox task status until it completes successfully."""
+    logger.info(f"Waiting for Proxmox task to complete: {upid}")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            endpoint = f"nodes/{node}/tasks/{upid}/status"
+            res = client.get(endpoint)
+            data = res.get("data", {})
+            status = data.get("status")
+            if status == "stopped":
+                exit_status = data.get("exitstatus")
+                if exit_status == "OK":
+                    logger.info("Proxmox task completed successfully.")
+                    return
+                else:
+                    raise RuntimeError(
+                        f"Proxmox task failed with status: {exit_status}"
+                    )
+        except Exception as e:
+            if "failed with status" in str(e):
+                raise e
+            logger.debug(f"Failed to query task status: {e}")
+        time.sleep(2)
+    raise TimeoutError("Proxmox task timed out.")
+
+
+def wait_for_lxc_ip(
+    client: ProxmoxClient, node: str, vmid: int, timeout_seconds: int = 120
+) -> str:
+    """Polls the Proxmox API until the container receives an IPv4 address."""
+    logger.info(f"Waiting for container {vmid} to receive an IPv4 address...")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
         try:
             endpoint = f"nodes/{node}/lxc/{vmid}/interfaces"
             res = client.get(endpoint)
             interfaces = res.get("data", [])
+            logger.debug(f"interfaces response: {interfaces}")
             for iface in interfaces:
                 name = iface.get("name")
-                inet = iface.get("inet")
+                # Only read `inet` (IPv4); ignore `inet6` entirely.
+                inet = iface.get("inet", "")
                 if name == "eth0" and inet:
-                    parts = inet.split("/")
-                    ip_addr, *rest = parts
-                    if ip_addr and not ip_addr.startswith("127."):
-                        return ip_addr
+                    ip_candidate, *_rest = inet.split("/")
+                    # Skip loopback and APIPA link-local
+                    if (
+                        ip_candidate
+                        and not ip_candidate.startswith("127.")
+                        and not ip_candidate.startswith("169.254.")
+                    ):
+                        return ip_candidate
         except Exception as e:
             logger.debug(f"Failed to get interfaces: {e}")
         time.sleep(4)
-    raise TimeoutError("Container failed to acquire an IP address in time.")
+    raise TimeoutError("Container failed to acquire an IPv4 address in time.")
 
 
 def main():
@@ -162,6 +200,22 @@ def main():
 
     client = ProxmoxClient(host, user, token_id, token_secret)
 
+    # Pre-flight: guard against DHCP pool exhaustion.
+    # If too many stopped CTs exist the DHCP server may run out of leases,
+    # causing new containers to receive only IPv6 and no IPv4 address.
+    STALE_CT_THRESHOLD = 10
+    existing_lxc = client.get_lxc_list(args.node)
+    stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
+    if len(stopped_cts) >= STALE_CT_THRESHOLD:
+        stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
+        logger.error(
+            f"Pre-flight check failed: {len(stopped_cts)} stopped LXC "
+            f"containers detected on node '{args.node}'. This may exhaust "
+            f"the DHCP lease pool. Destroy stale containers first.\n"
+            f"Stale VMIDs: {stale_vmids}"
+        )
+        sys.exit(1)
+
     # 1. Retrieve the next available VMID
     logger.info("Retrieving next available VMID...")
     vmid = client.get_next_vmid()
@@ -206,10 +260,15 @@ def main():
 
     logger.info(f"Creating LXC container {vmid} on node '{args.node}'...")
     creation_endpoint = f"nodes/{args.node}/lxc"
-    client.post(creation_endpoint, data=data)
+    result = client.post(creation_endpoint, data=data)
+    upid = result.get("data")
     logger.info("Container creation request submitted successfully.")
 
-    # 5. Wait for IP Address
+    # Wait for the Proxmox provisioning task to complete
+    # (mirrors the approach in proxmox_test_runner.py)
+    if upid:
+        wait_for_proxmox_task(client, args.node, upid)
+
     try:
         ip_address = wait_for_lxc_ip(client, args.node, vmid)
         logger.info(f"Container is online. IP Address: {ip_address}")
@@ -217,10 +276,9 @@ def main():
         logger.error(f"Failed to retrieve container IP address: {e}")
         sys.exit(1)
 
-    # 6. Install Docker and configure network via SSH
-    logger.info("Provisioning container over SSH (Installing Docker)...")
-    # Wait for SSH service to start up on the container
-    time.sleep(5)
+    # Wait for SSH daemon to start
+    logger.info("Waiting 10s for SSH daemon to start...")
+    time.sleep(10)
 
     ssh = SSHManager(
         hostname=ip_address,

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# last_tested_version: "lts"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 services:
   portainer:

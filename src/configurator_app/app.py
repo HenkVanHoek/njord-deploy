@@ -584,6 +584,31 @@ def create_app(test_config=None):
         try:
             client = ProxmoxClient(host, user, token_id, token_secret)
 
+            # Pre-flight: guard against DHCP pool exhaustion.
+            # If too many stopped CTs exist, the DHCP server may be out of
+            # leases. Refuse to create a new one and report the stale VMIDs.
+            STALE_CT_THRESHOLD = 10
+            existing_lxc = client.get_lxc_list(node)
+            stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
+            if len(stopped_cts) >= STALE_CT_THRESHOLD:
+                stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                f"Pre-flight check failed: {len(stopped_cts)} "
+                                f"stopped LXC containers detected on node "
+                                f"'{node}'. This may exhaust the DHCP lease "
+                                f"pool and prevent new containers from "
+                                f"receiving an IPv4 address. Please destroy "
+                                f"stale containers before provisioning a new "
+                                f"one. Stale VMIDs: {stale_vmids}"
+                            )
+                        }
+                    ),
+                    409,
+                )
+
             # 1. Next VMID
             vmid = client.get_next_vmid()
 
@@ -679,26 +704,69 @@ def create_app(test_config=None):
                 "start": 1,
             }
 
-            client.post(f"nodes/{node}/lxc", data=create_data)
+            result = client.post(f"nodes/{node}/lxc", data=create_data)
+            upid = result.get("data")
 
-            # 5. Wait for IP address
+            # 5. Wait for the Proxmox provisioning task to complete
+            #    (same approach as proxmox_test_runner.py — wait for UPID)
+            if upid:
+                logging.info(f"Waiting for Proxmox task to complete: {upid}")
+                task_deadline = 180
+                task_start = time.time()
+                while time.time() - task_start < task_deadline:
+                    try:
+                        task_res = client.get(f"nodes/{node}/tasks/{upid}/status")
+                        task_data = task_res.get("data", {})
+                        task_status = task_data.get("status")
+                        if task_status == "stopped":
+                            exit_status = task_data.get("exitstatus")
+                            if exit_status == "OK":
+                                logging.info("Proxmox task completed successfully.")
+                                break
+                            else:
+                                return (
+                                    jsonify(
+                                        {
+                                            "error": (
+                                                f"LXC creation task failed: "
+                                                f"{exit_status}"
+                                            )
+                                        }
+                                    ),
+                                    500,
+                                )
+                    except Exception:  # nosec B110
+                        pass
+                    time.sleep(2)
+
+            # 6. Poll for IPv4 address (UPID task already confirmed container is up)
             ip_address = None
-            for _ in range(30):
+            for attempt in range(30):
                 try:
                     res_if = client.get(f"nodes/{node}/lxc/{vmid}/interfaces")
                     interfaces = res_if.get("data", [])
+                    logging.info(
+                        f"[LXC IP poll #{attempt + 1}] interfaces: {interfaces}"
+                    )
                     for iface in interfaces:
-                        if iface.get("name") == "eth0" and iface.get("inet"):
-                            inet = iface.get("inet")
-                            parts = inet.split("/")
-                            ip_addr, *rest = parts
-                            if ip_addr and not ip_addr.startswith("127."):
-                                ip_address = ip_addr
-                                break
+                        if iface.get("name") != "eth0":
+                            continue
+                        # Only accept IPv4 from `inet`; ignore `inet6` entirely.
+                        inet = iface.get("inet", "")
+                        if not inet:
+                            continue
+                        ip_candidate, *_rest = inet.split("/")
+                        if (
+                            ip_candidate
+                            and not ip_candidate.startswith("127.")
+                            and not ip_candidate.startswith("169.254.")
+                        ):
+                            ip_address = ip_candidate
+                            break
                     if ip_address:
                         break
-                except Exception:  # nosec B110
-                    pass
+                except Exception as poll_err:  # nosec B110
+                    logging.warning(f"[LXC IP poll #{attempt + 1}] error: {poll_err}")
                 time.sleep(4)
 
             if not ip_address:
@@ -706,16 +774,16 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": (
-                                "LXC container created, but failed "
-                                "to acquire an IP address in time."
+                                "LXC container created, but failed to acquire "
+                                "an IPv4 address in time. Check server logs."
                             )
                         }
                     ),
                     500,
                 )
 
-            # 6. Install Docker via SSH
-            time.sleep(5)
+            # 7. Install Docker via SSH — wait for SSH daemon to start
+            time.sleep(10)
             ssh = SSHManager(
                 hostname=ip_address,
                 username="root",

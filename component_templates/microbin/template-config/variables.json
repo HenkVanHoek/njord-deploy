@@ -1,0 +1,76 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "The port on the host to access the Microbin web interface.",
+            "id": "MICROBIN_PORT",
+            "label": "Microbin Web Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "",
+            "description": "The base URL for the Microbin instance (e.g., https://paste.example.com). Leave empty for relative paths.",
+            "id": "MICROBIN_BASE_URL",
+            "label": "Microbin Base URL",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "",
+            "description": "The password for the Microbin administration interface. Leave empty for no admin password.",
+            "id": "MICROBIN_ADMIN_PASSWORD",
+            "label": "Microbin Admin Password",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "1024",
+            "description": "Maximum content length for a paste in kilobytes.",
+            "id": "MICROBIN_MAX_CONTENT_LENGTH_KB",
+            "label": "Max Content Length (KB)",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "0",
+            "description": "Default expiration time for pastes in seconds. 0 means no expiration.",
+            "id": "MICROBIN_DEFAULT_EXPIRATION_SECONDS",
+            "label": "Default Expiration (Seconds)",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "CHANGEME_SECURELY",
+            "description": "A random salt string for secure hashes. It is HIGHLY RECOMMENDED to change this from the default value.",
+            "id": "MICROBIN_SALT",
+            "label": "Microbin Salt",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "1",
+            "description": "",
+            "id": "MICROBIN_HIGHLIGHT_SYNTAX",
+            "label": "Syntax highlighting for code.",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "1",
+            "description": "",
+            "id": "MICROBIN_EDITABLE",
+            "label": "Modify allowed",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

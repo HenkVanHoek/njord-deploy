@@ -1150,6 +1150,36 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null
+        },
+        "microbin": {
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service.",
+            "docker_service_name": "microbin",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "danielszabo99/microbin",
+            "name": "Microbin",
+            "package_id": "general-stack",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "low",
+                "ram": "low",
+                "recommended_cores": 1,
+                "recommended_ram_mb": 128,
+                "recommended_storage_gb": 1,
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "pastebin",
+                "utility",
+                "text",
+                "privacy"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "MICROBIN_PORT"
         }
     },
     "packages": {

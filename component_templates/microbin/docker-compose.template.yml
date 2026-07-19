@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "2.1.4"
+# platform_notes: "Tested successfully on Proxmox LXC."
+# breaking_changes: Image moved from szabodanika/microbin to danielszabo99/microbin on Docker Hub.
+services:
+  microbin:
+    image: danielszabo99/microbin:latest
+    container_name: njorddeploy-microbin
+    ports:
+      - "{{ MICROBIN_PORT }}:8080"
+    volumes:
+      - "{{ DATA_ROOT }}/microbin/data:/data"
+    environment:
+      - PORT=8080
+      - DATA_DIR=/data
+      - BASE_URL={{ MICROBIN_BASE_URL }}
+      - ADMIN_PASSWORD={{ MICROBIN_ADMIN_PASSWORD }}
+      - MAX_CONTENT_LENGTH_KB={{ MICROBIN_MAX_CONTENT_LENGTH_KB }}
+      - DEFAULT_EXPIRATION_SECONDS={{ MICROBIN_DEFAULT_EXPIRATION_SECONDS }}
+      - SALT={{ MICROBIN_SALT }}
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

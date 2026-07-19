@@ -217,11 +217,11 @@ def test_fetch_from_remote(temp_dirs, monkeypatch):
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         # GitHub ZIP wraps in repo-name-branch/
         zip_file.writestr(
-            "njorddeploy-components-main/components_metadata.json",
+            "njord-deploy-components-main/components_metadata.json",
             json.dumps({"components": {"fetched-comp": {"name": "Fetched"}}}),
         )
         zip_file.writestr(
-            "njorddeploy-components-main/component_templates/"
+            "njord-deploy-components-main/component_templates/"
             "fetched-comp/docker-compose.template.yml",
             "services:\n  fetched:\n    image: fetched\n",
         )

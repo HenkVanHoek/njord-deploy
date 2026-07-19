@@ -1,6 +1,6 @@
 # NjordDeploy: Data Contracts
 
-**Version:** 1.8
+**Version:** 1.9
 **Status:** Active
 
 This document is the Single Source of Truth (SST) for the schema of all
@@ -57,6 +57,8 @@ This contract defines the structure for a single component element within the
 | `has_traefik_support`   | `boolean`                | No       | If true, the component requires Traefik setup and has a unique `traefik_internal_port`.                                                  |
 | `traefik_internal_port` | `integer`                | No       | The internal port used for Traefik routing (e.g., `80`). Required if `has_traefik_support` is true.                                      |
 | `other_files`           | `array<OtherFileConfig>` | No       | A list of configuration files to be generated, other than the main Docker Compose file. (`OtherFileConfig` schema defined below).        |
+| `config_templates`      | `object`                 | No       | A dictionary mapping a template filename (string) to a destination path (string). Used for rendering additional configuration files from `template-config/` into the deployment package. |
+| `package_id`            | `string`                 | No       | The ID of the Package this component belongs to. Defaults to `"general-stack"` when not set.                                             |
 
 ### Component Details Output Contract (`get_all_components` / `get_component_details` return)
 
@@ -67,6 +69,9 @@ This contract defines the enriched structure returned by `ComponentManager.get_a
 | `id`                                | `string`        | Yes      | The unique, machine-readable ID of the component (the dictionary key from `components_metadata.json`).                             |
 | `required_variables`                | `array<object>` | Yes      | **(Merged)** The content of the component's `template-config/variables.json` file, detailing all user-facing configuration fields. |
 | `name`                              | `string`        | Yes      | The human-readable name of the component (inherited from metadata).                                                                |
+| `package_id`                        | `string`        | Yes      | The Package ID this component belongs to. Defaults to `"general-stack"` if absent in metadata.                                    |
+| `tags`                              | `array<string>` | Yes      | A list of searchable tags. Defaults to `[]` if absent in metadata.                                                                |
+| `resource_profile`                  | `object`        | Yes      | AI-generated resource estimate. Shape: `{"cpu": string, "ram": string, "storage_type": string}`. Defaults to `{"cpu": "medium", "ram": "medium", "storage_type": "persistent"}`. |
 | **(All other metadata properties)** | *Varies*        | *Varies* | All other properties from the Component Metadata Structure are included.                                                           |
 
 ---
@@ -99,6 +104,44 @@ This contract defines the structure of an element within the `other_files` list 
 |---------------|----------|----------|--------------------------------------------------------------------------------------------------------------|
 | `template`    | `string` | Yes      | The name of the Jinja2 template file, relative to the component's template directory.                        |
 | `destination` | `string` | Yes      | The relative path and file name for the rendered output within the main deployment package output directory. |
+
+---
+
+## `components_metadata.json` — Top-Level Structure
+
+The file `config/components_metadata.json` is the Single Source of Truth for
+all component definitions. It contains four top-level keys:
+
+| Top-Level Key   | Type     | Description                                                                                     |
+|-----------------|----------|-------------------------------------------------------------------------------------------------|
+| `components`    | `object` | Dictionary mapping a **Component ID** (`string`) to a Component Metadata object (schema above). |
+| `packages`      | `object` | Dictionary mapping a **Package ID** (`string`) to a Package object (schema below).             |
+| `_njorddeploy`  | `object` | Internal application metadata used by the Editor App (schema below).                           |
+| `groups`        | `object` | *(Legacy/optional)* Dictionary mapping a **Group ID** to group display metadata.               |
+
+### Package Object Schema (`packages` dictionary value)
+
+A Package is a curated bundle of related components displayed together in the
+Editor App. Managed via `ComponentManager.create_package` /
+`update_package_metadata` / `delete_package`.
+
+| Property       | Type     | Required | Description                                                                                  |
+|----------------|----------|----------|----------------------------------------------------------------------------------------------|
+| `name`         | `string` | Yes      | The human-readable display name for the package (e.g., `"Home Automation Stack"`).          |
+| `description`  | `string` | No       | An optional description of the package's purpose.                                           |
+| `network_type` | `string` | No       | The Docker network mode for the stack. Defaults to `"bridge"`.                              |
+
+### `_njorddeploy` Internal Metadata Schema
+
+This object stores application-level configuration that drives the Editor UI.
+It is managed by `ComponentManager` methods and must not be edited manually.
+
+| Property           | Type            | Required | Description                                                                                                                                              |
+|--------------------|-----------------|----------|----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `group_order`      | `array<string>` | No       | Ordered list of Group IDs controlling the display order of groups in the UI.                                                                             |
+| `components_order` | `array<string>` | No       | Ordered list of Component IDs controlling the master sort order of the component list.                                                                   |
+| `group_rules`      | `object`        | No       | Dictionary mapping a **Group ID** to a rule object. Currently supports `{"exclusive": true}` to enforce mutual exclusivity within the group.            |
+| `default_group`    | `string`        | No       | The Group ID assigned to newly created components by default.                                                                                            |
 
 ---
 
@@ -256,3 +299,26 @@ This is the final payload sent to initiate the deployment.
 | `devices`               | `array<Target Device Contract>` | Yes      | The list of target devices.                                                          |
 | `components_to_clean`   | `array<string>`                 | No       | List of component IDs whose containers should be stopped and removed pre-deployment. |
 | `components_to_restart` | `array<string>`                 | No       | List of component IDs whose containers should be gracefully restarted (TBD).         |
+
+---
+
+## `docker-compose.template.yml` — Required Header Contract
+
+Every `docker-compose.template.yml` file in `component_templates/` must begin
+with the following four comment lines before any YAML content. This header is
+validated by `SyncManager.validate_metadata_header` as a **gating condition**
+before a component can be uploaded to the remote repository.
+
+```yaml
+# status: <untested|tested|stable|deprecated>
+# last_tested_version: <version string or "none">
+# platform_notes: <free text or "none">
+# breaking_changes: <free text or "none">
+```
+
+| Header Field           | Required | Description                                                                                          |
+|------------------------|----------|------------------------------------------------------------------------------------------------------|
+| `status`               | Yes      | The test status of the component. Recommended values: `untested`, `tested`, `stable`, `deprecated`. |
+| `last_tested_version`  | Yes      | The Docker image version last successfully tested (e.g., `"2.3.1"` or `"none"`).                    |
+| `platform_notes`       | Yes      | Notes on platform compatibility (e.g., `"ARM64 only"` or `"none"`).                                 |
+| `breaking_changes`     | Yes      | Description of any breaking changes relative to the previous version, or `"none"`.                  |

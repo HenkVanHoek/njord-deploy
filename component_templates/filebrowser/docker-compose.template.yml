@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# last_tested_version: "2.63.18"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 services:
   filebrowser:

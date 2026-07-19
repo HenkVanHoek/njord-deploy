@@ -532,332 +532,405 @@ def run_proxmox_tests(args) -> int:
     ssh_key_obj = dummy_mgr._get_or_create_key()
     ssh_public_key = f"{ssh_key_obj.get_name()} {ssh_key_obj.get_base64()}"
 
-    for comp in target_components:
-        comp_id = comp.get("id", "unknown")
-        logger.info("----------------------------------------")
-        logger.info(f"Testing component: {comp_id}")
-        logger.info("----------------------------------------")
+    is_lxc = getattr(args, "mode", "vm") == "lxc"
 
-        test_record = {
-            "component_id": comp_id,
-            "status": "failed",
-            "vmid": None,
-            "ip": None,
-            "deployment": "failed",
-            "running": False,
-            "http_ok": None,
-            "error_logs": False,
-            "error_message": "",
-        }
+    # --- LXC shared container setup (provisioned once, reused for all components) ---
+    shared_lxc_vmid: int | None = None
+    shared_lxc_ip: str | None = None
 
-        is_lxc = getattr(args, "mode", "vm") == "lxc"
-        new_vmid = None
-        vm_ip: str | None = None
+    if is_lxc:
+        logger.info("LXC mode: provisioning a shared container for all components.")
         try:
-            if is_lxc:
-                # 1. Create LXC
-                new_vmid = proxmox_client.get_next_vmid()
-                test_record["vmid"] = new_vmid
-                logger.info(f"Creating LXC container {new_vmid} on node '{node}'...")
-                ostemplate = find_suitable_lxc_template(proxmox_client, node)
-                logger.info(f"Using template: {ostemplate}")
+            shared_lxc_vmid = proxmox_client.get_next_vmid()
+            logger.info(
+                f"Creating shared LXC container {shared_lxc_vmid} "
+                f"on node '{node}'..."
+            )
+            ostemplate = find_suitable_lxc_template(proxmox_client, node)
+            logger.info(f"Using template: {ostemplate}")
 
-                net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
-                rootfs_config = "local-lvm:40"
-                features_config = "nesting=1"
+            net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
+            create_data = {
+                "vmid": shared_lxc_vmid,
+                "ostemplate": ostemplate,
+                "cores": 4,
+                "memory": 8192,
+                "swap": 512,
+                "rootfs": "local-lvm:40",
+                "net0": net_config,
+                "features": "nesting=1",
+                "unprivileged": 1,
+                "password": vm_pass,
+                "ssh-public-keys": ssh_public_key,
+                "start": 1,
+            }
+            create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+            upid = create_res.get("data")
+            if upid:
+                wait_for_proxmox_task(proxmox_client, node, upid)
 
-                create_data = {
-                    "vmid": new_vmid,
-                    "ostemplate": ostemplate,
-                    "cores": 4,
-                    "memory": 8192,
-                    "swap": 512,
-                    "rootfs": rootfs_config,
-                    "net0": net_config,
-                    "features": features_config,
-                    "unprivileged": 1,
-                    "password": vm_pass,
-                    "ssh-public-keys": ssh_public_key,
-                    "start": 1,
-                }
-                create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
-                upid = create_res.get("data")
-                if upid:
-                    wait_for_proxmox_task(proxmox_client, node, upid)
+            if shared_lxc_vmid is None:
+                raise RuntimeError("shared_lxc_vmid unexpectedly None")
+            shared_lxc_ip = wait_for_lxc_ip(proxmox_client, node, shared_lxc_vmid)
+            logger.info(f"Shared LXC container online at {shared_lxc_ip}.")
+            time.sleep(10)
 
-                # 2. Wait for dynamic IP
-                vm_ip = wait_for_lxc_ip(proxmox_client, node, new_vmid)
-                test_record["ip"] = vm_ip
-                time.sleep(10)
-
-                # 3. Provision LXC with Docker
+            # Install Docker once on the shared container
+            logger.info("Installing Docker on shared LXC container...")
+            if shared_lxc_ip is None:
+                raise RuntimeError("shared_lxc_ip unexpectedly None")
+            lxc_ssh = SSHManager(
+                hostname=shared_lxc_ip,
+                username="root",
+                password=vm_pass,
+                allow_auto_add=True,
+                load_system_keys=False,
+            )
+            connected = False
+            conn_msg = ""
+            for attempt in range(6):
+                connected, conn_msg = lxc_ssh.connect()
+                if connected:
+                    break
                 logger.info(
-                    f"Provisioning LXC container {new_vmid} (Installing Docker)..."
+                    f"SSH attempt {attempt + 1}/6 failed: {conn_msg}. "
+                    "Retrying in 5 seconds..."
                 )
-                ssh = SSHManager(
-                    hostname=vm_ip,
-                    username="root",
-                    password=vm_pass,
-                    allow_auto_add=True,
-                    load_system_keys=False,
+                time.sleep(5)
+            if not connected:
+                raise RuntimeError(
+                    f"Failed to SSH into shared LXC container: {conn_msg}"
                 )
-                connected = False
-                conn_msg = ""
-                for attempt in range(6):
-                    connected, conn_msg = ssh.connect()
-                    if connected:
-                        break
-                    logger.info(
-                        f"SSH connection attempt {attempt + 1}/6 failed: {conn_msg}. "
-                        "Retrying in 5 seconds..."
-                    )
-                    time.sleep(5)
 
-                if not connected:
-                    raise RuntimeError(f"Failed to connect to LXC over SSH: {conn_msg}")
+            for cmd in [
+                "apt-get update",
+                "apt-get install -y curl ca-certificates gnupg",
+                "curl -fsSL https://get.docker.com -o get-docker.sh",
+                "sh get-docker.sh",
+                "systemctl enable --now docker",
+            ]:
+                lxc_ssh.execute_command(cmd, lambda msg: None)
+            lxc_ssh.close()
+            logger.info("Docker installed on shared LXC container.")
 
-                install_commands = [
-                    "apt-get update",
-                    "apt-get install -y curl ca-certificates gnupg",
-                    "curl -fsSL https://get.docker.com -o get-docker.sh",
-                    "sh get-docker.sh",
-                    "systemctl enable --now docker",
-                    "docker network create njorddeploy_net",
-                ]
-                for cmd in install_commands:
-                    ssh.execute_command(cmd, lambda msg: None)
-                ssh.close()
-
-            else:
-                # 1. Clone VM
-                new_vmid = proxmox_client.get_next_vmid()
-                test_record["vmid"] = new_vmid
-                logger.info(
-                    f"Cloning master template VMID {template_id} to {new_vmid}..."
-                )
+        except Exception as setup_err:
+            logger.error(f"Failed to provision shared LXC container: {setup_err}")
+            # Cleanup if partially created
+            if shared_lxc_vmid:
                 try:
-                    clone_res = proxmox_client.clone_vm(
-                        node=node,
-                        vmid=template_id,
-                        newid=new_vmid,
-                        name=f"pish-test-{comp_id}",
-                        full=False,  # Linked clone
+                    stop_lxc(proxmox_client, node, shared_lxc_vmid)
+                    destroy_lxc(proxmox_client, node, shared_lxc_vmid)
+                except Exception:  # nosec B110
+                    pass
+            return 1
+
+    try:
+        for comp in target_components:
+            comp_id = comp.get("id", "unknown")
+            logger.info("----------------------------------------")
+            logger.info(f"Testing component: {comp_id}")
+            logger.info("----------------------------------------")
+
+            test_record = {
+                "component_id": comp_id,
+                "status": "failed",
+                "vmid": shared_lxc_vmid if is_lxc else None,
+                "ip": shared_lxc_ip if is_lxc else None,
+                "deployment": "failed",
+                "running": False,
+                "http_ok": None,
+                "error_logs": False,
+                "error_message": "",
+            }
+
+            new_vmid: int | None = None
+            vm_ip: str | None = shared_lxc_ip if is_lxc else None
+
+            try:
+                if is_lxc:
+                    # Clean Docker state between components so each test
+                    # starts from a fresh environment without leftover
+                    # containers, volumes, images, or networks.
+                    logger.info(
+                        f"Cleaning Docker environment before testing {comp_id}..."
                     )
-                    upid = clone_res.get("data")
-                    if upid:
-                        wait_for_proxmox_task(proxmox_client, node, upid)
-                except Exception as e:
-                    if "Linked clone feature is not supported" in str(e):
-                        logger.warning(
-                            "Linked clone not supported, falling back to full clone..."
+                    cleanup_ssh = SSHManager(
+                        hostname=shared_lxc_ip,
+                        username="root",
+                        password=vm_pass,
+                        allow_auto_add=True,
+                        load_system_keys=False,
+                    )
+                    connected, conn_msg = cleanup_ssh.connect()
+                    if not connected:
+                        raise RuntimeError(
+                            f"Cannot connect to shared LXC for cleanup: {conn_msg}"
                         )
+                    for cmd in [
+                        # Step 1: stop all running containers gracefully
+                        ("docker ps -q | xargs -r docker stop" " 2>/dev/null || true"),
+                        # Step 2: force-remove all containers (running or stopped)
+                        (
+                            "docker ps -aq | xargs -r docker rm -f"
+                            " 2>/dev/null || true"
+                        ),
+                        # Step 3: prune all unused images, volumes and networks
+                        "docker system prune -af --volumes",
+                        # Step 4: recreate the shared bridge network
+                        (
+                            "docker network inspect njorddeploy_net >/dev/null 2>&1 "
+                            "|| docker network create njorddeploy_net"
+                        ),
+                    ]:
+                        cleanup_ssh.execute_command(cmd, lambda msg: None)
+                    cleanup_ssh.close()
+                    logger.info("Docker environment clean.")
+
+                else:
+                    # VM mode: clone a fresh VM per component (unchanged)
+                    new_vmid = proxmox_client.get_next_vmid()
+                    test_record["vmid"] = new_vmid
+                    logger.info(
+                        f"Cloning master template VMID {template_id} "
+                        f"to {new_vmid}..."
+                    )
+                    try:
                         clone_res = proxmox_client.clone_vm(
                             node=node,
                             vmid=template_id,
                             newid=new_vmid,
                             name=f"pish-test-{comp_id}",
-                            full=True,  # Full clone
+                            full=False,
                         )
                         upid = clone_res.get("data")
                         if upid:
                             wait_for_proxmox_task(proxmox_client, node, upid)
-                    else:
-                        raise
+                    except Exception as clone_err:
+                        if "Linked clone feature is not supported" in str(clone_err):
+                            logger.warning(
+                                "Linked clone not supported, "
+                                "falling back to full clone..."
+                            )
+                            clone_res = proxmox_client.clone_vm(
+                                node=node,
+                                vmid=template_id,
+                                newid=new_vmid,
+                                name=f"pish-test-{comp_id}",
+                                full=True,
+                            )
+                            upid = clone_res.get("data")
+                            if upid:
+                                wait_for_proxmox_task(proxmox_client, node, upid)
+                        else:
+                            raise
 
-                # 2. Configure Cloud-Init (injecting our local SSH Key)
-                import urllib.parse
+                    import urllib.parse
 
-                logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
-                proxmox_client.configure_vm(
-                    node=node,
-                    vmid=new_vmid,
-                    config_data={
-                        "ciuser": vm_user,
-                        "cipassword": vm_pass,
-                        "sshkeys": urllib.parse.quote(ssh_public_key),
-                        "ipconfig0": "ip=dhcp",
-                        "agent": "enabled=1",
-                        "ide2": "local-lvm:cloudinit",
-                        "net0": "virtio,bridge=vmbr0,firewall=1",
-                    },
-                )
-
-                # 3. Start VM
-                logger.info(f"Starting VMID {new_vmid}...")
-                proxmox_client.start_vm(node=node, vmid=new_vmid)
-
-                # 4. Wait for dynamic IP
-                vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
-                if not vm_ip:
-                    raise TimeoutError("Unable to retrieve IP address for cloned VM.")
-                test_record["ip"] = vm_ip
-                time.sleep(10)
-
-            # 5. Build configuration package locally
-            logger.info(f"Generating deployment configurations for {comp_id}...")
-            comp_output_dir = setup_output_dir / str(new_vmid)
-            setup_mgr = SetupManager(
-                component_manager=comp_mgr, output_dir=comp_output_dir
-            )
-            setup_mgr.initialize_environment()
-
-            # Resolve dependencies (mirroring how the UI automatically includes
-            # depends_on)
-            all_components = comp_mgr.get_all_components()
-            comp_map = {c.get("id"): c for c in all_components if c.get("id")}
-            dependencies = comp.get("depends_on", [])
-            all_selected_ids = [comp_id]
-            for dep_id in dependencies:
-                if dep_id in comp_map and dep_id not in all_selected_ids:
-                    all_selected_ids.append(dep_id)
-
-            all_selected_data = [
-                comp_map[cid] for cid in all_selected_ids if cid in comp_map
-            ]
-
-            # Ensure we fetch appropriate variables for all selected components
-            user_vars = {}
-            for cid in all_selected_ids:
-                variables_list = comp_mgr.reader.get_component_variables(cid)
-                for var in variables_list:
-                    var_name = var.get("id") or var.get("name")
-                    if var_name:
-                        user_vars[var_name] = var.get("default")
-
-            # Inject target IP
-            user_vars["PISelfhosting_HOST_IP"] = vm_ip
-
-            success, errors = setup_mgr.prepare_deployment_package(
-                selected_components=all_selected_ids,
-                user_variables=user_vars,
-                managed_devices=[{"ip": vm_ip}],
-            )
-            if not success:
-                errors_summary = ", ".join([err.get("summary") for err in errors])
-                raise RuntimeError(f"Configuration packaging failed: {errors_summary}")
-
-            # Generate artifacts
-            comp_mgr.generate_deployment_artifacts(
-                selected_components_data=all_selected_data,
-                global_vars=user_vars,
-                output_path=comp_output_dir,
-            )
-
-            # 6. Deploy via DeploymentManager (Ansible)
-            logger.info(f"Executing Ansible deployment to {vm_ip}...")
-            deploy_mgr = DeploymentManager(component_manager=comp_mgr)
-            task_id = f"test-{comp_id}-{new_vmid}"
-            tasks_dict = {task_id: {"logs": [], "status": "pending"}}
-
-            deploy_mgr.start_deployment(
-                task_id=task_id,
-                tasks=tasks_dict,
-                output_path=str(comp_output_dir),
-                devices=[
-                    {
-                        "ip": vm_ip,
-                        "username": "root" if is_lxc else vm_user,
-                        "password": vm_pass,
-                    }
-                ],
-                selected_components_data=[comp],
-                global_vars=user_vars,
-            )
-
-            # Check deployment outcome
-            task_outcome: Dict[str, Any] = tasks_dict.get(task_id, {})
-            if task_outcome.get("status") == "completed":
-                test_record["deployment"] = "success"
-                logger.info("Ansible deployment completed successfully.")
-            else:
-                test_record["deployment"] = "failed"
-                errors_list: List[Dict[str, Any]] = task_outcome.get("errors", [])
-                first_error: Dict[str, Any] = next(iter(errors_list), {})
-                err_details = first_error.get("details", "Ansible execution error")
-                raise RuntimeError(f"Deployment failed: {err_details}")
-
-            # 7. Run Health Verification Probe
-            logger.info("Running service health verification probe...")
-            health = verify_service_health(
-                vm_ip=vm_ip,
-                vm_user="root" if is_lxc else vm_user,
-                vm_pass=vm_pass,
-                component_id=comp_id,
-                component_details=comp,
-                variables_list=variables_list,
-            )
-
-            test_record["running"] = health["running"]
-            test_record["http_ok"] = health["http_ok"]
-            test_record["error_logs"] = health["logs_error"]
-
-            if health["running"] and (
-                health["http_ok"] is None or health["http_ok"] is True
-            ):
-                test_record["status"] = "success"
-                logger.info(f"✅ Component {comp_id} verified successfully!")
-                tested_ver = health.get("detected_version") or comp.get(
-                    "component_version", "latest"
-                )
-                if is_lxc:
-                    notes = "Tested successfully on Proxmox LXC."
-                else:
-                    notes = (
-                        "Tested successfully on Proxmox VM "
-                        f"(template {template_id})."
+                    logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
+                    proxmox_client.configure_vm(
+                        node=node,
+                        vmid=new_vmid,
+                        config_data={
+                            "ciuser": vm_user,
+                            "cipassword": vm_pass,
+                            "sshkeys": urllib.parse.quote(ssh_public_key),
+                            "ipconfig0": "ip=dhcp",
+                            "agent": "enabled=1",
+                            "ide2": "local-lvm:cloudinit",
+                            "net0": "virtio,bridge=vmbr0,firewall=1",
+                        },
                     )
-                update_template_status(templates_path, comp_id, tested_ver, notes)
-            else:
-                test_record["status"] = "failed"
-                test_record["error_message"] = health["details"]
-                logger.error(
-                    "❌ Component verification failed: " f"{health['details']}"
+                    logger.info(f"Starting VMID {new_vmid}...")
+                    proxmox_client.start_vm(node=node, vmid=new_vmid)
+
+                    if new_vmid is None:
+                        raise RuntimeError("new_vmid unexpectedly None")
+                    vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
+                    if not vm_ip:
+                        raise TimeoutError(
+                            "Unable to retrieve IP address for cloned VM."
+                        )
+                    test_record["vmid"] = new_vmid
+                    test_record["ip"] = vm_ip
+                    time.sleep(10)
+
+                # 5. Build configuration package locally
+                logger.info(f"Generating deployment configurations for {comp_id}...")
+                # Use the VMID as a unique folder name; for LXC that is the
+                # shared container's VMID, which is stable across all iterations.
+                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
+                setup_mgr = SetupManager(
+                    component_manager=comp_mgr, output_dir=comp_output_dir
                 )
-                failed_count += 1
+                setup_mgr.initialize_environment()
 
-        except Exception as ex:
-            logger.error(f"❌ Error during test of {comp_id}: {ex}")
-            test_record["status"] = "failed"
-            test_record["error_message"] = str(ex)
-            failed_count += 1
-        finally:
-            # 8. Teardown (Stop and destroy the test VM/LXC)
-            if new_vmid:
-                logger.info(f"Stopping and destroying test ID {new_vmid}...")
-                try:
+                all_components = comp_mgr.get_all_components()
+                comp_map = {c.get("id"): c for c in all_components if c.get("id")}
+                dependencies = comp.get("depends_on", [])
+                all_selected_ids = [comp_id]
+                for dep_id in dependencies:
+                    if dep_id in comp_map and dep_id not in all_selected_ids:
+                        all_selected_ids.append(dep_id)
+
+                all_selected_data = [
+                    comp_map[cid] for cid in all_selected_ids if cid in comp_map
+                ]
+
+                user_vars = {}
+                for cid in all_selected_ids:
+                    variables_list = comp_mgr.reader.get_component_variables(cid)
+                    for var in variables_list:
+                        var_name = var.get("id") or var.get("name")
+                        if var_name:
+                            user_vars[var_name] = var.get("default")
+
+                user_vars["PISelfhosting_HOST_IP"] = vm_ip
+
+                success, errors = setup_mgr.prepare_deployment_package(
+                    selected_components=all_selected_ids,
+                    user_variables=user_vars,
+                    managed_devices=[{"ip": vm_ip}],
+                )
+                if not success:
+                    errors_summary = ", ".join([err.get("summary") for err in errors])
+                    raise RuntimeError(
+                        f"Configuration packaging failed: {errors_summary}"
+                    )
+
+                comp_mgr.generate_deployment_artifacts(
+                    selected_components_data=all_selected_data,
+                    global_vars=user_vars,
+                    output_path=comp_output_dir,
+                )
+
+                # 6. Deploy via DeploymentManager (Ansible)
+                logger.info(f"Executing Ansible deployment to {vm_ip}...")
+                deploy_mgr = DeploymentManager(component_manager=comp_mgr)
+                run_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                task_id = f"test-{comp_id}-{run_vmid}"
+                tasks_dict = {task_id: {"logs": [], "status": "pending"}}
+
+                deploy_mgr.start_deployment(
+                    task_id=task_id,
+                    tasks=tasks_dict,
+                    output_path=str(comp_output_dir),
+                    devices=[
+                        {
+                            "ip": vm_ip,
+                            "username": "root" if is_lxc else vm_user,
+                            "password": vm_pass,
+                        }
+                    ],
+                    selected_components_data=[comp],
+                    global_vars=user_vars,
+                )
+
+                task_outcome: Dict[str, Any] = tasks_dict.get(task_id, {})
+                if task_outcome.get("status") == "completed":
+                    test_record["deployment"] = "success"
+                    logger.info("Ansible deployment completed successfully.")
+                else:
+                    test_record["deployment"] = "failed"
+                    errors_list: List[Dict[str, Any]] = task_outcome.get("errors", [])
+                    first_error: Dict[str, Any] = next(iter(errors_list), {})
+                    err_details = first_error.get("details", "Ansible execution error")
+                    raise RuntimeError(f"Deployment failed: {err_details}")
+
+                # 7. Run Health Verification Probe
+                logger.info("Running service health verification probe...")
+                if vm_ip is None:
+                    raise RuntimeError("vm_ip unexpectedly None")
+                health = verify_service_health(
+                    vm_ip=vm_ip,
+                    vm_user="root" if is_lxc else vm_user,
+                    vm_pass=vm_pass,
+                    component_id=comp_id,
+                    component_details=comp,
+                    variables_list=variables_list,
+                )
+
+                test_record["running"] = health["running"]
+                test_record["http_ok"] = health["http_ok"]
+                test_record["error_logs"] = health["logs_error"]
+
+                if health["running"] and (
+                    health["http_ok"] is None or health["http_ok"] is True
+                ):
+                    test_record["status"] = "success"
+                    logger.info(f"✅ Component {comp_id} verified successfully!")
+                    tested_ver = health.get("detected_version") or comp.get(
+                        "component_version", "latest"
+                    )
                     if is_lxc:
-                        stop_res = stop_lxc(proxmox_client, node, new_vmid)
-                        upid = stop_res.get("data")
-                        if upid:
-                            wait_for_proxmox_task(proxmox_client, node, upid)
-
-                        destroy_res = destroy_lxc(proxmox_client, node, new_vmid)
-                        upid = destroy_res.get("data")
-                        if upid:
-                            wait_for_proxmox_task(proxmox_client, node, upid)
+                        notes = "Tested successfully on Proxmox LXC."
                     else:
+                        notes = (
+                            "Tested successfully on Proxmox VM "
+                            f"(template {template_id})."
+                        )
+                    update_template_status(templates_path, comp_id, tested_ver, notes)
+                else:
+                    test_record["status"] = "failed"
+                    test_record["error_message"] = health["details"]
+                    logger.error(
+                        "❌ Component verification failed: " f"{health['details']}"
+                    )
+                    failed_count += 1
+
+            except Exception as ex:
+                logger.error(f"❌ Error during test of {comp_id}: {ex}")
+                test_record["status"] = "failed"
+                test_record["error_message"] = str(ex)
+                failed_count += 1
+            finally:
+                # In VM mode: destroy the per-component clone after each test.
+                # In LXC mode: the shared container is destroyed after the loop.
+                if not is_lxc and new_vmid:
+                    logger.info(f"Stopping and destroying VM {new_vmid}...")
+                    try:
                         stop_res = proxmox_client.stop_vm(node, new_vmid)
                         upid = stop_res.get("data")
                         if upid:
                             wait_for_proxmox_task(proxmox_client, node, upid)
-
                         destroy_res = proxmox_client.destroy_vm(node, new_vmid)
                         upid = destroy_res.get("data")
                         if upid:
                             wait_for_proxmox_task(proxmox_client, node, upid)
-                    logger.info(f"ID {new_vmid} destroyed.")
-                except Exception as ex:
-                    logger.error(f"Failed to destroy ID {new_vmid}: {ex}")
+                        logger.info(f"VM {new_vmid} destroyed.")
+                    except Exception as teardown_err:
+                        logger.error(f"Failed to destroy VM {new_vmid}: {teardown_err}")
 
-            # Cleanup local folder
-            if new_vmid:
-                comp_output_dir = setup_output_dir / str(new_vmid)
-                if comp_output_dir.exists():
-                    import shutil
+                # Cleanup local output folder for this component
+                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                if folder_vmid:
+                    comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
+                    if comp_output_dir.exists():
+                        import shutil
 
-                    shutil.rmtree(comp_output_dir)
+                        shutil.rmtree(comp_output_dir)
 
-        results_summary.append(test_record)
+            results_summary.append(test_record)
+
+    finally:
+        # Destroy the shared LXC container after all components have been tested
+        if is_lxc and shared_lxc_vmid:
+            logger.info(f"Destroying shared LXC container {shared_lxc_vmid}...")
+            try:
+                stop_res = stop_lxc(proxmox_client, node, shared_lxc_vmid)
+                upid = stop_res.get("data")
+                if upid:
+                    wait_for_proxmox_task(proxmox_client, node, upid)
+                destroy_res = destroy_lxc(proxmox_client, node, shared_lxc_vmid)
+                upid = destroy_res.get("data")
+                if upid:
+                    wait_for_proxmox_task(proxmox_client, node, upid)
+                logger.info(f"Shared LXC container {shared_lxc_vmid} destroyed.")
+            except Exception as teardown_err:
+                logger.error(
+                    f"Failed to destroy shared LXC container "
+                    f"{shared_lxc_vmid}: {teardown_err}"
+                )
 
     # Ensure output dirs exist
     docs_dir = project_root / "docs"

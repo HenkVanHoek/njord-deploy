@@ -6,13 +6,13 @@ This guide documents the setup, architecture, and usage of the separate componen
 
 To decouple the release cycle of individual self-hosted services from the main application installer, components are stored and maintained in a separate repository.
 
-- Remote Repository: "https://github.com/HenkVanHoek/njorddeploy-components"
-- Custom Repository Variable: "PI_SELFHOSTING_COMPONENTS_REPO" (Defaults to "HenkVanHoek/njorddeploy-components")
+- Remote Repository: "https://github.com/HenkVanHoek/njord-deploy-components"
+- Custom Repository Variable: "PI_SELFHOSTING_COMPONENTS_REPO" (Defaults to "HenkVanHoek/njord-deploy-components")
 - Branch Variable: "PI_SELFHOSTING_COMPONENTS_BRANCH" (Defaults to "main")
 
 ### How Synchronization Works
 
-The sync manager, defined in [sync_manager.py](file:///home/hvhoek/PycharmProjects/NjordDeploy/src/managers/sync_manager.py), handles the data flow:
+The sync manager, defined in [sync_manager.py](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/sync_manager.py), handles the data flow:
 
 1. Fetching Remote Data:
    The application downloads the latest ZIP archive of the remote repository and extracts it to a local cache directory. On Linux, this is located inside the user data directory:
@@ -60,17 +60,17 @@ To use this feature, you must provide a Gemini API Key:
 
 ## 3. Local LLM and Context Generation (Ollama)
 
-For offline development and deep codebase reasoning, you can run a local Mistral-based assistant.
+For offline development and deep codebase reasoning, you can run a local Llama 3-based assistant.
 
 ### Setup and Configuration
 
 1. Create a Model file:
-   Create a file named "njorddeploy.mf" in the project root.
+   Create a file named "NjordDeploy.Modelfile" in the project root (already present in the repository).
 
 2. Build the Model in Ollama:
    Run the following terminal command:
    ```bash
-   ollama create njorddeploy-expert -f njorddeploy.mf
+   ollama create njorddeploy-expert -f NjordDeploy.Modelfile
    ```
 
 3. Generate Codebase Context:

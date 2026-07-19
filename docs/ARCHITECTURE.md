@@ -1,6 +1,6 @@
 # NjordDeploy: Core Architectural Doctrine
 
-**Version:** 2.2
+**Version:** 2.3
 **Status:** Active
 
 This document records the foundational patterns and "lessons learned" that ensure the project's backend and frontend are robust, testable, and maintainable. All development must adhere to this doctrine.
@@ -119,6 +119,59 @@ Enforcement
   filesystem outside of bind-mounted volumes owned by a container.
 - Code review and CI may scan deployment paths for `apt-get install python*` or
   `pip` usage to guard against regressions.
+
+## 2.7 Component Repository Synchronisation (SyncManager)
+
+- **Principle**: The `SyncManager` class (`src/managers/sync_manager.py`) is the
+  authoritative bridge between the local component files and the remote
+  `njord-deploy-components` GitHub repository. All repository I/O must go
+  through this manager.
+- **Rationale**: Centralising synchronisation in a single class prevents ad-hoc
+  HTTP or Git calls from being scattered across the application, and makes the
+  behaviour fully testable via mocking.
+
+Behavior
+
+- **Fetch**: Downloads the latest ZIP archive from GitHub
+  (`/archive/refs/heads/<branch>.zip`) and extracts it into a local cache
+  directory (`~/.local/share/NjordDeploy/remote_components_cache`). The default
+  repository is `HenkVanHoek/njord-deploy-components`; it can be overridden via
+  the `PI_SELFHOSTING_COMPONENTS_REPO` and `PI_SELFHOSTING_COMPONENTS_BRANCH`
+  environment variables.
+- **Diff**: Compares local `components_metadata.json` and
+  `component_templates/` against the cached remote version. Reports each
+  component as `synced`, `modified`, `remote_only`, or `local_only`.
+- **Pull (Sync to Local)**: Overwrites local files with the remote version for a
+  specific component, or for all components in bulk.
+- **Push (Upload to Remote)**: Clones or updates a local Git working copy of the
+  remote repository, commits changes, and pushes via SSH (preferred) or HTTPS
+  fallback. Write access is verified first via a dry-run push.
+- **Validation gate**: Before a component template is accepted for upload, the
+  `docker-compose.template.yml` file must contain the required header comments
+  (`status`, `last_tested_version`, `platform_notes`, `breaking_changes`).
+
+## 2.8 Proxmox Integration (ProxmoxClient)
+
+- **Principle**: The `ProxmoxClient` class (`src/utils/proxmox_client.py`) is a
+  thin, stateless adapter over the Proxmox VE REST API (token-based
+  authentication). It is the only permitted way to interact with a Proxmox host
+  from within the application.
+- **Rationale**: Keeping all Proxmox API calls in one class prevents credential
+  handling and raw HTTP calls from leaking into application logic, and allows
+  the integration to be fully unit-tested with mocks.
+
+Behavior
+
+- Authenticates via a Proxmox API token (`user@pam!token-id` + secret),
+  configured through the `PROXMOX_HOST`, `PROXMOX_USER`, `PROXMOX_TOKEN_ID`,
+  and `PROXMOX_TOKEN_SECRET` environment variables.
+- Provides LXC lifecycle operations: create, start, stop, destroy, and status
+  inspection.
+- Used by the automated Proxmox test runner (`scripts/proxmox_test_runner.py`)
+  and by the `configurator_app` for live LXC status queries.
+- TLS verification is disabled by default for self-signed Proxmox certificates;
+  this behaviour is intentional for homelab deployments and must not be changed
+  without a migration plan.
 
 ## 3. Networking and Service Architecture
 

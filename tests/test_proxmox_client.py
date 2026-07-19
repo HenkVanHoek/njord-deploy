@@ -173,6 +173,52 @@ class TestProxmoxClient(unittest.TestCase):
 
         self.assertIsNone(ip)
 
+    @patch("requests.get")
+    def test_get_lxc_list_returns_containers(self, mock_get):
+        """Verify that get_lxc_list returns the data list from the API."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "data": [
+                {"vmid": 101, "name": "ct-101", "status": "running"},
+                {"vmid": 102, "name": "ct-102", "status": "stopped"},
+            ]
+        }
+        mock_get.return_value = mock_response
+
+        containers = self.client.get_lxc_list(node="pve")
+
+        self.assertEqual(len(containers), 2)
+        first, second = containers
+        self.assertEqual(first["vmid"], 101)
+        self.assertEqual(second["status"], "stopped")
+        mock_get.assert_called_once_with(
+            "https://192.168.178.51:8006/api2/json/nodes/pve/lxc",
+            headers=self.client.headers,
+            params=None,
+            verify=False,
+            timeout=15,
+        )
+
+    @patch("requests.get")
+    def test_get_lxc_list_empty(self, mock_get):
+        """Verify that get_lxc_list returns an empty list when no CTs exist."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"data": []}
+        mock_get.return_value = mock_response
+
+        containers = self.client.get_lxc_list(node="pve")
+
+        self.assertEqual(containers, [])
+
+    @patch("requests.get")
+    def test_get_lxc_list_api_failure_returns_empty(self, mock_get):
+        """Verify that get_lxc_list returns [] and does not raise on API error."""
+        mock_get.side_effect = Exception("Connection refused")
+
+        containers = self.client.get_lxc_list(node="pve")
+
+        self.assertEqual(containers, [])
+
 
 if __name__ == "__main__":
     unittest.main()

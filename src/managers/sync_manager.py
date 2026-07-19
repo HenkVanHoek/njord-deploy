@@ -37,7 +37,7 @@ class SyncManager:
         """
         repo = os.environ.get(
             "PI_SELFHOSTING_COMPONENTS_REPO",
-            "HenkVanHoek/njorddeploy-components",
+            "HenkVanHoek/njord-deploy-components",
         )
         branch = os.environ.get("PI_SELFHOSTING_COMPONENTS_BRANCH", "main")
         url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
@@ -312,7 +312,7 @@ class SyncManager:
                 git_cwd = str(self.local_metadata_path.parent.parent)
 
         # Try SSH push dry run
-        ssh_url = "git@github.com:HenkVanHoek/njorddeploy-components.git"
+        ssh_url = "git@github.com:HenkVanHoek/njord-deploy-components.git"
         try:
             res = subprocess.run(  # nosec B603 B607
                 ["git", "push", "--dry-run", ssh_url],
@@ -336,7 +336,7 @@ class SyncManager:
             logger.error(f"SSH write access check failed: {e}")
 
         # Try HTTPS push dry run
-        https_url = "https://github.com/HenkVanHoek/njorddeploy-components.git"
+        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
         try:
             res = subprocess.run(  # nosec B603 B607
                 ["git", "push", "--dry-run", https_url],
@@ -364,8 +364,8 @@ class SyncManager:
     def _prepare_git_repo(self) -> str:
         """Clones or updates the local git cache for components repo."""
         self.git_repo_dir.parent.mkdir(parents=True, exist_ok=True)
-        ssh_url = "git@github.com:HenkVanHoek/njorddeploy-components.git"
-        https_url = "https://github.com/HenkVanHoek/njorddeploy-components.git"
+        ssh_url = "git@github.com:HenkVanHoek/njord-deploy-components.git"
+        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
 
         if self.git_repo_dir.exists() and (self.git_repo_dir / ".git").exists():
             import subprocess  # nosec B404

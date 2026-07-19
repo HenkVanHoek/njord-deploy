@@ -152,3 +152,17 @@ class ProxmoxClient:
         except Exception as e:
             logger.debug(f"Failed to query guest agent network interfaces: {e}")
         return None
+
+    def get_lxc_list(self, node: str) -> list:
+        """
+        Returns a list of all LXC containers on the given node.
+
+        Each entry is a dict with at minimum:
+        ``vmid`` (int), ``name`` (str), ``status`` (str: running/stopped).
+        """
+        try:
+            res = self.get(f"nodes/{node}/lxc")
+            return res.get("data", [])
+        except Exception as e:
+            logger.warning(f"Failed to list LXC containers on node '{node}': {e}")
+            return []

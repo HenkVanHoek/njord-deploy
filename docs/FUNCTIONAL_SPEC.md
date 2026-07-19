@@ -18,8 +18,9 @@ acceptance criteria.
 ## 2. User Personas
 
 -   **The End-User (Alex):** A non-technical but enthusiastic user who
-    wants to run self-hosted services on a Raspberry Pi. Alex interacts
-    exclusively with the **Configurator App**.
+    wants to run self-hosted services on a single-board computer or
+    Debian-based server (e.g., Raspberry Pi, Orange Pi, ODROID, Radxa,
+    Pine64). Alex interacts exclusively with the **Configurator App**.
 -   **The Developer (Charlie):** A technical user who maintains and extends
     the NjordDeploy project. Charlie interacts with the **Editor App**
     and the underlying data files.
@@ -349,3 +350,97 @@ conflicting software or forgetting to install a required dependency.
     uses sudo for Docker commands during the current session.
 
 -   **And** Compose Spec is used and compose files do not include a version key.
+
+---
+
+### Epic 4: Developer - Component Repository Synchronisation
+
+As Charlie, I need to synchronise locally developed components with the
+shared `njord-deploy-components` GitHub repository, so that tested
+components are available to all users without requiring a new application
+release.
+
+---
+
+#### Story: Fetching Remote Component Status
+
+> As a Developer (Charlie), I want to fetch the latest component list from
+> the remote repository and see the synchronisation status of each
+> component, so that I know which components are up to date, modified, or
+> only available in one location.
+
+**Acceptance Criteria:**
+
+-   **Given** I am in the Editor App and open the "Git Sync Manager" modal,
+-   **When** I click "Fetch / Check Status",
+-   **Then** the system downloads the latest ZIP from the remote repository
+    (`njord-deploy-components`) and compares it against the local files.
+-   **And** each component is labelled with one of: `Synced`, `Modified`,
+    `New in Repo` (remote only), or `Local Only`.
+
+---
+
+#### Story: Pulling a Remote Component
+
+> As a Developer (Charlie), I want to pull a component from the remote
+> repository into my local project, so that I receive the latest
+> community-maintained version.
+
+**Acceptance Criteria:**
+
+-   **Given** a component with status `New in Repo` or `Modified` is shown
+    in the sync list,
+-   **When** I click "Diff & Sync" and confirm the pull action,
+-   **Then** the local `components_metadata.json` and the component's
+    `component_templates/` directory are overwritten with the remote version.
+
+---
+
+#### Story: Uploading a Local Component to the Remote Repository
+
+> As a Developer (Charlie), I want to push a locally tested and validated
+> component to the remote repository, so that it becomes available to
+> all end-users through the sync mechanism.
+
+**Acceptance Criteria:**
+
+-   **Given** I have write access to the remote repository (verified via a
+    dry-run Git push),
+-   **And** the component's `docker-compose.template.yml` contains the
+    required header comments: `# status`, `# last_tested_version`,
+    `# platform_notes`, `# breaking_changes`,
+-   **When** I click "Upload All to Remote",
+-   **Then** the system commits and pushes the local changes to the remote
+    repository via SSH (with HTTPS as fallback).
+-   **And** if write access is not available, the "Upload All to Remote"
+    button must be disabled with an explanatory tooltip.
+
+---
+
+### Epic 5: Developer - Proxmox LXC Provisioning
+
+As Charlie, I need to automatically provision a clean Debian LXC container
+on a Proxmox VE host so that I can test component deployments in a
+repeatable, isolated environment.
+
+---
+
+#### Story: Creating a Proxmox LXC Container
+
+> As a Developer (Charlie), I want to trigger the creation of a new LXC
+> container on Proxmox via the Configurator API, so that I have a
+> fresh target environment for automated component testing.
+
+**Acceptance Criteria:**
+
+-   **Given** the Proxmox credentials (`PROXMOX_HOST`, `PROXMOX_USER`,
+    `PROXMOX_TOKEN_ID`, `PROXMOX_TOKEN_SECRET`) are configured in the
+    environment,
+-   **When** a `POST` request is made to `/api/proxmox/create-lxc` with
+    the desired container parameters,
+-   **Then** the system creates a new LXC container on the specified
+    Proxmox node using the Proxmox VE REST API.
+-   **And** if the credentials are missing or invalid, the API must return
+    a `400` or `500` error with a descriptive message.
+-   **And** the created container is immediately usable as a deployment
+    target by the test runner (`scripts/proxmox_test_runner.py`).

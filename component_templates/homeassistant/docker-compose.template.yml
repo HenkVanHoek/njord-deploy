@@ -1,6 +1,6 @@
-# status: "untested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# status: "tested"
+# last_tested_version: "2026.7.2"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 # templates/homeassistant/docker-compose.template.yml
 services:

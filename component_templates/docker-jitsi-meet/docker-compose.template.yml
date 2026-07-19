@@ -1,6 +1,6 @@
-# status: beta
-# last_tested_version: stable
-# platform_notes: none
+# status: "tested"
+# last_tested_version: "3.3.2"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: none
 services:
   prosody:

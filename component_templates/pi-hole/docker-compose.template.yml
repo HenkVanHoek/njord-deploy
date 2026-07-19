@@ -1,5 +1,5 @@
 # status: "tested"
-# last_tested_version: "latest"
+# last_tested_version: "2026.07.2"
 # platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 # file: component_templates/pi-hole/docker-compose.template.yml
