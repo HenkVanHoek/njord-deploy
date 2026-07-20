@@ -247,8 +247,7 @@ def create_app(test_config=None):
     app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
     output_dir = app_data_dir / "output"
 
-    # noinspection PyTypeChecker
-    setup_manager = SetupManager(component_manager, output_dir=output_dir)
+    setup_manager = SetupManager(component_manager.reader, output_dir=output_dir)
     deployment_manager = DeploymentManager(component_manager=component_manager)
 
     flask_app.deployment_tasks = {}
@@ -587,10 +586,10 @@ def create_app(test_config=None):
             # Pre-flight: guard against DHCP pool exhaustion.
             # If too many stopped CTs exist, the DHCP server may be out of
             # leases. Refuse to create a new one and report the stale VMIDs.
-            STALE_CT_THRESHOLD = 10
+            stale_ct_threshold = 10
             existing_lxc = client.get_lxc_list(node)
             stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
-            if len(stopped_cts) >= STALE_CT_THRESHOLD:
+            if len(stopped_cts) >= stale_ct_threshold:
                 stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
                 return (
                     jsonify(
@@ -616,7 +615,7 @@ def create_app(test_config=None):
             dummy_manager = SSHManager(
                 hostname="localhost", username="root", password=""
             )  # nosec B106
-            ssh_key = dummy_manager._get_or_create_key()
+            ssh_key = dummy_manager.get_ssh_key()
             pubkey = f"{ssh_key.get_name()} {ssh_key.get_base64()}"
 
             # 3. Locate template
@@ -653,12 +652,14 @@ def create_app(test_config=None):
             debian_templates = [
                 t for t in templates if "debian" in t.get("volid", "").lower()
             ]
-            ostemplate = None
+            ostemplate = ""
             if debian_templates:
                 debian_templates.sort(key=lambda x: x.get("volid", ""), reverse=True)
                 newest_deb = next(iter(debian_templates), None)
-                if newest_deb:
-                    ostemplate = newest_deb.get("volid")
+                if isinstance(newest_deb, dict):
+                    volid = newest_deb.get("volid")
+                    if isinstance(volid, str) and volid:
+                        ostemplate = volid
 
             if not ostemplate:
                 ubuntu_templates = [
@@ -669,13 +670,17 @@ def create_app(test_config=None):
                         key=lambda x: x.get("volid", ""), reverse=True
                     )
                     newest_ubu = next(iter(ubuntu_templates), None)
-                    if newest_ubu:
-                        ostemplate = newest_ubu.get("volid")
+                    if isinstance(newest_ubu, dict):
+                        volid = newest_ubu.get("volid")
+                        if isinstance(volid, str) and volid:
+                            ostemplate = volid
 
             if not ostemplate:
                 any_temp = next(iter(templates), None)
-                if any_temp:
-                    ostemplate = any_temp.get("volid")
+                if isinstance(any_temp, dict):
+                    volid = any_temp.get("volid")
+                    if isinstance(volid, str) and volid:
+                        ostemplate = volid
 
             if not ostemplate:
                 default_storage = next(iter(storages), "local")
@@ -714,11 +719,12 @@ def create_app(test_config=None):
                 task_deadline = 180
                 task_start = time.time()
                 while time.time() - task_start < task_deadline:
+                    # noinspection PyBroadException
                     try:
                         task_res = client.get(f"nodes/{node}/tasks/{upid}/status")
                         task_data = task_res.get("data", {})
-                        task_status = task_data.get("status")
-                        if task_status == "stopped":
+                        current_task_status = task_data.get("status")
+                        if current_task_status == "stopped":
                             exit_status = task_data.get("exitstatus")
                             if exit_status == "OK":
                                 logging.info("Proxmox task completed successfully.")
@@ -769,7 +775,7 @@ def create_app(test_config=None):
                     logging.warning(f"[LXC IP poll #{attempt + 1}] error: {poll_err}")
                 time.sleep(4)
 
-            if not ip_address:
+            if not isinstance(ip_address, str):
                 return (
                     jsonify(
                         {
@@ -1132,7 +1138,7 @@ def create_app(test_config=None):
             return jsonify({"error": "No target devices provided for analysis."}), 400
 
         device = next(iter(devices), None)
-        if not device:
+        if not isinstance(device, dict):
             return jsonify({"error": "No target devices provided for analysis."}), 400
 
         analysis_scanner = NodeScanner(

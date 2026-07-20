@@ -63,9 +63,9 @@ def find_suitable_template(client: ProxmoxClient, node: str) -> str:
             # Sort by name descending to get the newest version
             debian_templates.sort(key=lambda x: x.get("volid", ""), reverse=True)
             newest_deb = next(iter(debian_templates), None)
-            if newest_deb:
+            if isinstance(newest_deb, dict):
                 volid = newest_deb.get("volid")
-                if volid:
+                if isinstance(volid, str) and volid:
                     return volid
 
         # Fallback to Ubuntu templates
@@ -75,16 +75,16 @@ def find_suitable_template(client: ProxmoxClient, node: str) -> str:
         if ubuntu_templates:
             ubuntu_templates.sort(key=lambda x: x.get("volid", ""), reverse=True)
             newest_ubu = next(iter(ubuntu_templates), None)
-            if newest_ubu:
+            if isinstance(newest_ubu, dict):
                 volid = newest_ubu.get("volid")
-                if volid:
+                if isinstance(volid, str) and volid:
                     return volid
 
         # Take any template if neither Debian nor Ubuntu is found
         any_temp = next(iter(templates), None)
-        if any_temp:
+        if isinstance(any_temp, dict):
             volid = any_temp.get("volid")
-            if volid:
+            if isinstance(volid, str) and volid:
                 return volid
 
         raise ValueError("No templates found in storage list")
@@ -203,10 +203,10 @@ def main():
     # Pre-flight: guard against DHCP pool exhaustion.
     # If too many stopped CTs exist the DHCP server may run out of leases,
     # causing new containers to receive only IPv6 and no IPv4 address.
-    STALE_CT_THRESHOLD = 10
+    stale_ct_threshold = 10
     existing_lxc = client.get_lxc_list(args.node)
     stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
-    if len(stopped_cts) >= STALE_CT_THRESHOLD:
+    if len(stopped_cts) >= stale_ct_threshold:
         stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
         logger.error(
             f"Pre-flight check failed: {len(stopped_cts)} stopped LXC "
@@ -226,7 +226,7 @@ def main():
     dummy_manager = SSHManager(
         hostname="localhost", username="root", password=""
     )  # nosec B106
-    ssh_key = dummy_manager._get_or_create_key()
+    ssh_key = dummy_manager.get_ssh_key()
     pubkey = f"{ssh_key.get_name()} {ssh_key.get_base64()}"
 
     # 3. Find suitable template
@@ -266,7 +266,7 @@ def main():
 
     # Wait for the Proxmox provisioning task to complete
     # (mirrors the approach in proxmox_test_runner.py)
-    if upid:
+    if isinstance(upid, str):
         wait_for_proxmox_task(client, args.node, upid)
 
     try:

@@ -34,6 +34,14 @@ class ComponentManager:
             self._load_all_variables()
         )
 
+    def load_metadata(self) -> Dict[str, Any]:
+        """Loads and returns the main components metadata dict."""
+        return self._load_metadata()
+
+    def save_metadata(self):
+        """Saves the current components data back to the JSON file."""
+        self._save_metadata()
+
     def _load_metadata(self) -> Dict[str, Any]:
         """Loads the main components metadata file."""
         data = self.reader.get_all_metadata()

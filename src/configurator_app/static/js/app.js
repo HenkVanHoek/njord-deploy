@@ -1,5 +1,5 @@
 // noinspection DuplicatedCode
-/* global bootstrap, EventSource */
+/* global bootstrap */
 // Enclose in an IIFE to avoid global scope pollution and bypass DOMContentLoaded race conditions
 (function() {
     /**
@@ -39,15 +39,15 @@
     /**
      * @typedef {object} Host
      * @property {string} ip
-     * @property {string} mac
+     * @property {string} [mac]
      * @property {string|null} hostname
      */
 
     /**
      * @typedef {object} ScanData
      * @property {Host[]} hosts
-     * @property {string[]} messages
-     * @property {boolean} permissions_error
+     * @property {string[]} [messages]
+     * @property {boolean} [permissions_error]
      */
 
     /**
@@ -66,7 +66,7 @@
      * @property {string} [model]
      * @property {string} [serial]
      * @property {string} [ram]
-     * @property {DiskInfo[]} disks
+     * @property {DiskInfo[]} [disks]
      */
 
     /**
@@ -1692,9 +1692,9 @@
                         </div>
                     </div>
                 </div>`;
-            document.getElementById('deploy-button').addEventListener('click', () => {
+            document.getElementById('deploy-button').addEventListener('click', async () => {
                 const outputPath = document.getElementById('output-path-display').textContent;
-                handleDeployment(outputPath);
+                await handleDeployment(outputPath);
             });
             document.getElementById('start-over-btn').addEventListener('click', renderStep1_Welcome);
         } catch (error) {
@@ -1962,15 +1962,15 @@
                     selectedComponents.forEach(compId => {
                         const tabButton = document.getElementById(`tab-${compId}`);
                         if (tabButton) {
-                            tabButton.addEventListener('shown.bs.tab', () => {
-                                fetchLogs(compId);
+                            tabButton.addEventListener('shown.bs.tab', async () => {
+                                await fetchLogs(compId);
                             });
                         }
                         const refreshBtn = tabContent.querySelector(`.btn-refresh-logs[data-comp-id="${compId}"]`);
                         if (refreshBtn) {
-                            refreshBtn.addEventListener('click', (e) => {
+                            refreshBtn.addEventListener('click', async (e) => {
                                 e.stopPropagation();
-                                fetchLogs(compId);
+                                await fetchLogs(compId);
                             });
                         }
                     });
@@ -2013,7 +2013,7 @@
             subtitleContainer.innerHTML = `
                 <div class="mx-auto mb-3" style="max-width: 500px;">
                     <div class="progress" style="height: 20px;">
-                        <div id="deployment-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        <div id="deployment-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                     </div>
                     <div id="deployment-playbook-step" class="text-muted small mt-2">Initializing deployment...</div>
                 </div>
@@ -2141,7 +2141,7 @@
 
                 if (progress > 0 && progressBar) {
                     progressBar.style.width = `${progress}%`;
-                    progressBar.setAttribute('aria-valuenow', progress);
+                    progressBar.setAttribute('aria-valuenow', String(progress));
                     progressBar.textContent = `${progress}%`;
                 }
                 if (stepText && playbookStep) {
@@ -2175,7 +2175,7 @@
                 }
             };
 
-            eventSource.onerror = () => {
+            eventSource.onerror = async () => {
                 clearTimeout(watchdogTimer);
                 eventSource.close();
 
@@ -2186,7 +2186,9 @@
                     setButtonState(deployButton, false, {text: '<i class="fa-solid fa-triangle-exclamation me-2"></i>Show Error Report'});
                     wizardHeader.innerHTML = '<strong>Deployment Finished with Errors</strong>';
                     updateWizardFooter('Deployment completed, but some steps failed.', 'warning');
-                    deployButton.onclick = () => showErrorSummary(taskId);
+                    deployButton.onclick = async () => {
+                        await showErrorSummary(taskId);
+                    };
 
                     if (statusIcon) {
                         statusIcon.innerHTML = '<i class="fa-solid fa-circle-xmark fa-3x text-danger mb-3"></i>';
@@ -2219,14 +2221,14 @@
                     }
                     if (progressBar) {
                         progressBar.style.width = '100%';
-                        progressBar.setAttribute('aria-valuenow', 100);
+                        progressBar.setAttribute('aria-valuenow', '100');
                         progressBar.textContent = '100%';
                     }
                     if (playbookStep) {
                         playbookStep.textContent = 'All services are up and running.';
                     }
 
-                    setupLogsTabs();
+                    await setupLogsTabs();
 
                     const finalActions = document.getElementById('final-actions-container');
                     if (finalActions) {
@@ -2236,7 +2238,9 @@
                                     <i class="fa-solid fa-list-check me-2"></i>Access Your Services
                                  </button>
                             </div>`;
-                        document.getElementById('show-summary-btn').addEventListener('click', () => showServicesSummary(taskId));
+                        document.getElementById('show-summary-btn').addEventListener('click', async () => {
+                            await showServicesSummary(taskId);
+                        });
                     }
                 }
             };
@@ -2461,7 +2465,9 @@
                         hosts: [{
                             ip: lxcResult.ip,
                             hostname: `LXC-${lxcResult.vmid}`
-                        }]
+                        }],
+                        messages: [],
+                        permissions_error: false
                     };
 
                     lastScanData = virtualScanData;

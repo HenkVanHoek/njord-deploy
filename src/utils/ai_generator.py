@@ -283,7 +283,7 @@ class AIGenerator:
                             continue
 
                         # Check privileged
-                        if service_conf.get("privileged") is True:
+                        if service_conf.get("privileged"):
                             warnings.append(
                                 f"Service '{service_name}' runs in " "privileged mode."
                             )

@@ -7,7 +7,6 @@ import { renderEditor, renderVariablesPane } from './ui_render_utils.js';
 document.addEventListener('DOMContentLoaded', () => {
     const componentList = document.getElementById('component-list');
     const editorPane = document.getElementById('editor-pane');
-    const feedbackAlert = document.getElementById('feedback-alert');
     const placeholder = document.getElementById('placeholder-text');
     const editorContent = document.getElementById('editor-content');
     const saveChangesBtn = document.getElementById('save-changes-btn');
@@ -1667,7 +1666,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGuideVisibility();
     };
 
-    const setupGitSyncFeatures = () => {
+    const setupGitSyncFeatures = async () => {
         const gitSyncModalEl = document.getElementById('git-sync-modal');
         const gitDiffModalEl = document.getElementById('git-diff-modal');
         const gitSyncBtn = document.getElementById('git-sync-btn');
@@ -1740,9 +1739,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const diffBtn = document.createElement('button');
                     diffBtn.className = 'btn btn-xs btn-outline-primary me-1 py-0 px-2';
                     diffBtn.textContent = 'Diff & Sync';
-                    diffBtn.addEventListener('click', () => {
+                    diffBtn.addEventListener('click', async () => {
                         gitSyncModal.hide();
-                        showDiffForComponent(compId);
+                        await showDiffForComponent(compId);
                     });
                     tdActions.appendChild(diffBtn);
                 }
@@ -1964,16 +1963,16 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        gitSyncBtn.addEventListener('click', (e) => {
+        gitSyncBtn.addEventListener('click', async (e) => {
             e.preventDefault();
             gitSyncModal.show();
-            loadSyncStatus();
+            await loadSyncStatus();
         });
 
-        componentSyncBtn.addEventListener('click', () => {
+        componentSyncBtn.addEventListener('click', async () => {
             const compIdEl = document.getElementById('comp-id');
             if (compIdEl && compIdEl.value) {
-                showDiffForComponent(compIdEl.value);
+                await showDiffForComponent(compIdEl.value);
             }
         });
 
@@ -2130,7 +2129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             gitUploadAllBtn.addEventListener('click', handleUploadAllAction);
         }
 
-        checkGitPermissions();
+        await checkGitPermissions();
     };
 
     // --- Main Initialization ---
@@ -2148,7 +2147,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
-        setupGitSyncFeatures();
+        await setupGitSyncFeatures();
         updateUiForDirtyState();
         await refreshSyncStatusBadge();
     })();

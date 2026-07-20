@@ -61,6 +61,8 @@ class ComponentWriter:
             "breaking_changes:",
         ]
         has_headers = False
+
+        # noinspection PyBroadException
         try:
             lines = content.splitlines()
             found_fields = set()

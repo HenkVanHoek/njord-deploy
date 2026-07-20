@@ -107,7 +107,8 @@ class TestDeploymentManager(unittest.TestCase):
         self.assertTrue(len(task_res["errors"]) > 0)
 
         # Verify first error structure
-        err = task_res["errors"][0]
+        err, *_ = task_res["errors"]
+        assert isinstance(err, dict)
         self.assertEqual(err["type"], "Ansible:FAILED")
         self.assertEqual(
             err["summary"],
@@ -156,7 +157,8 @@ class TestDeploymentManager(unittest.TestCase):
         self.assertTrue(len(task_res["errors"]) > 0)
 
         # Verify first error structure
-        err = task_res["errors"][0]
+        err, *_ = task_res["errors"]
+        assert isinstance(err, dict)
         self.assertEqual(err["type"], "Ansible:ITEM_FAILED")
         self.assertEqual(
             err["summary"],

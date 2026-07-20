@@ -149,7 +149,7 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "status": "success",
-                            "message": ("Successfully synchronized " "all components"),
+                            "message": "Successfully synchronized " "all components",
                         }
                     ),
                     200,
@@ -304,8 +304,8 @@ def create_app(test_config=None):
                     "\r\n", "\n"
                 )
 
-            local_meta = sync_manager._get_local_component_meta(comp_id)
-            remote_meta = sync_manager._get_remote_component_meta(comp_id)
+            local_meta = sync_manager.get_local_component_meta(comp_id)
+            remote_meta = sync_manager.get_remote_component_meta(comp_id)
 
             differing_files = []
             local_dir = sync_manager.local_templates_path / comp_id
@@ -329,6 +329,7 @@ def create_app(test_config=None):
                     if not f1.exists() or not f2.exists():
                         differing_files.append(str(rel_path))
                         continue
+                    # noinspection PyBroadException
                     try:
                         if rel_path.suffix.lower() in (
                             ".yml",
@@ -670,7 +671,7 @@ def create_app(test_config=None):
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid GitHub repository URL is required")
 
-        if api_key:
+        if isinstance(api_key, str):
             api_key = api_key.strip()
 
         try:
@@ -679,7 +680,7 @@ def create_app(test_config=None):
 
             key_saved = False
             # Save API key only if generation succeeded (proving key is valid)
-            if api_key and save_key:
+            if isinstance(api_key, str) and save_key:
                 try:
                     save_api_key_to_env(api_key)
                     key_saved = True
@@ -734,7 +735,9 @@ def create_app(test_config=None):
 
         try:
             # Fallback: Extract docker_service_name from YAML if missing in metadata
-            if "docker_service_name" not in metadata and docker_compose:
+            if "docker_service_name" not in metadata and isinstance(
+                docker_compose, str
+            ):
                 try:
                     import yaml
 
@@ -756,7 +759,7 @@ def create_app(test_config=None):
             component_manager.update_component_metadata(component_id, metadata)
 
             # 3. Update compose template content
-            if docker_compose:
+            if isinstance(docker_compose, str) and docker_compose:
                 component_manager.update_component_template_content(
                     component_id, docker_compose
                 )
@@ -768,12 +771,10 @@ def create_app(test_config=None):
 
             # 5. Write other config files to template-config folder
             if config_templates:
-                templates_root_path = os.path.realpath(component_manager.templates_path)
-                config_dir = (
-                    Path(templates_root_path) / safe_component_id / "template-config"
-                )
-                safe_base = os.path.realpath(str(config_dir))
-                if not safe_base.startswith(templates_root_path):
+                templates_root_path = component_manager.templates_path.resolve()
+                config_dir = templates_root_path / safe_component_id / "template-config"
+                safe_base = str(config_dir.resolve())
+                if not safe_base.startswith(str(templates_root_path)):
                     abort(400, "Path traversal attempt detected")
 
                 config_dir.mkdir(parents=True, exist_ok=True)
@@ -792,12 +793,12 @@ def create_app(test_config=None):
                         f.write(content)
 
             # 6. Update components_order in _njorddeploy
-            meta_data = component_manager._load_metadata()
+            meta_data = component_manager.load_metadata()
             njorddeploy = meta_data.setdefault("_njorddeploy", {})
             order = njorddeploy.setdefault("components_order", [])
             if component_id not in order:
                 order.append(component_id)
-            component_manager._save_metadata()
+            component_manager.save_metadata()
 
             return jsonify({"status": "created"}), 201
 

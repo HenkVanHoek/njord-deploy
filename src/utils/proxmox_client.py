@@ -91,7 +91,7 @@ class ProxmoxClient:
         """Retrieves the next unused VMID from the cluster."""
         res = self.get("cluster/nextid")
         data = res.get("data")
-        if data is None:
+        if data is None or not isinstance(data, (int, str)):
             raise ValueError("Proxmox API returned no next VMID data")
         return int(data)
 

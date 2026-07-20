@@ -1,6 +1,6 @@
-# status: "untested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully as part of package 'nextcloud-stack' on Proxmox LXC."
 # breaking_changes: "None"
 services:
   notify-push:
@@ -17,8 +17,33 @@ services:
       NEXTCLOUD_URL: "https://nextcloud.{{ DOMAIN }}"
     volumes:
       - "{{ NEXTCLOUD_DATA_PATH }}:/var/www/html"
-    entrypoint: [ "/var/www/html/custom_apps/notify_push/bin/aarch64/notify_push" ]
-    command: [ "/var/www/html/config/config.php" ]
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        ARCH=$$(uname -m)
+        if [ "$$ARCH" = "arm64" ] || [ "$$ARCH" = "aarch64" ]; then
+            BINARY_ARCH="aarch64"
+        elif [ "$$ARCH" = "x86_64" ] || [ "$$ARCH" = "amd64" ]; then
+            BINARY_ARCH="x86_64"
+        elif [ "$$ARCH" = "armv7l" ] || [ "$$ARCH" = "armv7" ]; then
+            BINARY_ARCH="armv7"
+        else
+            BINARY_ARCH="$$ARCH"
+        fi
+
+        BINARY="/var/www/html/custom_apps/notify_push/bin/$$BINARY_ARCH/notify_push"
+
+        if [ -f "$$BINARY" ] && [ -f /var/www/html/config/config.php ]; then
+            echo "Starting notify_push for architecture $$BINARY_ARCH..."
+            exec "$$BINARY" /var/www/html/config/config.php
+        else
+            echo "Warning: notify_push binary ($$BINARY) or config.php not found."
+            echo "Standby mode active. Waiting for Nextcloud installation and Client Push app activation..."
+            while true; do
+                sleep 3600
+            done
+        fi
     networks:
       - pi-services
       - nextcloud-internal

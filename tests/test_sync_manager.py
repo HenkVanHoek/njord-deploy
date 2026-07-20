@@ -295,7 +295,7 @@ def test_check_write_access_success(temp_dirs, monkeypatch):
             self.stderr = stderr
             self.stdout = ""
 
-    def mock_run(*args, **kwargs):
+    def mock_run(*_args, **_kwargs):
         # Simulate successful push dry run (return code 1 with rejected
         # non-permission error is success)
         return MockCompletedProcess(1, "To github.com:...\n ! [rejected] main -> main")
@@ -316,7 +316,7 @@ def test_check_write_access_fail(temp_dirs, monkeypatch):
             self.stderr = stderr
             self.stdout = ""
 
-    def mock_run(*args, **kwargs):
+    def mock_run(*_args, **_kwargs):
         # Simulate failed push dry run due to permission denied
         return MockCompletedProcess(128, "Permission denied (publickey)")
 

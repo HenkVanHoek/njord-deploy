@@ -36,6 +36,10 @@ class SSHManager:
         app_data_dir.mkdir(parents=True, exist_ok=True)
         self.key_file = app_data_dir / "id_ed25519_njorddeploy"
 
+    def get_ssh_key(self) -> Ed25519Key:
+        """Retrieves the active SSH key."""
+        return self._get_or_create_key()
+
     def _get_or_create_key(self) -> Ed25519Key:
         """Retrieves an existing Ed25519 key or generates a new one."""
         if self.key_file.exists():

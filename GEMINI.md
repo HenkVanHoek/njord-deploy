@@ -19,6 +19,11 @@
 - **YAML Rules:** Always enclose YAML passwords in quotes. Use `yamllint` for validation.
 - **Formatting:** Use 4 spaces for code blocks inside markdown text.
 - **Comments & Docs:** Docstrings are required for public functions/classes[cite: 1]. All comments and documentation files (.md) must be in English.
+- **PyCharm IDE Diagnostics:** When verifying code, prefer using the `ide_get_diagnostics` MCP tool to retrieve live warnings directly from PyCharm. If the output is truncated on large files, rely on local checks.
+- **Type Narrowing:** Use explicit `isinstance(variable, dict)` or `isinstance(variable, str)` checks to resolve PyCharm `Member 'None'` and `Expected type` warnings.
+- **Noinspection Placement:** Place `# noinspection PyBroadException` on the line immediately preceding the `try:` block, not the `except:` block.
+- **Variable Casing:** Local function variables must be in lowercase `snake_case` (e.g. `stale_ct_threshold = 10`), not uppercase, to prevent PEP 8 casing warnings inside functions.
+- **Protected Access:** Never call a protected member (starting with a single underscore `_`) from an external script or module. Implement a public wrapper method (e.g. `get_ssh_key()`) on the class instead.
 
 ## Test-Driven Development (TDD) Workflow
 - **Framework:** `pytest`[cite: 1, 4]. Test structure mirrors the `src/` directory layout[cite: 1, 4].

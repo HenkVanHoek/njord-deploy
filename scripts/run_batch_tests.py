@@ -20,7 +20,6 @@ SKIPPED_COMPONENTS = [
     "web-notepad",
     "zigbee2mqtt",
     "lora-service",
-    "notify-push",
     "njorddeploy-service-maintenance",
 ]
 

@@ -134,14 +134,14 @@ class TestEditorAppAPI(unittest.TestCase):
     @patch("editor_app.app.ComponentManager.update_component_metadata")
     @patch("editor_app.app.ComponentManager.update_component_template_content")
     @patch("editor_app.app.ComponentManager.update_component_variables")
-    @patch("editor_app.app.ComponentManager._load_metadata")
-    @patch("editor_app.app.ComponentManager._save_metadata")
+    @patch("editor_app.app.ComponentManager.load_metadata")
+    @patch("editor_app.app.ComponentManager.save_metadata")
     def test_save_ai_component_success(
         self,
-        mock_save_meta,
+        _mock_save_meta,
         mock_load_meta,
-        mock_update_vars,
-        mock_update_template,
+        _mock_update_vars,
+        _mock_update_template,
         mock_update_meta,
         mock_create,
     ):

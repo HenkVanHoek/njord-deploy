@@ -4,10 +4,10 @@ import os
 # Fallback URLs for components that do not have project_url in the metadata
 FALLBACK_URLS = {
     "filebrowser": "https://filebrowser.org/",
-    "lora-service": ("https://github.com/HenkVanHoek/lora-letterbox-notifier"),
+    "lora-service": "https://github.com/HenkVanHoek/lora-letterbox-notifier",
     "nextcloud": "https://nextcloud.com/",
     "nextcloud-db": "https://mariadb.org/",
-    "nextcloud-db-dumper": ("https://github.com/HenkVanHoek/njord-deploy"),
+    "nextcloud-db-dumper": "https://github.com/HenkVanHoek/njord-deploy",
     "nextcloud-redis": "https://redis.io/",
     "notify-push": "https://github.com/nextcloud/notify_push",
     "octoprint": "https://octoprint.org/",
@@ -48,16 +48,15 @@ def main():
             ordered_groups.append(g)
 
     # Generate Markdown content
-    lines = []
-    lines.append("# Supported Services")
-    lines.append("")
-    lines.append(
+    lines = [
+        "# Supported Services",
+        "",
         "This document is automatically generated from the project metadata. "
         "It lists the open-source software packages that can be deployed "
         "using NjordDeploy, along with links to their official repositories "
-        "and homepages."
-    )
-    lines.append("")
+        "and homepages.",
+        "",
+    ]
 
     for group_id in ordered_groups:
         group_info = group_rules.get(group_id, {})

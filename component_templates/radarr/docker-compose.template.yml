@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "6.3.0.10514-ls311"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox LXC."
 # breaking_changes: "None"
 services:
   radarr:

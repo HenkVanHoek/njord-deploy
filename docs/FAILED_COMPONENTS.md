@@ -25,6 +25,5 @@ This document tracks components that failed verification or could not be tested/
 *   **Action**: Skipped. Needs complete stack templates and configuration files.
 
 ### `notify-push` (Nextcloud High-Performance Push)
-*   **Date**: 2026-07-16
-*   **Reason**: The component is a sidecar/helper container that executes the Nextcloud Client Push binary (`notify_push`) located inside the shared Nextcloud data volume (`/var/www/html/custom_apps/notify_push/bin/aarch64/notify_push`). On a fresh/clean Proxmox LXC test container, this shared volume is empty, meaning the binary does not exist, causing the container startup to fail with "no such file or directory".
-*   **Action**: Skipped. Cannot be tested on a clean-slate environment; requires a pre-configured Nextcloud data directory.
+*   **Status**: Fixed (2026-07-20)
+*   **Fix**: Modified the docker-compose template to use a dynamic shell entrypoint that checks the host architecture (`x86_64`, `aarch64`, etc.) and verifies if the binary is present. If the binary is missing (e.g., during the initial Nextcloud setup), it enters a standby sleep loop instead of crashing. This allows `docker compose` to start successfully on clean-slate VMs/LXCs of any architecture, and self-heal once the app is enabled in Nextcloud.

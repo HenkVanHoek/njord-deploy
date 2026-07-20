@@ -96,6 +96,14 @@ class SyncManager:
         except Exception:
             return {}
 
+    def get_local_component_meta(self, component_id: str) -> dict:
+        """Retrieves local component metadata from components_metadata.json."""
+        return self._get_local_component_meta(component_id)
+
+    def get_remote_component_meta(self, component_id: str) -> dict:
+        """Retrieves remote component metadata from cache."""
+        return self._get_remote_component_meta(component_id)
+
     def _get_local_component_meta(self, component_id: str) -> dict:
         data = self._load_json(self.local_metadata_path)
         return data.get("components", {}).get(component_id, {})

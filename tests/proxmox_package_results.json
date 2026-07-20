@@ -1,0 +1,48 @@
+[
+    {
+        "package_id": "nextcloud-stack",
+        "package_name": "Nextcloud Stack",
+        "status": "success",
+        "vmid": 110,
+        "ip": "192.168.178.58",
+        "deployment": "success",
+        "components": {
+            "nextcloud": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db-dumper": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-redis": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "notify-push": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    }
+]

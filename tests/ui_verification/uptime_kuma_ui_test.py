@@ -4,6 +4,7 @@ import json
 import re
 import socket
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -14,7 +15,10 @@ try:
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
     Page = any  # type: ignore
-    expect = None
+
+    def expect(*_args: Any, **_kwargs: Any) -> Any:  # type: ignore
+        pass
+
 
 pytestmark = pytest.mark.skipif(
     not PLAYWRIGHT_AVAILABLE, reason="Playwright is not installed"
@@ -59,10 +63,12 @@ def test_uptime_kuma_ui(page: Page) -> None:
         ip = get_deployed_component_ip("uptime-kuma")
     except Exception as e:
         pytest.skip(f"Skipping UI test: {e}")
+        return
 
     if not is_port_open(ip, 3001):
         pytest.skip(f"Skipping UI test: Port 3001 on {ip} is not reachable.")
 
+    # noinspection HttpUrlsUsage
     url = f"http://{ip}:3001"
 
     # Navigate to the Uptime Kuma setup screen
