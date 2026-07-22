@@ -1,24 +1,24 @@
 ---
 name: screenshot-converter
-description: Automatisch converteren van BMP/bitmap screenshots naar PNG om MIME-type leesfouten te voorkomen.
+description: Automatically convert BMP/bitmap screenshots to PNG to prevent MIME-type read errors.
 ---
 
 # Screenshot Converter (BMP to PNG)
 
-Gebruik deze skill om te bepalen hoe om te gaan met geüploade afbeeldingen die niet direct worden ondersteund door `view_file` (zoals `.bmp` bestanden).
+Use this skill to handle uploaded images that are not directly supported by `view_file` (such as `.bmp` files).
 
-## Werkwijze bij het ontvangen van een BMP/Bitmap screenshot:
+## Workflow when receiving a BMP/Bitmap screenshot:
 
-Als de gebruiker een afbeelding uploadt met de extensie `.bmp` (of een ander niet-ondersteund formaat), mag je **niet** direct proberen deze met `view_file` te bekijken (dit veroorzaakt een MIME-type fout). Volg in plaats daarvan de volgende stappen:
+If the user uploads an image with a `.bmp` extension (or another unsupported format), you **must not** attempt to view it directly with `view_file` (this will cause a MIME-type error). Instead, follow these steps:
 
-### 1. Converteer de afbeelding via het script:
-Voer het conversiescript uit in de terminal:
+### 1. Convert the image via the script:
+Run the conversion script in the terminal:
 ```bash
-python3 .agents/skills/screenshot-converter/scripts/convert.py "/absolute/pad/naar/bestand.bmp"
+python3 .agents/skills/screenshot-converter/scripts/convert.py "/absolute/path/to/file.bmp"
 ```
 
-### 2. Open het geconverteerde PNG-bestand:
-Gebruik hierna de `view_file` tool om het nieuw gegenereerde `.png` bestand te bekijken.
+### 2. Open the converted PNG file:
+Use the `view_file` tool to inspect the newly generated `.png` file.
 
-### 3. Rapporteer/antwoord aan de gebruiker:
-Beantwoord de vraag van de gebruiker direct aan de hand van de geconverteerde screenshot, zonder dat de gebruiker hier extra actie voor hoeft te ondernemen of handmatig toestemming hoeft te geven.
+### 3. Report/Reply to the user:
+Answer the user's question directly based on the converted screenshot, without requiring any additional action or manual permission from the user.

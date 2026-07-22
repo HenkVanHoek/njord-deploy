@@ -1,30 +1,30 @@
 ---
 name: docker-deploy
-description: Workflows voor het valideren en deployen van Docker-services via SSH op een remote machine voor NjordDeploy.
+description: Workflows for validating and deploying Docker services via SSH on a remote machine for NjordDeploy.
 ---
 
 # Docker Deploy Workflow (NjordDeploy)
 
-Gebruik deze skill wanneer de gebruiker vraagt om Docker-containers of configuraties te deployen, verifiëren of te beheren op een remote machine.
+Use this skill when the user asks to deploy, verify, or manage Docker containers or configurations on a remote machine.
 
-## Locatie op Remote Server:
-* Gebruiker/Host: `<remote_user>@<remote_ip>`
-* Doelmap: `/home/<remote_user>/docker/`
+## Location on Remote Server:
+* User/Host: `<remote_user>@<remote_ip>`
+* Target Directory: `/home/<remote_user>/docker/`
 
-## Deployment Stappenplan:
-1. **Kopieer Bestanden**: Kopieer de benodigde configuratiebestanden (zoals `docker-compose.yaml` of `verify_env.sh`) naar de server:
+## Deployment Steps:
+1. **Copy Files**: Copy the required configuration files (such as `docker-compose.yaml` or `verify_env.sh`) to the server:
    ```bash
    scp verify_env.sh docker-compose.yaml <remote_user>@<remote_ip>:/home/<remote_user>/docker/
    ```
-2. **Valideer de Omgeving**: Voer het verificatiescript uit via SSH om te controleren of alle omgevingsvariabelen correct zijn ingesteld:
+2. **Validate Environment**: Run the verification script via SSH to verify that all environment variables are correctly set:
    ```bash
    ssh <remote_user>@<remote_ip> "cd /home/<remote_user>/docker && ./verify_env.sh"
    ```
-3. **Start/Update Containers**: Start of herstart de containers:
+3. **Start/Update Containers**: Start or restart the containers:
    ```bash
    ssh <remote_user>@<remote_ip> "cd /home/<remote_user>/docker && docker compose up -d"
    ```
-4. **Verifieer Status**: Controleer of de containers correct draaien:
+4. **Verify Status**: Check if the containers are running correctly:
    ```bash
    ssh <remote_user>@<remote_ip> "docker ps -a"
    ```

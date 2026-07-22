@@ -61,7 +61,10 @@
             "Chat",
             "Communication",
             "Messaging",
-            "Communications"
+            "Communications",
+            "Utilities",
+            "Productivity",
+            "Media Servers"
         ],
         "group_rules": {
             "Chat": {
@@ -84,6 +87,10 @@
                 "is_exclusive": false,
                 "name": "Home Automation"
             },
+            "Media Servers": {
+                "is_exclusive": false,
+                "name": "Media Servers"
+            },
             "Media Stack": {
                 "is_exclusive": false,
                 "name": "Media Stack"
@@ -91,6 +98,10 @@
             "Messaging": {
                 "is_exclusive": false,
                 "name": "Messaging"
+            },
+            "Productivity": {
+                "is_exclusive": false,
+                "name": "Productivity"
             },
             "Security & Utilities": {
                 "is_exclusive": false,
@@ -103,6 +114,10 @@
             "System Tools": {
                 "is_exclusive": false,
                 "name": "System Tools"
+            },
+            "Utilities": {
+                "is_exclusive": false,
+                "name": "Utilities"
             },
             "dashboard": {
                 "is_exclusive": true,
@@ -164,6 +179,34 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": null
+        },
+        "audiobookshelf": {
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Self-hosted audiobook and podcast server to manage and play your audiobooks and podcasts.",
+            "docker_service_name": "audiobookshelf",
+            "group": "Media Servers",
+            "has_configuration": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/advplyr/audiobookshelf",
+            "name": "Audiobookshelf",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "100m",
+                "ram": "256Mi",
+                "recommended_cores": 1,
+                "recommended_ram_mb": 512,
+                "recommended_storage_gb": 5,
+                "storage_type": "hdd"
+            },
+            "tags": [
+                "audiobooks",
+                "podcasts",
+                "media",
+                "server",
+                "audio"
+            ],
+            "ui_port_variable": "AUDIOBOOKSHELF_PORT"
         },
         "caddy": {
             "component_version": "latest",
@@ -478,6 +521,36 @@
             },
             "tags": [],
             "traefik_internal_port": null
+        },
+        "microbin": {
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service.",
+            "docker_service_name": "microbin",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "danielszabo99/microbin",
+            "name": "Microbin",
+            "package_id": "general-stack",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "low",
+                "ram": "low",
+                "recommended_cores": 1,
+                "recommended_ram_mb": 128,
+                "recommended_storage_gb": 1,
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "pastebin",
+                "utility",
+                "text",
+                "privacy"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "MICROBIN_PORT"
         },
         "nextcloud": {
             "component_version": "latest",
@@ -974,6 +1047,34 @@
             "traefik_internal_port": null,
             "ui_port_variable": "SONARR_WEB_PORT"
         },
+        "stirling-pdf": {
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs.",
+            "docker_service_name": "stirling-pdf",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": true,
+            "image_name": "stirlingtools/stirling-pdf",
+            "name": "Stirling PDF",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "250m",
+                "ram": "512MB",
+                "recommended_cores": 1,
+                "recommended_ram_mb": 512,
+                "recommended_storage_gb": 5,
+                "storage_type": "ssd"
+            },
+            "tags": [
+                "pdf",
+                "editor",
+                "automation",
+                "document",
+                "productivity"
+            ],
+            "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
+        },
         "traefik": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1150,36 +1251,6 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null
-        },
-        "microbin": {
-            "conflicts_with": [],
-            "depends_on": [],
-            "description": "Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service.",
-            "docker_service_name": "microbin",
-            "group": "Utilities",
-            "has_configuration": true,
-            "has_traefik_support": false,
-            "has_ui": true,
-            "image_name": "danielszabo99/microbin",
-            "name": "Microbin",
-            "package_id": "general-stack",
-            "protocol": "http",
-            "resource_profile": {
-                "cpu": "low",
-                "ram": "low",
-                "recommended_cores": 1,
-                "recommended_ram_mb": 128,
-                "recommended_storage_gb": 1,
-                "storage_type": "persistent"
-            },
-            "tags": [
-                "pastebin",
-                "utility",
-                "text",
-                "privacy"
-            ],
-            "traefik_internal_port": null,
-            "ui_port_variable": "MICROBIN_PORT"
         }
     },
     "packages": {

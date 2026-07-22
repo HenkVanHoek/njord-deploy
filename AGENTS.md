@@ -15,7 +15,7 @@ CRITICAL WORKFLOW & OUTPUT DIRECTIVES
 - Proactive Code Investigation: You have direct read access to all workspace files. Always use search and view tools to inspect target files before proposing or performing any modifications. Do not make assumptions about code structure or API contracts.
 - Self-Correction and Testing: Use the terminal to run tests (pytest, Playwright), linters, and pre-commit checks (pre-commit run --all-files) locally to verify your changes. If a change fails testing or static analysis two times consecutively, stop automatic generation, explain the failure, and request specific code guidance or snippets from the user.
 - Direct File Updates: Use filesystem edit tools to modify files. Do not output entire file contents in the chat panel unless requested; provide only concise descriptions and diff summaries of the changes to save context tokens.
-- Standard Markdown and Formatting: Standard markdown features (including inline backticks for code symbols and standard fenced code blocks with language specifiers) are fully supported and should be used for clarity.
+- Standard Markdown and Formatting: Standard Markdown features (including inline backticks for code symbols and standard fenced code blocks with language specifiers) are fully supported and should be used for clarity.
 - Prioritize Objective Evidence: Treat automated tool outputs, logs, linter results, and test suite reports as the source of truth for diagnosing issues.
 
 CRITICAL CODE QUALITY DIRECTIVES (Python & JavaScript)

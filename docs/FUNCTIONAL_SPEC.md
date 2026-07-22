@@ -142,6 +142,8 @@ self-hosted services that are available to the end-user.
 - **And** I provide a Gemini API Key (or rely on the GEMINI_API_KEY environment variable),
 - **And** I click "Generate Component",
 - **Then** the system contacts the Gemini API and generates the component structure.
+- **And** the system automatically retrieves the public repository's `README.md` and `docker-compose.yml`/`docker-compose.yaml` files from GitHub to enrich the prompt context before calling the API.
+- **And** the system automatically validates the generated image name on Docker Hub and displays any warnings or errors in the preview modal.
 - **And** I can preview the generated metadata, variables, compose template, and configuration templates in a preview modal.
 - **And** when I click "Accept and Create", the component is registered and saved to the filesystem.
 

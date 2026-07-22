@@ -161,8 +161,15 @@ class ComponentManager:
         _variables: List[Dict[str, Any]],
     ) -> None:
         """Validates a component's template and variables."""
+        import re
+
         try:
-            data = yaml.safe_load(template_content)
+            cleaned_yaml = re.sub(r"\{\{.*?}}", "JINJA_VAR", template_content)
+            cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
+            cleaned_yaml = re.sub(r"\{#.*?}", "JINJA_COMMENT", cleaned_yaml)
+
+            data = yaml.safe_load(cleaned_yaml)
+
         except yaml.YAMLError as e:
             raise ValueError(
                 f"YAML Parsing Failed: The template content is not valid YAML. "

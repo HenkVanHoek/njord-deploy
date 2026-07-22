@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "The port for the Stirling PDF web interface.",
+            "id": "STIRLING_PDF_HTTP_PORT",
+            "label": "Web UI Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,15 +1,15 @@
 ---
 name: proxmox-test
-description: Workflows voor het automatisch testen van NjordDeploy componenten in een gekloonde Proxmox VM.
+description: Workflows for automatically testing NjordDeploy components in a cloned Proxmox VM.
 ---
 
 # Proxmox Component Integration Testing Workflow
 
-Gebruik deze skill om NjordDeploy componenten te valideren door ze automatisch te deployen en testen op een tijdelijk gekloonde VM binnen een Proxmox VE server.
+Use this skill to validate NjordDeploy components by automatically deploying and testing them on a temporarily cloned VM within a Proxmox VE server.
 
-## 1. Vereiste Omgevingsvariabelen
+## 1. Required Environment Variables
 
-Configureer de volgende keys in de `.env` file van het project:
+Configure the following keys in the project's `.env` file:
 
 ```bash
 # Proxmox VE Cluster credentials
@@ -29,46 +29,46 @@ PROXMOX_VM_RAM="2048"
 PROXMOX_VM_CORES="2"
 ```
 
-## 2. Testen Uitvoeren
+## 2. Running Tests
 
-### A. Test alle componenten (volledige integratietest run):
+### A. Test all components (full integration test run):
 ```bash
 python scripts/proxmox_test_runner.py
 ```
 
-### B. Test specifieke componenten:
+### B. Test specific components:
 ```bash
 python scripts/proxmox_test_runner.py --components adguard-home,pi-hole
 ```
 
-### C. Excludeer bepaalde componenten:
+### C. Exclude certain components:
 ```bash
 python scripts/proxmox_test_runner.py --exclude homeassistant,frigate
 ```
 
-### D. Specificeer een andere template of Proxmox node via CLI:
+### D. Specify a different template or Proxmox node via CLI:
 ```bash
 python scripts/proxmox_test_runner.py --template-id 901 --node pve-node2
 ```
 
-## 3. Rapportage & Resultaten
+## 3. Reporting & Results
 
-* **JSON Rapport**: De ruwe testresultaten worden opgeslagen in `tests/proxmox_results.json`.
-* **Markdown Rapport**: Een leesbaar overzicht van de testrun met foutdetails wordt opgeslagen in `docs/PROXMOX_TESTS.md`.
+* **JSON Report**: The raw test results are saved in `tests/proxmox_results.json`.
+* **Markdown Report**: A human-readable overview of the test run with error details is saved in `docs/PROXMOX_TESTS.md`.
 
-## 4. Problemen Oplossen (Troubleshooting)
+## 4. Troubleshooting
 
-### A. QEMU Guest Agent is niet actief
-Als de test-runner time-out bij het ophalen van het IP-adres van de VM:
-* Zorg ervoor dat de `qemu-guest-agent` daemon is geïnstalleerd en ingeschakeld in het besturingssysteem van je master template VM:
+### A. QEMU Guest Agent is not active
+If the test runner times out while retrieving the IP address of the VM:
+* Ensure that the `qemu-guest-agent` daemon is installed and enabled in the operating system of your master template VM:
   ```bash
   sudo apt-get update && sudo apt-get install -y qemu-guest-agent
   sudo systemctl enable --now qemu-guest-agent
   ```
-* De test-runner configureert de gekloonde VM automatisch met `agent: enabled=1` en koppelt een netwerkkaart (`net0`) en Cloud-Init drive (`ide2`), maar de daemon in de VM moet wel actief zijn om te reageren op API queries.
+* The test runner automatically configures the cloned VM with `agent: enabled=1` and attaches a network card (`net0`) and Cloud-Init drive (`ide2`), but the daemon inside the VM must be active to respond to API queries.
 
-### B. Geen ondersteuning voor Linked Clones
-Als je opslagpool (bijv. `local-lvm`) geen snapshots/linked clones ondersteunt, gooit Proxmox een API fout. De test-runner heeft een automatische fallback ingebouwd en zal in dat geval automatisch overschakelen naar een **Full Clone**. Dit duurt iets langer maar voorkomt dat de test faalt.
+### B. No support for Linked Clones
+If your storage pool (e.g., `local-lvm`) does not support snapshots/linked clones, Proxmox will throw an API error. The test runner has an automatic fallback built-in and will automatically switch to a **Full Clone**. This takes slightly longer but prevents the test from failing.
 
 ### C. Master Template VMID
-Op de node `pve` is de master template VMID standaard ingesteld op `105` (`pi-master-template`). Als je een andere template wilt gebruiken, geef dit dan mee via de CLI optie `--template-id <id>`.
+On the `pve` node, the master template VMID is configured to `105` (`pi-master-template`) by default. If you want to use a different template, specify it using the `--template-id <id>` CLI option.

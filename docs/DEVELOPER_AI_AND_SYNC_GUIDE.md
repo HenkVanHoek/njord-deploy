@@ -51,9 +51,11 @@ To use this feature, you must provide a Gemini API Key:
 1. Start the Editor App.
 2. Click the "Create with AI" button in the sidebar.
 3. Input the GitHub repository URL (such as "https://github.com/caddyserver/caddy") and add optional custom instructions.
-4. Click "Generate Component". The backend sends a request to the Gemini API with structural instructions and validation rules.
+4. Click "Generate Component".
+   * **Context Enrichment:** The backend automatically attempts to fetch public files (e.g. `README.md` and `docker-compose.yml`/`docker-compose.yaml`) from the GitHub repository to include as rich context in the API request.
+   * **Docker Hub Verification:** The generator queries the public Docker Hub Registry API to verify that the generated image name exists. If the check fails (returns 404), a validation warning is returned.
 5. The API returns a structured JSON payload containing metadata, user variables, and a Docker Compose template.
-6. Review the preview of the generated files.
+6. Review the preview of the generated files. If there are validation or image name warnings, they are displayed in the warning alert banner.
 7. Click "Accept and Create" to save the bootstrapped files directly to the local project filesystem.
 
 ---
@@ -82,3 +84,14 @@ For offline development and deep codebase reasoning, you can run a local Llama 3
 
 4. Ingest Context:
    Start a session with the "njorddeploy-expert" model in Open WebUI, then drag and drop the "llm_context.txt" file into your chat.
+
+---
+
+## 4. Component Governance & Admission Policy
+
+To prevent a proliferation of rarely or never used components ("wildgroei"), developers must strictly adhere to the project's governance guidelines:
+
+- **Product Owner Authorization:** The Product Owner is the sole gatekeeper of the components' repository. No component will be merged or distributed without explicit Product Owner approval.
+- **Admission Standards:** Components must be highly-requested, popular, and resource-friendly self-hosted services compatible with Debian and Docker on Single-Board Computers (SBCs).
+- **Quality Assurance:** Any component proposed for inclusion must pass local validation gates and be successfully deployed and verified via the automated Proxmox test suite (raising its status to `tested`).
+- **Release and Workflow:** Contributors must submit modifications and new components via Pull Requests on the remote repository rather than pushing directly to the `main` branch.

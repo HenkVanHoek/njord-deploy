@@ -1,22 +1,22 @@
 ---
 name: design-system-sync
-description: Handelingen voor het wijzigen van UI-stijlen in njorddeploy-design-system en het synchroniseren hiervan naar de NjordDeploy-app.
+description: Operations for modifying UI styles in njorddeploy-design-system and synchronizing them to the NjordDeploy app.
 ---
 
-# UI Stijlen & Design System Synchronisatie
+# UI Styles & Design System Synchronization
 
-Gebruik deze skill wanneer de gebruiker vraagt om UI-stijlen, CSS, of design-system wijzigingen door te voeren.
+Use this skill when the user asks to modify UI styles, CSS, or make design system changes.
 
-## Belangrijke Richtlijnen:
-1. **Pas NOOIT direct** `njorddeploy-style.css` aan in de configurator of editor app van `NjordDeploy`.
-2. Alle stijlaanpassingen moeten worden gedaan in de repository `njorddeploy-design-system`.
-3. Na het aanpassen van de stijlen in `njorddeploy-design-system`, moet je het synchronisatiescript uitvoeren om de wijzigingen over te zetten.
+## Important Guidelines:
+1. **NEVER modify** `njorddeploy-style.css` directly in the configurator or editor app of `NjordDeploy`.
+2. All style modifications must be made in the `njorddeploy-design-system` repository.
+3. After modifying styles in `njorddeploy-design-system`, you must run the synchronization script to sync the changes.
 
-## Synchronisatie Workflow:
-1. Navigeer naar het project `NjordDeploy`.
-2. Voer het script uit met het volgende commando:
+## Synchronization Workflow:
+1. Navigate to the `NjordDeploy` project.
+2. Run the script using the following command:
    ```bash
    python scripts/fetch_assets.py
    ```
-3. Controleer of de bestanden in `NjordDeploy/src/configurator_app/static/css/` correct zijn bijgewerkt.
-4. Commit de wijzigingen in beide repositories als dat nodig is.
+3. Verify that the files in `NjordDeploy/src/configurator_app/static/css/` are updated correctly.
+4. Commit the changes in both repositories if needed.

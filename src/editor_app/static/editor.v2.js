@@ -753,6 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             inputStep.classList.add('d-none');
             loadingStep.classList.remove('d-none');
+            const warningsContainer = document.getElementById('ai-warnings-container');
+            if (warningsContainer) warningsContainer.classList.add('d-none');
 
             try {
                 const result = await fetchJson('/api/ai/generate', {
@@ -788,6 +790,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewImage.value = generatedData.metadata.image_name || '';
                 previewConflicts.value = (generatedData.metadata.conflicts_with || []).join(', ');
                 previewCompose.value = generatedData.docker_compose || '';
+
+                // Render security/validation warnings
+                const warningsContainer = document.getElementById('ai-warnings-container');
+                const warningsList = document.getElementById('ai-warnings-list');
+                if (warningsContainer && warningsList) {
+                    warningsList.innerHTML = '';
+                    /** @type {string[]} */
+                    const warnings = generatedData.security_warnings || [];
+                    if (warnings.length > 0) {
+                        warnings.forEach(warning => {
+                            const li = document.createElement('li');
+                            li.textContent = String(warning);
+                            warningsList.appendChild(li);
+                        });
+                        warningsContainer.classList.remove('d-none');
+                    } else {
+                        warningsContainer.classList.add('d-none');
+                    }
+                }
 
                 // Populate variables table
                 previewVarsBody.innerHTML = '';
@@ -841,6 +862,8 @@ document.addEventListener('DOMContentLoaded', () => {
         backBtn.addEventListener('click', () => {
             previewStep.classList.add('d-none');
             inputStep.classList.remove('d-none');
+            const warningsContainer = document.getElementById('ai-warnings-container');
+            if (warningsContainer) warningsContainer.classList.add('d-none');
         });
 
         saveBtn.addEventListener('click', async () => {

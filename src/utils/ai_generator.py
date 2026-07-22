@@ -3,6 +3,7 @@
 import json
 import logging
 import os
+import re
 import urllib.parse
 from typing import Optional
 
@@ -18,7 +19,10 @@ class AIGenerator:
         self.api_key = api_key
 
     def generate_component_data(
-        self, repo_url: str, custom_instructions: Optional[str] = None
+        self,
+        repo_url: str,
+        custom_instructions: Optional[str] = None,
+        existing_groups: Optional[list[str]] = None,
     ) -> dict:
         """Analyzes a GitHub repository and returns structured component configuration.
 
@@ -45,6 +49,16 @@ class AIGenerator:
         owner = path_parts[0]
         repo_name = path_parts[1].replace(".git", "")
         component_id = repo_name.lower()
+
+        # Fetch README and compose files from the repository
+        readme_content = self._fetch_github_file(owner, repo_name, "README.md")
+        compose_content = self._fetch_github_file(
+            owner, repo_name, "docker-compose.yml"
+        )
+        if not compose_content:
+            compose_content = self._fetch_github_file(
+                owner, repo_name, "docker-compose.yaml"
+            )
 
         # Compile System Prompt and instructions
         system_prompt = (
@@ -95,9 +109,42 @@ class AIGenerator:
             "'http' unless the service natively requires/uses HTTPS).\n"
         )
 
+        if existing_groups:
+            groups_str = ", ".join(f"'{g}'" for g in existing_groups)
+            system_prompt += (
+                "14. In the metadata, the `group` property MUST be selected from "
+                f"the following list of existing groups: {groups_str}. "
+                "Do NOT invent new group names or introduce capitalization changes.\n"
+            )
+        else:
+            system_prompt += (
+                "14. In the metadata, the `group` property should represent the "
+                "category of the component.\n"
+            )
+
+        system_prompt += (
+            "15. For any variable object in the `variables` list, the `type` "
+            "property MUST be one of: 'port' (for host port mappings), "
+            "'password' (for secrets, passwords, or keys), or 'text' (for other "
+            "text inputs like directories, PUID, PGID, or strings). "
+            "Do NOT use 'number' or 'string' as the type.\n"
+        )
+
         user_prompt = (
             f"Analyze the repository: {owner}/{repo_name} (URL: {repo_url}).\n"
         )
+        if readme_content:
+            user_prompt += (
+                f"\n--- START OF REPOSITORY README.MD ---\n"
+                f"{readme_content[:15000]}"
+                f"\n--- END OF REPOSITORY README.MD ---\n"
+            )
+        if compose_content:
+            user_prompt += (
+                f"\n--- START OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+                f"{compose_content[:5000]}"
+                f"\n--- END OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+            )
         if custom_instructions:
             user_prompt += f"Custom User Instructions: {custom_instructions}\n"
 
@@ -265,6 +312,92 @@ class AIGenerator:
             logger.error(f"Failed to parse Gemini API response: {e}")
             raise RuntimeError(f"Received malformed response from Gemini API: {e}")
 
+    def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
+        """Tries to fetch a file from the repository's main or master branch."""
+        for branch in ["main", "master"]:
+            url = (
+                f"https://raw.githubusercontent.com/{owner}/{repo}/"
+                f"{branch}/{filename}"
+            )
+            try:
+                response = requests.get(url, timeout=5)
+                if response.status_code == 200:
+                    return response.text
+            except Exception:  # nosec B110
+                pass
+        return None
+
+    def _check_docker_image_exists(self, image_name: str) -> bool:
+        """Verifies if a given docker image exists on its registry."""
+        if not image_name:
+            return False
+
+        if "/" in image_name:
+            first_part, rest = image_name.split("/", 1)
+            if "." in first_part or ":" in first_part or first_part == "localhost":
+                registry = first_part
+                if ":" in rest:
+                    repository, _ = rest.split(":", 1)
+                else:
+                    repository = rest
+                return self._check_oci_image(registry, repository)
+            else:
+                namespace = first_part
+                if ":" in rest:
+                    repository, _ = rest.split(":", 1)
+                else:
+                    repository = rest
+        else:
+            namespace = "library"
+            if ":" in image_name:
+                repository, _ = image_name.split(":", 1)
+            else:
+                repository = image_name
+
+        url = f"https://hub.docker.com/v2/repositories/{namespace}/{repository}/"
+        try:
+            response = requests.get(url, timeout=5)
+            return response.status_code == 200
+        except Exception:
+            return False
+
+    def _check_oci_image(self, registry: str, repository: str) -> bool:
+        """Verifies image existence via standard OCI V2 API with token auth."""
+        url = f"https://{registry}/v2/{repository}/tags/list"
+        try:
+            res = requests.get(url, timeout=5)
+            if res.status_code == 200:
+                return True
+            if res.status_code == 401:
+                auth_header = res.headers.get("Www-Authenticate")
+                if not auth_header or not auth_header.startswith("Bearer "):
+                    return False
+
+                params = {}
+                for match in re.finditer(r'(\w+)="([^"]+)"', auth_header):
+                    params[match.group(1)] = match.group(2)
+
+                realm = params.get("realm")
+                if not realm:
+                    return False
+
+                token_params = {k: v for k, v in params.items() if k != "realm"}
+                token_res = requests.get(realm, params=token_params, timeout=5)
+                if token_res.status_code != 200:
+                    return False
+
+                token_data = token_res.json()
+                token = token_data.get("token") or token_data.get("access_token")
+                if not token:
+                    return False
+
+                headers = {"Authorization": f"Bearer {token}"}
+                res_with_token = requests.get(url, headers=headers, timeout=5)
+                return res_with_token.status_code == 200
+            return False
+        except Exception:
+            return False
+
     def _run_security_checks(self, data: dict) -> list[str]:
         """Runs security validations on the generated component data."""
         warnings = []
@@ -275,8 +408,14 @@ class AIGenerator:
             try:
                 import yaml
 
-                compose_dict = yaml.safe_load(docker_compose_str) or {}
+                cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", docker_compose_str)
+                cleaned_yaml = re.sub(r"\{%.*?%\}", "JINJA_BLOCK", cleaned_yaml)
+                cleaned_yaml = re.sub(r"\{#.*?#\}", "JINJA_COMMENT", cleaned_yaml)
+
+                compose_dict = yaml.safe_load(cleaned_yaml) or {}
+
                 services = compose_dict.get("services", {})
+
                 if isinstance(services, dict):
                     for service_name, service_conf in services.items():
                         if not isinstance(service_conf, dict):
@@ -358,5 +497,17 @@ class AIGenerator:
                             "secret but has a weak default value: "
                             f"'{var_default}'"
                         )
+
+        # 3. Check if the docker image exists on Docker Hub
+        metadata = data.get("metadata", {})
+        if isinstance(metadata, dict):
+            image_name = metadata.get("image_name")
+            if isinstance(image_name, str) and image_name:
+                if not self._check_docker_image_exists(image_name):
+                    warnings.append(
+                        f"Docker image '{image_name}' was not found on "
+                        "Docker Hub. Please check for spelling mistakes "
+                        "or ensure the repository is public."
+                    )
 
         return warnings

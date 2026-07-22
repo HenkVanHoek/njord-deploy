@@ -20,6 +20,7 @@ logging.basicConfig(
 )
 
 
+# noinspection PyBroadException
 def main():
     """Runs the PiScanner in a controlled, isolated environment."""
     print("--- Starting PiScanner Test ---")

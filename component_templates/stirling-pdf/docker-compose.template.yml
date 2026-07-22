@@ -1,0 +1,18 @@
+# status: "tested"
+# last_tested_version: "2.14.2"
+# platform_notes: "Tested successfully on Proxmox LXC."
+# breaking_changes: none
+services:
+  stirling-pdf:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-stirling-pdf
+    ports:
+      - "{{ STIRLING_PDF_HTTP_PORT }}:8080"
+    volumes:
+      - "{{ DATA_ROOT }}/stirling-pdf/data:/app/data"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+networks:
+  njorddeploy_net:
+    external: true

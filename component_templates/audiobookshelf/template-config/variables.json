@@ -1,0 +1,53 @@
+{
+    "variables": [
+        {
+            "default": "13378",
+            "description": "The host port for the Audiobookshelf web interface.",
+            "id": "AUDIOBOOKSHELF_PORT",
+            "label": "Audiobookshelf Web UI Port",
+            "type": "port"
+        },
+        {
+            "default": "1000",
+            "description": "The User ID (PUID) for the container process. Set to 0 for root or match your host user's PUID for file permissions.",
+            "id": "AUDIOBOOKSHELF_PUID",
+            "label": "User ID (PUID)",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "The Group ID (PGID) for the container process. Set to 0 for root or match your host user's PGID for file permissions.",
+            "id": "AUDIOBOOKSHELF_PGID",
+            "label": "Group ID (PGID)",
+            "type": "text"
+        },
+        {
+            "default": "{{ DATA_ROOT }}/audiobookshelf/audiobooks",
+            "description": "Host path where your audiobook files are stored and accessible by Audiobookshelf.",
+            "id": "AUDIOBOOKSHELF_AUDIOBOOKS_DIR",
+            "label": "Audiobooks Library Path",
+            "type": "text"
+        },
+        {
+            "default": "{{ DATA_ROOT }}/audiobookshelf/podcasts",
+            "description": "Host path where your podcast files are stored and accessible by Audiobookshelf.",
+            "id": "AUDIOBOOKSHELF_PODCASTS_DIR",
+            "label": "Podcasts Library Path",
+            "type": "text"
+        },
+        {
+            "default": "{{ DATA_ROOT }}/audiobookshelf/metadata",
+            "description": "Host path to store Audiobookshelf's metadata.",
+            "id": "AUDIOBOOKSHELF_METADATA_DIR",
+            "label": "Metadata Path",
+            "type": "text"
+        },
+        {
+            "default": "{{ DATA_ROOT }}/audiobookshelf/config",
+            "description": "Host path to store Audiobookshelf's configuration files.",
+            "id": "AUDIOBOOKSHELF_CONFIG_DIR",
+            "label": "Configuration Path",
+            "type": "text"
+        }
+    ]
+}

@@ -91,3 +91,25 @@ def test_generate_deployment_artifacts_renders_config_templates(tmp_path):
 
     rendered_content = rendered_caddyfile_path.read_text(encoding="utf-8")
     assert "Welcome to example.com" in rendered_content
+
+
+def test_validate_component_configuration_with_jinja(tmp_path):
+    """Test validate_component_configuration with unquoted Jinja templates."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    unquoted_jinja_yaml = (
+        "services:\n"
+        "  my-service:\n"
+        "    image: {{ image_name }}:{{ component_version }}\n"
+        "    ports:\n"
+        "      - {{ MY_PORT }}:80\n"
+    )
+
+    # Should not raise ValueError/YAMLError
+    manager.validate_component_configuration("my-service", unquoted_jinja_yaml, [])

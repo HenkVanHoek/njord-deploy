@@ -1,0 +1,24 @@
+# status: beta
+# last_tested_version: latest
+# platform_notes: Works on Linux.
+# breaking_changes: none
+services:
+  audiobookshelf:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-audiobookshelf
+    ports:
+      - "{{ AUDIOBOOKSHELF_PORT }}:13378"
+    volumes:
+      - "{{ AUDIOBOOKSHELF_AUDIOBOOKS_DIR }}:/audiobooks"
+      - "{{ AUDIOBOOKSHELF_PODCASTS_DIR }}:/podcasts"
+      - "{{ AUDIOBOOKSHELF_METADATA_DIR }}:/metadata"
+      - "{{ AUDIOBOOKSHELF_CONFIG_DIR }}:/config"
+    environment:
+      - PUID={{ AUDIOBOOKSHELF_PUID }}
+      - PGID={{ AUDIOBOOKSHELF_PGID }}
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

@@ -137,3 +137,134 @@ class TestAIGenerator(unittest.TestCase):
         self.assertTrue(any("MYSQL_PASSWORD" in w for w in warnings))
         self.assertTrue(any("ADMIN_TOKEN" in w for w in warnings))
         self.assertFalse(any("NORMAL_VAR" in w for w in warnings))
+
+    @patch("requests.get")
+    def test_check_docker_image_exists_docker_hub(self, mock_get):
+        """Test checking images on Docker Hub (both library and namespaces)."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_get.return_value = mock_response
+
+        # 1. Official image
+        res = self.generator._check_docker_image_exists("ubuntu:latest")
+        self.assertTrue(res)
+        mock_get.assert_called_with(
+            "https://hub.docker.com/v2/repositories/library/ubuntu/", timeout=5
+        )
+
+        # 2. Namespaced image
+        mock_get.reset_mock()
+        res = self.generator._check_docker_image_exists("advplyr/audiobookshelf")
+        self.assertTrue(res)
+        mock_get.assert_called_with(
+            "https://hub.docker.com/v2/repositories/advplyr/audiobookshelf/",
+            timeout=5,
+        )
+
+    @patch("requests.get")
+    def test_check_docker_image_exists_oci_immediate_success(self, mock_get):
+        """Test checking images on custom OCI registry with immediate success."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_get.return_value = mock_response
+
+        res = self.generator._check_docker_image_exists("quay.io/keycloak/keycloak")
+        self.assertTrue(res)
+        mock_get.assert_called_once_with(
+            "https://quay.io/v2/keycloak/keycloak/tags/list", timeout=5
+        )
+
+    @patch("requests.get")
+    def test_check_docker_image_exists_oci_token_auth(self, mock_get):
+        """Test checking images on custom OCI registry with token auth."""
+        # First call to tags/list: 401 with Www-Authenticate header
+        mock_res_401 = MagicMock()
+        mock_res_401.status_code = 401
+        mock_res_401.headers = {
+            "Www-Authenticate": (
+                'Bearer realm="https://ghcr.io/token",'
+                'service="ghcr.io",scope="repository:advplyr/audiobookshelf:pull"'
+            )
+        }
+
+        # Second call to get token: 200 with token in JSON
+        mock_res_token = MagicMock()
+        mock_res_token.status_code = 200
+        mock_res_token.json.return_value = {"token": "mock_token"}
+
+        # Third call to tags/list: 200
+        mock_res_200 = MagicMock()
+        mock_res_200.status_code = 200
+
+        mock_get.side_effect = [mock_res_401, mock_res_token, mock_res_200]
+
+        res = self.generator._check_docker_image_exists(
+            "ghcr.io/advplyr/audiobookshelf"
+        )
+        self.assertTrue(res)
+
+        # Verify calls
+        self.assertEqual(mock_get.call_count, 3)
+        call_1, call_2, call_3 = mock_get.call_args_list
+
+        args_2, kwargs_2 = call_2
+        (url_2,) = args_2
+        self.assertEqual(url_2, "https://ghcr.io/token")
+        self.assertEqual(kwargs_2["params"]["service"], "ghcr.io")
+
+        args_3, kwargs_3 = call_3
+        (url_3,) = args_3
+        self.assertEqual(url_3, "https://ghcr.io/v2/advplyr/audiobookshelf/tags/list")
+        self.assertEqual(kwargs_3["headers"]["Authorization"], "Bearer mock_token")
+
+    @patch("requests.post")
+    def test_generate_component_data_with_existing_groups(self, mock_post):
+        """Test generating component with existing_groups constraint."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": (
+                                    '{"metadata": {"name": "Caddy", "image_name": '
+                                    '"caddy", "description": "web server", '
+                                    '"group": "reverse_proxy", "has_ui": false, '
+                                    '"has_configuration": true}, "docker_compose": '
+                                    '"services:", "variables": []}'
+                                )
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        mock_post.return_value = mock_response
+
+        repo_url = "https://github.com/caddyserver/caddy"
+        existing_groups = ["reverse_proxy", "databases"]
+        self.generator.generate_component_data(
+            repo_url, existing_groups=existing_groups
+        )
+
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        json_data = kwargs.get("json", {})
+        (contents,) = json_data.get("contents", [])
+        parts = contents.get("parts", [])
+        (part,) = parts
+        prompt = part.get("text", "")
+
+        expected_group_rule = (
+            "14. In the metadata, the `group` property MUST be selected from "
+            "the following list of existing groups: 'reverse_proxy', 'databases'"
+        )
+        self.assertIn(expected_group_rule, prompt)
+
+        expected_var_rule = (
+            "15. For any variable object in the `variables` list, the `type` "
+            "property MUST be one of: 'port' (for host port mappings)"
+        )
+        self.assertIn(expected_var_rule, prompt)

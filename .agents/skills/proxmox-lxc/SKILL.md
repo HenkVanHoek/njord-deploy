@@ -1,15 +1,15 @@
 ---
 name: proxmox-lxc
-description: Workflows en scripts voor het automatisch aanmaken, inrichten (Docker) en beheren van LXC-containers in Proxmox VE.
+description: Workflows and scripts for automatically creating, provisioning (Docker), and managing LXC containers in Proxmox VE.
 ---
 
 # Proxmox LXC Container Provisioning Workflow
 
-Gebruik deze skill om automatisch LXC-containers aan te maken op je Proxmox VE-server die specifiek zijn ingericht voor NjordDeploy (inclusief Docker en de benodigde netwerkverbindingen).
+Use this skill to automatically create LXC containers on your Proxmox VE server specifically provisioned for NjordDeploy (including Docker and necessary network connections).
 
-## 1. Vereiste Omgevingsvariabelen
+## 1. Required Environment Variables
 
-Zorg ervoor dat de volgende keys correct zijn ingevuld in je `.env` bestand:
+Ensure that the following keys are correctly configured in your `.env` file:
 
 ```bash
 PROXMOX_HOST="https://<your-proxmox-ip>:8006"
@@ -19,30 +19,30 @@ PROXMOX_TOKEN_SECRET="xxxx-xxxx-xxxx-xxxx"
 PROXMOX_NODE="pve"
 ```
 
-## 2. Een LXC Container Aanmaken en Inrichten
+## 2. Creating and Provisioning an LXC Container
 
-Het script `scripts/create_proxmox_lxc.py` regelt de volledige installatie. Het voert de volgende stappen uit:
-1. Vraagt het eerstvolgende beschikbare VMID op bij Proxmox.
-2. Haalt de openbare SSH-sleutel van NjordDeploy op.
-3. Zoekt op de opslag (`local`) naar een bruikbare Debian of Ubuntu LXC-template.
-4. Maakt de container aan met Nesting en Keyctl ingeschakeld (nodig voor Docker in LXC).
-5. Wacht tot de container online is en een IP-adres krijgt via DHCP.
-6. Maakt verbinding via SSH en installeert automatisch Docker, en start het `njorddeploy_net` Docker-netwerk.
+The script `scripts/create_proxmox_lxc.py` handles the entire installation. It performs the following steps:
+1. Queries Proxmox for the next available VMID.
+2. Retrieves NjordDeploy's public SSH key.
+3. Searches the storage (`local`) for a usable Debian or Ubuntu LXC template.
+4. Creates the container with Nesting and Keyctl enabled (required for Docker inside LXC).
+5. Waits for the container to come online and receive an IP address via DHCP.
+6. Connects via SSH, automatically installs Docker, and starts the `njorddeploy_net` Docker network.
 
-### Commando voor 15+ gebruikers (Aanbevolen specs):
+### Command for 15+ users (Recommended specs):
 ```bash
 python scripts/create_proxmox_lxc.py --cores 4 --memory 8192 --storage-size 40 --storage-name local-lvm
 ```
 
-### Opties:
-* `--cores <aantal>`: Aantal CPU cores (standaard: `4`).
-* `--memory <MB>`: Werkgeheugen in MB (standaard: `8192` voor 8GB).
-* `--storage-size <GB>`: Grootte van de SSD (standaard: `40`).
-* `--storage-name <naam>`: Proxmox storage pool (standaard: `local-lvm`).
-* `--node <naam>`: Proxmox node naam (standaard: `pve`).
-* `--password <wachtwoord>`: Root-wachtwoord voor de container.
+### Options:
+* `--cores <count>`: Number of CPU cores (default: `4`).
+* `--memory <MB>`: RAM in MB (default: `8192` for 8GB).
+* `--storage-size <GB>`: Size of the SSD in GB (default: `40`).
+* `--storage-name <name>`: Proxmox storage pool (default: `local-lvm`).
+* `--node <name>`: Proxmox node name (default: `pve`).
+* `--password <password>`: Root password for the container.
 
-## 3. Beheer na installatie
+## 3. Post-Installation Management
 
-Zodra het script klaar is, toont het de container-details (ID, IP-adres, root-wachtwoord).
-Je kunt de container direct gebruiken als deployment-target in NjordDeploy door de host op te geven in de configurator of editor-app!
+Once the script completes, it displays the container details (ID, IP address, root password).
+You can use the container directly as a deployment target in NjordDeploy by specifying the host in the configurator or editor app!

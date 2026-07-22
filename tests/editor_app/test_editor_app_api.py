@@ -47,9 +47,13 @@ class TestEditorAppAPI(unittest.TestCase):
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertEqual(res_data["status"], "success")
         self.assertEqual(res_data["data"]["metadata"]["name"], "Caddy")
-        mock_generate.assert_called_once_with(
-            "https://github.com/caddyserver/caddy", "none"
-        )
+
+        mock_generate.assert_called_once()
+        args, kwargs = mock_generate.call_args
+        repo_url, instructions, groups = args
+        self.assertEqual(repo_url, "https://github.com/caddyserver/caddy")
+        self.assertEqual(instructions, "none")
+        self.assertIsInstance(groups, list)
 
     def test_ai_generate_endpoint_missing_url(self):
         """Tests that missing repo_url returns a bad request error."""

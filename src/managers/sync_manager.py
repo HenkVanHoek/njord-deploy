@@ -66,7 +66,7 @@ class SyncManager:
                     logger.error("No subdirectory found in extracted ZIP archive")
                     return False
 
-                repo_root = subdirs[0]
+                repo_root, *_ = subdirs
 
                 # Ensure clean target cache directory
                 if self.cache_dir.exists():
@@ -90,6 +90,7 @@ class SyncManager:
     def _load_json(self, path: Path) -> dict:
         if not path.exists():
             return {}
+        # noinspection PyBroadException
         try:
             with open(path, "r", encoding="utf-8") as f:
                 return json.load(f)
@@ -133,6 +134,7 @@ class SyncManager:
         for rel_path in files1:
             f1 = dir1 / rel_path
             f2 = dir2 / rel_path
+            # noinspection PyBroadException
             try:
                 # Normalize line endings and strip text files to prevent false positives
                 if rel_path.suffix.lower() in (
@@ -302,9 +304,12 @@ class SyncManager:
             return False
 
     def check_write_access(self) -> bool:
-        """Verifies if the local environment has write access to the components repo."""
+        """Verifies if the local environment has write access to the components'
+        repository.
+        """
         import subprocess  # nosec B404
 
+        # noinspection PyBroadException
         try:
             self._prepare_git_repo()
             git_cwd = str(self.git_repo_dir)
@@ -425,6 +430,7 @@ class SyncManager:
         if not filepath.exists():
             return False
 
+        # noinspection PyBroadException
         try:
             content = filepath.read_text(encoding="utf-8")
             lines = content.splitlines()

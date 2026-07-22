@@ -1,9 +1,13 @@
 # src/managers/deployment_manager.py
 import logging
 import os
+import shutil
 import sys
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+from appdirs import user_data_dir
 
 from utils.resource_utils import resource_path
 
@@ -53,6 +57,7 @@ class DeploymentManager:
         selected_components_data = selected_components_data or []
         global_vars = global_vars or {}
 
+        runner: Any = None
         self.tasks[task_id] = tasks[task_id]
         self.tasks[task_id]["status"] = "running"
 
@@ -78,6 +83,7 @@ class DeploymentManager:
                     f"{', '.join(components_to_restart)}"
                 )
 
+            # noinspection PyBroadException
             try:
                 # Map component IDs to actual docker service names for Ansible tasks
                 mapped_clean = []
@@ -111,9 +117,6 @@ class DeploymentManager:
                     "selected_components_data": selected_components_data,
                     "global_vars": global_vars,
                 }
-                from pathlib import Path
-
-                from appdirs import user_data_dir
 
                 app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
                 key_file = app_data_dir / "id_ed25519_njorddeploy"
@@ -127,16 +130,16 @@ class DeploymentManager:
 
                 processed_events: set[str] = set()
 
-                def handle_single_event(event: Dict[str, Any]) -> bool:
-                    event_uuid = event.get("uuid")
+                def handle_single_event(evt: Dict[str, Any]) -> bool:
+                    event_uuid = evt.get("uuid")
                     if not event_uuid:
                         event_uuid = str(len(processed_events))
                     if event_uuid in processed_events:
                         return True
                     processed_events.add(event_uuid)
 
-                    event_name = event.get("event")
-                    event_data = event.get("event_data", {})
+                    event_name = evt.get("event")
+                    event_data = evt.get("event_data", {})
 
                     if event_name == "runner_on_ok":
                         task_name = event_data.get("task", "Unknown Task")
@@ -214,7 +217,7 @@ class DeploymentManager:
                             self.tasks[task_id]["errors"] = []
 
                         task_name = event_data.get("task", "Unknown Task")
-                        timestamp_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        event_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
                         # Gather detailed reasons for failure
                         details_list = [err_msg]
@@ -261,7 +264,7 @@ class DeploymentManager:
                                 "summary": f"Ansible task failed: {task_name}",
                                 "details": details_str,
                                 "component_id": component_id,
-                                "timestamp": timestamp_str,
+                                "timestamp": event_ts,
                             }
                         )
 
@@ -274,7 +277,6 @@ class DeploymentManager:
 
                 # Execute Ansible and pass the local path and new flags as variables
                 try:
-                    from pathlib import Path
 
                     Path(project_root, "artifacts").mkdir(parents=True, exist_ok=True)
 
@@ -305,6 +307,7 @@ class DeploymentManager:
                         # capture global crashes
                         # like Out of Memory (OOM) or syntax/process compilation issues.
                         if hasattr(runner, "stdout") and runner.stdout:
+                            # noinspection PyBroadException
                             try:
                                 runner.stdout.seek(0)
                                 stdout_content = runner.stdout.read()
@@ -331,40 +334,42 @@ class DeploymentManager:
                                 )
                 finally:
                     # Cleanup sensitive/temporary Ansible files from disk
-                    import shutil
-                    from pathlib import Path
-
                     p_root = Path(project_root)
                     extravars_file = p_root / "env" / "extravars"
                     hosts_file = p_root / "inventory" / "hosts.json"
                     artifacts_dir = p_root / "artifacts"
 
                     if extravars_file.exists():
+                        # noinspection PyBroadException
                         try:
                             extravars_file.unlink()
-                        except Exception as ex:
-                            logger.error(f"Failed to delete extravars: {ex}")
+                        except Exception as ex_vars:
+                            logger.error(f"Failed to delete extravars: {ex_vars}")
 
                     if hosts_file.exists():
+                        # noinspection PyBroadException
                         try:
                             hosts_file.unlink()
-                        except Exception as ex:
-                            logger.error(f"Failed to delete hosts: {ex}")
+                        except Exception as ex_hosts:
+                            logger.error(f"Failed to delete hosts: {ex_hosts}")
 
-                    if "runner" in locals() and runner:
+                    if runner:
                         config = getattr(runner, "config", None)
                         artifact_dir_path = getattr(config, "artifact_dir", None)
-                        if artifact_dir_path:
+                        if isinstance(artifact_dir_path, str):
                             specific_artifact_dir = Path(artifact_dir_path)
                             if specific_artifact_dir.exists():
+                                # noinspection PyBroadException
                                 try:
                                     shutil.rmtree(specific_artifact_dir)
-                                except Exception as ex:
+                                except Exception as ex_rm:
                                     logger.error(
-                                        "Failed to delete specific artifacts: " f"{ex}"
+                                        "Failed to delete specific artifacts: "
+                                        f"{ex_rm}"
                                     )
 
                     if artifacts_dir.exists():
+                        # noinspection PyBroadException
                         try:
                             # Only delete root artifacts directory if it is empty
                             if not any(artifacts_dir.iterdir()):

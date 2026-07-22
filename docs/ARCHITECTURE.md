@@ -206,5 +206,7 @@ Behavior
 
 - **Principle**: The system integrates an AI generation flow that translates repository structures directly into NjordDeploy components.
 - **Backend Architecture**: The AIGenerator class makes direct HTTP POST requests to the Gemini Beta REST API model (gemini-2.5-flash) using structured JSON output.
+- **Context Enrichment**: Before invoking the Gemini API, the backend crawls the public repository to download source files (like `README.md` and `docker-compose.yml`) which are attached to the prompt context.
+- **Image Name Verification**: The backend verifies the generated Docker image name using the public Docker Hub Registry API. Any failures (HTTP 404) are flagged as UI warnings to prevent deployment errors.
 - **Security and API Keys**: The user provides a Gemini API key. If not provided, it falls back to the GEMINI_API_KEY environment variable loaded via python-dotenv.
 - **Developer Guide**: For detailed instructions on the Gemini AI generator, the components repository synchronization, and the local Ollama LLM setup, see the [Developer AI and Sync Guide](DEVELOPER_AI_AND_SYNC_GUIDE.md).

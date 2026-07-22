@@ -675,8 +675,15 @@ def create_app(test_config=None):
             api_key = api_key.strip()
 
         try:
+            # Extract list of existing groups from metadata
+            njorddeploy_meta = component_manager.get_njorddeploy_meta()
+            group_rules = njorddeploy_meta.get("group_rules", {})
+            existing_groups = list(group_rules.keys())
+
             generator = AIGenerator(api_key=api_key)
-            result = generator.generate_component_data(repo_url, custom_instructions)
+            result = generator.generate_component_data(
+                repo_url, custom_instructions, existing_groups
+            )
 
             key_saved = False
             # Save API key only if generation succeeded (proving key is valid)
@@ -741,7 +748,11 @@ def create_app(test_config=None):
                 try:
                     import yaml
 
-                    compose_data = yaml.safe_load(docker_compose)
+                    cleaned_yaml = re.sub(r"\{\{.*?}}", "JINJA_VAR", docker_compose)
+                    cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
+                    cleaned_yaml = re.sub(r"\{#.*?#}", "JINJA_COMMENT", cleaned_yaml)
+
+                    compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:
                         services = compose_data["services"]
                         if isinstance(services, dict) and services:
