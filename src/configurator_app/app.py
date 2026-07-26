@@ -598,6 +598,30 @@ def create_app(test_config=None):
             # leases. Refuse to create a new one and report the stale VMIDs.
             stale_ct_threshold = 10
             existing_lxc = client.get_lxc_list(node)
+            if hostname:
+                duplicate_cts = [
+                    ct
+                    for ct in existing_lxc
+                    if str(ct.get("name", "")).lower() == hostname.lower()
+                ]
+                if duplicate_cts:
+                    dup_vmids = sorted(int(ct.get("vmid", 0)) for ct in duplicate_cts)
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    f"Pre-flight check failed: A container with the "
+                                    f"hostname '{hostname}' already exists on node "
+                                    f"'{node}'. Hostnames must be unique to avoid "
+                                    f"DHCP and DNS conflicts. Please delete the "
+                                    f"existing container or choose a different name. "
+                                    f"Conflicting VMID(s): {dup_vmids}"
+                                )
+                            }
+                        ),
+                        409,
+                    )
+
             stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
             if len(stopped_cts) >= stale_ct_threshold:
                 stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
@@ -700,7 +724,7 @@ def create_app(test_config=None):
                 )
 
             # 4. Create LXC
-            net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
+            net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
             rootfs_config = f"{storage_name}:{storage_size}"
             features_config = "nesting=1"
 
@@ -807,6 +831,7 @@ def create_app(test_config=None):
                 username="root",
                 password=password,
                 allow_auto_add=True,
+                load_system_keys=False,
             )
             connected, conn_msg = ssh.connect()
             if not connected:
@@ -1595,7 +1620,13 @@ def create_app(test_config=None):
 
             from managers.ssh_manager import SSHManager
 
-            ssh = SSHManager(hostname=ip_address, username=username, password=password)
+            ssh = SSHManager(
+                hostname=ip_address,
+                username=username,
+                password=password,
+                allow_auto_add=True,
+                load_system_keys=False,
+            )
             connected = False
             msg = ""
             # Retry connection up to 3 times to handle transient SSH banner timeouts

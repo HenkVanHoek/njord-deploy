@@ -23,7 +23,7 @@
         },
         {
             "default": "http://your-n8n-domain.com",
-            "description": "The external URL that n8n uses to generate webhook endpoints. This must be accessible from outside the container. For example: http://your-n8n-domain.com or https://your-n8n-domain.com",
+            "description": "The external URL that n8n uses to generate webhook endpoints. This must be accessible from outside the container. For example: http://your-n8n-domain.com or https://your-n8n-domain.com. You can also use a local IP and port (e.g. http://192.168.178.91:5678) if you only use webhooks internally on your local network (LAN) and do not need external triggers from public internet services.",
             "id": "N8N_WEBHOOK_URL",
             "label": "n8n Webhook URL",
             "type": "text"

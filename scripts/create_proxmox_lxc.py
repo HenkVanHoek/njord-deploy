@@ -206,11 +206,39 @@ def main():
 
     client = ProxmoxClient(host, user, token_id, token_secret)
 
-    # Pre-flight: guard against DHCP pool exhaustion.
-    # If too many stopped CTs exist the DHCP server may run out of leases,
-    # causing new containers to receive only IPv6 and no IPv4 address.
+    # Sanitize hostname
+    hostname = ""
+    if args.hostname:
+        import re
+
+        hostname = args.hostname.strip()
+        hostname = re.sub(r"[\s_]+", "-", hostname)
+        hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
+        hostname = re.sub(r"-+", "-", hostname)
+        hostname = hostname.strip("-")
+        hostname = hostname[:63]
+
+    # Pre-flight: guard against DHCP pool exhaustion and duplicate hostnames.
     stale_ct_threshold = 10
     existing_lxc = client.get_lxc_list(args.node)
+
+    if hostname:
+        duplicate_cts = [
+            ct
+            for ct in existing_lxc
+            if str(ct.get("name", "")).lower() == hostname.lower()
+        ]
+        if duplicate_cts:
+            dup_vmids = sorted(int(ct.get("vmid", 0)) for ct in duplicate_cts)
+            logger.error(
+                f"Pre-flight check failed: A container with the hostname '{hostname}' "
+                f"already exists on node '{args.node}'. Hostnames must be unique to "
+                f"avoid DHCP and DNS conflicts. Please delete the existing container "
+                f"or choose a different name.\n"
+                f"Conflicting VMID(s): {dup_vmids}"
+            )
+            sys.exit(1)
+
     stopped_cts = [ct for ct in existing_lxc if ct.get("status") == "stopped"]
     if len(stopped_cts) >= stale_ct_threshold:
         stale_vmids = sorted(int(ct.get("vmid", 0)) for ct in stopped_cts)
@@ -241,7 +269,7 @@ def main():
     logger.info(f"Using template: {ostemplate}")
 
     # 4. Define creation parameters
-    net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
+    net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
     rootfs_config = f"{args.storage_name}:{args.storage_size}"
 
     # Features: nesting=1 is required to run Docker inside LXC.
@@ -263,17 +291,8 @@ def main():
         "ssh-public-keys": pubkey,
         "start": 1,
     }
-    if args.hostname:
-        import re
-
-        hostname = args.hostname.strip()
-        hostname = re.sub(r"[\s_]+", "-", hostname)
-        hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
-        hostname = re.sub(r"-+", "-", hostname)
-        hostname = hostname.strip("-")
-        hostname = hostname[:63]
-        if hostname:
-            data["hostname"] = hostname
+    if hostname:
+        data["hostname"] = hostname
 
     logger.info(f"Creating LXC container {vmid} on node '{args.node}'...")
     creation_endpoint = f"nodes/{args.node}/lxc"
@@ -302,6 +321,7 @@ def main():
         username="root",
         password=args.password,
         allow_auto_add=True,
+        load_system_keys=False,
     )
 
     # Simple log callback for SSH commands

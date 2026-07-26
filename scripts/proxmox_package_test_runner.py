@@ -594,7 +594,7 @@ def run_proxmox_package_tests(cli_args) -> int:
             ostemplate = find_suitable_lxc_template(proxmox_client, node)
             logger.info(f"Using template: {ostemplate}")
 
-            net_config = "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp"
+            net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
             create_data = {
                 "vmid": shared_lxc_vmid,
                 "ostemplate": ostemplate,
@@ -791,7 +791,7 @@ def run_proxmox_package_tests(cli_args) -> int:
                             "ipconfig0": "ip=dhcp",
                             "agent": "enabled=1",
                             "ide2": "local-lvm:cloudinit",
-                            "net0": "virtio,bridge=vmbr0,firewall=1",
+                            "net0": "virtio,bridge=vmbr0,firewall=0",
                         },
                     )
                     logger.info(f"Starting VMID {new_vmid}...")

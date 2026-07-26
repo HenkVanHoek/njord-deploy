@@ -16,6 +16,7 @@ services:
       - "N8N_BASIC_AUTH_PASSWORD={{ N8N_BASIC_AUTH_PASSWORD }}"
       - "WEBHOOK_URL={{ N8N_WEBHOOK_URL }}"
       - "GENERIC_TIMEZONE={{ N8N_TIMEZONE }}"
+      - "N8N_SECURE_COOKIE=false"
     user: "0:0"
     networks:
       - njorddeploy_net

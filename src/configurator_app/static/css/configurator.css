@@ -177,3 +177,10 @@ html[data-theme="futuristic-dark"] .sticky-action-bar,
 html[data-theme="high-contrast-dark"] .sticky-action-bar {
     border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
+
+/* Improve visibility and contrast of form descriptions in dark/futuristic/contrast themes */
+html[data-theme="dark"] .form-text,
+html[data-theme="futuristic-dark"] .form-text,
+html[data-theme="high-contrast-dark"] .form-text {
+    color: rgba(255, 255, 255, 0.6) !important;
+}
