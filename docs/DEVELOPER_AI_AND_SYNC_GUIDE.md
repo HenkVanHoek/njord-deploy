@@ -53,10 +53,35 @@ To use this feature, you must provide a Gemini API Key:
 3. Input the GitHub repository URL (such as "https://github.com/caddyserver/caddy") and add optional custom instructions.
 4. Click "Generate Component".
    * **Context Enrichment:** The backend automatically attempts to fetch public files (e.g. `README.md` and `docker-compose.yml`/`docker-compose.yaml`) from the GitHub repository to include as rich context in the API request.
-   * **Docker Hub Verification:** The generator queries the public Docker Hub Registry API to verify that the generated image name exists. If the check fails (returns 404), a validation warning is returned.
+   * **Docker Hub & GHCR Verification:** The generator queries the public
+     Docker Hub Registry API to verify that the generated image name exists.
+     If the check fails, the generator automatically queries the GitHub
+     Container Registry (GHCR) as a fallback. If the image is found on
+     GHCR, it automatically corrects the image name in the metadata and
+     Docker Compose template (prefixing it with `ghcr.io/`), preventing
+     false validation warnings and deployment errors.
+   * **Validation & Self-Correction:** The generator automatically performs
+     structure, variable consistency, and syntax validation checks. If any
+     validation warnings or YAML syntax parsing errors (such as mismatched
+     quotes or bad indentation) are detected, the backend executes an automatic
+     self-correction loop (up to 3 attempts), feeding the warnings and errors
+     back to the Gemini model to automatically refine the configuration.
+   * **Timeout & Error Resilience:** If the Gemini API times out or returns
+     an upstream error (HTTP 502/504), the editor intercepts this and displays
+     a detailed explanation inside the modal, providing direct "Retry" and
+     "Cancel" buttons to easily try again.
 5. The API returns a structured JSON payload containing metadata, user variables, and a Docker Compose template.
 6. Review the preview of the generated files. If there are validation or image name warnings, they are displayed in the warning alert banner.
 7. Click "Accept and Create" to save the bootstrapped files directly to the local project filesystem.
+
+### Prompt Engineering & Rules Management
+
+The core architectural guidelines and constraints that govern how the AI generates component configurations are stored in a separate JSON file: [ai_generator_rules.json](file:///home/hvhoek/PycharmProjects/njord-deploy/config/ai_generator_rules.json).
+
+* **Decoupled Architecture:** Separating these rules from the Python code allows developers to adjust the system prompts, quality standards, and syntax validation rules without touching the application code or restarting the Flask development server.
+* **Dynamic Loading:** The [AIGenerator](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_generator.py) class reads this file at runtime on every invocation. Modifications to the ruleset take effect immediately upon the next generation request.
+* **Auto-Numbering:** Rules in the `rules` array are numbered sequentially at runtime (e.g. `1.`, `2.`, `3.`), making it easy to insert, remove, or rearrange rules in the JSON file without having to manually update rule numbers.
+* **Dynamic Placeholders:** Special rule blocks (like `group_rule`) support runtime templates (e.g., dynamically listing the project's existing component groups like `reverse_proxy` or `databases`) with a fallback definition if no groups exist.
 
 ---
 

@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "17600",
+            "description": "The port on the host to access the Voicebox web interface.",
+            "id": "VOICEBOX_WEB_PORT",
+            "label": "Voicebox Web UI Port",
+            "type": "port"
+        },
+        {
+            "default": "info",
+            "description": "The log verbosity level for the Voicebox application.",
+            "id": "VOICEBOX_LOG_LEVEL",
+            "label": "Voicebox Log Level",
+            "type": "text"
+        }
+    ]
+}

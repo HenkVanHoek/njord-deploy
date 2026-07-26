@@ -1,0 +1,39 @@
+{
+    "variables": [
+        {
+            "default": "5678",
+            "description": "The host port for accessing the n8n web interface.",
+            "id": "N8N_WEB_PORT",
+            "label": "n8n Web UI Port",
+            "type": "port"
+        },
+        {
+            "default": "njorduser",
+            "description": "Username for n8n basic authentication.",
+            "id": "N8N_BASIC_AUTH_USER",
+            "label": "n8n Basic Auth User",
+            "type": "text"
+        },
+        {
+            "default": "CHANGEMEPASSWORD123",
+            "description": "Password for n8n basic authentication. CHANGE THIS IMMEDIATELY!",
+            "id": "N8N_BASIC_AUTH_PASSWORD",
+            "label": "n8n Basic Auth Password",
+            "type": "password"
+        },
+        {
+            "default": "http://your-n8n-domain.com",
+            "description": "The external URL that n8n uses to generate webhook endpoints. This must be accessible from outside the container. For example: http://your-n8n-domain.com or https://your-n8n-domain.com",
+            "id": "N8N_WEBHOOK_URL",
+            "label": "n8n Webhook URL",
+            "type": "text"
+        },
+        {
+            "default": "UTC",
+            "description": "Set the timezone for n8n. Example: Europe/Berlin or America/New_York.",
+            "id": "N8N_TIMEZONE",
+            "label": "n8n Timezone",
+            "type": "text"
+        }
+    ]
+}

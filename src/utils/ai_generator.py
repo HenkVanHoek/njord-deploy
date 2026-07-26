@@ -61,74 +61,33 @@ class AIGenerator:
             )
 
         # Compile System Prompt and instructions
-        system_prompt = (
-            "You are an expert Docker and NjordDeploy configuration engineer.\n"
-            "Your task is to analyze the target GitHub repository and generate the "
-            "NjordDeploy component files.\n\n"
-            "Constraints:\n"
-            "1. The component must run in Docker and join the external network "
-            'named "njorddeploy_net".\n'
-            "2. Expose external ports using configuration variables. "
-            'For example, use "{{ CADDY_HTTP_PORT }}" for the host port mapping.\n'
-            '3. Use "{{ DATA_ROOT }}" for host-side persistent data paths. '
-            'For example: "{{ DATA_ROOT }}/caddy/data:/data".\n'
-            "4. Do not include a version key in the "
-            "generated Docker Compose template.\n"
-            "5. If the service requires a default configuration file "
-            "(such as a Caddyfile), define it in the config_templates "
-            "property with its relative mount target.\n"
-            "6. For the service container image, always use "
-            '"{{ image_name }}:{{ component_version }}".\n'
-            "7. The container_name property for any service must always start "
-            'with the prefix "njorddeploy-" (e.g., '
-            '"container_name: njorddeploy-service-name").\n'
-            "8. The docker_compose property must be a valid, multi-line "
-            "YAML string formatted with standard indentation and "
-            "newlines (LF).\n"
-            "9. If the repository represents a source project that requires a "
-            "local build (contains a Dockerfile or is not a pre-built public "
-            "registry image), include a build block with a context pointing "
-            'to the repository Git URL (appended with "#main", e.g., '
-            '"context: https://github.com/owner/repo.git#main") and '
-            '"dockerfile: Dockerfile", and set "pull_policy: build".\n'
-            "10. Include the primary docker service name (e.g., the key under "
-            '"services" in the Docker Compose template, such as '
-            '"fluffychat-web") as "docker_service_name" in the metadata.\n'
-            "11. The docker_compose property must start with these exact four "
-            "comment lines at the very beginning of the YAML string:\n"
-            "    # status: beta\n"
-            "    # last_tested_version: <appropriate version, e.g. stable>\n"
-            "    # platform_notes: <brief compatibility notes>\n"
-            "    # breaking_changes: none\n"
-            "12. If the service has a web UI (has_ui is true), you MUST specify the "
-            "`ui_port_variable` in the metadata, which should contain the EXACT ID "
-            "of the port variable defined in the variables list that exposes the web "
-            "UI (e.g., PORTAINER_WEB_PORT).\n"
-            "13. If the service has a web UI (has_ui is true), you MUST specify the "
-            "`protocol` in the metadata as either 'http' or 'https' (defaulting to "
-            "'http' unless the service natively requires/uses HTTPS).\n"
-        )
+        from utils.resource_utils import resource_path
 
-        if existing_groups:
-            groups_str = ", ".join(f"'{g}'" for g in existing_groups)
-            system_prompt += (
-                "14. In the metadata, the `group` property MUST be selected from "
-                f"the following list of existing groups: {groups_str}. "
-                "Do NOT invent new group names or introduce capitalization changes.\n"
-            )
-        else:
-            system_prompt += (
-                "14. In the metadata, the `group` property should represent the "
-                "category of the component.\n"
-            )
+        rules_path = resource_path("config/ai_generator_rules.json")
+        try:
+            with open(rules_path, "r", encoding="utf-8") as f:
+                rules_data = json.load(f)
+        except Exception as e:
+            logger.error(f"Failed to load AI generator rules from {rules_path}: {e}")
+            raise RuntimeError(f"Failed to load AI generator rules: {e}") from e
 
-        system_prompt += (
-            "15. For any variable object in the `variables` list, the `type` "
-            "property MUST be one of: 'port' (for host port mappings), "
-            "'password' (for secrets, passwords, or keys), or 'text' (for other "
-            "text inputs like directories, PUID, PGID, or strings). "
-            "Do NOT use 'number' or 'string' as the type.\n"
-        )
+        system_instruction = rules_data.get("system_instruction", "")
+        rules_list = rules_data.get("rules", [])
+
+        system_prompt = f"{system_instruction}\n\nConstraints:\n"
+        for i, rule in enumerate(rules_list):
+            rule_num = i + 1
+            if isinstance(rule, dict) and rule.get("type") == "group_rule":
+                if existing_groups:
+                    groups_str = ", ".join(f"'{g}'" for g in existing_groups)
+                    resolved_rule = rule.get("template", "").format(
+                        groups_str=groups_str
+                    )
+                else:
+                    resolved_rule = rule.get("fallback", "")
+                system_prompt += f"{rule_num}. {resolved_rule}\n"
+            else:
+                system_prompt += f"{rule_num}. {rule}\n"
 
         user_prompt = (
             f"Analyze the repository: {owner}/{repo_name} (URL: {repo_url}).\n"
@@ -189,6 +148,7 @@ class AIGenerator:
                             },
                         },
                         "docker_service_name": {"type": "STRING"},
+                        "component_version": {"type": "STRING"},
                     },
                     "required": [
                         "name",
@@ -198,6 +158,7 @@ class AIGenerator:
                         "has_ui",
                         "has_configuration",
                         "docker_service_name",
+                        "component_version",
                     ],
                 },
                 "docker_compose": {"type": "STRING"},
@@ -230,87 +191,170 @@ class AIGenerator:
             "required": ["metadata", "docker_compose", "variables"],
         }
 
-        # Build payload for the API
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {
-                "responseMimeType": "application/json",
-                "responseSchema": response_schema,
-            },
-        }
+        # Define conversation history for multi-turn correction loop
+        contents = [{"role": "user", "parts": [{"text": prompt}]}]
+        max_attempts = 3
+        attempt = 0
 
         url = (
             "https://generativelanguage.googleapis.com/v1beta/models/"
             f"gemini-2.5-flash:generateContent?key={api_key}"
         )
 
-        try:
-            response = requests.post(url, json=payload, timeout=60)
-            response.raise_for_status()
-            result_json = response.json()
+        while True:
+            # Build payload for the API
+            payload = {
+                "contents": contents,
+                "generationConfig": {
+                    "responseMimeType": "application/json",
+                    "responseSchema": response_schema,
+                },
+            }
 
-            # Retrieve generated content from the response structure
-            candidates = result_json.get("candidates", [])
-            if not candidates:
-                raise ValueError("No candidates returned from Gemini API.")
+            try:
+                response = requests.post(url, json=payload, timeout=60)
+                response.raise_for_status()
+                result_json = response.json()
 
-            # Apply Unpacking-First Mandate from rules
-            candidate, *_ = candidates
-            content = candidate.get("content", {})
-            parts = content.get("parts", [])
-            if not parts:
-                raise ValueError("No parts found in the response content.")
+                # Retrieve generated content from the response structure
+                candidates = result_json.get("candidates", [])
+                if not candidates:
+                    raise ValueError("No candidates returned from Gemini API.")
 
-            part, *_ = parts
-            text = part.get("text", "")
+                # Apply Unpacking-First Mandate from rules
+                candidate, *_ = candidates
+                content = candidate.get("content", {})
+                parts = content.get("parts", [])
+                if not parts:
+                    raise ValueError("No parts found in the response content.")
 
-            # Parse and validate the returned JSON
-            data = json.loads(text)
+                part, *_ = parts
+                text = part.get("text", "")
 
-            # Convert config_templates array of {name, content} to a dictionary
-            raw_configs = data.get("config_templates", [])
-            configs_dict = {}
-            if isinstance(raw_configs, list):
-                for item in raw_configs:
-                    if isinstance(item, dict) and "name" in item and "content" in item:
-                        configs_dict[item["name"]] = item["content"]
-            else:
-                configs_dict = raw_configs
-            data["config_templates"] = configs_dict
+                # Parse and validate the returned JSON
+                data = json.loads(text)
 
-            data["id"] = component_id
-            data["security_warnings"] = self._run_security_checks(data)
-            return data
-
-        except requests.exceptions.RequestException as e:
-            logger.error("Gemini API request failed")
-            if e.response is not None:
-                status_code = e.response.status_code
-                if status_code == 429:
-                    raise RuntimeError(
-                        "Gemini API quota exceeded or rate limit reached. "
-                        "Please wait a minute before trying again."
-                    )
-                elif status_code == 503:
-                    raise RuntimeError(
-                        "Gemini API service is temporarily unavailable or "
-                        "overloaded. Please try again in a few moments."
-                    )
-                elif status_code == 400:
-                    raise RuntimeError(
-                        "Gemini API rejected the request as invalid "
-                        "(400 Bad Request)."
-                    )
+                # Convert config_templates array of {name, content} to a dictionary
+                raw_configs = data.get("config_templates", [])
+                configs_dict = {}
+                if isinstance(raw_configs, list):
+                    for item in raw_configs:
+                        if (
+                            isinstance(item, dict)
+                            and "name" in item
+                            and "content" in item
+                        ):
+                            configs_dict[item["name"]] = item["content"]
                 else:
-                    raise RuntimeError(
-                        f"Gemini API returned an HTTP error status: {status_code}"
+                    configs_dict = raw_configs
+                data["config_templates"] = configs_dict
+
+                data["id"] = component_id
+
+                # Run security and validation checks
+                warnings = self._run_security_checks(data)
+
+                # Filter to only fixable structure/variable/syntax warnings
+                fixable_warnings = [
+                    w for w in warnings if "was not found on Docker Hub" not in w
+                ]
+
+                # If no fixable warnings, or we reached max correction attempts
+                if not fixable_warnings or attempt >= max_attempts:
+                    data["security_warnings"] = warnings
+                    return data
+
+                attempt += 1
+                logger.info(
+                    f"AI validation failed with warnings: {fixable_warnings}. "
+                    f"Attempting self-correction (attempt "
+                    f"{attempt}/{max_attempts})..."
+                )
+
+                # Formulate correction prompt
+                correction_prompt = (
+                    "The generated component configuration had the following "
+                    "validation/security warnings:\n"
+                )
+                for w in fixable_warnings:
+                    correction_prompt += f"- {w}\n"
+                correction_prompt += (
+                    "\nPlease correct the JSON configuration to resolve "
+                    "these warnings. Ensure that:\n"
+                    "1. Every custom Jinja variable referenced in "
+                    "`docker_compose` is defined in the `variables` list, "
+                    "and all defined variables are referenced in "
+                    "`docker_compose`.\n"
+                    "2. If `has_ui` is true, the `ui_port_variable` in "
+                    "the metadata matches the exact port variable ID defined "
+                    "in the variables list and referenced in "
+                    "`docker_compose`.\n"
+                    "3. Any variables defined in the variables list but "
+                    "not used in the docker-compose template are either "
+                    "removed from the variables list or added to the template "
+                    "as needed.\n"
+                    "4. If there are syntax or parsing errors in the Docker "
+                    "Compose YAML template (such as nested double quotes, "
+                    "mismatched quotes, or bad indentation), correct the "
+                    "formatting to ensure it is valid, parseable YAML.\n"
+                    "Return the complete corrected JSON configuration "
+                    "according to the original schema."
+                )
+
+                # Append model's response and correction prompt to history
+                contents.append({"role": "model", "parts": [{"text": text}]})
+                contents.append(
+                    {"role": "user", "parts": [{"text": correction_prompt}]}
+                )
+
+            except requests.exceptions.RequestException as e:
+                logger.error("Gemini API request failed")
+                if e.response is not None:
+                    status_code = e.response.status_code
+                    if status_code == 429:
+                        raise RuntimeError(
+                            "Gemini API quota exceeded or rate limit reached. "
+                            "Please wait a minute before trying again."
+                        )
+                    elif status_code == 503:
+                        raise RuntimeError(
+                            "Gemini API service is temporarily unavailable or "
+                            "overloaded. Please try again in a few moments."
+                        )
+                    elif status_code == 400:
+                        raise RuntimeError(
+                            "Gemini API rejected the request as invalid "
+                            "(400 Bad Request)."
+                        )
+                    else:
+                        raise RuntimeError(
+                            "Gemini API returned an HTTP error status: "
+                            f"{status_code}"
+                        )
+                raise RuntimeError(
+                    f"Failed to communicate with Gemini API: {type(e).__name__}"
+                )
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                logger.error(f"Failed to parse Gemini API response: {e}")
+                if attempt < max_attempts:
+                    attempt += 1
+                    logger.info(
+                        "Failed to parse response as JSON. Attempting "
+                        f"self-correction (attempt {attempt}/{max_attempts})..."
                     )
-            raise RuntimeError(
-                f"Failed to communicate with Gemini API: {type(e).__name__}"
-            )
-        except (json.JSONDecodeError, KeyError, ValueError) as e:
-            logger.error(f"Failed to parse Gemini API response: {e}")
-            raise RuntimeError(f"Received malformed response from Gemini API: {e}")
+                    correction_prompt = (
+                        "The previous response failed to parse as JSON with "
+                        f"error: {e}. Please return the complete, valid JSON "
+                        "adhering strictly to the original schema."
+                    )
+                    text_val = text if "text" in locals() else ""
+                    contents.append({"role": "model", "parts": [{"text": text_val}]})
+                    contents.append(
+                        {"role": "user", "parts": [{"text": correction_prompt}]}
+                    )
+                    continue
+
+                raise RuntimeError(f"Received malformed response from Gemini API: {e}")
 
     def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
         """Tries to fetch a file from the repository's main or master branch."""
@@ -408,7 +452,12 @@ class AIGenerator:
             try:
                 import yaml
 
-                cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", docker_compose_str)
+                cleaned_yaml = re.sub(
+                    r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
+                    '"JINJA_VAR"',
+                    docker_compose_str,
+                )
+                cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
                 cleaned_yaml = re.sub(r"\{%.*?%\}", "JINJA_BLOCK", cleaned_yaml)
                 cleaned_yaml = re.sub(r"\{#.*?#\}", "JINJA_COMMENT", cleaned_yaml)
 
@@ -431,6 +480,15 @@ class AIGenerator:
                         if service_conf.get("network_mode") == "host":
                             warnings.append(
                                 f"Service '{service_name}' uses host " "network mode."
+                            )
+
+                        # Check if pull_policy is nested inside build block
+                        build_conf = service_conf.get("build")
+                        if isinstance(build_conf, dict) and "pull_policy" in build_conf:
+                            warnings.append(
+                                f"Service '{service_name}' has 'pull_policy' "
+                                "nested inside the 'build' block. "
+                                "It must be placed at the service level instead."
                             )
 
                         # Check volume mounts
@@ -498,16 +556,98 @@ class AIGenerator:
                             f"'{var_default}'"
                         )
 
-        # 3. Check if the docker image exists on Docker Hub
+        # 3. Check variable consistency between compose and variables list
+        docker_compose_str = data.get("docker_compose", "")
+        metadata = data.get("metadata", {})
+        if isinstance(docker_compose_str, str) and docker_compose_str:
+            jinja_vars = set(
+                re.findall(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}", docker_compose_str)
+            )
+            system_vars = {
+                "DATA_ROOT",
+                "DOMAIN",
+                "image_name",
+                "component_version",
+                "has_traefik_support",
+                "traefik_labels_yaml",
+                "traefik_internal_port",
+                "CONFIG_BASE_PATH",
+            }
+            custom_vars_in_compose = jinja_vars - system_vars
+            defined_var_ids = set()
+            if isinstance(variables, list):
+                for var in variables:
+                    if isinstance(var, dict) and var.get("id"):
+                        defined_var_ids.add(var.get("id"))
+
+            # Report missing definitions
+            for var in custom_vars_in_compose - defined_var_ids:
+                warnings.append(
+                    f"Variable '{var}' is used in docker-compose template "
+                    "but not defined in the variables list."
+                )
+
+            # Report unused definitions
+            for var in defined_var_ids - jinja_vars:
+                warnings.append(
+                    f"Variable '{var}' is defined in variables list "
+                    "but not used in the docker-compose template."
+                )
+
+            # Check UI port variable consistency
+            if isinstance(metadata, dict) and metadata.get("has_ui"):
+                ui_port_var = metadata.get("ui_port_variable")
+                if not ui_port_var:
+                    warnings.append(
+                        "Component has UI but 'ui_port_variable' is "
+                        "missing in metadata."
+                    )
+                elif ui_port_var not in defined_var_ids:
+                    warnings.append(
+                        f"The UI port variable '{ui_port_var}' specified in "
+                        "metadata is not defined in the variables list."
+                    )
+                elif ui_port_var not in jinja_vars:
+                    warnings.append(
+                        f"The UI port variable '{ui_port_var}' is defined "
+                        "but not referenced in the docker-compose template."
+                    )
+
+        # 4. Check if the docker image exists on Docker Hub
         metadata = data.get("metadata", {})
         if isinstance(metadata, dict):
             image_name = metadata.get("image_name")
             if isinstance(image_name, str) and image_name:
                 if not self._check_docker_image_exists(image_name):
-                    warnings.append(
-                        f"Docker image '{image_name}' was not found on "
-                        "Docker Hub. Please check for spelling mistakes "
-                        "or ensure the repository is public."
-                    )
+                    # Check if it exists on ghcr.io (e.g., ghcr.io/owner/repo)
+                    is_corrected = False
+                    has_registry = any(r in image_name for r in [".", "localhost"])
+                    if "/" in image_name and not has_registry:
+                        ghcr_image = f"ghcr.io/{image_name}"
+                        if self._check_docker_image_exists(ghcr_image):
+                            metadata["image_name"] = ghcr_image
+                            docker_compose_str = data.get("docker_compose", "")
+                            if (
+                                isinstance(docker_compose_str, str)
+                                and docker_compose_str
+                            ):
+                                pattern = (
+                                    r"(\bimage\s*:\s*[\"']?)"
+                                    + re.escape(image_name)
+                                    + r"(\b)"
+                                )
+                                data["docker_compose"] = re.sub(
+                                    pattern,
+                                    lambda m: m.group(1) + ghcr_image + m.group(2),
+                                    docker_compose_str,
+                                )
+                            is_corrected = True
+
+                    if not is_corrected:
+                        warnings.append(
+                            f"Docker image '{image_name}' was not found on "
+                            "Docker Hub. Please check for spelling mistakes "
+                            "or ensure the repository is public."
+                        )
 
         return warnings

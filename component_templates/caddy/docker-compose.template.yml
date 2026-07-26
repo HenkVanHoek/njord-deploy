@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'caddy-filebrowser-stack' on Proxmox LXC."
+# last_tested_version: "v2.11.4"
+# platform_notes: "Tested successfully on Proxmox LXC."
 # breaking_changes: "None"
 services:
   caddy:

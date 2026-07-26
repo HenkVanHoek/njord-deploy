@@ -355,6 +355,10 @@
                     </div>
                     <div class="mt-2 d-none" id="proxmox_lxc_input_container">
                         <div class="row g-2">
+                            <div class="col-sm-12">
+                                <label for="lxc_hostname" class="form-label small mb-1">Container Name (Hostname)</label>
+                                <input type="text" class="form-control form-control-sm" id="lxc_hostname" placeholder="e.g. njord-server">
+                            </div>
                             <div class="col-sm-6">
                                 <label for="lxc_cores" class="form-label small mb-1">CPU Cores</label>
                                 <input type="number" class="form-control form-control-sm" id="lxc_cores" value="2" min="1">
@@ -372,6 +376,24 @@
                                 <input type="text" class="form-control form-control-sm" id="lxc_storage_name" value="local-lvm">
                             </div>
                         </div>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_existing" value="proxmox_existing">
+                        <label class="form-check-label fw-bold" for="method_proxmox_existing">
+                            <strong>Select Existing Proxmox Target</strong>
+                            <span class="d-block small text-muted">Deploy to an existing VM or LXC container on your Proxmox server.</span>
+                        </label>
+                    </div>
+                    <div class="mt-2 d-none" id="proxmox_existing_container">
+                        <div class="mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-proxmox-targets-btn">
+                                <i class="fa-solid fa-sync me-1"></i> Load/Refresh Targets
+                            </button>
+                        </div>
+                        <div class="form-text text-danger d-none mb-2" id="proxmox_targets_error"></div>
+                        <select class="form-select form-select-sm" id="proxmox_target_select" aria-label="Select Target">
+                            <option value="">-- Click refresh/load to fetch targets --</option>
+                        </select>
                     </div>
                 </div>
 
@@ -2393,11 +2415,18 @@
         const lxcRadio = document.getElementById('method_proxmox_lxc');
         const lxcContainer = document.getElementById('proxmox_lxc_input_container');
 
+        const existingRadio = document.getElementById('method_proxmox_existing');
+        const existingContainer = document.getElementById('proxmox_existing_container');
+        const refreshBtn = document.getElementById('refresh-proxmox-targets-btn');
+        const targetSelect = /** @type {HTMLSelectElement} */ (document.getElementById('proxmox_target_select'));
+        const targetsError = document.getElementById('proxmox_targets_error');
+
         const updateInputs = () => {
             if (autoRadio && (/** @type {HTMLInputElement} */ (autoRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
             if (manualRadio && (/** @type {HTMLInputElement} */ (manualRadio)).checked) {
@@ -2405,11 +2434,13 @@
                 manualInput.focus();
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
             if (directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked) {
                 manualInput.disabled = true;
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
                 if (directIpContainer) {
                     directIpContainer.classList.remove('d-none');
                     if (directIpInput) directIpInput.focus();
@@ -2419,8 +2450,16 @@
             if (lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+            }
+            if (existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked) {
+                manualInput.disabled = true;
+                if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.remove('d-none');
+                if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
             }
         };
 
@@ -2428,9 +2467,117 @@
         if (manualRadio) manualRadio.addEventListener('change', updateInputs);
         if (directRadio) directRadio.addEventListener('change', updateInputs);
         if (lxcRadio) lxcRadio.addEventListener('change', updateInputs);
+        if (existingRadio) existingRadio.addEventListener('change', updateInputs);
+
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                setButtonState(refreshBtn, true, {loadingText: 'Loading...'});
+                if (targetsError) targetsError.classList.add('d-none');
+                try {
+                    const res = await fetchAPI('/api/proxmox/list-targets', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'}
+                    });
+                    if (targetSelect) {
+                        targetSelect.innerHTML = '<option value="">-- Choose an existing VM or LXC container --</option>';
+                        res.targets.forEach(t => {
+                            const option = document.createElement('option');
+                            option.value = JSON.stringify({
+                                node: t.node,
+                                vmid: t.vmid,
+                                type: t.type,
+                                status: t.status,
+                                name: t.name
+                            });
+                            const statusEmoji = t.status === 'running' ? '🟢' : '🔴';
+                            option.textContent = `[${t.type.toUpperCase()}] ${t.name} (VMID ${t.vmid}) - ${statusEmoji} ${t.status}`;
+                            targetSelect.appendChild(option);
+                        });
+                    }
+                } catch (err) {
+                    console.error('Failed to load targets:', err);
+                    if (targetsError) {
+                        targetsError.textContent = `Failed to load targets: ${err.message}`;
+                        targetsError.classList.remove('d-none');
+                    }
+                } finally {
+                    setButtonState(refreshBtn, false, {text: 'Load/Refresh Targets'});
+                }
+            });
+        }
 
         const performScan = async () => {
             const isLxc = lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked;
+            const isExisting = existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked;
+
+            if (isExisting) {
+                const selectedVal = targetSelect ? targetSelect.value : '';
+                if (!selectedVal) {
+                    updateWizardFooter('<i class="fa-solid fa-xmark me-2"></i>Please select a Proxmox target first.', 'danger');
+                    return;
+                }
+                const target = JSON.parse(selectedVal);
+
+                setButtonState(scanBtn, true, {loadingText: 'Connecting...'});
+                updateWizardFooter(`Querying Proxmox target ${target.name} (VMID ${target.vmid})...`, 'primary');
+
+                try {
+                    let ipRes;
+                    if (target.status === 'stopped') {
+                        updateWizardFooter(`Starting ${target.type.toUpperCase()} target (VMID ${target.vmid}) and waiting for IP address...`, 'primary');
+                        ipRes = await fetchAPI('/api/proxmox/start-target', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                node: target.node,
+                                vmid: target.vmid,
+                                type: target.type
+                            })
+                        });
+                    } else {
+                        ipRes = await fetchAPI('/api/proxmox/get-target-ip', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                node: target.node,
+                                vmid: target.vmid,
+                                type: target.type
+                            })
+                        });
+                    }
+
+                    if (!ipRes.ip) {
+                        throw new Error('Failed to retrieve target IP address. Make sure the container/VM is running and guest agent/network interface is active.');
+                    }
+
+                    // Cache target credentials
+                    managedDeviceCache[ipRes.ip] = {
+                        ip: ipRes.ip,
+                        hostname: target.name,
+                        username: target.type === 'lxc' ? 'root' : '',
+                        password: ''
+                    };
+
+                    const virtualScanData = {
+                        hosts: [{
+                            ip: ipRes.ip,
+                            hostname: target.name
+                        }],
+                        messages: [],
+                        permissions_error: false
+                    };
+
+                    lastScanData = virtualScanData;
+                    renderStep2_ConfigureDevices(virtualScanData);
+                } catch (error) {
+                    console.error('An error occurred during Proxmox target configuration:', error);
+                    updateWizardFooter(`<i class="fa-solid fa-xmark me-2"></i>An error occurred: ${escapeHTML(error.message)}`, 'danger');
+                } finally {
+                    setButtonState(scanBtn, false);
+                    scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
+                }
+                return;
+            }
 
             if (isLxc) {
                 setButtonState(scanBtn, true, {loadingText: 'Provisioning LXC...'});
@@ -2440,6 +2587,7 @@
                 const memVal = parseInt(document.getElementById('lxc_memory').value) || 4096;
                 const sizeVal = document.getElementById('lxc_storage_size').value || '20';
                 const storageNameVal = document.getElementById('lxc_storage_name').value || 'local-lvm';
+                const hostnameVal = document.getElementById('lxc_hostname').value.trim();
 
                 try {
                     const lxcResult = await fetchAPI('/api/proxmox/create-lxc', {
@@ -2449,14 +2597,15 @@
                             cores: coresVal,
                             memory: memVal,
                             storage_size: sizeVal,
-                            storage_name: storageNameVal
+                            storage_name: storageNameVal,
+                            hostname: hostnameVal
                         })
                     });
 
                     // Cache root user credentials so Step 2 automatically configures them
                     managedDeviceCache[lxcResult.ip] = {
                         ip: lxcResult.ip,
-                        hostname: `LXC-${lxcResult.vmid}`,
+                        hostname: lxcResult.hostname || `LXC-${lxcResult.vmid}`,
                         username: 'root',
                         password: lxcResult.password
                     };
@@ -2464,7 +2613,7 @@
                     const virtualScanData = {
                         hosts: [{
                             ip: lxcResult.ip,
-                            hostname: `LXC-${lxcResult.vmid}`
+                            hostname: lxcResult.hostname || `LXC-${lxcResult.vmid}`
                         }],
                         messages: [],
                         permissions_error: false

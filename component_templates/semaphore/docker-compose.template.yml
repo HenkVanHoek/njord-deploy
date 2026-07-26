@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "v2.18.28"
+# platform_notes: "Tested successfully on Proxmox LXC."
+# breaking_changes: none
+services:
+  semaphore-ui:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-semaphore-ui
+    ports:
+      - "{{ SEMAPHORE_PORT }}:3000"
+    environment:
+      - "SEMAPHORE_DB_DIALECT=sqlite"
+      - "SEMAPHORE_DB_FILE=/etc/semaphore/semaphore.sqlite"
+      - "SEMAPHORE_ADMIN={{ SEMAPHORE_ADMIN_USERNAME }}"
+      - "SEMAPHORE_ADMIN_PASSWORD={{ SEMAPHORE_ADMIN_PASSWORD }}"
+      - "SEMAPHORE_ADMIN_NAME={{ SEMAPHORE_ADMIN_NAME }}"
+      - "SEMAPHORE_ADMIN_EMAIL={{ SEMAPHORE_ADMIN_EMAIL }}"
+    volumes:
+      - "{{ DATA_ROOT }}/semaphore-ui/data:/etc/semaphore"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

@@ -523,7 +523,7 @@
                     <form id="ai-generator-form">
                         <div class="mb-3">
                             <label for="ai-repo-url" class="form-label">GitHub Repository URL</label>
-                            <input type="url" class="form-control" id="ai-repo-url" required placeholder="https://github.com/caddyserver/caddy">
+                            <input type="url" class="form-control" id="ai-repo-url" required autocomplete="off" placeholder="https://github.com/caddyserver/caddy">
                             <div class="form-text">The official or community GitHub repository URL of the application.</div>
                         </div>
                         <div class="mb-3">
@@ -532,7 +532,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="ai-api-key" class="form-label">Gemini API Key</label>
-                            <input type="password" class="form-control" id="ai-api-key"
+                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password"
                                    placeholder="{% if has_gemini_key %}Gemini API key is configured (leave blank to keep){% else %}Enter Gemini API key{% endif %}">
                             <div class="form-text">
                                 {% if has_gemini_key %}
@@ -562,6 +562,17 @@
                     </div>
                     <h5 class="text-dark">Generating Component...</h5>
                     <p class="text-muted">Analyzing GitHub repository and generating configuration files. This may take up to a minute.</p>
+                </div>
+
+                <!-- Step 2.5: Error State -->
+                <div id="ai-error-step" class="d-none text-center py-5">
+                    <i class="bi bi-exclamation-octagon text-danger display-4 mb-3 d-block"></i>
+                    <h5 id="ai-error-title" class="fw-bold mb-2 text-dark">AI Generation Failed</h5>
+                    <p id="ai-error-msg" class="text-muted mb-4 px-3"></p>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button type="button" class="btn btn-primary" id="ai-error-retry-btn">Retry</button>
+                        <button type="button" class="btn btn-secondary" id="ai-error-cancel-btn">Cancel</button>
+                    </div>
                 </div>
 
                 <!-- Step 3: Preview and Review -->

@@ -112,19 +112,24 @@ def verify_service_health(
 
         # List containers running in the compose project
         cmd_docker_ps = (
-            "docker ps --filter "
+            "docker ps -a --filter "
             "label=com.docker.compose.project=njorddeploy "
             "--format '{{.Names}} ({{.Status}})'"
         )
         cmd_exit, output = ssh_mgr.execute_command(
             cmd_docker_ps,
-            append_log,
+            lambda x: None,
             check_exit_code=False,
         )
 
+        is_running = False
         if cmd_exit == 0 and output:
-            results["running"] = True
-            results["details"] = f"Running containers:\n{output}"
+            is_running = any("Up" in line for line in output.splitlines())
+            results["running"] = is_running
+            if is_running:
+                results["details"] = f"Running containers:\n{output}"
+            else:
+                results["details"] = f"Containers found but none are running:\n{output}"
         else:
             results["details"] = f"No running containers found (exit code: {cmd_exit})."
 
@@ -142,6 +147,11 @@ def verify_service_health(
             logs_content = "\n".join(log_lines).lower()
             if "traceback" in logs_content or "fatal" in logs_content:
                 results["logs_error"] = True
+
+            if not is_running:
+                results["details"] += "\nLast 100 container logs:\n" + "\n".join(
+                    log_lines
+                )
 
             # Inspect container config to get the actual version
             cmd_inspect = (

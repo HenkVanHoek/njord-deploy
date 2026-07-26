@@ -122,13 +122,13 @@ def verify_package_health(
 
         # List containers running in the compose project
         cmd_docker_ps = (
-            "docker ps --filter "
+            "docker ps -a --filter "
             "label=com.docker.compose.project=njorddeploy "
             "--format '{{.Names}} ({{.Status}})'"
         )
         cmd_exit, output = ssh_mgr.execute_command(
             cmd_docker_ps,
-            append_log,
+            lambda x: None,
             check_exit_code=False,
         )
 
@@ -153,7 +153,7 @@ def verify_package_health(
             matched_container = None
             for container in running_containers:
                 if svc_name in container:
-                    is_running = True
+                    is_running = "Up" in container
                     container_name, *_ = container.split()
                     matched_container = container_name
                     break
@@ -167,6 +167,17 @@ def verify_package_health(
                 comp_error_message = (
                     f"No running container found matching service '{svc_name}'."
                 )
+                if matched_container:
+                    err_logs: List[str] = []
+                    ssh_mgr.execute_command(
+                        f"docker logs {matched_container} --tail 100",
+                        lambda x: err_logs.append(x),
+                        check_exit_code=False,
+                    )
+                    if err_logs:
+                        comp_error_message += (
+                            "\nLast 100 container logs:\n" + "\n".join(err_logs)
+                        )
                 overall_success = False
             else:
                 # Check docker logs for tracebacks or fatal errors

@@ -3,10 +3,19 @@
         "components_order": [
             "adguard-home",
             "pi-hole",
+            "audiobookshelf",
+            "caddy",
+            "nginx-proxy-manager",
+            "traefik",
             "conduit",
             "lora-service",
             "octoprint",
             "prosody",
+            "docker-jitsi-meet",
+            "filebrowser",
+            "njorddeploy-service-maintenance",
+            "portainer",
+            "uptime-kuma",
             "frigate",
             "homeassistant",
             "scrypted",
@@ -22,16 +31,14 @@
             "radarr",
             "sabnzbd",
             "sonarr",
+            "microbin",
             "nextcloud",
             "nextcloud-db",
             "nextcloud-db-dumper",
             "nextcloud-redis",
             "notify-push",
-            "nginx-proxy-manager",
-            "traefik",
-            "njorddeploy-service-maintenance",
-            "portainer",
-            "uptime-kuma",
+            "pish-fluffychat-web",
+            "stirling-pdf",
             "unbound",
             "vaultwarden",
             "web-notepad"
@@ -552,6 +559,20 @@
             "traefik_internal_port": null,
             "ui_port_variable": "MICROBIN_PORT"
         },
+        "n8n": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations.",
+            "docker_service_name": "n8n",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": true,
+            "image_name": "docker.n8n.io/n8nio/n8n",
+            "name": "n8n",
+            "protocol": "http",
+            "ui_port_variable": "N8N_WEB_PORT"
+        },
         "nextcloud": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1021,6 +1042,35 @@
             ],
             "traefik_internal_port": null
         },
+        "semaphore": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Modern UI for Ansible, Terraform/OpenTofu/Terragrunt, PowerShell and other DevOps tools.",
+            "docker_service_name": "semaphore-ui",
+            "group": "System Tools",
+            "has_configuration": true,
+            "has_ui": true,
+            "image_name": "semaphoreui/semaphore",
+            "name": "Semaphore UI",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "500m",
+                "ram": "512MB",
+                "recommended_cores": 1,
+                "recommended_ram_mb": 512,
+                "recommended_storage_gb": 1,
+                "storage_type": "ssd"
+            },
+            "tags": [
+                "ansible",
+                "terraform",
+                "devops",
+                "automation",
+                "ui"
+            ],
+            "ui_port_variable": "SEMAPHORE_PORT"
+        },
         "sonarr": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1198,6 +1248,35 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null
+        },
+        "voicebox": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine.",
+            "docker_service_name": "voicebox",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/jamiepine/voicebox",
+            "name": "Voicebox",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "4",
+                "ram": "8G",
+                "recommended_cores": 4,
+                "recommended_ram_mb": 8192,
+                "recommended_storage_gb": 20,
+                "storage_type": "ssd"
+            },
+            "tags": [
+                "AI",
+                "Voice",
+                "Speech-to-Text",
+                "Text-to-Speech",
+                "Voice Cloning"
+            ],
+            "ui_port_variable": "VOICEBOX_WEB_PORT"
         },
         "web-notepad": {
             "component_version": "latest",

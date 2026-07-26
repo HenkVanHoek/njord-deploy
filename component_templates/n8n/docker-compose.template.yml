@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "2.31.6"
+# platform_notes: "Tested successfully on Proxmox LXC."
+# breaking_changes: none
+services:
+  n8n:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-n8n
+    ports:
+      - "{{ N8N_WEB_PORT }}:5678"
+    volumes:
+      - "{{ DATA_ROOT }}/n8n:/home/node/.n8n"
+    environment:
+      - "N8N_BASIC_AUTH_ACTIVE=true"
+      - "N8N_BASIC_AUTH_USER={{ N8N_BASIC_AUTH_USER }}"
+      - "N8N_BASIC_AUTH_PASSWORD={{ N8N_BASIC_AUTH_PASSWORD }}"
+      - "WEBHOOK_URL={{ N8N_WEBHOOK_URL }}"
+      - "GENERIC_TIMEZONE={{ N8N_TIMEZONE }}"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+networks:
+  njorddeploy_net:
+    external: true

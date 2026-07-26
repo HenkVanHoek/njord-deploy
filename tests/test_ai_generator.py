@@ -109,6 +109,10 @@ class TestAIGenerator(unittest.TestCase):
                 "    volumes:\n"
                 "      - /var/run/docker.sock:/var/run/docker.sock\n"
                 "      - /etc:/etc\n"
+                "    environment:\n"
+                "      - DB_PASS={{ MYSQL_PASSWORD }}\n"
+                "      - TOKEN={{ ADMIN_TOKEN }}\n"
+                "      - NORMAL={{ NORMAL_VAR }}\n"
             ),
             "variables": [
                 {
@@ -268,3 +272,124 @@ class TestAIGenerator(unittest.TestCase):
             "property MUST be one of: 'port' (for host port mappings)"
         )
         self.assertIn(expected_var_rule, prompt)
+
+    @patch("requests.get")
+    def test_registry_replacement_ignores_build_context(self, mock_get):
+        """Verify image registry replacement doesn't alter build context."""
+
+        def mock_exists(url, **kwargs):
+            mock_res = MagicMock()
+            if "ghcr.io" in url:
+                mock_res.status_code = 200
+            else:
+                mock_res.status_code = 404
+            return mock_res
+
+        mock_get.side_effect = mock_exists
+
+        test_data = {
+            "metadata": {"image_name": "jamiepine/voicebox"},
+            "docker_compose": (
+                "services:\n"
+                "  voicebox:\n"
+                "    build:\n"
+                "      context: https://github.com/jamiepine/voicebox.git#main\n"
+                '    image: "jamiepine/voicebox:latest"\n'
+            ),
+        }
+
+        self.generator._run_security_checks(test_data)
+
+        # The image in docker_compose should be updated
+        self.assertIn(
+            'image: "ghcr.io/jamiepine/voicebox:latest"', test_data["docker_compose"]
+        )
+        # The build context URL should remain completely untouched
+        self.assertIn(
+            "context: https://github.com/jamiepine/voicebox.git#main",
+            test_data["docker_compose"],
+        )
+
+    def test_run_security_checks_detects_variable_mismatches(self):
+        """Verify that _run_security_checks flags mismatched variables."""
+        test_data = {
+            "metadata": {"has_ui": True, "ui_port_variable": "MISMATCHED_PORT"},
+            "docker_compose": (
+                "services:\n"
+                "  my-web:\n"
+                "    ports:\n"
+                '      - "{{ USED_BUT_NOT_DEFINED_PORT }}:80"\n'
+            ),
+            "variables": [
+                {
+                    "id": "DEFINED_BUT_NOT_USED_VAR",
+                    "type": "text",
+                    "default": "value",
+                }
+            ],
+        }
+
+        warnings = self.generator._run_security_checks(test_data)
+
+        self.assertTrue(any("USED_BUT_NOT_DEFINED_PORT" in w for w in warnings))
+        self.assertTrue(any("DEFINED_BUT_NOT_USED_VAR" in w for w in warnings))
+        self.assertTrue(any("MISMATCHED_PORT" in w for w in warnings))
+
+    @patch("requests.post")
+    def test_generate_component_data_self_correction(self, mock_post):
+        """Verify that validation warnings trigger the self-correction loop."""
+        mock_response_1 = MagicMock()
+        mock_response_1.status_code = 200
+        mock_response_1.json.return_value = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": (
+                                    '{"metadata": {"name": "Caddy", "image_name": '
+                                    '"caddy", "description": "web server", '
+                                    '"group": "reverse_proxy", "has_ui": false, '
+                                    '"has_configuration": true}, "docker_compose": '
+                                    '"services:", "variables": [{"id": '
+                                    '"DEFINED_BUT_NOT_USED_VAR", "label": "L", '
+                                    '"type": "text", "default": "D", '
+                                    '"description": "D"}]}'
+                                )
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+
+        mock_response_2 = MagicMock()
+        mock_response_2.status_code = 200
+        mock_response_2.json.return_value = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": (
+                                    '{"metadata": {"name": "Caddy", "image_name": '
+                                    '"caddy", "description": "web server", '
+                                    '"group": "reverse_proxy", "has_ui": false, '
+                                    '"has_configuration": true}, "docker_compose": '
+                                    '"services:", "variables": []}'
+                                )
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+
+        mock_post.side_effect = [mock_response_1, mock_response_2]
+
+        repo_url = "https://github.com/caddyserver/caddy"
+        result = self.generator.generate_component_data(repo_url)
+
+        self.assertEqual(result["id"], "caddy")
+        self.assertEqual(result["variables"], [])
+        self.assertEqual(mock_post.call_count, 2)

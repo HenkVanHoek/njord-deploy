@@ -184,6 +184,12 @@ def main():
         default="PiSelfhostLXC2026!",
         help="Root password for LXC",
     )
+    parser.add_argument(
+        "--hostname",
+        type=str,
+        default="",
+        help="Container name (hostname) in Proxmox",
+    )
 
     args = parser.parse_args()
 
@@ -257,6 +263,17 @@ def main():
         "ssh-public-keys": pubkey,
         "start": 1,
     }
+    if args.hostname:
+        import re
+
+        hostname = args.hostname.strip()
+        hostname = re.sub(r"[\s_]+", "-", hostname)
+        hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
+        hostname = re.sub(r"-+", "-", hostname)
+        hostname = hostname.strip("-")
+        hostname = hostname[:63]
+        if hostname:
+            data["hostname"] = hostname
 
     logger.info(f"Creating LXC container {vmid} on node '{args.node}'...")
     creation_endpoint = f"nodes/{args.node}/lxc"

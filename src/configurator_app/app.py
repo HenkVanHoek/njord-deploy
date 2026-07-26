@@ -561,6 +561,16 @@ def create_app(test_config=None):
         storage_name = str(data.get("storage_name", "local-lvm"))
         node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve")))
         password = str(data.get("password", "PiSelfhostLXC2026!"))
+        hostname = str(data.get("hostname", "")).strip()
+
+        if hostname:
+            import re
+
+            hostname = re.sub(r"[\s_]+", "-", hostname)
+            hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
+            hostname = re.sub(r"-+", "-", hostname)
+            hostname = hostname.strip("-")
+            hostname = hostname[:63]
 
         host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
         user = os.getenv("PROXMOX_USER", "root@pam")
@@ -708,6 +718,8 @@ def create_app(test_config=None):
                 "ssh-public-keys": pubkey,
                 "start": 1,
             }
+            if hostname:
+                create_data["hostname"] = hostname
 
             result = client.post(f"nodes/{node}/lxc", data=create_data)
             upid = result.get("data")
@@ -840,6 +852,7 @@ def create_app(test_config=None):
                         "status": "success",
                         "ip": ip_address,
                         "vmid": vmid,
+                        "hostname": hostname or f"CT{vmid}",
                         "username": "root",
                         "password": password,
                     }
@@ -851,6 +864,207 @@ def create_app(test_config=None):
             logging.error(f"Failed to create Proxmox LXC: {e}", exc_info=True)
             return (
                 jsonify({"error": f"Proxmox LXC creation failed: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/proxmox/list-targets", methods=["POST"])
+    def list_proxmox_targets():
+        from utils.proxmox_client import ProxmoxClient
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+        node = os.getenv("PROXMOX_NODE", "pve")
+
+        if not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Proxmox API token credentials "
+                            "are not configured in your .env file."
+                        )
+                    }
+                ),
+                500,
+            )
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+            targets = []
+
+            # 1. Query LXC containers on the node
+            # noinspection PyBroadException
+            try:
+                lxc_res = client.get(f"nodes/{node}/lxc")
+                lxc_list = lxc_res.get("data", [])
+                for item in lxc_list:
+                    if item.get("template"):
+                        continue
+                    targets.append(
+                        {
+                            "vmid": int(item.get("vmid", 0)),
+                            "name": str(item.get("name", f"CT{item.get('vmid')}")),
+                            "type": "lxc",
+                            "status": str(item.get("status", "unknown")),
+                            "node": node,
+                        }
+                    )
+            except Exception as e:
+                logging.warning(f"Failed to fetch Proxmox LXCs: {e}")
+
+            # 2. Query QEMU VMs on the node
+            # noinspection PyBroadException
+            try:
+                qemu_res = client.get(f"nodes/{node}/qemu")
+                qemu_list = qemu_res.get("data", [])
+                for item in qemu_list:
+                    if item.get("template"):
+                        continue
+                    targets.append(
+                        {
+                            "vmid": int(item.get("vmid", 0)),
+                            "name": str(item.get("name", f"VM{item.get('vmid')}")),
+                            "type": "qemu",
+                            "status": str(item.get("status", "unknown")),
+                            "node": node,
+                        }
+                    )
+            except Exception as e:
+                logging.warning(f"Failed to fetch Proxmox QEMU VMs: {e}")
+
+            return jsonify({"targets": sorted(targets, key=lambda x: x["vmid"])}), 200
+
+        except Exception as e:
+            logging.error(f"Failed to list Proxmox targets: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Failed to list Proxmox targets: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/proxmox/get-target-ip", methods=["POST"])
+    def get_proxmox_target_ip():
+        from utils.proxmox_client import ProxmoxClient
+
+        data = request.get_json() or {}
+        vmid = int(data.get("vmid", 0))
+        target_type = str(data.get("type", "")).strip()
+        node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve"))).strip()
+
+        if not vmid or target_type not in ["lxc", "qemu"]:
+            return jsonify({"error": "Invalid VMID or target type"}), 400
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+            ip_address = None
+
+            if target_type == "lxc":
+                res_if = client.get(f"nodes/{node}/lxc/{vmid}/interfaces")
+                interfaces = res_if.get("data", [])
+                for iface in interfaces:
+                    if iface.get("name") != "eth0":
+                        continue
+                    inet = iface.get("inet", "")
+                    if not inet:
+                        continue
+                    ip_candidate, *_rest = inet.split("/")
+                    if (
+                        ip_candidate
+                        and not ip_candidate.startswith("127.")
+                        and not ip_candidate.startswith("169.254.")
+                    ):
+                        ip_address = ip_candidate
+                        break
+            else:
+                ip_address = client.get_vm_ip(node, vmid)
+
+            return jsonify({"ip": ip_address}), 200
+
+        except Exception as e:
+            logging.error(f"Failed to query Proxmox target IP: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Failed to query target IP: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/proxmox/start-target", methods=["POST"])
+    def start_proxmox_target():
+        from utils.proxmox_client import ProxmoxClient
+
+        data = request.get_json() or {}
+        vmid = int(data.get("vmid", 0))
+        target_type = str(data.get("type", "")).strip()
+        node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve"))).strip()
+
+        if not vmid or target_type not in ["lxc", "qemu"]:
+            return jsonify({"error": "Invalid VMID or target type"}), 400
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+
+            endpoint = f"nodes/{node}/{target_type}/{vmid}/status/start"
+            client.post(endpoint)
+
+            ip_address = None
+            for attempt in range(15):
+                # noinspection PyBroadException
+                try:
+                    if target_type == "lxc":
+                        res_if = client.get(f"nodes/{node}/lxc/{vmid}/interfaces")
+                        interfaces = res_if.get("data", [])
+                        for iface in interfaces:
+                            if iface.get("name") != "eth0":
+                                continue
+                            inet = iface.get("inet", "")
+                            if not inet:
+                                continue
+                            ip_candidate, *_rest = inet.split("/")
+                            if (
+                                ip_candidate
+                                and not ip_candidate.startswith("127.")
+                                and not ip_candidate.startswith("169.254.")
+                            ):
+                                ip_address = ip_candidate
+                                break
+                    else:
+                        ip_address = client.get_vm_ip(node, vmid)
+
+                    if ip_address:
+                        break
+                except Exception:  # nosec B110
+                    pass
+                time.sleep(4)
+
+            if not ip_address:
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "Target started, but failed to acquire "
+                                "an IP address in time."
+                            )
+                        }
+                    ),
+                    500,
+                )
+
+            return jsonify({"ip": ip_address}), 200
+
+        except Exception as e:
+            logging.error(f"Failed to start Proxmox target: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Failed to start target: {str(e)}"}),
                 500,
             )
 

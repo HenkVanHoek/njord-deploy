@@ -446,3 +446,29 @@ repeatable, isolated environment.
     a `400` or `500` error with a descriptive message.
 -   **And** the created container is immediately usable as a deployment
     target by the test runner (`scripts/proxmox_test_runner.py`).
+
+---
+
+#### Story: Creating a Proxmox LXC Container with Custom Hostname
+
+> As a user or developer, I want to specify a custom, descriptive hostname when creating a new LXC container, so that the target server does not just get a generic UUID.
+
+**Acceptance Criteria:**
+
+-   **Given** the "Create New Proxmox LXC Target" scan method is selected,
+-   **When** the user fills in a custom hostname in the container configuration form and starts provisioning,
+-   **Then** the backend validates/sanitizes the hostname to conform to RFC DNS standards (alphanumeric characters and hyphens only, up to 63 characters).
+-   **And** the container is created on Proxmox using this custom name instead of the task ID UUID.
+
+---
+
+#### Story: Deploying to an Existing Proxmox Target
+
+> As a user or developer, I want to select an existing VM or LXC container from my Proxmox server, so that I can redeploy or configure services on a pre-existing machine.
+
+**Acceptance Criteria:**
+
+-   **Given** the "Select Existing Proxmox Target" scan method is selected,
+-   **When** the user clicks "Load/Refresh Targets", the configurator queries the Proxmox host using `/api/proxmox/list-targets` and displays a dropdown list of all active/stopped VMs and containers.
+-   **Then** if the user selects a target that is currently stopped, the backend automatically starts it using `/api/proxmox/start-target` and waits until it retrieves a valid IP address.
+-   **And** if the target is already running, the backend retrieves its IP address using `/api/proxmox/get-target-ip` and proceeds directly to the deployment step.

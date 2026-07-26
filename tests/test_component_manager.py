@@ -1,6 +1,7 @@
 # tests/test_component_manager.py
 import json
 
+import pytest
 import yaml
 
 from src.managers.component_manager import ComponentManager
@@ -113,3 +114,26 @@ def test_validate_component_configuration_with_jinja(tmp_path):
 
     # Should not raise ValueError/YAMLError
     manager.validate_component_configuration("my-service", unquoted_jinja_yaml, [])
+
+
+def test_validate_component_configuration_fails_with_nested_pull_policy(tmp_path):
+    """Test that validation fails if pull_policy is nested inside build block."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    invalid_yaml = (
+        "services:\n"
+        "  my-service:\n"
+        "    build:\n"
+        "      context: .\n"
+        "      dockerfile: Dockerfile\n"
+        "      pull_policy: build\n"
+    )
+
+    with pytest.raises(ValueError, match="nested inside the 'build' block"):
+        manager.validate_component_configuration("my-service", invalid_yaml, [])

@@ -14,10 +14,11 @@ You can run the complete check locally and token-free using the provided script:
 ```
 This script runs all Python checks (via pre-commit) and then checks all JavaScript files with ESLint. This is the fastest and most token-efficient method to verify that all code is clean.
 
-## Python Code Guidelines:
-* PEP 8 compliance.
-* Maximum line length: 88 characters.
-* Code must pass all `flake8` and `mypy` checks.
+## Python & File Modification Guidelines:
+* **PEP 8 Compliance**: Python code must follow PEP 8 standards.
+* **Maximum Line Length**: Keep Python lines under 88 characters.
+* **Code Validation**: Python code must pass all `flake8` and `mypy` checks.
+* **Trailing Empty Line (CRITICAL)**: All edited or newly created files (Python, HTML, JS, CSS, YAML, JSON, Markdown, etc.) MUST end with a single trailing empty line (newline). This is enforced by the `end-of-file-fixer` hook in `pre-commit`. Always ensure your edits and file writes include this trailing newline so that `pre-commit` passes on the very first run.
 
 ## JavaScript Code Guidelines:
 * No inline JavaScript. Logic must always be placed in external `.js` files.

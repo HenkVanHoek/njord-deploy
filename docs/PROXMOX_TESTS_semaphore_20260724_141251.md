@@ -1,13 +1,13 @@
-# Proxmox Automated Component Testing Report - n8n
+# Proxmox Automated Component Testing Report - semaphore
 
-**Run Timestamp:** 2026-07-25 23:57:30
+**Run Timestamp:** 2026-07-24 14:12:51
 **Total Tested:** 1 | **Passed:** 1 | **Failed:** 0
 
 ## Results Table
 
 | Component ID | VM ID | IP Address | Deployment | Containers | HTTP | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| `n8n` | 110 | 192.168.178.90 | success | Running | OK | **✅ PASS** |
+| `semaphore` | 110 | 192.168.178.75 | success | Running | OK | **✅ PASS** |
 
 ## Details & Failures
 

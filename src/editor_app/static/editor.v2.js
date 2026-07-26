@@ -757,7 +757,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (warningsContainer) warningsContainer.classList.add('d-none');
 
             try {
-                const result = await fetchJson('/api/ai/generate', {
+                const response = await fetch('/api/ai/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -768,6 +768,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     })
                 });
 
+                if (!response.ok) {
+                    let errorTitle = 'AI Generation Failed';
+                    let errorMsg = `Request failed with status ${response.status}`;
+
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.error) {
+                            errorTitle = errorData.error;
+                        }
+                        errorMsg = errorData.details || errorData.error || errorMsg;
+                    } catch (e) {
+                        // ignore non-json errors
+                    }
+
+                    loadingStep.classList.add('d-none');
+                    const errorStep = document.getElementById('ai-error-step');
+                    const errorTitleEl = document.getElementById('ai-error-title');
+                    const errorMsgEl = document.getElementById('ai-error-msg');
+
+                    if (errorStep && errorTitleEl && errorMsgEl) {
+                        errorTitleEl.textContent = errorTitle;
+                        errorMsgEl.textContent = errorMsg;
+
+                        const retryBtn = document.getElementById('ai-error-retry-btn');
+                        const cancelBtn = document.getElementById('ai-error-cancel-btn');
+
+                        const newRetryBtn = retryBtn.cloneNode(true);
+                        retryBtn.parentNode.replaceChild(newRetryBtn, retryBtn);
+
+                        const newCancelBtn = cancelBtn.cloneNode(true);
+                        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                        newRetryBtn.addEventListener('click', () => {
+                            errorStep.classList.add('d-none');
+                            form.requestSubmit();
+                        });
+
+                        newCancelBtn.addEventListener('click', () => {
+                            errorStep.classList.add('d-none');
+                            inputStep.classList.remove('d-none');
+                        });
+
+                        errorStep.classList.remove('d-none');
+                    } else {
+                        showAlert(`${errorTitle}: ${errorMsg}`, 'danger');
+                        inputStep.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                const result = await response.json();
                 generatedData = result.data;
 
                 // Update input placeholder dynamically if a key was entered and saved

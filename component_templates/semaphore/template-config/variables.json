@@ -1,0 +1,46 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "The port on the host to expose the Semaphore UI web interface.",
+            "id": "SEMAPHORE_PORT",
+            "label": "Semaphore UI Port",
+            "type": "port"
+        },
+        {
+            "default": "admin",
+            "description": "The username for the initial Semaphore UI admin user.",
+            "id": "SEMAPHORE_ADMIN_USERNAME",
+            "label": "Admin Username",
+            "type": "text"
+        },
+        {
+            "default": "4R0W0R+oK20wS7qXW2E1F/7P4n9Y7iG1",
+            "description": "The password for the initial Semaphore UI admin user. This will be securely generated if left as default.",
+            "id": "SEMAPHORE_ADMIN_PASSWORD",
+            "label": "Admin Password",
+            "type": "password"
+        },
+        {
+            "default": "Admin User",
+            "description": "The full name for the initial Semaphore UI admin user.",
+            "id": "SEMAPHORE_ADMIN_NAME",
+            "label": "Admin Name",
+            "type": "text"
+        },
+        {
+            "default": "admin@localhost",
+            "description": "The email address for the initial Semaphore UI admin user.",
+            "id": "SEMAPHORE_ADMIN_EMAIL",
+            "label": "Admin Email",
+            "type": "text"
+        },
+        {
+            "default": "/var/lib/njorddeploy",
+            "description": "The root directory for persistent application data. This is where Semaphore UI's SQLite database and configuration will be stored.",
+            "id": "DATA_ROOT",
+            "label": "Data Root",
+            "type": "text"
+        }
+    ]
+}

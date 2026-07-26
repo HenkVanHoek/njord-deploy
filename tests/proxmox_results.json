@@ -1,9 +1,9 @@
 [
     {
-        "component_id": "stirling-pdf",
+        "component_id": "n8n",
         "status": "success",
         "vmid": 110,
-        "ip": "192.168.178.69",
+        "ip": "192.168.178.90",
         "deployment": "success",
         "running": true,
         "http_ok": true,

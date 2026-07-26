@@ -179,6 +179,16 @@ class ComponentManager:
         for service_name, service_data in services.items():
             if not isinstance(service_data, dict):
                 continue
+
+            # Check if pull_policy is nested inside the build block
+            build_data = service_data.get("build")
+            if isinstance(build_data, dict) and "pull_policy" in build_data:
+                raise ValueError(
+                    f"Validation Error: In service '{service_name}', 'pull_policy' "
+                    "is nested inside the 'build' block. It must be placed at the "
+                    "service level instead."
+                )
+
             container_name = service_data.get("container_name")
             if isinstance(container_name, str) and container_name:
                 mandatory_prefix = "njorddeploy-"

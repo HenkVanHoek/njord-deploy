@@ -1,0 +1,33 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully on Proxmox LXC."
+# breaking_changes: none
+services:
+  voicebox:
+    image: "{{ image_name }}:{{ component_version }}"
+    build:
+      context: https://github.com/jamiepine/voicebox.git#main
+      dockerfile: Dockerfile
+    pull_policy: build
+    container_name: njorddeploy-voicebox
+    restart: unless-stopped
+    user: "0:0"
+    ports:
+      - "{{ VOICEBOX_WEB_PORT }}:17493"
+    volumes:
+      - "{{ DATA_ROOT }}/voicebox/generations:/app/data/generations"
+      - njorddeploy-voicebox-data:/app/data
+      - njorddeploy-huggingface-cache:/home/voicebox/.cache/huggingface
+    environment:
+      - "LOG_LEVEL={{ VOICEBOX_LOG_LEVEL }}"
+      - "NUMBA_CACHE_DIR=/tmp/numba_cache"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
+
+volumes:
+  njorddeploy-voicebox-data:
+  njorddeploy-huggingface-cache:

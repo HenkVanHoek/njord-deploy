@@ -717,8 +717,36 @@ def create_app(test_config=None):
             return jsonify({"error": msg}), 400
         except Exception as e:
             logging.error(f"Failed to generate component via AI: {e}", exc_info=True)
-            err_msg = "AI Generation failed due to an internal error"
-            return jsonify({"error": err_msg}), 500
+            err_msg = str(e)
+            if "timeout" in err_msg.lower():
+                return (
+                    jsonify(
+                        {
+                            "error": "Gemini API Timeout",
+                            "details": (
+                                "The connection to the Gemini API timed out. "
+                                "This is usually a temporary network issue or "
+                                "the server is overloaded. Please try again."
+                            ),
+                        }
+                    ),
+                    504,
+                )
+            elif "gemini api" in err_msg.lower():
+                return (
+                    jsonify(
+                        {
+                            "error": "Gemini API Error",
+                            "details": err_msg,
+                        }
+                    ),
+                    502,
+                )
+            else:
+                return (
+                    jsonify({"error": "AI Generation failed due to an internal error"}),
+                    500,
+                )
 
     @app.route("/api/components/ai", methods=["POST"])
     def save_ai_component():
@@ -748,7 +776,12 @@ def create_app(test_config=None):
                 try:
                     import yaml
 
-                    cleaned_yaml = re.sub(r"\{\{.*?}}", "JINJA_VAR", docker_compose)
+                    cleaned_yaml = re.sub(
+                        r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
+                        '"JINJA_VAR"',
+                        docker_compose,
+                    )
+                    cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
                     cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
                     cleaned_yaml = re.sub(r"\{#.*?#}", "JINJA_COMMENT", cleaned_yaml)
 
