@@ -581,7 +581,7 @@
                 "nextcloud-redis"
             ],
             "description": "File storage, sharing, productivity and collaboration platform.",
-            "group": "productivity",
+            "group": "Productivity",
             "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": true,
