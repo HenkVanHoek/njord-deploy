@@ -1,0 +1,5 @@
+BMP
+categorised
+json
+md
+py

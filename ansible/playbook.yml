@@ -130,6 +130,22 @@
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
 
+    - name: Register Jitsi Meet moderator user if configured
+      ansible.builtin.shell: |
+        if [ -f {{ project_config_dir }}/.env ]; then
+          JITSI_MEET_USER=$(grep "^JITSI_MEET_USER=" {{ project_config_dir }}/.env | cut -d= -f2-)
+          JITSI_MEET_PASSWORD=$(grep "^JITSI_MEET_PASSWORD=" {{ project_config_dir }}/.env | cut -d= -f2-)
+          if [ -n "$JITSI_MEET_USER" ] && [ -n "$JITSI_MEET_PASSWORD" ]; then
+            if docker ps | grep -q njorddeploy-jitsi-prosody; then
+              docker exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
+            fi
+          fi
+        fi
+      register: jitsi_register_out
+      changed_when: "'created' in jitsi_register_out.stdout"
+      failed_when: false
+
+
     - name: Restart specifically requested components
       ansible.builtin.command:
         cmd: "docker compose restart {{ item }}"

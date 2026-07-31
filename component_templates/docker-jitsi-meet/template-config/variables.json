@@ -89,6 +89,24 @@
             "required": "",
             "source": "",
             "type": "string"
+        },
+        {
+            "default": "jitsimeet",
+            "description": "The username for the Jitsi Meet moderator account (required to create meetings).",
+            "id": "JITSI_MEET_USER",
+            "label": "Moderator Username",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "jitsimeetpw",
+            "description": "The password for the Jitsi Meet moderator account.",
+            "id": "JITSI_MEET_PASSWORD",
+            "label": "Moderator Password",
+            "required": "",
+            "source": "",
+            "type": "password"
         }
     ]
 }

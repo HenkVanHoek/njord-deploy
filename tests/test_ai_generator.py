@@ -3,8 +3,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-import requests
-
 from utils.ai_generator import AIGenerator
 
 
@@ -14,31 +12,17 @@ class TestAIGenerator(unittest.TestCase):
     def setUp(self):
         self.generator = AIGenerator(api_key="test_api_key")
 
-    @patch("requests.post")
-    def test_generate_component_data_success(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_success(self, mock_generate):
         """Tests successful generation when API returns valid data."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [
-                            {
-                                "text": (
-                                    '{"metadata": {"name": "Caddy", "image_name": '
-                                    '"caddy", "description": "web server", '
-                                    '"group": "reverse_proxy", "has_ui": false, '
-                                    '"has_configuration": true}, "docker_compose": '
-                                    '"services:", "variables": []}'
-                                )
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-        mock_post.return_value = mock_response
+        mock_generate.return_value = (
+            '{"metadata": {"name": "Caddy", "image_name": '
+            '"caddy", "description": "web server", '
+            '"group": "reverse_proxy", "has_ui": false, '
+            '"has_configuration": true, "docker_service_name": "caddy", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": []}'
+        )
 
         repo_url = "https://github.com/caddyserver/caddy"
         result = self.generator.generate_component_data(repo_url)
@@ -47,7 +31,7 @@ class TestAIGenerator(unittest.TestCase):
         self.assertEqual(result["metadata"]["name"], "Caddy")
         self.assertEqual(result["docker_compose"], "services:")
         self.assertEqual(result["variables"], [])
-        mock_post.assert_called_once()
+        mock_generate.assert_called_once()
 
     def test_invalid_url_raises_value_error(self):
         """Tests that invalid GitHub URLs cause a ValueError."""
@@ -57,38 +41,30 @@ class TestAIGenerator(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.generator.generate_component_data("https://github.com/")
 
-    @patch("requests.post")
-    def test_api_failure_raises_runtime_error(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_api_failure_raises_runtime_error(self, mock_generate):
         """Tests that HTTP errors trigger a RuntimeError."""
-        mock_post.side_effect = requests.exceptions.RequestException("Network error")
+        mock_generate.side_effect = RuntimeError("Connection error.")
 
         with self.assertRaises(RuntimeError):
             self.generator.generate_component_data("https://github.com/owner/repo")
 
-    @patch("requests.post")
-    def test_api_quota_exceeded_friendly_message(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_api_quota_exceeded_friendly_message(self, mock_generate):
         """Verify friendly error message for 429 Too Many Requests."""
-        mock_response = MagicMock()
-        mock_response.status_code = 429
-        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            "Quota Exceeded", response=mock_response
-        )
-        mock_post.return_value = mock_response
+        mock_generate.side_effect = RuntimeError("quota exceeded or rate limit reached")
 
         with self.assertRaises(RuntimeError) as context:
             self.generator.generate_component_data("https://github.com/owner/repo")
 
         self.assertIn("quota exceeded", str(context.exception))
 
-    @patch("requests.post")
-    def test_api_service_unavailable_friendly_message(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_api_service_unavailable_friendly_message(self, mock_generate):
         """Verify friendly error message for 503 Service Unavailable."""
-        mock_response = MagicMock()
-        mock_response.status_code = 503
-        mock_response.raise_for_status.side_effect = requests.exceptions.HTTPError(
-            "Service Unavailable", response=mock_response
+        mock_generate.side_effect = RuntimeError(
+            "temporarily unavailable or overloaded"
         )
-        mock_post.return_value = mock_response
 
         with self.assertRaises(RuntimeError) as context:
             self.generator.generate_component_data("https://github.com/owner/repo")
@@ -221,31 +197,17 @@ class TestAIGenerator(unittest.TestCase):
         self.assertEqual(url_3, "https://ghcr.io/v2/advplyr/audiobookshelf/tags/list")
         self.assertEqual(kwargs_3["headers"]["Authorization"], "Bearer mock_token")
 
-    @patch("requests.post")
-    def test_generate_component_data_with_existing_groups(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_with_existing_groups(self, mock_generate):
         """Test generating component with existing_groups constraint."""
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [
-                            {
-                                "text": (
-                                    '{"metadata": {"name": "Caddy", "image_name": '
-                                    '"caddy", "description": "web server", '
-                                    '"group": "reverse_proxy", "has_ui": false, '
-                                    '"has_configuration": true}, "docker_compose": '
-                                    '"services:", "variables": []}'
-                                )
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-        mock_post.return_value = mock_response
+        mock_generate.return_value = (
+            '{"metadata": {"name": "Caddy", "image_name": '
+            '"caddy", "description": "web server", '
+            '"group": "reverse_proxy", "has_ui": false, '
+            '"has_configuration": true, "docker_service_name": "caddy", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": []}'
+        )
 
         repo_url = "https://github.com/caddyserver/caddy"
         existing_groups = ["reverse_proxy", "databases"]
@@ -253,25 +215,21 @@ class TestAIGenerator(unittest.TestCase):
             repo_url, existing_groups=existing_groups
         )
 
-        mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
-        json_data = kwargs.get("json", {})
-        (contents,) = json_data.get("contents", [])
-        parts = contents.get("parts", [])
-        (part,) = parts
-        prompt = part.get("text", "")
+        mock_generate.assert_called_once()
+        args, kwargs = mock_generate.call_args
+        sys_context = kwargs.get("system_context", "")
 
         expected_group_rule = (
             "14. In the metadata, the `group` property MUST be selected from "
             "the following list of existing groups: 'reverse_proxy', 'databases'"
         )
-        self.assertIn(expected_group_rule, prompt)
+        self.assertIn(expected_group_rule, sys_context)
 
         expected_var_rule = (
             "15. For any variable object in the `variables` list, the `type` "
             "property MUST be one of: 'port' (for host port mappings)"
         )
-        self.assertIn(expected_var_rule, prompt)
+        self.assertIn(expected_var_rule, sys_context)
 
     @patch("requests.get")
     def test_registry_replacement_ignores_build_context(self, mock_get):
@@ -335,61 +293,35 @@ class TestAIGenerator(unittest.TestCase):
         self.assertTrue(any("DEFINED_BUT_NOT_USED_VAR" in w for w in warnings))
         self.assertTrue(any("MISMATCHED_PORT" in w for w in warnings))
 
-    @patch("requests.post")
-    def test_generate_component_data_self_correction(self, mock_post):
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_self_correction(self, mock_generate):
         """Verify that validation warnings trigger the self-correction loop."""
-        mock_response_1 = MagicMock()
-        mock_response_1.status_code = 200
-        mock_response_1.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [
-                            {
-                                "text": (
-                                    '{"metadata": {"name": "Caddy", "image_name": '
-                                    '"caddy", "description": "web server", '
-                                    '"group": "reverse_proxy", "has_ui": false, '
-                                    '"has_configuration": true}, "docker_compose": '
-                                    '"services:", "variables": [{"id": '
-                                    '"DEFINED_BUT_NOT_USED_VAR", "label": "L", '
-                                    '"type": "text", "default": "D", '
-                                    '"description": "D"}]}'
-                                )
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
+        text_1 = (
+            '{"metadata": {"name": "Caddy", "image_name": '
+            '"caddy", "description": "web server", '
+            '"group": "reverse_proxy", "has_ui": false, '
+            '"has_configuration": true, "docker_service_name": "caddy", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": [{"id": '
+            '"DEFINED_BUT_NOT_USED_VAR", "label": "L", '
+            '"type": "text", "default": "D", '
+            '"description": "D"}]}'
+        )
 
-        mock_response_2 = MagicMock()
-        mock_response_2.status_code = 200
-        mock_response_2.json.return_value = {
-            "candidates": [
-                {
-                    "content": {
-                        "parts": [
-                            {
-                                "text": (
-                                    '{"metadata": {"name": "Caddy", "image_name": '
-                                    '"caddy", "description": "web server", '
-                                    '"group": "reverse_proxy", "has_ui": false, '
-                                    '"has_configuration": true}, "docker_compose": '
-                                    '"services:", "variables": []}'
-                                )
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
+        text_2 = (
+            '{"metadata": {"name": "Caddy", "image_name": '
+            '"caddy", "description": "web server", '
+            '"group": "reverse_proxy", "has_ui": false, '
+            '"has_configuration": true, "docker_service_name": "caddy", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": []}'
+        )
 
-        mock_post.side_effect = [mock_response_1, mock_response_2]
+        mock_generate.side_effect = [text_1, text_2]
 
         repo_url = "https://github.com/caddyserver/caddy"
         result = self.generator.generate_component_data(repo_url)
 
         self.assertEqual(result["id"], "caddy")
         self.assertEqual(result["variables"], [])
-        self.assertEqual(mock_post.call_count, 2)
+        self.assertEqual(mock_generate.call_count, 2)

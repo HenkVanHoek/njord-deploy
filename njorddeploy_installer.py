@@ -27,7 +27,7 @@ def run_installation() -> Generator[str, None, None]:
 
     load_dotenv(dotenv_path=project_root / ".env")
 
-    yield "--- PiSelfHosting Installer ---"
+    yield "--- NjordDeploy Installer ---"
 
     version = get_project_version()
     yield f"Project Version: {version}"

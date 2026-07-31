@@ -15,15 +15,27 @@ All data files must adhere to the schemas defined herein.
 
 ## `template-config/variables.json`
 
-This file defines the user-configurable variables for a component. It is an
-array of variable objects, where each object has the following properties:
+This file defines the user-configurable variables for a component. It is a JSON object with a single top-level key `"variables"`, which contains an array of variable objects:
+
+```json
+{
+  "variables": [
+    {
+      "id": "VARIABLE_ID",
+      ...
+    }
+  ]
+}
+```
+
+Each variable object in the array has the following properties:
 
 | Property      | Type     | Required                                    | Description                                                                                                                                                                                                                                                                                                                                              |
 |---------------|----------|---------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `id`          | `string` | Yes                                         | The unique identifier for the variable. This is used as the key in the `.env` file and for template substitution (e.g., `{{ MY_VARIABLE_ID }}`). By convention, this should be uppercase.                                                                                                                                                                |
 | `label`       | `string` | No                                          | A short, human-readable name for the UI. If not provided, the UI will derive a title from the `id`.                                                                                                                                                                                                                                                      |
 | `description` | `string` | Yes                                         | A detailed, user-facing explanation of what the variable is for, including any security implications, required formats, or default behaviors. This is a critical field for ensuring correct configuration.                                                                                                                                               |
-| `type`        | `string` | Yes                                         | The data type of the input, which controls the UI rendering. Valid options are: `text`, `password`, `choice`, `select`.                                                                                                                                                                                                                                  |
+| `type`        | `string` | Yes                                         | The data type of the input, which controls the UI rendering. Valid options are: `text`, `password`, `select`, `choice`, `port`, `string`. Note: Any type other than `password` and `select` is rendered as a standard `text` input in the configurator UI.                                                                                             |
 | `default`     | `string` | No                                          | The default value to pre-populate in the UI input field.                                                                                                                                                                                                                                                                                                 |
 | `options`     | `array`  | **Yes** (if `type` is `choice` or `select`) | An array of strings used to populate a `<select>` dropdown.                                                                                                                                                                                                                                                                                              |
 | `required`    | `string` | No                                          | Determines when the field is mandatory. Valid options are `always` or `clean-install`.                                                                                                                                                                                                                                                                   |
@@ -40,25 +52,31 @@ array of variable objects, where each object has the following properties:
 This contract defines the structure for a single component element within the
 `"components"` dictionary of `config/components_metadata.json`.
 
-| Property                | Type                     | Required | Description                                                                                                                              |
-|-------------------------|--------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`                  | `string`                 | Yes      | A human-readable name for the component.                                                                                                 |
-| `group`                 | `string`                 | Yes      | The category ID this component belongs to (e.g., `network_management`, `media_servers`).                                                 |
-| `description`           | `string`                 | Yes      | A detailed description of the component's function for the UI.                                                                           |
-| `ports`                 | `array<string>`          | No       | A list of port mappings used for live conflict checking (e.g., `80:80/tcp`, `8080`).                                                     |
-| `has_ui`                | `boolean`                | No       | If true, the component has a web interface and the backend should attempt to generate a service link.                                    |
-| `ui_port_variable`      | `string`                 | No       | The ID of the variable containing the component's external UI host port. Preferred over `ui_port`.                                       |
-| `ui_port`               | `integer`                | No       | The default or fixed external UI host port, used if `ui_port_variable` is absent.                                                        |
-| `protocol`              | `string`                 | No       | The protocol for the UI link (`http` or `https`). Defaults to `http`.                                                                    |
-| `has_configuration`     | `boolean`                | Yes      | If true, a `template-config/variables.json` file is expected.                                                                            |
-| `docker_service_name`   | `string`                 | No       | The primary service name in the docker-compose file. Used to distinguish main containers from init containers. Defaults to component ID. |
-| `depends_on`            | `array<string>`          | No       | A list of component IDs this component depends on for ordering.                                                                          |
-| `conflicts_with`        | `array<string>`          | No       | **(New)** A list of component IDs that this component conflicts with.                                                                    |
-| `has_traefik_support`   | `boolean`                | No       | If true, the component requires Traefik setup and has a unique `traefik_internal_port`.                                                  |
-| `traefik_internal_port` | `integer`                | No       | The internal port used for Traefik routing (e.g., `80`). Required if `has_traefik_support` is true.                                      |
-| `other_files`           | `array<OtherFileConfig>` | No       | A list of configuration files to be generated, other than the main Docker Compose file. (`OtherFileConfig` schema defined below).        |
-| `config_templates`      | `object`                 | No       | A dictionary mapping a template filename (string) to a destination path (string). Used for rendering additional configuration files from `template-config/` into the deployment package. |
-| `package_id`            | `string`                 | No       | The ID of the Package this component belongs to. Defaults to `"general-stack"` when not set.                                             |
+| Property                      | Type                     | Required | Description                                                                                                                              |
+|-------------------------------|--------------------------|----------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `name`                        | `string`                 | Yes      | A human-readable name for the component.                                                                                                 |
+| `group`                       | `string`                 | Yes      | The category ID this component belongs to (e.g., `network_management`, `media_servers`).                                                 |
+| `description`                 | `string`                 | Yes      | A detailed description of the component's function for the UI.                                                                           |
+| `ports`                       | `array<string>`          | No       | A list of port mappings used for live conflict checking (e.g., `80:80/tcp`, `8080`).                                                     |
+| `has_ui`                      | `boolean`                | No       | If true, the component has a web interface and the backend should attempt to generate a service link.                                    |
+| `ui_port_variable`            | `string`                 | No       | The ID of the variable containing the component's external UI host port. Preferred over `ui_port`.                                       |
+| `ui_port`                     | `integer`                | No       | The default or fixed external UI host port, used if `ui_port_variable` is absent.                                                        |
+| `protocol`                    | `string`                 | No       | The protocol for the UI link (`http` or `https`). Defaults to `http`.                                                                    |
+| `has_configuration`           | `boolean`                | Yes      | If true, a `template-config/variables.json` file is expected.                                                                            |
+| `docker_service_name`         | `string`                 | No       | The primary service name in the docker-compose file. Used to distinguish main containers from init containers. Defaults to component ID. |
+| `depends_on`                  | `array<string>`          | No       | A list of component IDs this component depends on for ordering.                                                                          |
+| `conflicts_with`              | `array<string>`          | No       | **(New)** A list of component IDs that this component conflicts with.                                                                    |
+| `has_traefik_support`         | `boolean`                | No       | If true, the component requires Traefik setup and has a unique `traefik_internal_port`.                                                  |
+| `traefik_internal_port`       | `integer`                | No       | The internal port used for Traefik routing (e.g., `80`). Required if `has_traefik_support` is true.                                      |
+| `other_files`                 | `array<OtherFileConfig>` | No       | A list of configuration files to be generated, other than the main Docker Compose file. (`OtherFileConfig` schema defined below).        |
+| `config_templates`            | `object`                 | No       | A dictionary mapping a template filename (string) to a destination path (string). Used for rendering additional configuration files from `template-config/` into the deployment package. |
+| `package_id`                  | `string`                 | No       | The ID of the Package this component belongs to. Defaults to `"general-stack"` when not set.                                             |
+| `component_version`           | `string`                 | No       | **(New)** The specific version of the component (e.g., `"latest"` or a specific release tag).                                            |
+| `project_url`                 | `string`                 | No       | **(New)** The URL of the official homepage or codebase repository for the service.                                                       |
+| `resource_profile`            | `object`                 | No       | **(New)** Resource requirements profile, specifying keys like `cpu`, `ram`, `storage_type`, `recommended_cores`, `recommended_ram_mb`, `recommended_storage_gb`. |
+| `tags`                        | `array<string>`          | No       | **(New)** A list of searchable/filterable keyword tags associated with the component.                                                    |
+| `traefik_host_variable`       | `string`                 | No       | **(New)** Specifies a custom variable ID that holds the hostname routing for Traefik.                                                    |
+| `post_install_restart_option` | `string`                 | No       | **(New)** Custom configuration instruction specifying container restart options post-deployment.                                         |
 
 ### Component Details Output Contract (`get_all_components` / `get_component_details` return)
 
@@ -142,6 +160,7 @@ It is managed by `ComponentManager` methods and must not be edited manually.
 | `components_order` | `array<string>` | No       | Ordered list of Component IDs controlling the master sort order of the component list.                                                                   |
 | `group_rules`      | `object`        | No       | Dictionary mapping a **Group ID** to a rule object. Currently supports `{"exclusive": true}` to enforce mutual exclusivity within the group.            |
 | `default_group`    | `string`        | No       | The Group ID assigned to newly created components by default.                                                                                            |
+| `global_variables` | `array<string>` | No       | **(New)** List of variable IDs that are loaded globally/system-wide rather than component-specific.                                                      |
 
 ---
 

@@ -40,7 +40,8 @@ dependencies = [
     "argon2-cffi",
     "passlib",
     "cryptography",
-    "bcrypt"
+    "bcrypt",
+    "openai"
 ]
 
 [tool.setuptools]

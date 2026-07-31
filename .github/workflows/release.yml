@@ -21,13 +21,13 @@ jobs:
         include:
           - os-name: Linux
             os-runner: ubuntu-latest
-            artifact-name: PiSelfhosting-Linux
+            artifact-name: NjordDeploy-Linux
           - os-name: macOS
             os-runner: macos-latest
-            artifact-name: PiSelfhosting-macOS
+            artifact-name: NjordDeploy-macOS
           - os-name: Windows
             os-runner: windows-latest
-            artifact-name: PiSelfhosting-Windows.exe
+            artifact-name: NjordDeploy-Windows.exe
 
     steps:
       - name: Checkout repository
@@ -71,17 +71,17 @@ jobs:
         shell: bash
         run: |
           rm -rf build dist
-          pyinstaller PiSelfhostingInstaller.spec
+          pyinstaller NjordDeployInstaller.spec
 
       - name: Package the executable
         shell: bash
         # ROBUSTNESS: Explicit check avoids wildcards to prevent shell globbing errors
         run: |
           mkdir -p artifact
-          if [ -f "dist/PiSelfhostingInstaller.exe" ]; then
-            mv "dist/PiSelfhostingInstaller.exe" "artifact/${{ matrix.artifact-name }}"
-          elif [ -f "dist/PiSelfhostingInstaller" ]; then
-            mv "dist/PiSelfhostingInstaller" "artifact/${{ matrix.artifact-name }}"
+          if [ -f "dist/NjordDeployInstaller.exe" ]; then
+            mv "dist/NjordDeployInstaller.exe" "artifact/${{ matrix.artifact-name }}"
+          elif [ -f "dist/NjordDeployInstaller" ]; then
+            mv "dist/NjordDeployInstaller" "artifact/${{ matrix.artifact-name }}"
           else
             echo "ERROR: Pyinstaller executable not found in dist/"
             exit 1
@@ -112,15 +112,15 @@ jobs:
 
       - name: Zip installers for release
         run: |
-          zip -j PiSelfhosting-Windows.zip installers/PiSelfhosting-Windows.exe
-          zip -j PiSelfhosting-macOS.zip installers/PiSelfhosting-macOS
-          zip -j PiSelfhosting-Linux.zip installers/PiSelfhosting-Linux
+          zip -j NjordDeploy-Windows.zip installers/NjordDeploy-Windows.exe
+          zip -j NjordDeploy-macOS.zip installers/NjordDeploy-macOS
+          zip -j NjordDeploy-Linux.zip installers/NjordDeploy-Linux
 
       - name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
-          file: "PiSelfhosting-*.zip"
+          file: "NjordDeploy-*.zip"
           file_glob: true
           overwrite: true

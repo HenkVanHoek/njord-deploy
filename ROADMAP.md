@@ -27,14 +27,14 @@ This phase focused on creating a rock-solid, feature-rich, and user-friendly ins
 
 With a stable foundation, this phase will focus on expanding the ecosystem, improving the developer experience, and providing more options for advanced users.
 
-*   **[In Progress] Component Configuration Tools**: Develop modular, post-installation tools for key services (e.g., Frigate camera management) accessible from the user's dashboard.
+*   **[In Progress] Component Configuration Tools**: Develop modular, post-installation tools for key services. The core ONVIF camera discovery and configuration tool for Frigate (`frigate_camera_config_tool.py`) has been completed, with dashboard integration being the next step.
 *   **[Planned] Integrated Backup & Restore**: Develop a user-friendly, Flask-based tool to back up and restore all persistent service data. This is a critical feature for data security and user peace of mind.
     *   **Implementation**: This will be a new, optional management tool built with Flask. It will provide a simple web UI to automatically detect and back up all persistent Docker volumes. The tool will feature **smart, configurable defaults**, allowing users to easily exclude large data volumes (like Frigate video recordings) to ensure fast and efficient backups of critical configuration data.
-*   **[Planned] AI-Assisted Component Generation**:
-    *   **Why?**: To dramatically accelerate the process of adding new services and lower the barrier for new contributors. As a nod to the powerful AI assistance that has been instrumental in this project's development (notably Google Gemini), this feature aims to bring that same power directly to our developers.
-    *   **Implementation**: This will involve adding a new UI to the Editor where a developer can describe a service. The backend will use this prompt to query an LLM to generate draft versions of the component's metadata, `variables.json`, and `docker-compose.template.yml`. The implementation will be two-phased:
-        1.  An initial version will leverage a powerful **cloud-based API** (like Google Gemini) as a pragmatic first step.
-        2.  The long-term goal, in keeping with the project's self-hosting ethos, is to prioritize support for **local, open-source LLMs** that can be run on the user's own hardware. Using open-source models is perfectly aligned with our philosophy of control and ownership; the true goal is to bring this feature fully in-house and eliminate the dependency on an external API.
+*   **[✅] AI-Assisted Component Generation**:
+    *   **Why?**: To dramatically accelerate the process of adding new services and lower the barrier for new contributors. As a nod to the powerful AI assistance that has been instrumental in this project's development, this feature brings that same power directly to our developers.
+    *   **Implementation**: This has been implemented as a new UI in the Editor where a developer can describe a service or input a GitHub repository URL. The backend uses this prompt to query an LLM to generate draft versions of the component's metadata, `variables.json`, and `docker-compose.template.yml`.
+        1.  **[✅] Cloud-Based API**: The initial phase leveraging the Google Gemini API (model `gemini-2.5-flash`) is fully active, featuring automatic repository analysis, image presence verification (Docker Hub & GHCR fallback), validation warning flags, and self-correction loops.
+        2.  **[✅] Local LLMs & Offline Development**: Support for offline development has been introduced with local Llama-3/Mistral-based configurations via Ollama (configured in `Local_LLM_configuration.md`), along with utility scripts (`context_generator.py`) to ingest codebase context within resource limits.
 *   **[Planned] Advanced Installer Options**: Introduce an "Advanced Mode" in the installer for power users to tweak more specific Docker settings.
 
 ---

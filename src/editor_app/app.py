@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 
+import requests
 from flask import Flask, abort, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
@@ -28,8 +29,18 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
-    def save_api_key_to_env(key: str):
-        """Saves the Gemini API key to the local .env file."""
+    def save_api_key_to_env(key: str, provider: str = "gemini"):
+        """Saves the API key to the local .env file based on the provider."""
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "hostyourai": "HOSTYOURAI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "custom": "CUSTOM_AI_API_KEY",
+        }
+        var_name = env_map.get(provider)
+        if not var_name:
+            return
+
         env_path = project_root / ".env"
         lines = []
         key_written = False
@@ -38,21 +49,21 @@ def create_app(test_config=None):
                 lines = f.readlines()
 
             for i, line in enumerate(lines):
-                if line.strip().startswith("GEMINI_API_KEY="):
-                    lines[i] = f"GEMINI_API_KEY={key}\n"
+                if line.strip().startswith(f"{var_name}="):
+                    lines[i] = f"{var_name}={key}\n"
                     key_written = True
                     break
 
         if not key_written:
             if lines and not lines[-1].endswith("\n"):
                 lines.append("\n")
-            lines.append(f"GEMINI_API_KEY={key}\n")
+            lines.append(f"{var_name}={key}\n")
 
         with open(env_path, "w") as f:
             f.writelines(lines)
 
         # Update current process environment
-        os.environ["GEMINI_API_KEY"] = key
+        os.environ[var_name] = key
 
     meta_file_path, temp_path_obj = get_components_paths()
     meta_file = str(meta_file_path)
@@ -660,6 +671,82 @@ def create_app(test_config=None):
 
         return jsonify({"hashed_user_string": hashed_str}), 200
 
+    @app.route("/api/ai/status", methods=["GET", "POST"])
+    def ai_status():
+        """Checks the status of the requested or default AI provider."""
+        provider = None
+        base_url = None
+        if request.method == "POST":
+            data = request.get_json() or {}
+            provider = data.get("provider")
+            base_url = data.get("base_url")
+
+        if not provider:
+            provider = os.getenv("AI_PROVIDER", "ollama")
+
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "hostyourai": "HOSTYOURAI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "custom": "CUSTOM_AI_API_KEY",
+        }
+
+        status = "offline"
+        details = ""
+
+        if provider == "ollama":
+            url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+            try:
+                # Clean path to find raw tags list API
+                tags_url = url.replace("/v1", "/api/tags")
+                resp = requests.get(tags_url, timeout=3)
+                if resp.status_code == 200:
+                    status = "online"
+                    details = "Ollama is running locally."
+                    models_data = resp.json().get("models", [])
+                    installed_models = [
+                        m.get("name") for m in models_data if m.get("name")
+                    ]
+                    return (
+                        jsonify(
+                            {
+                                "provider": provider,
+                                "status": status,
+                                "details": details,
+                                "models": installed_models,
+                            }
+                        ),
+                        200,
+                    )
+                else:
+                    status = "offline"
+                    details = f"Ollama returned HTTP {resp.status_code}."
+            except Exception as e:
+                status = "offline"
+                details = f"Could not connect to Ollama at {url}: {e}"
+        else:
+            var_name = env_map.get(provider)
+            if not var_name:
+                status = "offline"
+                details = f"Unknown provider {provider}"
+            else:
+                key_exists = bool(os.getenv(var_name))
+                if key_exists:
+                    status = "online"
+                    details = f"API Key configured in environment ({var_name})."
+                else:
+                    status = (
+                        "configured_locally_only"
+                        if request.method == "POST"
+                        else "missing_key"
+                    )
+                    details = f"API Key ({var_name}) not found in .env file."
+
+        return (
+            jsonify({"provider": provider, "status": status, "details": details}),
+            200,
+        )
+
     @app.route("/api/ai/generate", methods=["POST"])
     def ai_generate_component():
         data = request.get_json() or {}
@@ -667,6 +754,11 @@ def create_app(test_config=None):
         custom_instructions = data.get("custom_instructions")
         api_key = data.get("api_key")
         save_key = data.get("save_key", False)
+        provider = data.get("provider")
+        if not provider:
+            provider = "gemini" if api_key else os.getenv("AI_PROVIDER", "ollama")
+        base_url = data.get("base_url")
+        model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid GitHub repository URL is required")
@@ -680,7 +772,12 @@ def create_app(test_config=None):
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
 
-            generator = AIGenerator(api_key=api_key)
+            generator = AIGenerator(
+                api_key=api_key,
+                provider=provider,
+                base_url=base_url,
+                model=model,
+            )
             result = generator.generate_component_data(
                 repo_url, custom_instructions, existing_groups
             )
@@ -689,7 +786,7 @@ def create_app(test_config=None):
             # Save API key only if generation succeeded (proving key is valid)
             if isinstance(api_key, str) and save_key:
                 try:
-                    save_api_key_to_env(api_key)
+                    save_api_key_to_env(api_key, provider=provider)
                     key_saved = True
                 except Exception as e:
                     logging.error(f"Failed to save API key to .env: {e}")
@@ -706,8 +803,8 @@ def create_app(test_config=None):
             )
         except ValueError as ve:
             err_msg = str(ve)
-            if "key is not configured" in err_msg:
-                msg = "Gemini API key is not configured"
+            if "API key missing for provider" in err_msg:
+                msg = err_msg
             elif "repository URL is required" in err_msg:
                 msg = "A valid GitHub repository URL is required"
             elif "repository URL format" in err_msg:
@@ -722,9 +819,9 @@ def create_app(test_config=None):
                 return (
                     jsonify(
                         {
-                            "error": "Gemini API Timeout",
+                            "error": "AI API Timeout",
                             "details": (
-                                "The connection to the Gemini API timed out. "
+                                "The connection to the AI API timed out. "
                                 "This is usually a temporary network issue or "
                                 "the server is overloaded. Please try again."
                             ),
@@ -732,11 +829,11 @@ def create_app(test_config=None):
                     ),
                     504,
                 )
-            elif "gemini api" in err_msg.lower():
+            elif "api error" in err_msg.lower() or "openai" in err_msg.lower():
                 return (
                     jsonify(
                         {
-                            "error": "Gemini API Error",
+                            "error": "AI API Error",
                             "details": err_msg,
                         }
                     ),
@@ -744,7 +841,9 @@ def create_app(test_config=None):
                 )
             else:
                 return (
-                    jsonify({"error": "AI Generation failed due to an internal error"}),
+                    jsonify(
+                        {"error": ("AI Generation failed due to an internal error")}
+                    ),
                     500,
                 )
 

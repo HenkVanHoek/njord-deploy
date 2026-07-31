@@ -11,6 +11,7 @@
 *.log
 .env
 .env.*
+.envrc
 
 # Python-specific files
 #-----------------------------------------

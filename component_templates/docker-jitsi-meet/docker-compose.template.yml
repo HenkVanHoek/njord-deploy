@@ -7,7 +7,9 @@ services:
     container_name: njorddeploy-jitsi-prosody
     image: jitsi/prosody:stable
     networks:
-      - njorddeploy_net
+      njorddeploy_net:
+        aliases:
+          - xmpp.meet.jitsi
     volumes:
       - "{{ DATA_ROOT }}/jitsi/prosody/config:/config"
       - "{{ DATA_ROOT }}/jitsi/prosody/plugins:/prosody-plugins-custom"
@@ -23,8 +25,11 @@ services:
       - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
       - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
       - JVB_PORT={{ JITSI_JVB_PORT }}
+      - ENABLE_XMPP_WEBSOCKET=${ENABLE_XMPP_WEBSOCKET}
 {% if JITSI_ENABLE_AUTH %}
       - ENABLE_AUTH=1
+      - ENABLE_GUEST=1
+      - ENABLE_GUESTS=1
       - ENABLE_GUEST_IS_GUEST=1
       - AUTH_TYPE=internal
 {% endif %}
@@ -50,6 +55,8 @@ services:
       - JVB_PORT={{ JITSI_JVB_PORT }}
 {% if JITSI_ENABLE_AUTH %}
       - ENABLE_AUTH=1
+      - ENABLE_GUEST=1
+      - ENABLE_GUESTS=1
       - ENABLE_GUEST_IS_GUEST=1
 {% endif %}
 
@@ -75,6 +82,8 @@ services:
       - JICOFO_COMPONENT_SECRET={{ JICOFO_COMPONENT_SECRET }}
       - PUBLIC_URL={{ JITSI_PUBLIC_URL }}
       - JVB_PORT={{ JITSI_JVB_PORT }}
+      - DOCKER_HOST_ADDRESS=${DOCKER_HOST_ADDRESS}
+      - ENABLE_COLIBRI_WEBSOCKET=${ENABLE_COLIBRI_WEBSOCKET}
 
   web:
     container_name: njorddeploy-jitsi-web
@@ -100,9 +109,12 @@ services:
       - JVB_PORT={{ JITSI_JVB_PORT }}
 {% if JITSI_ENABLE_AUTH %}
       - ENABLE_AUTH=1
+      - ENABLE_GUEST=1
+      - ENABLE_GUESTS=1
       - ENABLE_GUEST_IS_GUEST=1
       - AUTH_TYPE=internal
 {% endif %}
+      - ENABLE_XMPP_WEBSOCKET=${ENABLE_XMPP_WEBSOCKET}
 {% if JITSI_ENABLE_ETHERPAD %}
       - ETHERPAD_PUBLIC_URL={{ JITSI_PUBLIC_URL }}/etherpad
 {% endif %}

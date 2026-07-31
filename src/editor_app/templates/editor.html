@@ -531,18 +531,46 @@
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="ai-api-key" class="form-label">Gemini API Key</label>
-                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password"
-                                   placeholder="{% if has_gemini_key %}Gemini API key is configured (leave blank to keep){% else %}Enter Gemini API key{% endif %}">
-                            <div class="form-text">
-                                {% if has_gemini_key %}
-                                The configured GEMINI_API_KEY from the .env file will be used if this is left blank.
-                                {% else %}
-                                An API key is required to use the AI component generator.
-                                {% endif %}
+                            <label for="ai-provider" class="form-label">AI Provider</label>
+                            <select class="form-select" id="ai-provider">
+                                <option value="ollama" {% if not has_gemini_key %}selected{% endif %}>Ollama Local (RTX 3060)</option>
+                                <option value="gemini" {% if has_gemini_key %}selected{% endif %}>Google Gemini</option>
+                                <option value="hostyourai">HostYourAI / Loes (EU)</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="custom">Custom Endpoint</option>
+                            </select>
+                        </div>
+
+                        <div id="ai-status-container" class="mb-3 d-none">
+                            <span id="ai-status-badge" class="badge bg-secondary">Checking status...</span>
+                            <span id="ai-status-details" class="text-muted small ms-2"></span>
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-base-url-group">
+                            <label for="ai-base-url" class="form-label">Base URL</label>
+                            <input type="url" class="form-control" id="ai-base-url" autocomplete="off" placeholder="http://localhost:11434/v1">
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-api-key-group">
+                            <label for="ai-api-key" class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                            <div class="form-text" id="ai-api-key-help">An API key is required for cloud providers.</div>
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-model-select-group">
+                            <label for="ai-model-select" class="form-label">Model</label>
+                            <select class="form-select" id="ai-model-select"></select>
+                            <div class="form-text d-none" id="ai-hostyourai-help">
+                                <a href="https://hostyourai.eu" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> Bekijk alle HostYourAI-modellen op de website</a>
                             </div>
                         </div>
-                        <div class="form-check mb-3">
+
+                        <div class="mb-3 d-none" id="ai-model-custom-group">
+                            <label for="ai-model-custom" class="form-label">Custom Model Name</label>
+                            <input type="text" class="form-control" id="ai-model-custom" autocomplete="off" placeholder="e.g., qwen2.5-coder:14b">
+                        </div>
+
+                        <div class="form-check mb-3" id="ai-save-key-group">
                             <input class="form-check-input" type="checkbox" id="ai-save-key">
                             <label class="form-check-label text-secondary small" for="ai-save-key">
                                 Save API key to local .env file

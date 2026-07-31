@@ -1,6 +1,6 @@
 :: start.bat
 @echo off
-ECHO Starting PiSelfhosting Configurator...
+ECHO Starting NjordDeploy Configurator...
 ECHO This will open a new tab in your web browser.
 
 :: Run the Flask application from the 'configurator_app' directory

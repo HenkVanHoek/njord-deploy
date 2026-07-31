@@ -2,7 +2,6 @@
 
 import json
 import logging
-import os
 import re
 import urllib.parse
 from typing import Optional
@@ -15,8 +14,17 @@ logger = logging.getLogger(__name__)
 class AIGenerator:
     """Handles interaction with the Gemini REST API to generate components."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
         self.api_key = api_key
+        self.provider = provider
+        self.base_url = base_url
+        self.model = model
 
     def generate_component_data(
         self,
@@ -26,15 +34,8 @@ class AIGenerator:
     ) -> dict:
         """Analyzes a GitHub repository and returns structured component configuration.
 
-        Uses the Gemini REST API with structured JSON output configuration.
+        Uses the multi-provider AIGeneratorEngine.
         """
-        # Retrieve the API key from parameter or fallback to
-        # the GEMINI_API_KEY environment variable.
-        # Ensure the GEMINI_API_KEY is configured in your .env file.
-        api_key = self.api_key or os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("Gemini API key is not configured.")
-
         # Clean and validate the repository URL
         parsed_url = urllib.parse.urlparse(repo_url)
         if not parsed_url.netloc or "github.com" not in parsed_url.netloc:
@@ -107,129 +108,29 @@ class AIGenerator:
         if custom_instructions:
             user_prompt += f"Custom User Instructions: {custom_instructions}\n"
 
-        prompt = f"{system_prompt}\n{user_prompt}"
+        # Initialize the AIGeneratorEngine
+        from utils.ai_generator_engine import AIGeneratorEngine
 
-        # Define the expected JSON response schema
-        response_schema = {
-            "type": "OBJECT",
-            "properties": {
-                "metadata": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "name": {"type": "STRING"},
-                        "image_name": {"type": "STRING"},
-                        "description": {"type": "STRING"},
-                        "group": {"type": "STRING"},
-                        "has_ui": {"type": "BOOLEAN"},
-                        "has_configuration": {"type": "BOOLEAN"},
-                        "ui_port_variable": {"type": "STRING"},
-                        "protocol": {"type": "STRING"},
-                        "conflicts_with": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "depends_on": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "tags": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "resource_profile": {
-                            "type": "OBJECT",
-                            "properties": {
-                                "cpu": {"type": "STRING"},
-                                "ram": {"type": "STRING"},
-                                "storage_type": {"type": "STRING"},
-                                "recommended_cores": {"type": "INTEGER"},
-                                "recommended_ram_mb": {"type": "INTEGER"},
-                                "recommended_storage_gb": {"type": "INTEGER"},
-                            },
-                        },
-                        "docker_service_name": {"type": "STRING"},
-                        "component_version": {"type": "STRING"},
-                    },
-                    "required": [
-                        "name",
-                        "image_name",
-                        "description",
-                        "group",
-                        "has_ui",
-                        "has_configuration",
-                        "docker_service_name",
-                        "component_version",
-                    ],
-                },
-                "docker_compose": {"type": "STRING"},
-                "variables": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "id": {"type": "STRING"},
-                            "label": {"type": "STRING"},
-                            "type": {"type": "STRING"},
-                            "default": {"type": "STRING"},
-                            "description": {"type": "STRING"},
-                        },
-                        "required": ["id", "label", "type", "default", "description"],
-                    },
-                },
-                "config_templates": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "name": {"type": "STRING"},
-                            "content": {"type": "STRING"},
-                        },
-                        "required": ["name", "content"],
-                    },
-                },
-            },
-            "required": ["metadata", "docker_compose", "variables"],
-        }
+        engine = AIGeneratorEngine(
+            provider=self.provider,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            model=self.model,
+        )
 
         # Define conversation history for multi-turn correction loop
-        contents = [{"role": "user", "parts": [{"text": prompt}]}]
+        messages = [{"role": "user", "content": user_prompt}]
         max_attempts = 3
         attempt = 0
 
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.5-flash:generateContent?key={api_key}"
-        )
-
         while True:
-            # Build payload for the API
-            payload = {
-                "contents": contents,
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                    "responseSchema": response_schema,
-                },
-            }
-
             try:
-                response = requests.post(url, json=payload, timeout=60)
-                response.raise_for_status()
-                result_json = response.json()
-
-                # Retrieve generated content from the response structure
-                candidates = result_json.get("candidates", [])
-                if not candidates:
-                    raise ValueError("No candidates returned from Gemini API.")
-
-                # Apply Unpacking-First Mandate from rules
-                candidate, *_ = candidates
-                content = candidate.get("content", {})
-                parts = content.get("parts", [])
-                if not parts:
-                    raise ValueError("No parts found in the response content.")
-
-                part, *_ = parts
-                text = part.get("text", "")
+                # Request structured JSON format
+                text = engine.generate(
+                    prompt=messages,
+                    system_context=system_prompt,
+                    response_format={"type": "json_object"},
+                )
 
                 # Parse and validate the returned JSON
                 data = json.loads(text)
@@ -302,59 +203,53 @@ class AIGenerator:
                 )
 
                 # Append model's response and correction prompt to history
-                contents.append({"role": "model", "parts": [{"text": text}]})
-                contents.append(
-                    {"role": "user", "parts": [{"text": correction_prompt}]}
-                )
+                messages.append({"role": "assistant", "content": text})
+                messages.append({"role": "user", "content": correction_prompt})
 
-            except requests.exceptions.RequestException as e:
-                logger.error("Gemini API request failed")
-                if e.response is not None:
-                    status_code = e.response.status_code
-                    if status_code == 429:
-                        raise RuntimeError(
-                            "Gemini API quota exceeded or rate limit reached. "
-                            "Please wait a minute before trying again."
+            except Exception as e:
+                logger.error(f"AI Generator inference failed: {e}")
+                err_msg = str(e).lower()
+                if "rate limit" in err_msg or "quota" in err_msg or "429" in err_msg:
+                    raise RuntimeError(
+                        "AI API quota exceeded or rate limit reached. "
+                        "Please wait a minute before trying again."
+                    ) from e
+                elif (
+                    "503" in err_msg
+                    or "unavailable" in err_msg
+                    or "overloaded" in err_msg
+                ):
+                    raise RuntimeError(
+                        "AI API service is temporarily unavailable or "
+                        "overloaded. Please try again in a few moments."
+                    ) from e
+                elif "400" in err_msg or "bad request" in err_msg:
+                    raise RuntimeError(
+                        "AI API rejected the request as invalid " "(400 Bad Request)."
+                    ) from e
+                elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
+                    if attempt < max_attempts:
+                        attempt += 1
+                        logger.info(
+                            "Failed to parse response as JSON. Attempting "
+                            f"self-correction (attempt {attempt}/{max_attempts})..."
                         )
-                    elif status_code == 503:
-                        raise RuntimeError(
-                            "Gemini API service is temporarily unavailable or "
-                            "overloaded. Please try again in a few moments."
+                        correction_prompt = (
+                            "The previous response failed to parse as JSON with "
+                            f"error: {e}. Please return the complete, valid JSON "
+                            "adhering strictly to the original schema."
                         )
-                    elif status_code == 400:
-                        raise RuntimeError(
-                            "Gemini API rejected the request as invalid "
-                            "(400 Bad Request)."
-                        )
-                    else:
-                        raise RuntimeError(
-                            "Gemini API returned an HTTP error status: "
-                            f"{status_code}"
-                        )
-                raise RuntimeError(
-                    f"Failed to communicate with Gemini API: {type(e).__name__}"
-                )
-            except (json.JSONDecodeError, KeyError, ValueError) as e:
-                logger.error(f"Failed to parse Gemini API response: {e}")
-                if attempt < max_attempts:
-                    attempt += 1
-                    logger.info(
-                        "Failed to parse response as JSON. Attempting "
-                        f"self-correction (attempt {attempt}/{max_attempts})..."
-                    )
-                    correction_prompt = (
-                        "The previous response failed to parse as JSON with "
-                        f"error: {e}. Please return the complete, valid JSON "
-                        "adhering strictly to the original schema."
-                    )
-                    text_val = text if "text" in locals() else ""
-                    contents.append({"role": "model", "parts": [{"text": text_val}]})
-                    contents.append(
-                        {"role": "user", "parts": [{"text": correction_prompt}]}
-                    )
-                    continue
-
-                raise RuntimeError(f"Received malformed response from Gemini API: {e}")
+                        text_val = text if "text" in locals() else ""
+                        messages.append({"role": "assistant", "content": text_val})
+                        messages.append({"role": "user", "content": correction_prompt})
+                        continue
+                    raise RuntimeError(
+                        f"Received malformed response from AI API: {e}"
+                    ) from e
+                else:
+                    raise RuntimeError(
+                        f"Failed to communicate with AI API: {type(e).__name__} - {e}"
+                    ) from e
 
     def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
         """Tries to fetch a file from the repository's main or master branch."""

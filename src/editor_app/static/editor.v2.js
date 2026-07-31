@@ -712,6 +712,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const instructionsInput = document.getElementById('ai-instructions');
         const apiKeyInput = document.getElementById('ai-api-key');
 
+        const providerSelect = document.getElementById('ai-provider');
+        const apiKeyGroup = document.getElementById('ai-api-key-group');
+        const baseUrlGroup = document.getElementById('ai-base-url-group');
+        const modelSelectGroup = document.getElementById('ai-model-select-group');
+        const modelSelect = document.getElementById('ai-model-select');
+        const modelCustomGroup = document.getElementById('ai-model-custom-group');
+        const modelCustomInput = document.getElementById('ai-model-custom');
+        const hostyouraiHelp = document.getElementById('ai-hostyourai-help');
+        const statusContainer = document.getElementById('ai-status-container');
+        const statusBadge = document.getElementById('ai-status-badge');
+        const statusDetails = document.getElementById('ai-status-details');
+        const baseUrlInput = document.getElementById('ai-base-url');
+
         const inputStep = document.getElementById('ai-input-step');
         const loadingStep = document.getElementById('ai-loading-step');
         const previewStep = document.getElementById('ai-preview-step');
@@ -732,7 +745,216 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let generatedData = null;
 
+        let installedOllamaModels = [];
 
+        const checkStatus = async () => {
+            const provider = providerSelect.value;
+            const baseUrl = baseUrlInput.value.trim();
+
+            statusContainer.classList.remove('d-none');
+            statusBadge.className = 'badge bg-secondary';
+            statusBadge.textContent = 'Checking status...';
+            statusDetails.textContent = '';
+
+            try {
+                const response = await fetch('/api/ai/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider, base_url: baseUrl })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'online') {
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.textContent = 'Online';
+                        if (provider === 'ollama' && data.models) {
+                            installedOllamaModels = data.models;
+                            populateModels('ollama', installedOllamaModels);
+                        }
+                    } else if (data.status === 'configured_locally_only') {
+                        statusBadge.className = 'badge bg-info';
+                        statusBadge.textContent = 'Configured locally';
+                    } else if (data.status === 'missing_key') {
+                        statusBadge.className = 'badge bg-warning text-dark';
+                        statusBadge.textContent = 'Key missing';
+                    } else {
+                        statusBadge.className = 'badge bg-danger';
+                        statusBadge.textContent = 'Offline';
+                    }
+                    statusDetails.textContent = data.details || '';
+                } else {
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'Error';
+                    statusDetails.textContent = `Status endpoint returned ${response.status}`;
+                }
+            } catch (e) {
+                statusBadge.className = 'badge bg-danger';
+                statusBadge.textContent = 'Error';
+                statusDetails.textContent = e.message || 'Network error checking status';
+            }
+        };
+
+        const populateModels = (provider, modelsList = []) => {
+            modelSelect.innerHTML = '';
+            hostyouraiHelp.classList.add('d-none');
+
+            let options = [];
+
+            if (provider === 'gemini') {
+                options = [
+                    { value: 'gemini-2.5-flash', text: 'Gemini 2.5 Flash (Aanbevolen - Snel)' },
+                    { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro (Deep Coding Reasoning)' },
+                    { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash (Legacy Snel)' },
+                    { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro (Legacy)' }
+                ];
+            } else if (provider === 'openai') {
+                options = [
+                    { value: 'gpt-4o-mini', text: 'GPT-4o Mini (Aanbevolen - Snel)' },
+                    { value: 'gpt-4o', text: 'GPT-4o (Krachtig)' },
+                    { value: 'o1-mini', text: 'o1 Mini (Redeneren)' },
+                    { value: 'custom', text: 'Handmatig model invoeren...' }
+                ];
+            } else if (provider === 'hostyourai') {
+                options = [
+                    { value: 'mistral-7b-instruct', text: 'Mistral 7B Instruct (Default)' },
+                    { value: 'meta-llama-3-8b-instruct', text: 'Meta Llama 3 8B Instruct' },
+                    { value: 'mixtral-8x7b-instruct', text: 'Mixtral 8x7B Instruct (Krachtig)' },
+                    { value: 'custom', text: 'Handmatig model invoeren...' }
+                ];
+                hostyouraiHelp.classList.remove('d-none');
+            } else if (provider === 'ollama') {
+                if (modelsList.length > 0) {
+                    modelsList.forEach(model => {
+                        options.push({ value: model, text: model });
+                    });
+                    options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
+                } else {
+                    options = [
+                        { value: 'qwen2.5-coder:14b-instruct-q4_K_M', text: 'Qwen 2.5 Coder 14B Q4_K_M (Aanbevolen)' },
+                        { value: 'qwen2.5-coder:7b', text: 'Qwen 2.5 Coder 7B' },
+                        { value: 'llama3:latest', text: 'Llama 3' },
+                        { value: 'custom', text: 'Handmatig model invoeren...' }
+                    ];
+                }
+            }
+
+            options.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt.value;
+                el.textContent = opt.text;
+                modelSelect.appendChild(el);
+            });
+
+            // Set default selections
+            if (provider === 'gemini') {
+                modelSelect.value = 'gemini-2.5-flash';
+            } else if (provider === 'openai') {
+                modelSelect.value = 'gpt-4o-mini';
+            } else if (provider === 'hostyourai') {
+                modelSelect.value = 'mistral-7b-instruct';
+            } else if (provider === 'ollama') {
+                if (modelsList.length > 0) {
+                    const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
+                    modelSelect.value = qwenModel || modelsList[0];
+                } else {
+                    modelSelect.value = 'qwen2.5-coder:14b-instruct-q4_K_M';
+                }
+            }
+
+            handleModelSelectChange();
+        };
+
+        const handleModelSelectChange = () => {
+            if (modelSelect.value === 'custom') {
+                modelCustomGroup.classList.remove('d-none');
+                modelCustomInput.required = true;
+            } else {
+                modelCustomGroup.classList.add('d-none');
+                modelCustomInput.required = false;
+            }
+        };
+
+        modelSelect.addEventListener('change', handleModelSelectChange);
+
+        const updateProviderFields = () => {
+            const provider = providerSelect.value;
+
+            apiKeyGroup.classList.add('d-none');
+            baseUrlGroup.classList.add('d-none');
+            modelSelectGroup.classList.add('d-none');
+            modelCustomGroup.classList.add('d-none');
+            hostyouraiHelp.classList.add('d-none');
+
+            if (provider === 'ollama') {
+                baseUrlGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = 'http://localhost:11434/v1';
+                }
+                populateModels('ollama', installedOllamaModels);
+            } else if (provider === 'gemini') {
+                apiKeyGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The GEMINI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter Gemini API key (leave blank to use .env key)';
+                populateModels('gemini');
+            } else if (provider === 'hostyourai') {
+                apiKeyGroup.classList.remove('d-none');
+                baseUrlGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The HOSTYOURAI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter HostYourAI API key (leave blank to use .env key)';
+
+                baseUrlInput.placeholder = 'https://api.hostyourai.eu/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = 'https://api.hostyourai.eu/v1';
+                }
+                populateModels('hostyourai');
+            } else if (provider === 'openai') {
+                apiKeyGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The OPENAI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter OpenAI API key (leave blank to use .env key)';
+                populateModels('openai');
+            } else if (provider === 'custom') {
+                apiKeyGroup.classList.remove('d-none');
+                baseUrlGroup.classList.remove('d-none');
+                modelCustomGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'API Key or Token for custom endpoint.';
+                }
+                apiKeyInput.placeholder = 'Enter Custom Endpoint Token';
+
+                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = '';
+                }
+                modelCustomInput.value = '';
+                modelCustomInput.placeholder = 'e.g., custom-model-name';
+            }
+
+            checkStatus();
+        };
+
+        providerSelect.addEventListener('change', updateProviderFields);
+        baseUrlInput.addEventListener('change', checkStatus);
 
         createAiBtn.addEventListener('click', () => {
             form.reset();
@@ -740,6 +962,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
             generatedData = null;
+            installedOllamaModels = [];
+            updateProviderFields();
             modal.show();
         });
 
@@ -750,6 +974,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const apiKey = apiKeyInput.value.trim();
             const saveKeyCheckbox = document.getElementById('ai-save-key');
             const saveKey = saveKeyCheckbox ? saveKeyCheckbox.checked : false;
+
+            const provider = providerSelect.value;
+            const baseUrl = baseUrlInput.value.trim();
+            let modelOverride = modelSelect.value;
+            if (provider === 'custom' || modelSelect.value === 'custom') {
+                modelOverride = modelCustomInput.value.trim();
+            }
 
             inputStep.classList.add('d-none');
             loadingStep.classList.remove('d-none');
@@ -764,7 +995,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         repo_url: repoUrl,
                         custom_instructions: instructions,
                         api_key: apiKey,
-                        save_key: saveKey
+                        save_key: saveKey,
+                        provider: provider,
+                        base_url: baseUrl,
+                        model: modelOverride
                     })
                 });
 

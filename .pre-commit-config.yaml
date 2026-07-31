@@ -77,3 +77,12 @@ repos:
         # Assuming you have Bandit configured via pyproject.toml.
         args: ["-c", "pyproject.toml"]
         additional_dependencies: ["bandit[toml]"]
+
+# --- 6. LOCAL CUSTOM SECURITY CHECKS ---
+-   repo: local
+    hooks:
+    -   id: check-secrets
+        name: Check Secrets
+        entry: python3 scripts/check_secrets.py
+        language: system
+        types: [text]
