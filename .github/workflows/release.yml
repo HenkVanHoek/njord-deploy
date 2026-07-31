@@ -41,22 +41,7 @@ jobs:
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
-      - name: Install system dependencies (Linux)
-        if: matrix.os-name == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y nmap
 
-      - name: Install system dependencies (macOS)
-        if: matrix.os-name == 'macOS'
-        # OPTIMIZATION: Disable Homebrew auto-update to save 5-10 minutes in CI
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: 1
-        run: brew install nmap
-
-      - name: Install system dependencies (Windows)
-        if: matrix.os-name == 'Windows'
-        run: choco install nmap
 
       - name: Install Python dependencies
         run: |
