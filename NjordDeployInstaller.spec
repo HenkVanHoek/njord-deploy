@@ -5,9 +5,7 @@ import platform
 # windowed application, consistent across all operating systems.
 
 # Placeholders to prevent PyCharm unresolved reference warnings at design time
-try:
-    from PyInstaller.building.api import EXE, PYZ, Analysis
-except ImportError:
+if "Analysis" not in globals():
     # noinspection PyUnusedLocal
     class Analysis:
         def __init__(self, *args, **kwargs):
@@ -18,11 +16,13 @@ except ImportError:
             self.zipfiles = None
             self.datas = None
 
+if "PYZ" not in globals():
     # noinspection PyUnusedLocal
     class PYZ:
         def __init__(self, *args, **kwargs):
             pass
 
+if "EXE" not in globals():
     # noinspection PyUnusedLocal
     class EXE:
         def __init__(self, *args, **kwargs):
