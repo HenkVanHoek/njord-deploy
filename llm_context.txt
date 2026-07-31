@@ -170,6 +170,22 @@ if __name__ == "__main__":
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
 
+    - name: Register Jitsi Meet moderator user if configured
+      ansible.builtin.shell: |
+        if [ -f {{ project_config_dir }}/.env ]; then
+          JITSI_MEET_USER=$(grep "^JITSI_MEET_USER=" {{ project_config_dir }}/.env | cut -d= -f2-)
+          JITSI_MEET_PASSWORD=$(grep "^JITSI_MEET_PASSWORD=" {{ project_config_dir }}/.env | cut -d= -f2-)
+          if [ -n "$JITSI_MEET_USER" ] && [ -n "$JITSI_MEET_PASSWORD" ]; then
+            if docker ps | grep -q njorddeploy-jitsi-prosody; then
+              docker exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
+            fi
+          fi
+        fi
+      register: jitsi_register_out
+      changed_when: "'created' in jitsi_register_out.stdout"
+      failed_when: false
+
+
     - name: Restart specifically requested components
       ansible.builtin.command:
         cmd: "docker compose restart {{ item }}"
@@ -867,7 +883,7 @@ def run_installation() -> Generator[str, None, None]:
 
     load_dotenv(dotenv_path=project_root / ".env")
 
-    yield "--- PiSelfHosting Installer ---"
+    yield "--- NjordDeploy Installer ---"
 
     version = get_project_version()
     yield f"Project Version: {version}"
@@ -1071,6 +1087,220 @@ if __name__ == "__main__":
         port=5001,  # Using 5001 to avoid conflicts with the main app
         extra_files=extra_files_to_watch,
     )
+
+--- FILE: scripts/check_secrets.py ---
+# File: scripts/check_secrets.py
+# Part of the NjordDeploy project.
+
+# Copyright (C) 2026 Henk van Hoek
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see https://www.gnu.org/licenses.
+
+import os
+import re
+import sys
+
+# Common patterns for keys/secrets
+GEMINI_KEY_RE = re.compile(r"AIzaSy[A-Za-z0-9_-]{35}")
+PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z ]+ PRIVATE KEY-----")
+
+# Regex to detect assignments to sensitive variable names
+# E.g. GEMINI_API_KEY = "xyz" or export PASSWORD="abc"
+SECRET_ASSIGNMENT_RE = re.compile(
+    r"(?:export\s+)?([a-zA-Z0-9_\-\.]+)\s*=\s*(['\"])(.*?)\2", re.IGNORECASE
+)
+
+# SENSITIVE_KEYWORDS to check in variable names
+SENSITIVE_KEYWORDS = {
+    "password",
+    "passwd",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "private_key",
+}
+
+# Placeholders that are allowed
+PLACEHOLDERS = {
+    "placeholder",
+    "example",
+    "changeme",
+    "change_me",
+    "insert_here",
+    "your_",
+    "jouw_",
+    "default",
+    "none",
+    "null",
+    "true",
+    "false",
+    "replace_me",
+    "<replace",
+    "bpt-registration-token",
+    "token-here",
+    "password-here",
+}
+
+
+def is_placeholder(value):
+    val_lower = value.lower().strip()
+    if not val_lower:
+        return True
+    # Allow environment variable references, variable interpolation, or tag brackets
+    if (
+        val_lower.startswith("$")
+        or val_lower.startswith("{")
+        or val_lower.endswith("}")
+        or (val_lower.startswith("<") and val_lower.endswith(">"))
+    ):
+        return True
+    for p in PLACEHOLDERS:
+        if p in val_lower:
+            return True
+    return False
+
+
+def check_file(filepath):
+    # Skip binary files, git directory, etc.
+    if not os.path.isfile(filepath):
+        return []
+
+    filename = os.path.basename(filepath)
+    filepath_lower = filepath.lower()
+
+    # Check if this is a test file or a documentation/JS file
+    is_test_file = "tests/" in filepath_lower or "test_" in filename
+
+    # Only run assignment checks on code and config files, not JS, MD, HTML, CSS, etc.
+    run_assignment_check = not is_test_file and any(
+        filepath_lower.endswith(ext)
+        for ext in [
+            ".py",
+            ".sh",
+            ".env",
+            ".envrc",
+            ".yaml",
+            ".yml",
+            ".json",
+            ".conf",
+            ".ini",
+        ]
+    )
+
+    # Read file content safely
+    try:
+        with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+            lines = f.readlines()
+    except Exception:
+        return []
+
+    findings = []
+    for line_num, line in enumerate(lines, 1):
+        stripped = line.strip()
+        # Skip comments
+        if stripped.startswith("#") or stripped.startswith("//"):
+            # Still scan comments for Gemini/private keys, but not assignments
+            if GEMINI_KEY_RE.search(line):
+                findings.append((line_num, "Leaked Gemini API Key detected in comment"))
+            if not is_test_file and PRIVATE_KEY_RE.search(line):
+                findings.append(
+                    (line_num, "Leaked Private Key block detected in comment")
+                )
+            continue
+
+        # 1. Check for Gemini API Keys
+        if GEMINI_KEY_RE.search(line):
+            findings.append((line_num, "Leaked Gemini API Key detected"))
+            continue
+
+        # 2. Check for Private Keys
+        if not is_test_file and PRIVATE_KEY_RE.search(line):
+            findings.append((line_num, "Leaked Private Key block detected"))
+            continue
+
+        # 3. Check for assignments
+        if run_assignment_check:
+            match = SECRET_ASSIGNMENT_RE.search(line)
+            if match:
+                var_name, _, var_value = match.groups()
+                var_name_lower = var_name.lower()
+
+                # Skip JS DOM/UI assignments
+                DOM_PROPERTIES = [
+                    ".placeholder",
+                    ".classname",
+                    ".type",
+                    ".value",
+                    ".display",
+                    ".id",
+                    ".style",
+                    ".src",
+                ]
+                if any(prop in var_name_lower for prop in DOM_PROPERTIES):
+                    continue
+
+                # Check if any sensitive keyword is in the variable name
+                if any(kw in var_name_lower for kw in SENSITIVE_KEYWORDS):
+                    if not is_placeholder(var_value):
+                        findings.append(
+                            (
+                                line_num,
+                                f"Potential hardcoded secret assigned to "
+                                f"'{var_name}': '{var_value[:4]}...'",
+                            )
+                        )
+
+    return findings
+
+
+def main():
+    files_to_check = sys.argv[1:]
+    if not files_to_check:
+        sys.exit(0)
+
+    has_errors = False
+    for filepath in files_to_check:
+        # Avoid checking check_secrets.py or example files
+        filename = os.path.basename(filepath)
+        if filename == "check_secrets.py" or ".example" in filename:
+            continue
+
+        findings = check_file(filepath)
+        if findings:
+            has_errors = True
+            print(f"[SECURITY CHECK FAILED] {filepath}:")
+            for line_num, msg in findings:
+                print(f"  Line {line_num}: {msg}")
+            print()
+
+    if has_errors:
+        print(
+            "Error: Staging credentials/secrets is forbidden by "
+            "security-secrets-guard policy."
+        )
+        print(
+            "Please remove the plaintext secret, use environment variables, "
+            "and try again."
+        )
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
 
 --- FILE: scripts/create_proxmox_lxc.py ---
 # scripts/create_proxmox_lxc.py
@@ -2786,6 +3016,727 @@ if __name__ == "__main__":
     exit_code = run_proxmox_package_tests(args)
     sys.exit(0 if exit_code == 0 else 1)
 
+--- FILE: scripts/proxmox_release_test_runner.py ---
+# scripts/proxmox_release_test_runner.py
+import argparse
+import logging
+import os
+import sys
+import time
+import urllib.parse
+import zipfile
+from pathlib import Path
+from typing import Tuple
+
+import requests  # type: ignore
+from dotenv import load_dotenv
+
+# Ensure we can import from the 'src' root directory
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root / "src"))
+
+from managers.ssh_manager import SSHManager  # noqa: E402
+from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("proxmox_release_test_runner")
+
+
+def setup_proxmox_client() -> ProxmoxClient:
+    """Initializes ProxmoxClient from environment variables."""
+    host = os.getenv("PROXMOX_HOST") or "https://192.168.178.51:8006"
+    user = os.getenv("PROXMOX_USER") or "root@pam"
+    token_id = os.getenv("PROXMOX_TOKEN_ID") or ""
+    token_secret = os.getenv("PROXMOX_TOKEN_SECRET") or ""
+
+    if not token_id or not token_secret:
+        logger.error("PROXMOX_TOKEN_ID or PROXMOX_TOKEN_SECRET not configured.")
+        print(
+            "ERROR: Proxmox API Token credentials must be set in your .env file.\n"
+            "Required keys:\n"
+            "  PROXMOX_HOST=https://192.168.178.51:8006\n"
+            "  PROXMOX_USER=root@pam\n"
+            "  PROXMOX_TOKEN_ID=<token-id>\n"
+            "  PROXMOX_TOKEN_SECRET=<token-secret>\n"
+        )
+        sys.exit(1)
+
+    return ProxmoxClient(
+        host=host,
+        user=user,
+        token_id=token_id,
+        token_secret=token_secret,
+        verify_ssl=False,
+    )
+
+
+def wait_for_proxmox_task(
+    client: ProxmoxClient, node: str, upid: str, timeout_seconds: int = 180
+) -> None:
+    """Polls the Proxmox task status until it completes successfully."""
+    logger.info(f"Waiting for Proxmox task to complete: {upid}")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            endpoint = f"nodes/{node}/tasks/{upid}/status"
+            res = client.get(endpoint)
+            data = res.get("data", {})
+            status = data.get("status")
+            if status == "stopped":
+                exit_status = data.get("exitstatus")
+                if exit_status == "OK":
+                    logger.info("Proxmox task completed successfully.")
+                    return
+                else:
+                    raise RuntimeError(
+                        f"Proxmox task failed with status: {exit_status}"
+                    )
+        except Exception as e:
+            if "failed with status" in str(e):
+                raise e
+            logger.debug(f"Failed to query task status: {e}")
+        time.sleep(2)
+    raise TimeoutError("Proxmox task timed out.")
+
+
+def wait_for_ip(
+    client: ProxmoxClient, node: str, vmid: int, timeout_seconds: int = 120
+) -> str | None:
+    """Polls the guest agent until it retrieves a valid IP address."""
+    logger.info(f"Waiting for VM {vmid} to boot and retrieve dynamic IP...")
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        ip = client.get_vm_ip(node, vmid)
+        if ip:
+            logger.info(f"VM {vmid} is online with IP: {ip}")
+            return ip
+        time.sleep(5)
+    logger.error(f"Timed out waiting for VM {vmid} IP address.")
+    return None
+
+
+def download_github_release(tag: str, platform_name: str) -> Path:
+    """Downloads the release asset for a given tag and platform from GitHub."""
+    logger.info(f"Downloading release assets for tag {tag} ({platform_name})...")
+    url = f"https://api.github.com/repos/HenkVanHoek/njord-deploy/releases/tags/{tag}"
+    response = requests.get(url, timeout=15)
+    response.raise_for_status()
+    release_data = response.json()
+    assets = release_data.get("assets", [])
+
+    # Find the correct asset matching the platform
+    target_asset = None
+    for asset in assets:
+        name = asset.get("name", "")
+        if platform_name.lower() in name.lower() and name.endswith(".zip"):
+            target_asset = asset
+            break
+
+    if not target_asset:
+        raise RuntimeError(
+            f"No asset found for platform {platform_name} in release {tag}"
+        )
+
+    download_url = target_asset.get("browser_download_url")
+    logger.info(f"Downloading from {download_url}...")
+    dl_response = requests.get(download_url, timeout=60)
+    dl_response.raise_for_status()
+
+    # Save zip to temporary file
+    temp_dir = project_root / "tmp_release_test"
+    temp_dir.mkdir(exist_ok=True)
+    zip_path = temp_dir / f"release_{platform_name}.zip"
+    with open(zip_path, "wb") as f:
+        f.write(dl_response.content)
+
+    # Unzip
+    with zipfile.ZipFile(zip_path, "r") as zip_ref:
+        zip_ref.extractall(temp_dir)
+
+    # Find the extracted executable (filtering out the zip itself)
+    extracted_files = list(temp_dir.glob("*"))
+    filtered_files = [f for f in extracted_files if f.name != zip_path.name]
+
+    # Rule check: list unpacking or next(iter()) for first elements
+    target_file = next(iter(filtered_files), None)
+    if not target_file:
+        raise RuntimeError("No files found inside the extracted zip.")
+
+    return target_file
+
+
+def run_linux_vm_test(
+    client: ProxmoxClient,
+    node: str,
+    template_id: int,
+    binary_path: Path,
+    vm_user: str,
+    vm_pass: str,
+    ssh_public_key: str,
+) -> Tuple[bool, str]:
+    """Clones a Linux VM, installs the binary, and verifies status."""
+    vmid_val = client.get_next_vmid()
+    if not vmid_val:
+        return False, "Failed to allocate new VMID from Proxmox."
+
+    new_vmid = vmid_val
+    logger.info(
+        f"[LINUX] Cloning master template {template_id} to new VMID {new_vmid}..."
+    )
+
+    try:
+        # Step 1: Clone
+        try:
+            clone_res = client.clone_vm(
+                node=node,
+                vmid=template_id,
+                newid=new_vmid,
+                name=f"njord-rel-test-linux-{new_vmid}",
+                full=False,
+            )
+            upid = clone_res.get("data")
+            if isinstance(upid, str):
+                wait_for_proxmox_task(client, node, upid)
+        except Exception as clone_err:
+            if "Linked clone feature is not supported" in str(clone_err):
+                logger.warning(
+                    "[LINUX] Linked clone not supported. Falling back to full clone..."
+                )
+                clone_res = client.clone_vm(
+                    node=node,
+                    vmid=template_id,
+                    newid=new_vmid,
+                    name=f"njord-rel-test-linux-{new_vmid}",
+                    full=True,
+                )
+                upid = clone_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(client, node, upid)
+            else:
+                raise
+
+        # Step 2: Configure Cloud-Init
+        logger.info(f"[LINUX] Configuring Cloud-Init for VMID {new_vmid}...")
+        client.configure_vm(
+            node=node,
+            vmid=new_vmid,
+            config_data={
+                "ciuser": vm_user,
+                "cipassword": vm_pass,
+                "sshkeys": urllib.parse.quote(ssh_public_key),
+                "ipconfig0": "ip=dhcp",
+                "agent": "enabled=1",
+                "ide2": "local-lvm:cloudinit",
+                "net0": "virtio,bridge=vmbr0,firewall=0",
+            },
+        )
+
+        # Step 3: Start VM
+        logger.info(f"[LINUX] Starting VMID {new_vmid}...")
+        client.start_vm(node=node, vmid=new_vmid)
+
+        # Step 4: Wait for IP
+        vm_ip = wait_for_ip(client, node, new_vmid)
+        if not vm_ip:
+            return False, "Timed out waiting for VM IP."
+
+        # Wait a little bit for SSH daemon to fully initialize
+        time.sleep(15)
+
+        # Step 5: Copy binary & install
+        ssh_mgr = SSHManager(
+            hostname=vm_ip,
+            username=vm_user,
+            password=vm_pass,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+
+        connected = False
+        conn_msg = ""
+        for attempt in range(1, 6):
+            logger.info(
+                f"[LINUX] Connecting via SSH to {vm_user}@{vm_ip} "
+                f"(attempt {attempt}/5)..."
+            )
+            connected, conn_msg = ssh_mgr.connect()
+            if connected:
+                break
+            time.sleep(10)
+
+        if not connected:
+            return False, f"SSH connection failed after 5 attempts: {conn_msg}"
+
+        try:
+            # Deploy SSH keys for passwordless communication
+            ssh_mgr.setup_ssh_key(lambda x: None)
+
+            # Read installer script content
+            install_script_path = project_root / "linux" / "install.sh"
+            with open(install_script_path, "rb") as f:
+                script_bytes = f.read()
+
+            # Upload files
+            logger.info("[LINUX] Copying binary and install script to VM...")
+            with open(binary_path, "rb") as f:
+                bin_bytes = f.read()
+
+            # Upload binary as temporary name
+            ok_bin, msg_bin = ssh_mgr.upload_content(bin_bytes, "NjordDeploy-Linux")
+            if not ok_bin:
+                return False, f"Failed to upload binary: {msg_bin}"
+
+            ok_scr, msg_scr = ssh_mgr.upload_content(script_bytes, "install.sh")
+            if not ok_scr:
+                return False, f"Failed to upload install script: {msg_scr}"
+
+            # Make install.sh executable and run installation
+            logger.info("[LINUX] Running installation script...")
+            ssh_mgr.execute_command("chmod +x install.sh", lambda x: None)
+
+            # Run installer using password for sudo (user needs sudo privs)
+            # The script requires running as root
+            cmd_install = f"echo '{vm_pass}' | sudo -S ./install.sh"
+            exit_code, output = ssh_mgr.execute_command(
+                cmd_install, lambda msg: logger.info(f"[LINUX INSTALL] {msg.strip()}")
+            )
+
+            if exit_code != 0:
+                return False, f"Installation script failed with code {exit_code}"
+
+            # Verify binary exists at expected location
+            exit_code, output = ssh_mgr.execute_command(
+                "ls -l /usr/local/bin/NjordDeploy-Configurator", lambda x: None
+            )
+            if exit_code != 0:
+                return False, "NjordDeploy-Configurator binary not found after install."
+
+            # Run diagnostic command to capture instant crashes
+            logger.info("[LINUX] Running binary with 5s timeout for diagnostics...")
+            cmd_diag = "timeout 5 /usr/local/bin/NjordDeploy-Configurator"
+            ssh_mgr.execute_command(
+                cmd_diag,
+                lambda msg: logger.info(f"[DIAGNOSTIC] {msg.strip()}"),
+                check_exit_code=False,
+            )
+
+            # Start the application in the background
+            logger.info("[LINUX] Starting NjordDeploy Configurator in background...")
+            cmd_start = (
+                f"nohup /usr/local/bin/NjordDeploy-Configurator > "
+                f"/home/{vm_user}/njorddeploy.log 2>&1 &"
+            )
+            ssh_mgr.execute_command(
+                cmd_start,
+                lambda msg: logger.info(f"[LINUX START] {msg.strip()}"),
+                check_exit_code=False,
+            )
+
+            # Allow application startup time
+            time.sleep(5)
+
+            # Verify it is listening on port 5001 (default) or 5000
+            # Let's perform a simple HTTP GET verification
+            logger.info("[LINUX] Verifying HTTP response on port 5001...")
+            verification_url = f"http://{vm_ip}:5001/"
+            try:
+                verify_res = requests.get(verification_url, timeout=5)
+                if verify_res.status_code == 200:
+                    logger.info("[LINUX] Success: HTTP interface is reachable!")
+                    return True, "Linux VM Test Passed successfully."
+                else:
+                    return (
+                        False,
+                        f"HTTP interface returned code {verify_res.status_code}",
+                    )
+            except Exception as http_err:
+                # Try port 5000 just in case
+                try:
+                    verification_url_fallback = f"http://{vm_ip}:5000/"
+                    verify_res = requests.get(verification_url_fallback, timeout=5)
+                    if verify_res.status_code == 200:
+                        logger.info(
+                            "[LINUX] Success: HTTP interface reachable on port 5000!"
+                        )
+                        return True, "Linux VM Test Passed successfully."
+                except Exception:  # nosec B110
+                    pass
+                # Read remote application logs for diagnostics before failing
+                logger.info(
+                    "[LINUX] Verification failed. "
+                    "Retrieving remote logs for diagnostics..."
+                )
+                _, log_output = ssh_mgr.execute_command(
+                    f"cat /home/{vm_user}/njorddeploy.log",
+                    lambda x: None,
+                    check_exit_code=False,
+                )
+                logger.error(f"[LINUX] Remote application logs:\n{log_output}")
+
+                return (
+                    False,
+                    f"HTTP interface verification failed on port 5001: {http_err}",
+                )
+
+        finally:
+            ssh_mgr.close()
+
+    except Exception as e:
+        logger.error(f"[LINUX] Test error: {e}", exc_info=True)
+        return False, str(e)
+
+    finally:
+        # Clean up VM
+        logger.info(f"[LINUX] Cleaning up VMID {new_vmid}...")
+        try:
+            client.stop_vm(node=node, vmid=new_vmid)
+            time.sleep(2)
+            client.destroy_vm(node=node, vmid=new_vmid)
+            logger.info(f"[LINUX] VMID {new_vmid} destroyed.")
+        except Exception as cleanup_err:
+            logger.error(f"[LINUX] Error cleaning up VMID {new_vmid}: {cleanup_err}")
+
+
+def run_windows_vm_test(
+    client: ProxmoxClient,
+    node: str,
+    template_id: int,
+    binary_path: Path,
+    vm_user: str,
+    vm_pass: str,
+) -> Tuple[bool, str]:
+    """Clones a Windows VM, copies executable, runs and verifies."""
+    vmid_val = client.get_next_vmid()
+    if not vmid_val:
+        return False, "Failed to allocate new VMID from Proxmox."
+
+    new_vmid = vmid_val
+    logger.info(
+        f"[WINDOWS] Cloning master template {template_id} to new VMID {new_vmid}..."
+    )
+
+    try:
+        # Step 1: Clone
+        try:
+            clone_res = client.clone_vm(
+                node=node,
+                vmid=template_id,
+                newid=new_vmid,
+                name=f"njord-rel-test-win-{new_vmid}",
+                full=False,
+            )
+            upid = clone_res.get("data")
+            if isinstance(upid, str):
+                wait_for_proxmox_task(client, node, upid)
+        except Exception as clone_err:
+            if "Linked clone feature is not supported" in str(clone_err):
+                logger.warning(
+                    "[WINDOWS] Linked clone not supported. "
+                    "Falling back to full clone..."
+                )
+                clone_res = client.clone_vm(
+                    node=node,
+                    vmid=template_id,
+                    newid=new_vmid,
+                    name=f"njord-rel-test-win-{new_vmid}",
+                    full=True,
+                )
+                upid = clone_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(client, node, upid)
+            else:
+                raise
+
+        # Cloud init password for Windows templates is set if template supports it.
+        # Otherwise password configured in template image is used.
+        logger.info("[WINDOWS] Configuring Cloud-Init credentials...")
+        client.configure_vm(
+            node=node,
+            vmid=new_vmid,
+            config_data={
+                "ciuser": vm_user,
+                "cipassword": vm_pass,
+            },
+        )
+
+        # Step 2: Start VM
+        logger.info(f"[WINDOWS] Starting VMID {new_vmid}...")
+        client.start_vm(node=node, vmid=new_vmid)
+
+        # Step 3: Wait for IP
+        vm_ip = wait_for_ip(client, node, new_vmid)
+        if not vm_ip:
+            return False, "Timed out waiting for VM IP."
+
+        # Wait a little bit for Windows OpenSSH server to start
+        time.sleep(25)
+
+        # Step 4: SSH and run
+        ssh_mgr = SSHManager(
+            hostname=vm_ip,
+            username=vm_user,
+            password=vm_pass,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+
+        connected = False
+        conn_msg = ""
+        for attempt in range(1, 6):
+            logger.info(
+                f"[WINDOWS] Connecting via SSH to {vm_user}@{vm_ip} "
+                f"(attempt {attempt}/5)..."
+            )
+            connected, conn_msg = ssh_mgr.connect()
+            if connected:
+                break
+            time.sleep(10)
+
+        if not connected:
+            return False, f"SSH connection failed after 5 attempts: {conn_msg}"
+
+        try:
+            # Upload Windows executable
+            logger.info("[WINDOWS] Uploading NjordDeployInstaller.exe...")
+            with open(binary_path, "rb") as f:
+                bin_bytes = f.read()
+
+            ok_bin, msg_bin = ssh_mgr.upload_content(
+                bin_bytes, "NjordDeployInstaller.exe"
+            )
+            if not ok_bin:
+                return False, f"Failed to upload Windows binary: {msg_bin}"
+
+            # Start executable in background
+            logger.info("[WINDOWS] Launching executable on Windows guest...")
+            # Using start-process in PowerShell to run background task
+            cmd_start = (
+                'powershell -Command "Start-Process '
+                "-FilePath '.\\NjordDeployInstaller.exe' "
+                "-WindowStyle Hidden -RedirectStandardOutput 'njorddeploy.log'\""
+            )
+            ssh_mgr.execute_command(cmd_start, lambda x: None, check_exit_code=False)
+
+            # Allow startup time
+            time.sleep(10)
+
+            # Verify it is listening on port 5001
+            logger.info("[WINDOWS] Verifying HTTP response on port 5001...")
+            verification_url = f"http://{vm_ip}:5001/"
+            try:
+                verify_res = requests.get(verification_url, timeout=5)
+                if verify_res.status_code == 200:
+                    logger.info("[WINDOWS] Success: HTTP interface is reachable!")
+                    return True, "Windows VM Test Passed successfully."
+                else:
+                    return (
+                        False,
+                        f"HTTP interface returned code {verify_res.status_code}",
+                    )
+            except Exception as http_err:
+                # Try port 5000 just in case
+                try:
+                    verification_url_fallback = f"http://{vm_ip}:5000/"
+                    verify_res = requests.get(verification_url_fallback, timeout=5)
+                    if verify_res.status_code == 200:
+                        logger.info(
+                            "[WINDOWS] Success: HTTP interface reachable on port 5000!"
+                        )
+                        return True, "Windows VM Test Passed successfully."
+                except Exception:  # nosec B110
+                    pass
+                return (
+                    False,
+                    f"HTTP interface verification failed on port 5001: {http_err}",
+                )
+
+        finally:
+            ssh_mgr.close()
+
+    except Exception as e:
+        logger.error(f"[WINDOWS] Test error: {e}", exc_info=True)
+        return False, str(e)
+
+    finally:
+        # Clean up VM
+        logger.info(f"[WINDOWS] Cleaning up VMID {new_vmid}...")
+        try:
+            client.stop_vm(node=node, vmid=new_vmid)
+            time.sleep(2)
+            client.destroy_vm(node=node, vmid=new_vmid)
+            logger.info(f"[WINDOWS] VMID {new_vmid} destroyed.")
+        except Exception as cleanup_err:
+            logger.error(f"[WINDOWS] Error cleaning up VMID {new_vmid}: {cleanup_err}")
+
+
+def main():
+    load_dotenv(dotenv_path=project_root / ".env")
+
+    parser = argparse.ArgumentParser(
+        description="Automated Release Integration Testing on Proxmox VMs"
+    )
+    parser.options = parser.add_argument(
+        "--binary-path",
+        type=str,
+        help="Path to local binary (defaults to dist/NjordDeployInstaller).",
+    )
+    parser.add_argument(
+        "--github-tag",
+        type=str,
+        help="GitHub release tag to fetch the release binary from.",
+    )
+    parser.add_argument(
+        "--node",
+        type=str,
+        default=os.getenv("PROXMOX_NODE") or "pve",
+        help="Proxmox node to use.",
+    )
+    parser.add_argument(
+        "--skip-linux", action="store_true", help="Skip the Linux VM release test."
+    )
+    parser.add_argument(
+        "--skip-windows", action="store_true", help="Skip the Windows VM release test."
+    )
+
+    args = parser.parse_args()
+
+    # Determine templates and credentials
+    linux_template = int(os.getenv("RELEASE_TEST_LINUX_TEMPLATE") or 900)
+    windows_template = int(os.getenv("RELEASE_TEST_WINDOWS_TEMPLATE") or 910)
+    vm_user = (
+        os.getenv("RELEASE_TEST_VM_USER") or os.getenv("PROXMOX_VM_USER") or "testuser"
+    )
+    vm_pass = (
+        os.getenv("RELEASE_TEST_VM_PASSWORD")
+        or os.getenv("PROXMOX_VM_PASSWORD")
+        or "your-secure-test-password"
+    )
+
+    dummy_mgr = SSHManager(
+        hostname="localhost", username="test", password="key"
+    )  # nosec B106
+    ssh_key_obj = dummy_mgr.get_ssh_key()
+    ssh_public_key = f"{ssh_key_obj.get_name()} {ssh_key_obj.get_base64()}"
+
+    proxmox_client = setup_proxmox_client()
+
+    results = []
+
+    # Run Linux Test
+    if not args.skip_linux:
+        # Determine Linux binary path
+        if args.github_tag:
+            try:
+                linux_bin = download_github_release(args.github_tag, "linux")
+            except Exception as dl_err:
+                logger.error(f"Failed to download Linux asset: {dl_err}")
+                sys.exit(1)
+        else:
+            local_path = (
+                Path(args.binary_path)
+                if args.binary_path
+                else project_root / "dist" / "NjordDeployInstaller"
+            )
+            if not local_path.exists():
+                # Try fallback NjordDeploy-Linux
+                fallback = project_root / "dist" / "NjordDeploy-Linux"
+                if fallback.exists():
+                    local_path = fallback
+                else:
+                    logger.error(
+                        f"Linux binary not found at '{local_path}'. "
+                        "Run PyInstaller first or use --github-tag."
+                    )
+                    sys.exit(1)
+            linux_bin = local_path
+
+        logger.info(f"Using Linux binary: {linux_bin}")
+        success, details = run_linux_vm_test(
+            client=proxmox_client,
+            node=args.node,
+            template_id=linux_template,
+            binary_path=linux_bin,
+            vm_user=vm_user,
+            vm_pass=vm_pass,
+            ssh_public_key=ssh_public_key,
+        )
+        results.append(("Linux VM Release Test", success, details))
+
+    # Run Windows Test
+    if not args.skip_windows:
+        # Determine Windows binary path
+        if args.github_tag:
+            try:
+                windows_bin = download_github_release(args.github_tag, "windows")
+            except Exception as dl_err:
+                logger.error(f"Failed to download Windows asset: {dl_err}")
+                sys.exit(1)
+        else:
+            # Expecting either arg binary_path (if it's .exe) or default
+            local_path = None
+            if args.binary_path and args.binary_path.endswith(".exe"):
+                local_path = Path(args.binary_path)
+            else:
+                local_path = project_root / "dist" / "NjordDeployInstaller.exe"
+                if not local_path.exists():
+                    # Try fallback NjordDeploy-Windows.exe
+                    fallback = project_root / "dist" / "NjordDeploy-Windows.exe"
+                    if fallback.exists():
+                        local_path = fallback
+
+            if not local_path or not local_path.exists():
+                logger.error(
+                    f"Windows binary not found at '{local_path}'. "
+                    "Run PyInstaller on Windows, provide --binary-path, "
+                    "or use --github-tag."
+                )
+                sys.exit(1)
+            windows_bin = local_path
+
+        logger.info(f"Using Windows binary: {windows_bin}")
+        success, details = run_windows_vm_test(
+            client=proxmox_client,
+            node=args.node,
+            template_id=windows_template,
+            binary_path=windows_bin,
+            vm_user=vm_user,
+            vm_pass=vm_pass,
+        )
+        results.append(("Windows VM Release Test", success, details))
+
+    # Summary Report
+    print("\n" + "=" * 50)
+    print("           RELEASE INTEGRATION TEST REPORT")
+    print("=" * 50)
+    failures = 0
+    for name, success, details in results:
+        status_str = "✅ PASS" if success else "❌ FAIL"
+        if not success:
+            failures += 1
+        print(f"{name:30} : {status_str}")
+        print(f"  Details: {details}\n")
+    print("=" * 50)
+
+    # Clean up tmp folder if it exists
+    tmp_folder = project_root / "tmp_release_test"
+    if tmp_folder.exists():
+        import shutil
+
+        shutil.rmtree(tmp_folder, ignore_errors=True)
+
+    if failures > 0:
+        sys.exit(1)
+    else:
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+
 --- FILE: scripts/proxmox_test_runner.py ---
 # scripts/proxmox_test_runner.py
 import argparse
@@ -4018,7 +4969,7 @@ if __name__ == "__main__":
 
 --- FILE: scripts/update_docs.py ---
 # scripts/update_docs.py
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
@@ -4028,7 +4979,7 @@ def main():
 
     print("🔄 Updating Supported Services Documentation...")
     try:
-        subprocess.run(
+        subprocess.run(  # nosec B603
             [
                 sys.executable,
                 str(project_root / "scripts" / "generate_services_doc.py"),
@@ -4041,7 +4992,7 @@ def main():
 
     print("🔄 Generating Codebase Context...")
     try:
-        subprocess.run(
+        subprocess.run(  # nosec B603
             [sys.executable, str(project_root / "context_generator.py")],
             check=True,
         )
@@ -10667,6 +11618,7 @@ import logging
 import os
 from pathlib import Path
 
+import requests
 from flask import Flask, abort, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
@@ -10691,8 +11643,18 @@ def create_app(test_config=None):
     if test_config:
         app.config.update(test_config)
 
-    def save_api_key_to_env(key: str):
-        """Saves the Gemini API key to the local .env file."""
+    def save_api_key_to_env(key: str, provider: str = "gemini"):
+        """Saves the API key to the local .env file based on the provider."""
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "hostyourai": "HOSTYOURAI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "custom": "CUSTOM_AI_API_KEY",
+        }
+        var_name = env_map.get(provider)
+        if not var_name:
+            return
+
         env_path = project_root / ".env"
         lines = []
         key_written = False
@@ -10701,21 +11663,21 @@ def create_app(test_config=None):
                 lines = f.readlines()
 
             for i, line in enumerate(lines):
-                if line.strip().startswith("GEMINI_API_KEY="):
-                    lines[i] = f"GEMINI_API_KEY={key}\n"
+                if line.strip().startswith(f"{var_name}="):
+                    lines[i] = f"{var_name}={key}\n"
                     key_written = True
                     break
 
         if not key_written:
             if lines and not lines[-1].endswith("\n"):
                 lines.append("\n")
-            lines.append(f"GEMINI_API_KEY={key}\n")
+            lines.append(f"{var_name}={key}\n")
 
         with open(env_path, "w") as f:
             f.writelines(lines)
 
         # Update current process environment
-        os.environ["GEMINI_API_KEY"] = key
+        os.environ[var_name] = key
 
     meta_file_path, temp_path_obj = get_components_paths()
     meta_file = str(meta_file_path)
@@ -11323,6 +12285,82 @@ def create_app(test_config=None):
 
         return jsonify({"hashed_user_string": hashed_str}), 200
 
+    @app.route("/api/ai/status", methods=["GET", "POST"])
+    def ai_status():
+        """Checks the status of the requested or default AI provider."""
+        provider = None
+        base_url = None
+        if request.method == "POST":
+            data = request.get_json() or {}
+            provider = data.get("provider")
+            base_url = data.get("base_url")
+
+        if not provider:
+            provider = os.getenv("AI_PROVIDER", "ollama")
+
+        env_map = {
+            "gemini": "GEMINI_API_KEY",
+            "hostyourai": "HOSTYOURAI_API_KEY",
+            "openai": "OPENAI_API_KEY",
+            "custom": "CUSTOM_AI_API_KEY",
+        }
+
+        status = "offline"
+        details = ""
+
+        if provider == "ollama":
+            url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+            try:
+                # Clean path to find raw tags list API
+                tags_url = url.replace("/v1", "/api/tags")
+                resp = requests.get(tags_url, timeout=3)
+                if resp.status_code == 200:
+                    status = "online"
+                    details = "Ollama is running locally."
+                    models_data = resp.json().get("models", [])
+                    installed_models = [
+                        m.get("name") for m in models_data if m.get("name")
+                    ]
+                    return (
+                        jsonify(
+                            {
+                                "provider": provider,
+                                "status": status,
+                                "details": details,
+                                "models": installed_models,
+                            }
+                        ),
+                        200,
+                    )
+                else:
+                    status = "offline"
+                    details = f"Ollama returned HTTP {resp.status_code}."
+            except Exception as e:
+                status = "offline"
+                details = f"Could not connect to Ollama at {url}: {e}"
+        else:
+            var_name = env_map.get(provider)
+            if not var_name:
+                status = "offline"
+                details = f"Unknown provider {provider}"
+            else:
+                key_exists = bool(os.getenv(var_name))
+                if key_exists:
+                    status = "online"
+                    details = f"API Key configured in environment ({var_name})."
+                else:
+                    status = (
+                        "configured_locally_only"
+                        if request.method == "POST"
+                        else "missing_key"
+                    )
+                    details = f"API Key ({var_name}) not found in .env file."
+
+        return (
+            jsonify({"provider": provider, "status": status, "details": details}),
+            200,
+        )
+
     @app.route("/api/ai/generate", methods=["POST"])
     def ai_generate_component():
         data = request.get_json() or {}
@@ -11330,6 +12368,11 @@ def create_app(test_config=None):
         custom_instructions = data.get("custom_instructions")
         api_key = data.get("api_key")
         save_key = data.get("save_key", False)
+        provider = data.get("provider")
+        if not provider:
+            provider = "gemini" if api_key else os.getenv("AI_PROVIDER", "ollama")
+        base_url = data.get("base_url")
+        model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid GitHub repository URL is required")
@@ -11343,7 +12386,12 @@ def create_app(test_config=None):
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
 
-            generator = AIGenerator(api_key=api_key)
+            generator = AIGenerator(
+                api_key=api_key,
+                provider=provider,
+                base_url=base_url,
+                model=model,
+            )
             result = generator.generate_component_data(
                 repo_url, custom_instructions, existing_groups
             )
@@ -11352,7 +12400,7 @@ def create_app(test_config=None):
             # Save API key only if generation succeeded (proving key is valid)
             if isinstance(api_key, str) and save_key:
                 try:
-                    save_api_key_to_env(api_key)
+                    save_api_key_to_env(api_key, provider=provider)
                     key_saved = True
                 except Exception as e:
                     logging.error(f"Failed to save API key to .env: {e}")
@@ -11369,8 +12417,8 @@ def create_app(test_config=None):
             )
         except ValueError as ve:
             err_msg = str(ve)
-            if "key is not configured" in err_msg:
-                msg = "Gemini API key is not configured"
+            if "API key missing for provider" in err_msg:
+                msg = err_msg
             elif "repository URL is required" in err_msg:
                 msg = "A valid GitHub repository URL is required"
             elif "repository URL format" in err_msg:
@@ -11385,9 +12433,9 @@ def create_app(test_config=None):
                 return (
                     jsonify(
                         {
-                            "error": "Gemini API Timeout",
+                            "error": "AI API Timeout",
                             "details": (
-                                "The connection to the Gemini API timed out. "
+                                "The connection to the AI API timed out. "
                                 "This is usually a temporary network issue or "
                                 "the server is overloaded. Please try again."
                             ),
@@ -11395,11 +12443,11 @@ def create_app(test_config=None):
                     ),
                     504,
                 )
-            elif "gemini api" in err_msg.lower():
+            elif "api error" in err_msg.lower() or "openai" in err_msg.lower():
                 return (
                     jsonify(
                         {
-                            "error": "Gemini API Error",
+                            "error": "AI API Error",
                             "details": err_msg,
                         }
                     ),
@@ -11407,7 +12455,9 @@ def create_app(test_config=None):
                 )
             else:
                 return (
-                    jsonify({"error": "AI Generation failed due to an internal error"}),
+                    jsonify(
+                        {"error": ("AI Generation failed due to an internal error")}
+                    ),
                     500,
                 )
 
@@ -12302,6 +13352,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const instructionsInput = document.getElementById('ai-instructions');
         const apiKeyInput = document.getElementById('ai-api-key');
 
+        const providerSelect = document.getElementById('ai-provider');
+        const apiKeyGroup = document.getElementById('ai-api-key-group');
+        const baseUrlGroup = document.getElementById('ai-base-url-group');
+        const modelSelectGroup = document.getElementById('ai-model-select-group');
+        const modelSelect = document.getElementById('ai-model-select');
+        const modelCustomGroup = document.getElementById('ai-model-custom-group');
+        const modelCustomInput = document.getElementById('ai-model-custom');
+        const hostyouraiHelp = document.getElementById('ai-hostyourai-help');
+        const statusContainer = document.getElementById('ai-status-container');
+        const statusBadge = document.getElementById('ai-status-badge');
+        const statusDetails = document.getElementById('ai-status-details');
+        const baseUrlInput = document.getElementById('ai-base-url');
+
         const inputStep = document.getElementById('ai-input-step');
         const loadingStep = document.getElementById('ai-loading-step');
         const previewStep = document.getElementById('ai-preview-step');
@@ -12322,7 +13385,216 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let generatedData = null;
 
+        let installedOllamaModels = [];
 
+        const checkStatus = async () => {
+            const provider = providerSelect.value;
+            const baseUrl = baseUrlInput.value.trim();
+
+            statusContainer.classList.remove('d-none');
+            statusBadge.className = 'badge bg-secondary';
+            statusBadge.textContent = 'Checking status...';
+            statusDetails.textContent = '';
+
+            try {
+                const response = await fetch('/api/ai/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider, base_url: baseUrl })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.status === 'online') {
+                        statusBadge.className = 'badge bg-success';
+                        statusBadge.textContent = 'Online';
+                        if (provider === 'ollama' && data.models) {
+                            installedOllamaModels = data.models;
+                            populateModels('ollama', installedOllamaModels);
+                        }
+                    } else if (data.status === 'configured_locally_only') {
+                        statusBadge.className = 'badge bg-info';
+                        statusBadge.textContent = 'Configured locally';
+                    } else if (data.status === 'missing_key') {
+                        statusBadge.className = 'badge bg-warning text-dark';
+                        statusBadge.textContent = 'Key missing';
+                    } else {
+                        statusBadge.className = 'badge bg-danger';
+                        statusBadge.textContent = 'Offline';
+                    }
+                    statusDetails.textContent = data.details || '';
+                } else {
+                    statusBadge.className = 'badge bg-danger';
+                    statusBadge.textContent = 'Error';
+                    statusDetails.textContent = `Status endpoint returned ${response.status}`;
+                }
+            } catch (e) {
+                statusBadge.className = 'badge bg-danger';
+                statusBadge.textContent = 'Error';
+                statusDetails.textContent = e.message || 'Network error checking status';
+            }
+        };
+
+        const populateModels = (provider, modelsList = []) => {
+            modelSelect.innerHTML = '';
+            hostyouraiHelp.classList.add('d-none');
+
+            let options = [];
+
+            if (provider === 'gemini') {
+                options = [
+                    { value: 'gemini-2.5-flash', text: 'Gemini 2.5 Flash (Aanbevolen - Snel)' },
+                    { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro (Deep Coding Reasoning)' },
+                    { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash (Legacy Snel)' },
+                    { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro (Legacy)' }
+                ];
+            } else if (provider === 'openai') {
+                options = [
+                    { value: 'gpt-4o-mini', text: 'GPT-4o Mini (Aanbevolen - Snel)' },
+                    { value: 'gpt-4o', text: 'GPT-4o (Krachtig)' },
+                    { value: 'o1-mini', text: 'o1 Mini (Redeneren)' },
+                    { value: 'custom', text: 'Handmatig model invoeren...' }
+                ];
+            } else if (provider === 'hostyourai') {
+                options = [
+                    { value: 'mistral-7b-instruct', text: 'Mistral 7B Instruct (Default)' },
+                    { value: 'meta-llama-3-8b-instruct', text: 'Meta Llama 3 8B Instruct' },
+                    { value: 'mixtral-8x7b-instruct', text: 'Mixtral 8x7B Instruct (Krachtig)' },
+                    { value: 'custom', text: 'Handmatig model invoeren...' }
+                ];
+                hostyouraiHelp.classList.remove('d-none');
+            } else if (provider === 'ollama') {
+                if (modelsList.length > 0) {
+                    modelsList.forEach(model => {
+                        options.push({ value: model, text: model });
+                    });
+                    options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
+                } else {
+                    options = [
+                        { value: 'qwen2.5-coder:14b-instruct-q4_K_M', text: 'Qwen 2.5 Coder 14B Q4_K_M (Aanbevolen)' },
+                        { value: 'qwen2.5-coder:7b', text: 'Qwen 2.5 Coder 7B' },
+                        { value: 'llama3:latest', text: 'Llama 3' },
+                        { value: 'custom', text: 'Handmatig model invoeren...' }
+                    ];
+                }
+            }
+
+            options.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt.value;
+                el.textContent = opt.text;
+                modelSelect.appendChild(el);
+            });
+
+            // Set default selections
+            if (provider === 'gemini') {
+                modelSelect.value = 'gemini-2.5-flash';
+            } else if (provider === 'openai') {
+                modelSelect.value = 'gpt-4o-mini';
+            } else if (provider === 'hostyourai') {
+                modelSelect.value = 'mistral-7b-instruct';
+            } else if (provider === 'ollama') {
+                if (modelsList.length > 0) {
+                    const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
+                    modelSelect.value = qwenModel || modelsList[0];
+                } else {
+                    modelSelect.value = 'qwen2.5-coder:14b-instruct-q4_K_M';
+                }
+            }
+
+            handleModelSelectChange();
+        };
+
+        const handleModelSelectChange = () => {
+            if (modelSelect.value === 'custom') {
+                modelCustomGroup.classList.remove('d-none');
+                modelCustomInput.required = true;
+            } else {
+                modelCustomGroup.classList.add('d-none');
+                modelCustomInput.required = false;
+            }
+        };
+
+        modelSelect.addEventListener('change', handleModelSelectChange);
+
+        const updateProviderFields = () => {
+            const provider = providerSelect.value;
+
+            apiKeyGroup.classList.add('d-none');
+            baseUrlGroup.classList.add('d-none');
+            modelSelectGroup.classList.add('d-none');
+            modelCustomGroup.classList.add('d-none');
+            hostyouraiHelp.classList.add('d-none');
+
+            if (provider === 'ollama') {
+                baseUrlGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = 'http://localhost:11434/v1';
+                }
+                populateModels('ollama', installedOllamaModels);
+            } else if (provider === 'gemini') {
+                apiKeyGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The GEMINI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter Gemini API key (leave blank to use .env key)';
+                populateModels('gemini');
+            } else if (provider === 'hostyourai') {
+                apiKeyGroup.classList.remove('d-none');
+                baseUrlGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The HOSTYOURAI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter HostYourAI API key (leave blank to use .env key)';
+
+                baseUrlInput.placeholder = 'https://api.hostyourai.eu/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = 'https://api.hostyourai.eu/v1';
+                }
+                populateModels('hostyourai');
+            } else if (provider === 'openai') {
+                apiKeyGroup.classList.remove('d-none');
+                modelSelectGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'The OPENAI_API_KEY from your .env file will be used if left blank.';
+                }
+                apiKeyInput.placeholder = 'Enter OpenAI API key (leave blank to use .env key)';
+                populateModels('openai');
+            } else if (provider === 'custom') {
+                apiKeyGroup.classList.remove('d-none');
+                baseUrlGroup.classList.remove('d-none');
+                modelCustomGroup.classList.remove('d-none');
+
+                const helpText = document.getElementById('ai-api-key-help');
+                if (helpText) {
+                    helpText.textContent = 'API Key or Token for custom endpoint.';
+                }
+                apiKeyInput.placeholder = 'Enter Custom Endpoint Token';
+
+                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+                if (!baseUrlInput.value) {
+                    baseUrlInput.value = '';
+                }
+                modelCustomInput.value = '';
+                modelCustomInput.placeholder = 'e.g., custom-model-name';
+            }
+
+            checkStatus();
+        };
+
+        providerSelect.addEventListener('change', updateProviderFields);
+        baseUrlInput.addEventListener('change', checkStatus);
 
         createAiBtn.addEventListener('click', () => {
             form.reset();
@@ -12330,6 +13602,8 @@ document.addEventListener('DOMContentLoaded', () => {
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
             generatedData = null;
+            installedOllamaModels = [];
+            updateProviderFields();
             modal.show();
         });
 
@@ -12340,6 +13614,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const apiKey = apiKeyInput.value.trim();
             const saveKeyCheckbox = document.getElementById('ai-save-key');
             const saveKey = saveKeyCheckbox ? saveKeyCheckbox.checked : false;
+
+            const provider = providerSelect.value;
+            const baseUrl = baseUrlInput.value.trim();
+            let modelOverride = modelSelect.value;
+            if (provider === 'custom' || modelSelect.value === 'custom') {
+                modelOverride = modelCustomInput.value.trim();
+            }
 
             inputStep.classList.add('d-none');
             loadingStep.classList.remove('d-none');
@@ -12354,7 +13635,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         repo_url: repoUrl,
                         custom_instructions: instructions,
                         api_key: apiKey,
-                        save_key: saveKey
+                        save_key: saveKey,
+                        provider: provider,
+                        base_url: baseUrl,
+                        model: modelOverride
                     })
                 });
 
@@ -15012,18 +16296,46 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="ai-api-key" class="form-label">Gemini API Key</label>
-                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password"
-                                   placeholder="{% if has_gemini_key %}Gemini API key is configured (leave blank to keep){% else %}Enter Gemini API key{% endif %}">
-                            <div class="form-text">
-                                {% if has_gemini_key %}
-                                The configured GEMINI_API_KEY from the .env file will be used if this is left blank.
-                                {% else %}
-                                An API key is required to use the AI component generator.
-                                {% endif %}
+                            <label for="ai-provider" class="form-label">AI Provider</label>
+                            <select class="form-select" id="ai-provider">
+                                <option value="ollama" {% if not has_gemini_key %}selected{% endif %}>Ollama Local (RTX 3060)</option>
+                                <option value="gemini" {% if has_gemini_key %}selected{% endif %}>Google Gemini</option>
+                                <option value="hostyourai">HostYourAI / Loes (EU)</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="custom">Custom Endpoint</option>
+                            </select>
+                        </div>
+
+                        <div id="ai-status-container" class="mb-3 d-none">
+                            <span id="ai-status-badge" class="badge bg-secondary">Checking status...</span>
+                            <span id="ai-status-details" class="text-muted small ms-2"></span>
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-base-url-group">
+                            <label for="ai-base-url" class="form-label">Base URL</label>
+                            <input type="url" class="form-control" id="ai-base-url" autocomplete="off" placeholder="http://localhost:11434/v1">
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-api-key-group">
+                            <label for="ai-api-key" class="form-label">API Key</label>
+                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                            <div class="form-text" id="ai-api-key-help">An API key is required for cloud providers.</div>
+                        </div>
+
+                        <div class="mb-3 d-none" id="ai-model-select-group">
+                            <label for="ai-model-select" class="form-label">Model</label>
+                            <select class="form-select" id="ai-model-select"></select>
+                            <div class="form-text d-none" id="ai-hostyourai-help">
+                                <a href="https://hostyourai.eu" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> Bekijk alle HostYourAI-modellen op de website</a>
                             </div>
                         </div>
-                        <div class="form-check mb-3">
+
+                        <div class="mb-3 d-none" id="ai-model-custom-group">
+                            <label for="ai-model-custom" class="form-label">Custom Model Name</label>
+                            <input type="text" class="form-control" id="ai-model-custom" autocomplete="off" placeholder="e.g., qwen2.5-coder:14b">
+                        </div>
+
+                        <div class="form-check mb-3" id="ai-save-key-group">
                             <input class="form-check-input" type="checkbox" id="ai-save-key">
                             <label class="form-check-label text-secondary small" for="ai-save-key">
                                 Save API key to local .env file
@@ -18412,7 +19724,6 @@ if __name__ == "__main__":
 
 import json
 import logging
-import os
 import re
 import urllib.parse
 from typing import Optional
@@ -18425,8 +19736,17 @@ logger = logging.getLogger(__name__)
 class AIGenerator:
     """Handles interaction with the Gemini REST API to generate components."""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        provider: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
         self.api_key = api_key
+        self.provider = provider
+        self.base_url = base_url
+        self.model = model
 
     def generate_component_data(
         self,
@@ -18436,15 +19756,8 @@ class AIGenerator:
     ) -> dict:
         """Analyzes a GitHub repository and returns structured component configuration.
 
-        Uses the Gemini REST API with structured JSON output configuration.
+        Uses the multi-provider AIGeneratorEngine.
         """
-        # Retrieve the API key from parameter or fallback to
-        # the GEMINI_API_KEY environment variable.
-        # Ensure the GEMINI_API_KEY is configured in your .env file.
-        api_key = self.api_key or os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise ValueError("Gemini API key is not configured.")
-
         # Clean and validate the repository URL
         parsed_url = urllib.parse.urlparse(repo_url)
         if not parsed_url.netloc or "github.com" not in parsed_url.netloc:
@@ -18517,129 +19830,29 @@ class AIGenerator:
         if custom_instructions:
             user_prompt += f"Custom User Instructions: {custom_instructions}\n"
 
-        prompt = f"{system_prompt}\n{user_prompt}"
+        # Initialize the AIGeneratorEngine
+        from utils.ai_generator_engine import AIGeneratorEngine
 
-        # Define the expected JSON response schema
-        response_schema = {
-            "type": "OBJECT",
-            "properties": {
-                "metadata": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "name": {"type": "STRING"},
-                        "image_name": {"type": "STRING"},
-                        "description": {"type": "STRING"},
-                        "group": {"type": "STRING"},
-                        "has_ui": {"type": "BOOLEAN"},
-                        "has_configuration": {"type": "BOOLEAN"},
-                        "ui_port_variable": {"type": "STRING"},
-                        "protocol": {"type": "STRING"},
-                        "conflicts_with": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "depends_on": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "tags": {
-                            "type": "ARRAY",
-                            "items": {"type": "STRING"},
-                        },
-                        "resource_profile": {
-                            "type": "OBJECT",
-                            "properties": {
-                                "cpu": {"type": "STRING"},
-                                "ram": {"type": "STRING"},
-                                "storage_type": {"type": "STRING"},
-                                "recommended_cores": {"type": "INTEGER"},
-                                "recommended_ram_mb": {"type": "INTEGER"},
-                                "recommended_storage_gb": {"type": "INTEGER"},
-                            },
-                        },
-                        "docker_service_name": {"type": "STRING"},
-                        "component_version": {"type": "STRING"},
-                    },
-                    "required": [
-                        "name",
-                        "image_name",
-                        "description",
-                        "group",
-                        "has_ui",
-                        "has_configuration",
-                        "docker_service_name",
-                        "component_version",
-                    ],
-                },
-                "docker_compose": {"type": "STRING"},
-                "variables": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "id": {"type": "STRING"},
-                            "label": {"type": "STRING"},
-                            "type": {"type": "STRING"},
-                            "default": {"type": "STRING"},
-                            "description": {"type": "STRING"},
-                        },
-                        "required": ["id", "label", "type", "default", "description"],
-                    },
-                },
-                "config_templates": {
-                    "type": "ARRAY",
-                    "items": {
-                        "type": "OBJECT",
-                        "properties": {
-                            "name": {"type": "STRING"},
-                            "content": {"type": "STRING"},
-                        },
-                        "required": ["name", "content"],
-                    },
-                },
-            },
-            "required": ["metadata", "docker_compose", "variables"],
-        }
+        engine = AIGeneratorEngine(
+            provider=self.provider,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            model=self.model,
+        )
 
         # Define conversation history for multi-turn correction loop
-        contents = [{"role": "user", "parts": [{"text": prompt}]}]
+        messages = [{"role": "user", "content": user_prompt}]
         max_attempts = 3
         attempt = 0
 
-        url = (
-            "https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.5-flash:generateContent?key={api_key}"
-        )
-
         while True:
-            # Build payload for the API
-            payload = {
-                "contents": contents,
-                "generationConfig": {
-                    "responseMimeType": "application/json",
-                    "responseSchema": response_schema,
-                },
-            }
-
             try:
-                response = requests.post(url, json=payload, timeout=60)
-                response.raise_for_status()
-                result_json = response.json()
-
-                # Retrieve generated content from the response structure
-                candidates = result_json.get("candidates", [])
-                if not candidates:
-                    raise ValueError("No candidates returned from Gemini API.")
-
-                # Apply Unpacking-First Mandate from rules
-                candidate, *_ = candidates
-                content = candidate.get("content", {})
-                parts = content.get("parts", [])
-                if not parts:
-                    raise ValueError("No parts found in the response content.")
-
-                part, *_ = parts
-                text = part.get("text", "")
+                # Request structured JSON format
+                text = engine.generate(
+                    prompt=messages,
+                    system_context=system_prompt,
+                    response_format={"type": "json_object"},
+                )
 
                 # Parse and validate the returned JSON
                 data = json.loads(text)
@@ -18712,59 +19925,53 @@ class AIGenerator:
                 )
 
                 # Append model's response and correction prompt to history
-                contents.append({"role": "model", "parts": [{"text": text}]})
-                contents.append(
-                    {"role": "user", "parts": [{"text": correction_prompt}]}
-                )
+                messages.append({"role": "assistant", "content": text})
+                messages.append({"role": "user", "content": correction_prompt})
 
-            except requests.exceptions.RequestException as e:
-                logger.error("Gemini API request failed")
-                if e.response is not None:
-                    status_code = e.response.status_code
-                    if status_code == 429:
-                        raise RuntimeError(
-                            "Gemini API quota exceeded or rate limit reached. "
-                            "Please wait a minute before trying again."
+            except Exception as e:
+                logger.error(f"AI Generator inference failed: {e}")
+                err_msg = str(e).lower()
+                if "rate limit" in err_msg or "quota" in err_msg or "429" in err_msg:
+                    raise RuntimeError(
+                        "AI API quota exceeded or rate limit reached. "
+                        "Please wait a minute before trying again."
+                    ) from e
+                elif (
+                    "503" in err_msg
+                    or "unavailable" in err_msg
+                    or "overloaded" in err_msg
+                ):
+                    raise RuntimeError(
+                        "AI API service is temporarily unavailable or "
+                        "overloaded. Please try again in a few moments."
+                    ) from e
+                elif "400" in err_msg or "bad request" in err_msg:
+                    raise RuntimeError(
+                        "AI API rejected the request as invalid " "(400 Bad Request)."
+                    ) from e
+                elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
+                    if attempt < max_attempts:
+                        attempt += 1
+                        logger.info(
+                            "Failed to parse response as JSON. Attempting "
+                            f"self-correction (attempt {attempt}/{max_attempts})..."
                         )
-                    elif status_code == 503:
-                        raise RuntimeError(
-                            "Gemini API service is temporarily unavailable or "
-                            "overloaded. Please try again in a few moments."
+                        correction_prompt = (
+                            "The previous response failed to parse as JSON with "
+                            f"error: {e}. Please return the complete, valid JSON "
+                            "adhering strictly to the original schema."
                         )
-                    elif status_code == 400:
-                        raise RuntimeError(
-                            "Gemini API rejected the request as invalid "
-                            "(400 Bad Request)."
-                        )
-                    else:
-                        raise RuntimeError(
-                            "Gemini API returned an HTTP error status: "
-                            f"{status_code}"
-                        )
-                raise RuntimeError(
-                    f"Failed to communicate with Gemini API: {type(e).__name__}"
-                )
-            except (json.JSONDecodeError, KeyError, ValueError) as e:
-                logger.error(f"Failed to parse Gemini API response: {e}")
-                if attempt < max_attempts:
-                    attempt += 1
-                    logger.info(
-                        "Failed to parse response as JSON. Attempting "
-                        f"self-correction (attempt {attempt}/{max_attempts})..."
-                    )
-                    correction_prompt = (
-                        "The previous response failed to parse as JSON with "
-                        f"error: {e}. Please return the complete, valid JSON "
-                        "adhering strictly to the original schema."
-                    )
-                    text_val = text if "text" in locals() else ""
-                    contents.append({"role": "model", "parts": [{"text": text_val}]})
-                    contents.append(
-                        {"role": "user", "parts": [{"text": correction_prompt}]}
-                    )
-                    continue
-
-                raise RuntimeError(f"Received malformed response from Gemini API: {e}")
+                        text_val = text if "text" in locals() else ""
+                        messages.append({"role": "assistant", "content": text_val})
+                        messages.append({"role": "user", "content": correction_prompt})
+                        continue
+                    raise RuntimeError(
+                        f"Received malformed response from AI API: {e}"
+                    ) from e
+                else:
+                    raise RuntimeError(
+                        f"Failed to communicate with AI API: {type(e).__name__} - {e}"
+                    ) from e
 
     def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
         """Tries to fetch a file from the repository's main or master branch."""
@@ -19061,6 +20268,124 @@ class AIGenerator:
                         )
 
         return warnings
+
+--- FILE: src/utils/ai_generator_engine.py ---
+# src/utils/ai_generator_engine.py
+
+import os
+from typing import Any, Dict, List, Optional, Union
+
+from openai import OpenAI
+
+
+class AIGeneratorEngine:
+    """Core interface for routing queries to different AI providers."""
+
+    def __init__(
+        self,
+        provider: Optional[str] = None,
+        api_key: Optional[str] = None,
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
+        self.provider: str = provider or (os.getenv("AI_PROVIDER") or "ollama")
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model = model
+
+    def generate(
+        self,
+        prompt: Union[str, List[Dict[str, str]]],
+        system_context: Optional[str] = None,
+        response_format: Optional[Dict[str, Any]] = None,
+    ) -> str:
+        """Sends a prompt to the configured provider and returns the response."""
+        config = self._get_provider_config(self.provider)
+
+        client = OpenAI(
+            api_key=config["api_key"],
+            base_url=config["base_url"],
+        )
+
+        if isinstance(prompt, list):
+            messages = list(prompt)
+        else:
+            messages = []
+            if system_context:
+                messages.append({"role": "system", "content": system_context})
+            messages.append({"role": "user", "content": prompt})
+
+        kwargs: Dict[str, Any] = {
+            "model": config["model"],
+            "messages": messages,
+            "temperature": 0.2,
+        }
+        if response_format:
+            kwargs["response_format"] = response_format
+
+        response = client.chat.completions.create(**kwargs)
+
+        # Enforce the Unpacking-First Mandate for precise list element access
+        choice, *_ = response.choices
+        content = choice.message.content
+        return content or ""
+
+    def _get_provider_config(self, provider: str) -> Dict[str, Any]:
+        """Retrieves config parameters for the active provider."""
+        configs: Dict[str, Dict[str, Any]] = {
+            "gemini": {
+                "api_key": os.getenv("GEMINI_API_KEY"),
+                "base_url": (
+                    "https://generativelanguage.googleapis.com/v1beta/openai/"
+                ),
+                "model": "gemini-2.5-flash",
+            },
+            "hostyourai": {
+                "api_key": os.getenv("HOSTYOURAI_API_KEY", "dummy"),
+                "base_url": os.getenv(
+                    "HOSTYOURAI_BASE_URL", "https://api.hostyourai.eu/v1"
+                ),
+                "model": "mistral-7b-instruct",
+            },
+            "openai": {
+                "api_key": os.getenv("OPENAI_API_KEY"),
+                "base_url": "https://api.openai.com/v1",
+                "model": "gpt-4o-mini",
+            },
+            "ollama": {
+                "api_key": "ollama",  # Required by OpenAI SDK
+                "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
+                "model": os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct-q4_K_M"),
+            },
+            "custom": {
+                "api_key": os.getenv("CUSTOM_AI_API_KEY", "dummy"),
+                "base_url": os.getenv(
+                    "CUSTOM_AI_BASE_URL", "http://localhost:11434/v1"
+                ),
+                "model": "default",
+            },
+        }
+
+        if provider not in configs:
+            raise ValueError(f"Unsupported AI provider: {provider}")
+
+        cfg = configs[provider]
+
+        # Apply any runtime overrides passed via constructor
+        if self.api_key:
+            cfg["api_key"] = self.api_key
+        if self.base_url:
+            cfg["base_url"] = self.base_url
+        if self.model:
+            cfg["model"] = self.model
+
+        if not cfg["api_key"] and provider != "ollama":
+            raise ValueError(
+                f"API key missing for provider '{provider}'. "
+                "Please check your .env settings."
+            )
+
+        return cfg
 
 --- FILE: src/utils/auth_utils.py ---
 # src/utils/auth_utils.py

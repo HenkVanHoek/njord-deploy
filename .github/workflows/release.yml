@@ -20,7 +20,7 @@ jobs:
       matrix:
         include:
           - os-name: Linux
-            os-runner: ubuntu-latest
+            os-runner: ubuntu-22.04
             artifact-name: NjordDeploy-Linux
           - os-name: macOS
             os-runner: macos-latest

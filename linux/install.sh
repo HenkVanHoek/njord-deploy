@@ -50,17 +50,25 @@ mkdir -p "$DEST_DESKTOP"
 echo "Copying application..."
 cp "$BINARY_PATH" "$DEST_BIN/NjordDeploy-Configurator"
 
-echo "Copying icon..."
-cp "$ICON_PATH" "$DEST_ICON/njorddeploy-icon192x192.png"
+if [ -f "$ICON_PATH" ]; then
+  echo "Copying icon..."
+  cp "$ICON_PATH" "$DEST_ICON/njorddeploy-icon192x192.png"
+else
+  echo "Icon file not found, skipping."
+fi
 
-echo "Creating application shortcut..."
-# Copy the desktop file to a temporary location to modify it without changing the repository file
-TEMP_DESKTOP="/tmp/njorddeploy-Configurator.desktop"
-cp "$DESKTOP_PATH" "$TEMP_DESKTOP"
-sed -i "s|Exec=.*|Exec=$DEST_BIN/NjordDeploy-Configurator|" "$TEMP_DESKTOP"
-sed -i "s|Icon=.*|Icon=njorddeploy-icon192x192|" "$TEMP_DESKTOP"
-cp "$TEMP_DESKTOP" "$DEST_DESKTOP/"
-rm "$TEMP_DESKTOP"
+if [ -f "$DESKTOP_PATH" ]; then
+  echo "Creating application shortcut..."
+  # Copy the desktop file to a temporary location to modify it without changing the repository file
+  TEMP_DESKTOP="/tmp/njorddeploy-Configurator.desktop"
+  cp "$DESKTOP_PATH" "$TEMP_DESKTOP"
+  sed -i "s|Exec=.*|Exec=$DEST_BIN/NjordDeploy-Configurator|" "$TEMP_DESKTOP"
+  sed -i "s|Icon=.*|Icon=njorddeploy-icon192x192|" "$TEMP_DESKTOP"
+  cp "$TEMP_DESKTOP" "$DEST_DESKTOP/"
+  rm -f "$TEMP_DESKTOP"
+else
+  echo "Desktop shortcut file not found, skipping."
+fi
 
 # Step 5: Make the application executable for all users
 chmod +x "$DEST_BIN/NjordDeploy-Configurator"
