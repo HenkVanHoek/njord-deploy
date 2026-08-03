@@ -1,6 +1,6 @@
 <div align="center" dir="auto"><img width="150" height="150" style="max-width: 100%; height: auto; max-height: 150px;" alt="njorddeploy-icon512x512" src="https://github.com/HenkVanHoek/assets/63ed723a-578f-47f9-b40b-e241c4c5935b" /></div>
 
-# NjordDeploy
+# Njord-Deploy
 
 Welcome to NjordDeploy! This project provides a user-friendly system to deploy and manage a suite of self-hosted services on a Raspberry Pi (or any Linux-based system) using Docker. Our goal is to make self-hosting powerful, accessible, and easy to maintain.
 
