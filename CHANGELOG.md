@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+- **Ansible Host Key Bypass**: Configured `ansible_ssh_common_args` to bypass strict host key verification (`StrictHostKeyChecking=no` and `UserKnownHostsFile=/dev/null`) during deployments, preventing SSH connection failures when dynamic test VMs or reinstalled hosts change their host keys.
+- **Proxmox Test Runner Skip List**: Added `gluetun` to the integration test skip list (`SKIPPED_COMPONENTS`) because VPN client containers require valid private credentials to start and cannot be verified automatically in isolated testing environments.
+
+### Changed
+- **Default VM Test Template**: Updated the default Proxmox master template ID for integration, package, and release testing from `900` to `902` (`debian-clean-template`) to resolve IP/DHCP retrieval and QEMU guest agent timeouts.
+- **Test Reports Trailing Newlines**: Standardized test JSON and markdown report writers to ensure files end with exactly one trailing newline character, avoiding formatting failures in `pre-commit` hooks.
+
 ## [0.6.0] - 2025-10-12
 
 ### Added

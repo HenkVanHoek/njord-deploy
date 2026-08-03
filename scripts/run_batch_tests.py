@@ -21,6 +21,7 @@ SKIPPED_COMPONENTS = [
     "zigbee2mqtt",
     "lora-service",
     "njorddeploy-service-maintenance",
+    "gluetun",
 ]
 
 

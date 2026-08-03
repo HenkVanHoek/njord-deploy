@@ -37,6 +37,8 @@ class AIGeneratorEngine:
 
         if isinstance(prompt, list):
             messages = list(prompt)
+            if system_context and not any(m.get("role") == "system" for m in messages):
+                messages.insert(0, {"role": "system", "content": system_context})
         else:
             messages = []
             if system_context:

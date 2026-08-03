@@ -173,13 +173,15 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn.setAttribute('aria-label', 'Close');
         alertEl.appendChild(closeBtn);
 
-        setTimeout(() => {
-            const currentAlert = document.getElementById('feedback-alert');
-            if (currentAlert && currentAlert === alertEl) {
-                const alertInstance = bootstrap.Alert.getOrCreateInstance(currentAlert);
-                if (alertInstance) alertInstance.close();
-            }
-        }, 5000);
+        if (type !== 'danger') {
+            setTimeout(() => {
+                const currentAlert = document.getElementById('feedback-alert');
+                if (currentAlert && currentAlert === alertEl) {
+                    const alertInstance = bootstrap.Alert.getOrCreateInstance(currentAlert);
+                    if (alertInstance) alertInstance.close();
+                }
+            }, 5000);
+        }
     };
 
     const refreshSyncStatusBadge = async () => {
@@ -710,6 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('ai-generator-form');
         const repoUrlInput = document.getElementById('ai-repo-url');
         const instructionsInput = document.getElementById('ai-instructions');
+        const packageSelect = document.getElementById('ai-package-id');
         const apiKeyInput = document.getElementById('ai-api-key');
 
         const providerSelect = document.getElementById('ai-provider');
@@ -735,6 +738,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Preview fields
         const previewName = document.getElementById('ai-preview-name');
         const previewGroup = document.getElementById('ai-preview-group');
+        const previewPackage = document.getElementById('ai-preview-package');
         const previewDesc = document.getElementById('ai-preview-desc');
         const previewImage = document.getElementById('ai-preview-image');
         const previewConflicts = document.getElementById('ai-preview-conflicts');
@@ -956,13 +960,30 @@ document.addEventListener('DOMContentLoaded', () => {
         providerSelect.addEventListener('change', updateProviderFields);
         baseUrlInput.addEventListener('change', checkStatus);
 
-        createAiBtn.addEventListener('click', () => {
+        createAiBtn.addEventListener('click', async () => {
             form.reset();
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
             generatedData = null;
             installedOllamaModels = [];
+
+            // Populate packages dropdown dynamically
+            if (packageSelect) {
+                packageSelect.innerHTML = '<option value="">None (General)</option>';
+                try {
+                    const packages = await fetchJson('/api/packages').catch(() => ({}));
+                    Object.entries(packages).forEach(([pkgId, pkgData]) => {
+                        const opt = document.createElement('option');
+                        opt.value = pkgId;
+                        opt.textContent = pkgData.name || pkgId;
+                        packageSelect.appendChild(opt);
+                    });
+                } catch (err) {
+                    console.error('Failed to populate packages for AI creator:', err);
+                }
+            }
+
             updateProviderFields();
             modal.show();
         });
@@ -1055,6 +1076,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 generatedData = result.data;
 
+                // Inject the selected package ID into the generated metadata
+                // Inject the selected package ID into the generated metadata
+                if (generatedData && packageSelect) {
+                    if (!generatedData.metadata) {
+                        generatedData.metadata = {};
+                    }
+                    generatedData.metadata.package_id = packageSelect.value || null;
+                }
+
                 // Update input placeholder dynamically if a key was entered and saved
                 if (apiKey) {
                     apiKeyInput.value = '';
@@ -1069,11 +1099,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Populate preview UI
-                previewName.value = generatedData.metadata.name || '';
-                previewGroup.value = generatedData.metadata.group || '';
-                previewDesc.value = generatedData.metadata.description || '';
-                previewImage.value = generatedData.metadata.image_name || '';
-                previewConflicts.value = (generatedData.metadata.conflicts_with || []).join(', ');
+                const meta = (generatedData && generatedData.metadata) || generatedData || {};
+                previewName.value = meta.name || '';
+                previewGroup.value = meta.group || '';
+                if (previewPackage) {
+                    previewPackage.value = meta.package_id || 'None (General)';
+                }
+                previewDesc.value = meta.description || '';
+                previewImage.value = meta.image_name || '';
+                previewConflicts.value = (meta.conflicts_with || []).join(', ');
                 previewCompose.value = generatedData.docker_compose || '';
 
                 // Render security/validation warnings
@@ -1154,6 +1188,26 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', async () => {
             if (!generatedData) return;
             try {
+                // Ensure a clean metadata structure exists before saving
+                if (!generatedData.metadata || Object.keys(generatedData.metadata).length === 0) {
+                    generatedData.metadata = {
+                        name: generatedData.name || '',
+                        description: generatedData.description || '',
+                        group: generatedData.group || '',
+                        image_name: generatedData.image_name || '',
+                        package_id: generatedData.package_id || null,
+                        tags: generatedData.tags || [],
+                        resource_profile: generatedData.resource_profile || {},
+                        depends_on: generatedData.depends_on || [],
+                        conflicts_with: generatedData.conflicts_with || [],
+                        has_ui: generatedData.has_ui || false,
+                        has_configuration: generatedData.has_configuration || false,
+                        has_traefik_support: generatedData.has_traefik_support || false,
+                        ui_port_variable: generatedData.ui_port_variable || null,
+                        traefik_internal_port: generatedData.traefik_internal_port || null
+                    };
+                }
+
                 await fetchJson('/api/components/ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

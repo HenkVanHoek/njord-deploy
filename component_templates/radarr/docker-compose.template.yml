@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox LXC."
+# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox VM (template 902)."
 # breaking_changes: "None"
 services:
   radarr:

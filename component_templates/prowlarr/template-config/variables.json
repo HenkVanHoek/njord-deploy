@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "9696",
+            "description": "The port Prowlarr's web interface will be accessible on.",
+            "id": "PROWLARR_WEB_PORT",
+            "label": "Prowlarr Web Port",
+            "type": "port"
+        },
+        {
+            "default": "1000",
+            "description": "The User ID (PUID) for the container. Set to your user id for file access.",
+            "id": "PUID",
+            "label": "User ID (PUID)",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "The Group ID (PGID) for the container. Set to your group id for file access.",
+            "id": "PGID",
+            "label": "Group ID (PGID)",
+            "type": "text"
+        },
+        {
+            "default": "Europe/Amsterdam",
+            "description": "Specify the timezone for the container, e.g., Europe/London, America/New_York.",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}

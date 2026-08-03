@@ -1,0 +1,88 @@
+{
+    "variables": [
+        {
+            "default": "8000",
+            "description": "The port for Gluetun's internal control server API.",
+            "id": "GLUETUN_CONTROL_PORT",
+            "label": "Gluetun Control Port",
+            "type": "port"
+        },
+        {
+            "default": "8888",
+            "description": "The port for the built-in HTTP proxy server.",
+            "id": "GLUETUN_HTTP_PROXY_PORT",
+            "label": "HTTP Proxy Port",
+            "type": "port"
+        },
+        {
+            "default": "8388",
+            "description": "The port for the built-in Shadowsocks proxy server (TCP and UDP).",
+            "id": "GLUETUN_SHADOWSOCKS_PORT",
+            "label": "Shadowsocks Proxy Port",
+            "type": "port"
+        },
+        {
+            "default": "custom",
+            "description": "Your VPN service provider (e.g., ivpn, nordvpn, private internet access, custom).",
+            "id": "VPN_SERVICE_PROVIDER",
+            "label": "VPN Service Provider",
+            "type": "text"
+        },
+        {
+            "default": "wireguard",
+            "description": "The VPN protocol type (e.g., openvpn, wireguard).",
+            "id": "VPN_TYPE",
+            "label": "VPN Type",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "Your Wireguard private key, if using Wireguard.",
+            "id": "WIREGUARD_PRIVATE_KEY",
+            "label": "Wireguard Private Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your Wireguard IP addresses (e.g., 10.64.222.21/32), if using Wireguard.",
+            "id": "WIREGUARD_ADDRESSES",
+            "label": "Wireguard Addresses",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "The IP address of your VPN server endpoint. Required for 'custom' provider.",
+            "id": "VPN_ENDPOINT_IP",
+            "label": "VPN Endpoint IP",
+            "type": "text"
+        },
+        {
+            "default": "51820",
+            "description": "The port of your VPN server endpoint. Required for 'custom' provider.",
+            "id": "VPN_ENDPOINT_PORT",
+            "label": "VPN Endpoint Port",
+            "type": "port"
+        },
+        {
+            "default": "Etc/UTC",
+            "description": "Container timezone (e.g., Europe/London, America/New_York).",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "User ID for permissions. Set to 0 for root if experiencing permission issues.",
+            "id": "PUID",
+            "label": "User ID",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "Group ID for permissions. Set to 0 for root if experiencing permission issues.",
+            "id": "PGID",
+            "label": "Group ID",
+            "type": "text"
+        }
+    ]
+}

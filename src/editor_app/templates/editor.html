@@ -531,6 +531,12 @@
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
                         <div class="mb-3">
+                            <label for="ai-package-id" class="form-label">Package (Optional)</label>
+                            <select class="form-select" id="ai-package-id">
+                                <option value="">None (General)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="ai-provider" class="form-label">AI Provider</label>
                             <select class="form-select" id="ai-provider">
                                 <option value="ollama" {% if not has_gemini_key %}selected{% endif %}>Ollama Local (RTX 3060)</option>
@@ -638,6 +644,10 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-group">Group</label>
                                     <input type="text" class="form-control" id="ai-preview-group" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" for="ai-preview-package">Package</label>
+                                    <input type="text" class="form-control" id="ai-preview-package" readonly>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold" for="ai-preview-desc">Description</label>

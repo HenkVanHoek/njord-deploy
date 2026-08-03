@@ -35,6 +35,7 @@ SKIPPED_COMPONENTS = [
     "zigbee2mqtt",
     "lora-service",
     "njorddeploy-service-maintenance",
+    "gluetun",
 ]
 
 
@@ -520,7 +521,7 @@ def run_proxmox_package_tests(cli_args) -> int:
     proxmox_client = setup_proxmox_client()
 
     node = cli_args.node or os.getenv("PROXMOX_NODE") or "pve"
-    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "900"
+    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "902"
     template_id = int(cli_args.template_id or template_env)
     vm_user = os.getenv("PROXMOX_VM_USER") or ""
     vm_pass = os.getenv("PROXMOX_VM_PASSWORD") or ""
@@ -1011,6 +1012,7 @@ def run_proxmox_package_tests(cli_args) -> int:
     json_path = tests_dir / "proxmox_package_results.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results_summary, f, indent=4)
+        f.write("\n")
     logger.info(f"Saved raw test results to: {json_path}")
 
     # Generate Markdown Report
@@ -1161,7 +1163,7 @@ def write_markdown_report(
         md_lines.append("")
 
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(md_lines) + "\n")
+        f.write("\n".join(md_lines).rstrip() + "\n")
 
 
 if __name__ == "__main__":

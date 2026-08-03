@@ -1855,6 +1855,7 @@ SKIPPED_COMPONENTS = [
     "zigbee2mqtt",
     "lora-service",
     "njorddeploy-service-maintenance",
+    "gluetun",
 ]
 
 
@@ -2340,7 +2341,7 @@ def run_proxmox_package_tests(cli_args) -> int:
     proxmox_client = setup_proxmox_client()
 
     node = cli_args.node or os.getenv("PROXMOX_NODE") or "pve"
-    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "900"
+    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "902"
     template_id = int(cli_args.template_id or template_env)
     vm_user = os.getenv("PROXMOX_VM_USER") or ""
     vm_pass = os.getenv("PROXMOX_VM_PASSWORD") or ""
@@ -2831,6 +2832,7 @@ def run_proxmox_package_tests(cli_args) -> int:
     json_path = tests_dir / "proxmox_package_results.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results_summary, f, indent=4)
+        f.write("\n")
     logger.info(f"Saved raw test results to: {json_path}")
 
     # Generate Markdown Report
@@ -2981,7 +2983,7 @@ def write_markdown_report(
         md_lines.append("")
 
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(md_lines) + "\n")
+        f.write("\n".join(md_lines).rstrip() + "\n")
 
 
 if __name__ == "__main__":
@@ -3327,8 +3329,10 @@ def run_linux_vm_test(
             # Start the application in the background
             logger.info("[LINUX] Starting NjordDeploy Configurator in background...")
             cmd_start = (
-                f"nohup /usr/local/bin/NjordDeploy-Configurator > "
-                f"/home/{vm_user}/njorddeploy.log 2>&1 &"
+                f"echo '{vm_pass}' | sudo -S systemd-run "
+                f"--working-directory=/home/{vm_user} "
+                f"--unit=njorddeploy-test "
+                f"/usr/local/bin/NjordDeploy-Configurator"
             )
             ssh_mgr.execute_command(
                 cmd_start,
@@ -3371,7 +3375,7 @@ def run_linux_vm_test(
                     "Retrieving remote logs for diagnostics..."
                 )
                 _, log_output = ssh_mgr.execute_command(
-                    f"cat /home/{vm_user}/njorddeploy.log",
+                    "journalctl -u njorddeploy-test --no-pager",
                     lambda x: None,
                     check_exit_code=False,
                 )
@@ -3383,6 +3387,12 @@ def run_linux_vm_test(
                 )
 
         finally:
+            # Stop the transient systemd service
+            ssh_mgr.execute_command(
+                f"echo '{vm_pass}' | sudo -S systemctl stop njorddeploy-test",
+                lambda x: None,
+                check_exit_code=False,
+            )
             ssh_mgr.close()
 
     except Exception as e:
@@ -3549,6 +3559,18 @@ def run_windows_vm_test(
                         return True, "Windows VM Test Passed successfully."
                 except Exception:  # nosec B110
                     pass
+                # Read remote application logs for diagnostics before failing
+                logger.info(
+                    "[WINDOWS] Verification failed. "
+                    "Retrieving remote logs for diagnostics..."
+                )
+                _, log_output = ssh_mgr.execute_command(
+                    'powershell -Command "Get-Content njorddeploy.log"',
+                    lambda x: None,
+                    check_exit_code=False,
+                )
+                logger.error(f"[WINDOWS] Remote application logs:\n{log_output}")
+
                 return (
                     False,
                     f"HTTP interface verification failed on port 5001: {http_err}",
@@ -3605,7 +3627,7 @@ def main():
     args = parser.parse_args()
 
     # Determine templates and credentials
-    linux_template = int(os.getenv("RELEASE_TEST_LINUX_TEMPLATE") or 900)
+    linux_template = int(os.getenv("RELEASE_TEST_LINUX_TEMPLATE") or 902)
     windows_template = int(os.getenv("RELEASE_TEST_WINDOWS_TEMPLATE") or 910)
     vm_user = (
         os.getenv("RELEASE_TEST_VM_USER") or os.getenv("PROXMOX_VM_USER") or "testuser"
@@ -4227,7 +4249,7 @@ def run_proxmox_tests(cli_args) -> int:
     proxmox_client = setup_proxmox_client()
 
     node = cli_args.node or os.getenv("PROXMOX_NODE") or "pve"
-    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "900"
+    template_env = os.getenv("PROXMOX_TEMPLATE_ID") or "902"
     template_id = int(cli_args.template_id or template_env)
     vm_user = os.getenv("PROXMOX_VM_USER") or ""
     vm_pass = os.getenv("PROXMOX_VM_PASSWORD") or ""
@@ -4708,6 +4730,7 @@ def run_proxmox_tests(cli_args) -> int:
     json_path = tests_dir / "proxmox_results.json"
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(results_summary, f, indent=4)
+        f.write("\n")
     logger.info(f"Saved raw test results to: {json_path}")
 
     # Generate Markdown Report
@@ -4835,7 +4858,7 @@ def write_markdown_report(
         )
 
     with open(report_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(md_lines) + "\n")
+        f.write("\n".join(md_lines).rstrip() + "\n")
 
 
 if __name__ == "__main__":
@@ -4903,6 +4926,7 @@ SKIPPED_COMPONENTS = [
     "zigbee2mqtt",
     "lora-service",
     "njorddeploy-service-maintenance",
+    "gluetun",
 ]
 
 
@@ -12813,13 +12837,15 @@ document.addEventListener('DOMContentLoaded', () => {
         closeBtn.setAttribute('aria-label', 'Close');
         alertEl.appendChild(closeBtn);
 
-        setTimeout(() => {
-            const currentAlert = document.getElementById('feedback-alert');
-            if (currentAlert && currentAlert === alertEl) {
-                const alertInstance = bootstrap.Alert.getOrCreateInstance(currentAlert);
-                if (alertInstance) alertInstance.close();
-            }
-        }, 5000);
+        if (type !== 'danger') {
+            setTimeout(() => {
+                const currentAlert = document.getElementById('feedback-alert');
+                if (currentAlert && currentAlert === alertEl) {
+                    const alertInstance = bootstrap.Alert.getOrCreateInstance(currentAlert);
+                    if (alertInstance) alertInstance.close();
+                }
+            }, 5000);
+        }
     };
 
     const refreshSyncStatusBadge = async () => {
@@ -13350,6 +13376,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const form = document.getElementById('ai-generator-form');
         const repoUrlInput = document.getElementById('ai-repo-url');
         const instructionsInput = document.getElementById('ai-instructions');
+        const packageSelect = document.getElementById('ai-package-id');
         const apiKeyInput = document.getElementById('ai-api-key');
 
         const providerSelect = document.getElementById('ai-provider');
@@ -13375,6 +13402,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Preview fields
         const previewName = document.getElementById('ai-preview-name');
         const previewGroup = document.getElementById('ai-preview-group');
+        const previewPackage = document.getElementById('ai-preview-package');
         const previewDesc = document.getElementById('ai-preview-desc');
         const previewImage = document.getElementById('ai-preview-image');
         const previewConflicts = document.getElementById('ai-preview-conflicts');
@@ -13596,13 +13624,30 @@ document.addEventListener('DOMContentLoaded', () => {
         providerSelect.addEventListener('change', updateProviderFields);
         baseUrlInput.addEventListener('change', checkStatus);
 
-        createAiBtn.addEventListener('click', () => {
+        createAiBtn.addEventListener('click', async () => {
             form.reset();
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
             generatedData = null;
             installedOllamaModels = [];
+
+            // Populate packages dropdown dynamically
+            if (packageSelect) {
+                packageSelect.innerHTML = '<option value="">None (General)</option>';
+                try {
+                    const packages = await fetchJson('/api/packages').catch(() => ({}));
+                    Object.entries(packages).forEach(([pkgId, pkgData]) => {
+                        const opt = document.createElement('option');
+                        opt.value = pkgId;
+                        opt.textContent = pkgData.name || pkgId;
+                        packageSelect.appendChild(opt);
+                    });
+                } catch (err) {
+                    console.error('Failed to populate packages for AI creator:', err);
+                }
+            }
+
             updateProviderFields();
             modal.show();
         });
@@ -13695,6 +13740,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
                 generatedData = result.data;
 
+                // Inject the selected package ID into the generated metadata
+                // Inject the selected package ID into the generated metadata
+                if (generatedData && packageSelect) {
+                    if (!generatedData.metadata) {
+                        generatedData.metadata = {};
+                    }
+                    generatedData.metadata.package_id = packageSelect.value || null;
+                }
+
                 // Update input placeholder dynamically if a key was entered and saved
                 if (apiKey) {
                     apiKeyInput.value = '';
@@ -13709,11 +13763,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 // Populate preview UI
-                previewName.value = generatedData.metadata.name || '';
-                previewGroup.value = generatedData.metadata.group || '';
-                previewDesc.value = generatedData.metadata.description || '';
-                previewImage.value = generatedData.metadata.image_name || '';
-                previewConflicts.value = (generatedData.metadata.conflicts_with || []).join(', ');
+                const meta = (generatedData && generatedData.metadata) || generatedData || {};
+                previewName.value = meta.name || '';
+                previewGroup.value = meta.group || '';
+                if (previewPackage) {
+                    previewPackage.value = meta.package_id || 'None (General)';
+                }
+                previewDesc.value = meta.description || '';
+                previewImage.value = meta.image_name || '';
+                previewConflicts.value = (meta.conflicts_with || []).join(', ');
                 previewCompose.value = generatedData.docker_compose || '';
 
                 // Render security/validation warnings
@@ -13794,6 +13852,26 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', async () => {
             if (!generatedData) return;
             try {
+                // Ensure a clean metadata structure exists before saving
+                if (!generatedData.metadata || Object.keys(generatedData.metadata).length === 0) {
+                    generatedData.metadata = {
+                        name: generatedData.name || '',
+                        description: generatedData.description || '',
+                        group: generatedData.group || '',
+                        image_name: generatedData.image_name || '',
+                        package_id: generatedData.package_id || null,
+                        tags: generatedData.tags || [],
+                        resource_profile: generatedData.resource_profile || {},
+                        depends_on: generatedData.depends_on || [],
+                        conflicts_with: generatedData.conflicts_with || [],
+                        has_ui: generatedData.has_ui || false,
+                        has_configuration: generatedData.has_configuration || false,
+                        has_traefik_support: generatedData.has_traefik_support || false,
+                        ui_port_variable: generatedData.ui_port_variable || null,
+                        traefik_internal_port: generatedData.traefik_internal_port || null
+                    };
+                }
+
                 await fetchJson('/api/components/ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -16296,6 +16374,12 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
                         <div class="mb-3">
+                            <label for="ai-package-id" class="form-label">Package (Optional)</label>
+                            <select class="form-select" id="ai-package-id">
+                                <option value="">None (General)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="ai-provider" class="form-label">AI Provider</label>
                             <select class="form-select" id="ai-provider">
                                 <option value="ollama" {% if not has_gemini_key %}selected{% endif %}>Ollama Local (RTX 3060)</option>
@@ -16403,6 +16487,10 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-group">Group</label>
                                     <input type="text" class="form-control" id="ai-preview-group" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold" for="ai-preview-package">Package</label>
+                                    <input type="text" class="form-control" id="ai-preview-package" readonly>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold" for="ai-preview-desc">Description</label>
@@ -17793,6 +17881,11 @@ class DeploymentManager:
                 if ssh_password:
                     extravars["ansible_password"] = ssh_password
                     extravars["ansible_become_password"] = ssh_password
+
+                # Prevent host key checking errors for dynamic test/reinstalled VMs
+                extravars["ansible_ssh_common_args"] = (
+                    "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+                )
 
                 processed_events: set[str] = set()
 
@@ -20309,6 +20402,8 @@ class AIGeneratorEngine:
 
         if isinstance(prompt, list):
             messages = list(prompt)
+            if system_context and not any(m.get("role") == "system" for m in messages):
+                messages.insert(0, {"role": "system", "content": system_context})
         else:
             messages = []
             if system_context:

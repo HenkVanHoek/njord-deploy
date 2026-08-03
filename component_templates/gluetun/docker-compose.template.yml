@@ -1,0 +1,36 @@
+# status: beta
+# last_tested_version: latest
+# platform_notes: Requires NET_ADMIN capability and /dev/net/tun device.
+# breaking_changes: none
+services:
+  gluetun:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-gluetun
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    ports:
+      - "{{ GLUETUN_CONTROL_PORT }}:8000/tcp" # Gluetun control server API
+      - "{{ GLUETUN_HTTP_PROXY_PORT }}:8888/tcp" # HTTP proxy
+      - "{{ GLUETUN_SHADOWSOCKS_PORT }}:8388/tcp" # Shadowsocks TCP
+      - "{{ GLUETUN_SHADOWSOCKS_PORT }}:8388/udp" # Shadowsocks UDP
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/gluetun:/gluetun"
+    environment:
+      - "VPN_SERVICE_PROVIDER={{ VPN_SERVICE_PROVIDER }}"
+      - "VPN_TYPE={{ VPN_TYPE }}"
+      - "WIREGUARD_PRIVATE_KEY={{ WIREGUARD_PRIVATE_KEY }}"
+      - "WIREGUARD_ADDRESSES={{ WIREGUARD_ADDRESSES }}"
+      - "VPN_ENDPOINT_IP={{ VPN_ENDPOINT_IP }}"
+      - "VPN_ENDPOINT_PORT={{ VPN_ENDPOINT_PORT }}"
+      - "TZ={{ TZ }}"
+      - "PUID={{ PUID }}"
+      - "PGID={{ PGID }}"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

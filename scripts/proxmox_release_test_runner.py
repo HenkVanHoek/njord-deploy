@@ -308,8 +308,10 @@ def run_linux_vm_test(
             # Start the application in the background
             logger.info("[LINUX] Starting NjordDeploy Configurator in background...")
             cmd_start = (
-                f"nohup /usr/local/bin/NjordDeploy-Configurator > "
-                f"/home/{vm_user}/njorddeploy.log 2>&1 &"
+                f"echo '{vm_pass}' | sudo -S systemd-run "
+                f"--working-directory=/home/{vm_user} "
+                f"--unit=njorddeploy-test "
+                f"/usr/local/bin/NjordDeploy-Configurator"
             )
             ssh_mgr.execute_command(
                 cmd_start,
@@ -352,7 +354,7 @@ def run_linux_vm_test(
                     "Retrieving remote logs for diagnostics..."
                 )
                 _, log_output = ssh_mgr.execute_command(
-                    f"cat /home/{vm_user}/njorddeploy.log",
+                    "journalctl -u njorddeploy-test --no-pager",
                     lambda x: None,
                     check_exit_code=False,
                 )
@@ -364,6 +366,12 @@ def run_linux_vm_test(
                 )
 
         finally:
+            # Stop the transient systemd service
+            ssh_mgr.execute_command(
+                f"echo '{vm_pass}' | sudo -S systemctl stop njorddeploy-test",
+                lambda x: None,
+                check_exit_code=False,
+            )
             ssh_mgr.close()
 
     except Exception as e:
@@ -530,6 +538,18 @@ def run_windows_vm_test(
                         return True, "Windows VM Test Passed successfully."
                 except Exception:  # nosec B110
                     pass
+                # Read remote application logs for diagnostics before failing
+                logger.info(
+                    "[WINDOWS] Verification failed. "
+                    "Retrieving remote logs for diagnostics..."
+                )
+                _, log_output = ssh_mgr.execute_command(
+                    'powershell -Command "Get-Content njorddeploy.log"',
+                    lambda x: None,
+                    check_exit_code=False,
+                )
+                logger.error(f"[WINDOWS] Remote application logs:\n{log_output}")
+
                 return (
                     False,
                     f"HTTP interface verification failed on port 5001: {http_err}",
@@ -586,7 +606,7 @@ def main():
     args = parser.parse_args()
 
     # Determine templates and credentials
-    linux_template = int(os.getenv("RELEASE_TEST_LINUX_TEMPLATE") or 900)
+    linux_template = int(os.getenv("RELEASE_TEST_LINUX_TEMPLATE") or 902)
     windows_template = int(os.getenv("RELEASE_TEST_WINDOWS_TEMPLATE") or 910)
     vm_user = (
         os.getenv("RELEASE_TEST_VM_USER") or os.getenv("PROXMOX_VM_USER") or "testuser"

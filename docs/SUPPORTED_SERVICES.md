@@ -47,7 +47,9 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Gluetun | Lightweight swiss-army-knife-like VPN client to multiple VPN service providers. | N/A |
 | Jellyfin | A Free Software Media System that puts you in control of your media. | [Link](https://jellyfin.org/) |
+| Prowlarr | Prowlarr is an indexer manager/proxy built on the popular *arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers. | N/A |
 | qBittorrent | A lightweight and powerful BitTorrent client. | [Link](https://www.qbittorrent.org/) |
 | Radarr | A fork of Sonarr to work with movies. | [Link](https://radarr.video/) |
 | SABnzbd | The popular and easy-to-use Usenet download client. | [Link](https://sabnzbd.org/) |

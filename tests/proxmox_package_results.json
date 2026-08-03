@@ -1,43 +1,50 @@
 [
     {
-        "package_id": "nextcloud-stack",
-        "package_name": "Nextcloud Stack",
+        "package_id": "media-stack",
+        "package_name": "Media Stack",
         "status": "success",
-        "vmid": 110,
-        "ip": "192.168.178.58",
+        "vmid": 111,
+        "ip": "192.168.178.132",
         "deployment": "success",
         "components": {
-            "nextcloud": {
+            "jellyfin": {
                 "running": true,
                 "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null
             },
-            "nextcloud-db": {
+            "prowlarr": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null
             },
-            "nextcloud-db-dumper": {
+            "qbittorrent": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null
             },
-            "nextcloud-redis": {
+            "radarr": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null
             },
-            "notify-push": {
+            "sabnzbd": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "sonarr": {
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null

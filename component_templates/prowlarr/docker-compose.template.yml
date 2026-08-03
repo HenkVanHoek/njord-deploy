@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox VM (template 902)."
+# breaking_changes: none
+services:
+  prowlarr:
+    container_name: njorddeploy-prowlarr
+    image: "{{ image_name }}:{{ component_version }}"
+    environment:
+      - "PUID={{ PUID }}"
+      - "PGID={{ PGID }}"
+      - "TZ={{ TZ }}"
+      - "UMASK_SET=022"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/prowlarr/config:/config"
+    ports:
+      - "{{ PROWLARR_WEB_PORT }}:9696"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+    user: "0:0"
+
+networks:
+  njorddeploy_net:
+    external: true

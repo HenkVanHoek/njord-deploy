@@ -18,7 +18,7 @@ PROXMOX_USER="root@pam"
 PROXMOX_TOKEN_ID="clone-token"
 PROXMOX_TOKEN_SECRET="xxxx-xxxx-xxxx-xxxx"
 PROXMOX_NODE="pve"
-PROXMOX_TEMPLATE_ID="900"
+PROXMOX_TEMPLATE_ID="902"
 
 # Target VM credentials
 PROXMOX_VM_USER="<your-vm-user>"
@@ -71,4 +71,4 @@ If the test runner times out while retrieving the IP address of the VM:
 If your storage pool (e.g., `local-lvm`) does not support snapshots/linked clones, Proxmox will throw an API error. The test runner has an automatic fallback built-in and will automatically switch to a **Full Clone**. This takes slightly longer but prevents the test from failing.
 
 ### C. Master Template VMID
-On the `pve` node, the master template VMID is configured to `105` (`pi-master-template`) by default. If you want to use a different template, specify it using the `--template-id <id>` CLI option.
+On the `pve` node, the master template VMID defaults to `902` (`debian-clean-template`). If you want to use a different template, specify it using the `--template-id <id>` CLI option.

@@ -21,7 +21,7 @@ PROXMOX_NODE="pve"
 
 # Release Test Target VMs
 # Template IDs for clean OS installations (must have OpenSSH/QEMU Guest Agent)
-RELEASE_TEST_LINUX_TEMPLATE="900"
+RELEASE_TEST_LINUX_TEMPLATE="902"
 RELEASE_TEST_WINDOWS_TEMPLATE="910"
 
 # Target OS credentials
@@ -68,3 +68,25 @@ python scripts/proxmox_release_test_runner.py --skip-linux
    - **Linux:** Runs `sudo ./install.sh` to place the binary in `/usr/local/bin/NjordDeploy-Configurator` and registers/starts the service, checking that it responds on port `5001`.
    - **Windows:** Runs the packaged `.exe` binary in the background and verifies port connectivity.
 4. **Cleanup:** Once tests finish (pass or fail), the cloned VMs are stopped and deleted from the Proxmox server.
+
+## 4. Preparing the Windows VM Template
+
+Since Windows does not natively support Cloud-Init easily without complex OpenStack Cloudbase-Init configurations, the Windows template is prepared with static credentials and an active SSH server:
+
+1. **Install Windows VM:** Create a standard Windows VM in Proxmox (e.g., VMID `910`).
+2. **Install VirtIO Drivers & Guest Agent:** Mount the Proxmox VirtIO ISO and install all drivers and the QEMU Guest Agent service.
+3. **Configure User Account:** Create a local administrator account matching your `RELEASE_TEST_VM_USER` (e.g., `pivm`) and `RELEASE_TEST_VM_PASSWORD` (e.g., `SaxGitaar31!`).
+4. **Enable OpenSSH Server:**
+   Run the following commands in an elevated (Administrator) PowerShell inside the Windows VM:
+   ```powershell
+   # Install OpenSSH Server
+   Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
+
+   # Start the service and configure to run automatically
+   Start-Service sshd
+   Set-Service -Name sshd -StartupType 'Automatic'
+
+   # Confirm firewall rule allows port 22
+   New-NetFirewallRule -Name sshd -DisplayName 'OpenSSH Server (sshd)' -Enabled True -Direction Inbound -Protocol TCP -LocalPort 22 -Action Allow
+   ```
+5. **Convert to Template:** Shut down the Windows VM and right-click it in the Proxmox UI to convert it to a template.

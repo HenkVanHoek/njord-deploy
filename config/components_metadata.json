@@ -383,6 +383,28 @@
             ],
             "traefik_internal_port": null
         },
+        "gluetun": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Lightweight swiss-army-knife-like VPN client to multiple VPN service providers.",
+            "docker_service_name": "gluetun",
+            "group": "Media Stack",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": false,
+            "image_name": "ghcr.io/qdm12/gluetun",
+            "name": "Gluetun",
+            "package_id": "media-stack",
+            "protocol": null,
+            "tags": [
+                "vpn",
+                "network",
+                "security"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": null
+        },
         "heimdall": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -938,6 +960,30 @@
                 "self-hosted"
             ],
             "traefik_internal_port": 80
+        },
+        "prowlarr": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Prowlarr is an indexer manager/proxy built on the popular *arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers.",
+            "docker_service_name": "prowlarr",
+            "group": "Media Stack",
+            "has_configuration": false,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "lscr.io/linuxserver/prowlarr",
+            "name": "Prowlarr",
+            "package_id": "media-stack",
+            "protocol": "http",
+            "tags": [
+                "media",
+                "indexer",
+                "torrent",
+                "usenet",
+                "arr"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "PROWLARR_WEB_PORT"
         },
         "qbittorrent": {
             "component_version": "latest",

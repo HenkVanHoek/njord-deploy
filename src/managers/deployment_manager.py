@@ -128,6 +128,11 @@ class DeploymentManager:
                     extravars["ansible_password"] = ssh_password
                     extravars["ansible_become_password"] = ssh_password
 
+                # Prevent host key checking errors for dynamic test/reinstalled VMs
+                extravars["ansible_ssh_common_args"] = (
+                    "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+                )
+
                 processed_events: set[str] = set()
 
                 def handle_single_event(evt: Dict[str, Any]) -> bool:
