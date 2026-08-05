@@ -68,10 +68,13 @@ Behavior during deployment
 
 ## 🚀 Quick Start Guide
 
-1.  **Download the Installer**: Go to the [GitHub Releases page](https://github.com/HenkVanHoek/njord-deploy/releases) and download the latest installer for your operating system.
-2.  **Run the Installer**: Unzip the file and run the `NjordDeploy-Configurator` executable.
-3.  **Configure**: Your web browser will open to the configurator UI. Follow the on-screen steps to discover your device, select software, and provide any required configuration.
-4.  **Deploy**: After confirming your selections, the system will generate the necessary files and allow you to deploy them to your target device, with a live log of the entire process.
+1. **Download the Release Zip**: Go to the [GitHub Releases page](https://github.com/HenkVanHoek/njord-deploy/releases) and download the release package for your operating system (`NjordDeploy-Linux.zip`, `NjordDeploy-macOS.zip`, or `NjordDeploy-Windows.zip`).
+2. **Unzip & Launch**: Unzip the package to a local folder. You will find two standalone executables:
+   - **`NjordDeployConfigurator`** (`.exe` on Windows): The end-user application for device discovery, service selection, and deployment (runs on `http://localhost:5001`).
+   - **`NjordDeployEditor`** (`.exe` on Windows): The developer tool for creating and modifying component metadata (runs on `http://localhost:5000`).
+   - *Linux / macOS:* Make executable if needed (`chmod +x NjordDeployConfigurator`) and launch `./NjordDeployConfigurator`.
+3. **Configure**: Your default web browser will open automatically to `http://localhost:5001`. Follow the on-screen wizard to discover your device, select services, and customize your configuration.
+4. **Deploy**: Confirm your selections to generate Docker Compose files and deploy services to your target host with a live browser log.
 
 ### One-Time Setup for Linux Users
 
