@@ -21,7 +21,7 @@ filterwarnings = [
 
 [project]
 name = "NjordDeploy"
-version = "0.5.9-Alpha"
+version = "0.5.10-Alpha"
 description = "A project to self-host services on a Raspberry Pi."
 requires-python = ">=3.11"
 dependencies = [
@@ -66,7 +66,7 @@ dev = [
 ]
 
 [tool.bumpversion]
-current_version = "0.5.9-Alpha"
+current_version = "0.5.10-Alpha"
 commit = true
 tag = true
 commit_args = "--no-verify"
