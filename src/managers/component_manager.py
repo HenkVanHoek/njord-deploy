@@ -110,6 +110,8 @@ class ComponentManager:
         for comp_id, comp_data in components.items():
             full_data = comp_data.copy()
             full_data["id"] = comp_id
+            if "test_status" not in full_data:
+                full_data["test_status"] = self.reader.get_template_status(comp_id)
             full_data["required_variables"] = self.reader.get_component_variables(
                 comp_id
             )
@@ -131,6 +133,8 @@ class ComponentManager:
 
         details = component_data.copy()
         details["id"] = component_id
+        if "test_status" not in details:
+            details["test_status"] = self.reader.get_template_status(component_id)
         details["required_variables"] = self.reader.get_component_variables(
             component_id
         )
@@ -267,6 +271,10 @@ class ComponentManager:
                     "is_exclusive": False,
                 }
                 njorddeploy_meta.setdefault("group_order", []).append(new_group_id)
+        if "test_status" in update_data:
+            self.writer.update_template_status(
+                component_id, str(update_data["test_status"])
+            )
         components[component_id].update(update_data)
         self._save_metadata()
 

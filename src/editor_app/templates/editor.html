@@ -266,6 +266,7 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
+                <li class="nav-item me-1"><a class="nav-link d-flex align-items-center" href="#" id="stats-btn" data-bs-toggle="modal" data-bs-target="#statsModal"><i class="bi bi-bar-chart-fill me-1"></i> Stats</a></li>
                 <li class="nav-item"><a class="nav-link d-flex align-items-center" href="#" id="git-sync-btn"><i class="bi bi-git me-1"></i> Git Sync<span id="git-sync-badge" class="badge bg-danger ms-1 d-none" title="Globale metadata niet gepusht">!</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="git-upload-btn" title="Read-only: Checking permissions..." data-bs-toggle="tooltip"><i class="bi bi-cloud-arrow-up"></i> Upload to Repo</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn"><i class="bi bi-compass"></i> Quick Tour</a></li>
@@ -283,7 +284,7 @@
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="d-flex justify-content-between align-items-center">
-                <h4>Components</h4>
+                <h4>Components <span id="components-header-count" class="text-muted fs-6 fw-normal">(0)</span></h4>
                 <div class="d-flex align-items-center">
                     <button class="btn btn-sm btn-outline-primary me-1" id="expand-all-btn" title="Expand All"><i class="bi bi-chevron-double-down"></i></button>
                     <button class="btn btn-sm btn-outline-primary me-2" id="collapse-all-btn" title="Collapse All"><i class="bi bi-chevron-double-up"></i></button>
@@ -301,8 +302,8 @@
             </div>
             <div id="sidebar-controls" class="mb-3">
                 <div class="nav nav-pills nav-fill mb-2" id="view-tabs" role="tablist">
-                    <button class="nav-link active py-1" id="view-groups-tab" data-view="groups" type="button">Groups</button>
-                    <button class="nav-link py-1" id="view-packages-tab" data-view="packages" type="button">Packages</button>
+                    <button class="nav-link active py-1" id="view-groups-tab" data-view="groups" type="button">Groups <span id="groups-tab-count">(0)</span></button>
+                    <button class="nav-link py-1" id="view-packages-tab" data-view="packages" type="button">Packages <span id="packages-tab-count">(0)</span></button>
                 </div>
             </div>
         </div>
@@ -854,6 +855,29 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button type="button" class="btn btn-warning" id="diff-sync-action-btn"><i class="bi bi-cloud-arrow-down"></i> Sync This Component</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Overview Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1" aria-labelledby="statsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statsModalLabel">
+                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i> Ecosystem & Testing Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="stats-modal-body">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading statistics...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>

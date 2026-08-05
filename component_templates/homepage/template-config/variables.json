@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "The port on the host that Homepage's web interface will be accessible on.",
+            "id": "HOMEPAGE_WEB_PORT",
+            "label": "Homepage Web Port",
+            "type": "port"
+        },
+        {
+            "default": "localhost:3000",
+            "description": "Comma-separated list of allowed hostnames/IPs. Required for security. See Homepage documentation for details. Example: 'yourdomain.com,192.168.1.100:3000'.",
+            "id": "HOMEPAGE_ALLOWED_HOSTS",
+            "label": "Homepage Allowed Hosts",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "User ID for the container. Set to 0 for root. Note: The container is configured to run as root (0:0) by default to prevent permission issues with mounted volumes, but this variable is provided for advanced customization.",
+            "id": "PUID",
+            "label": "User ID (PUID)",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "Group ID for the container. Set to 0 for root. Note: The container is configured to run as root (0:0) by default to prevent permission issues with mounted volumes, but this variable is provided for advanced customization.",
+            "id": "PGID",
+            "label": "Group ID (PGID)",
+            "type": "text"
+        }
+    ]
+}

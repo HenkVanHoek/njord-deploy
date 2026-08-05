@@ -37,6 +37,16 @@
       when: item.mount == '/'
 
 # --- DOCKER ENGINE PROVISIONING (WITHOUT PIP OR Python LIBRARIES) ---
+    - name: Wait for cloud-init and background apt/dpkg locks to clear
+      ansible.builtin.shell: |
+        if command -v cloud-init >/dev/null 2>&1; then
+          cloud-init status --wait || true
+        fi
+        while pgrep -x apt-get >/dev/null 2>&1 || pgrep -x dpkg >/dev/null 2>&1 || (command -v fuser >/dev/null 2>&1 && fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1); do
+          sleep 2
+        done
+      changed_when: false
+
     - name: Ensure prerequisites for Docker repository are installed
       ansible.builtin.apt:
         name:
@@ -44,6 +54,7 @@
           - curl
         state: present
         update_cache: yes
+        lock_timeout: 600
 
     - name: Ensure directory for Docker archive keyring exists
       ansible.builtin.file:
@@ -72,6 +83,7 @@
           - docker-compose-plugin   # Official Docker Compose V2 plugin
         state: present
         update_cache: yes
+        lock_timeout: 600
 
     - name: Ensure SSH user is in docker group
       ansible.builtin.user:

@@ -58,3 +58,23 @@ def test_reader_loads_component_variables(tmp_path):
     # Verify
     assert len(variables) == 1
     assert variables[0]["name"] == "API_KEY"
+
+
+def test_reader_retrieves_test_status_from_template_header(tmp_path):
+    """Test that reader extracts status header from docker-compose.template.yml."""
+    meta_path = tmp_path / "metadata.json"
+    temp_path = tmp_path / "templates"
+    temp_path.mkdir()
+
+    comp_dir = temp_path / "adguard"
+    comp_dir.mkdir()
+    (comp_dir / "docker-compose.template.yml").write_text(
+        '# status: "tested"\nservices:\n', encoding="utf-8"
+    )
+
+    data = {"components": {"adguard": {"name": "AdGuard"}}}
+    meta_path.write_text(json.dumps(data), encoding="utf-8")
+
+    reader = ComponentReader(metadata_path=meta_path, templates_path=temp_path)
+    components = reader.get_all_components()
+    assert components["adguard"]["test_status"] == "tested"

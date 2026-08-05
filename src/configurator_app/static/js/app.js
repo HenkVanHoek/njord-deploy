@@ -378,6 +378,46 @@
                         </div>
                     </div>
                     <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_vm" value="proxmox_vm">
+                        <label class="form-check-label fw-bold" for="method_proxmox_vm">
+                            <strong>Create New Proxmox VM Target</strong>
+                            <span class="d-block small text-muted">Clone and provision a brand new QEMU VM from a Proxmox template.</span>
+                        </label>
+                    </div>
+                    <div class="mt-2 d-none" id="proxmox_vm_input_container">
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <label for="vm_hostname" class="form-label small mb-1">VM Name (Hostname)</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_hostname" placeholder="e.g. njord-vm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_template_select" class="form-label small mb-1">Source VM Template</label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-select form-select-sm" id="vm_template_select">
+                                        <option value="">-- Load Templates --</option>
+                                    </select>
+                                    <input type="number" class="form-control form-control-sm" id="vm_template_manual" placeholder="VMID" style="max-width: 80px;">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_cores" class="form-label small mb-1">CPU Cores</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_cores" value="2" min="1">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_memory" class="form-label small mb-1">RAM (MB)</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_memory" value="4096" min="512">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_username" class="form-label small mb-1">VM Username</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_username" value="debian">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_existing" value="proxmox_existing">
                         <label class="form-check-label fw-bold" for="method_proxmox_existing">
                             <strong>Select Existing Proxmox Target</strong>
@@ -2415,17 +2455,58 @@
         const lxcRadio = document.getElementById('method_proxmox_lxc');
         const lxcContainer = document.getElementById('proxmox_lxc_input_container');
 
+        const vmRadio = document.getElementById('method_proxmox_vm');
+        const vmContainer = document.getElementById('proxmox_vm_input_container');
+
         const existingRadio = document.getElementById('method_proxmox_existing');
         const existingContainer = document.getElementById('proxmox_existing_container');
         const refreshBtn = document.getElementById('refresh-proxmox-targets-btn');
         const targetSelect = /** @type {HTMLSelectElement} */ (document.getElementById('proxmox_target_select'));
         const targetsError = document.getElementById('proxmox_targets_error');
 
-        const updateInputs = () => {
+        const loadVmTemplates = async () => {
+            const templateSelect = document.getElementById('vm_template_select');
+            if (!templateSelect) return;
+            if (templateSelect.options.length > 1) return;
+            templateSelect.innerHTML = '<option value="">-- Loading templates... --</option>';
+            try {
+                const res = await fetchAPI('/api/proxmox/list-templates', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                templateSelect.innerHTML = '<option value="">-- Select Template --</option>';
+                if (res.templates && res.templates.length > 0) {
+                    res.templates.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.vmid;
+                        opt.textContent = `[${t.vmid}] ${t.name}`;
+                        templateSelect.appendChild(opt);
+                    });
+                } else {
+                    templateSelect.innerHTML = '<option value="">-- No templates found --</option>';
+                }
+            } catch (err) {
+                console.error('Failed to load VM templates:', err);
+                templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+            }
+        };
+
+        const templateSelectEl = document.getElementById('vm_template_select');
+        const templateManualEl = /** @type {HTMLInputElement} */ (document.getElementById('vm_template_manual'));
+        if (templateSelectEl && templateManualEl) {
+            templateSelectEl.addEventListener('change', () => {
+                if (templateSelectEl.value) {
+                    templateManualEl.value = templateSelectEl.value;
+                }
+            });
+        }
+
+        const updateInputs = async () => {
             if (autoRadio && (/** @type {HTMLInputElement} */ (autoRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
@@ -2434,12 +2515,14 @@
                 manualInput.focus();
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
             if (directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked) {
                 manualInput.disabled = true;
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (directIpContainer) {
                     directIpContainer.classList.remove('d-none');
@@ -2450,14 +2533,25 @@
             if (lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+            }
+            if (vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked) {
+                manualInput.disabled = true;
+                if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.remove('d-none');
+                if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                await loadVmTemplates();
             }
             if (existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
             }
@@ -2467,6 +2561,7 @@
         if (manualRadio) manualRadio.addEventListener('change', updateInputs);
         if (directRadio) directRadio.addEventListener('change', updateInputs);
         if (lxcRadio) lxcRadio.addEventListener('change', updateInputs);
+        if (vmRadio) vmRadio.addEventListener('change', updateInputs);
         if (existingRadio) existingRadio.addEventListener('change', updateInputs);
 
         if (refreshBtn) {
@@ -2508,6 +2603,7 @@
 
         const performScan = async () => {
             const isLxc = lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked;
+            const isVm = vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked;
             const isExisting = existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked;
 
             if (isExisting) {
@@ -2627,6 +2723,67 @@
                 } finally {
                     setButtonState(scanBtn, false);
                     scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+                }
+                return;
+            }
+
+            if (isVm) {
+                setButtonState(scanBtn, true, {loadingText: 'Provisioning VM...'});
+                updateWizardFooter('Cloning Proxmox VM, configuring Cloud-Init, and installing Docker (this takes a few minutes)...', 'primary');
+
+                const coresVal = parseInt(document.getElementById('vm_cores').value) || 2;
+                const memVal = parseInt(document.getElementById('vm_memory').value) || 4096;
+                const storageNameVal = document.getElementById('vm_storage_name').value || 'local-lvm';
+                const hostnameVal = document.getElementById('vm_hostname').value.trim();
+                const templateManualVal = document.getElementById('vm_template_manual').value.trim();
+                const usernameVal = document.getElementById('vm_username').value.trim() || 'debian';
+
+                if (!templateManualVal) {
+                    updateWizardFooter('<i class="fa-solid fa-xmark me-2"></i>Please select a template or enter a Template VMID.', 'danger');
+                    setButtonState(scanBtn, false);
+                    scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                    return;
+                }
+
+                try {
+                    const vmResult = await fetchAPI('/api/proxmox/create-vm', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            cores: coresVal,
+                            memory: memVal,
+                            storage_name: storageNameVal,
+                            hostname: hostnameVal,
+                            template_vmid: templateManualVal,
+                            username: usernameVal
+                        })
+                    });
+
+                    // Cache credentials
+                    managedDeviceCache[vmResult.ip] = {
+                        ip: vmResult.ip,
+                        hostname: vmResult.hostname || `VM-${vmResult.vmid}`,
+                        username: vmResult.username || 'debian',
+                        password: vmResult.password
+                    };
+
+                    const virtualScanData = {
+                        hosts: [{
+                            ip: vmResult.ip,
+                            hostname: vmResult.hostname || `VM-${vmResult.vmid}`
+                        }],
+                        messages: [],
+                        permissions_error: false
+                    };
+
+                    lastScanData = virtualScanData;
+                    renderStep2_ConfigureDevices(virtualScanData);
+                } catch (error) {
+                    console.error('An error occurred during Proxmox VM creation:', error);
+                    updateWizardFooter(`<i class="fa-solid fa-xmark me-2"></i>An error occurred: ${escapeHTML(error.message)}`, 'danger');
+                } finally {
+                    setButtonState(scanBtn, false);
+                    scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
                 }
                 return;
             }

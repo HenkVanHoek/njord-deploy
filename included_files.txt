@@ -1,4 +1,4 @@
-Tokens: 234926 | VRAM Status: CRITICAL
+Tokens: 246989 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml

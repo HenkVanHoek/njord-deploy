@@ -1,0 +1,31 @@
+{
+    "variables": [
+        {
+            "default": "8083",
+            "description": "The host port on which phpMyAdmin will be accessible.",
+            "id": "PHPMYADMIN_WEB_PORT",
+            "label": "phpMyAdmin Web Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "mariadb",
+            "description": "The hostname of the MariaDB database service.",
+            "id": "PMA_HOST",
+            "label": "MariaDB Hostname",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "32_random_secret_string_blowfish",
+            "description": "Blowfish secret passphrase for cookie authentication encryption.",
+            "id": "PHPMYADMIN_BLOWFISH_SECRET",
+            "label": "Blowfish Secret",
+            "required": "",
+            "source": "",
+            "type": "password"
+        }
+    ]
+}

@@ -36,13 +36,41 @@ class ComponentReader:
         self._cached_metadata = self._load_json(self.metadata_file)
         return self._cached_metadata
 
+    def get_template_status(self, component_id: str) -> str:
+        """Reads the status of a component from its template header."""
+        template_file = (
+            self.templates_path / component_id / "docker-compose.template.yml"
+        )
+        if not template_file.exists():
+            return "untested"
+        # noinspection PyBroadException
+        try:
+            content = template_file.read_text(encoding="utf-8")
+            for line in content.splitlines():
+                if line.startswith("#"):
+                    stripped = line[1:].strip()
+                    if stripped.startswith("status:"):
+                        parts = stripped.split(":", 1)
+                        if len(parts) == 2:
+                            return parts[1].strip().strip('"').strip("'")
+        except Exception:  # nosec B110
+            pass
+        return "untested"
+
     def get_all_components(self) -> Dict[str, Any]:
-        """Returns all defined components from the master metadata."""
-        return self.get_all_metadata().get("components", {})
+        """Returns all components enriched with template status if missing."""
+        components = self.get_all_metadata().get("components", {})
+        for comp_id, comp in components.items():
+            if isinstance(comp, dict) and "test_status" not in comp:
+                comp["test_status"] = self.get_template_status(comp_id)
+        return components
 
     def get_component_details(self, component_id: str) -> Optional[Dict[str, Any]]:
         """Returns metadata for a specific component ID."""
-        return self.get_all_components().get(component_id)
+        comp = self.get_all_components().get(component_id)
+        if isinstance(comp, dict) and "test_status" not in comp:
+            comp["test_status"] = self.get_template_status(component_id)
+        return comp
 
     def get_docker_service_name(self, component_id: str) -> str:
         """Gets the primary service name for a component's template."""

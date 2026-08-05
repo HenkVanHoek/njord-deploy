@@ -1,27 +1,24 @@
-# status: "testing"
-# last_tested_version: "none"
-# platform_notes: "Targeted for ARM architecture."
+# status: "tested"
+# last_tested_version: "5.2.3"
+# platform_notes: "Tested successfully on Proxmox VM (template 902)."
 # breaking_changes: "None"
-# templates/phpmyadmin/docker-compose.template.yml
 services:
   phpmyadmin:
-    image: arm64v8/phpmyadmin:{{ component_version }}
+    image: phpmyadmin:{{ component_version }}
     container_name: njorddeploy-phpmyadmin
     restart: unless-stopped
     environment:
-      PMA_HOST: mariadb # Hostname of the MariaDB service
+      PMA_HOST: ${PMA_HOST:-mariadb}
       PMA_PORT: 3306
-      MYSQL_ROOT_PASSWORD: ${DB_PASS} # Use the root password from .env
-      # PMA_USER: ${DB_USER} # Optional: specific P_USER if not using root
-      # PMA_PASSWORD: ${DB_PASS} # Optional: specific P_PASSWORD
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: ${DB_PASS:-}
     ports:
-      - "8083:80" # phpMyAdmin web UI port
-    depends_on:
-      - mariadb # Ensures mariadb starts first
+      - "${PHPMYADMIN_WEB_PORT:-8083}:80"
     volumes:
-      - "{{DATA_ROOT}}/phpmyadmin/config/config.inc.php:/etc/phpmyadmin/config.inc.php" # Mount the specific config file, FHS compliant
+      - "{{DATA_ROOT}}/phpmyadmin/config/config.inc.php:/etc/phpmyadmin/config.inc.php"
     networks:
       - njorddeploy_net
+
 networks:
   njorddeploy_net:
     external: true

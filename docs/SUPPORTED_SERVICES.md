@@ -40,6 +40,7 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | Heimdall | A simple and elegant application dashboard. | [Link](https://heimdall.site/) |
 | Homarr | A simple, yet powerful dashboard for your server. | [Link](https://homarr.dev/) |
+| Homepage | A modern, fully static, fast, secure fully proxied, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery. Homepage does not include an authentication layer itself; it is recommended to place it behind a reverse proxy with authentication if exposed to untrusted networks. For optimal file permissions on mounted volumes, the container is configured to run as root (user: 0:0) by default, overriding the PUID/PGID environment variables if set. Note: Docker integration requiring access to /var/run/docker.sock is not enabled by default for security reasons. Users can manually add this volume mount if needed. | N/A |
 | Homer | A dead simple, static homepage for your server. | [Link](https://github.com/bastienwirtz/homer) |
 | Organizr | A full-featured server organizer with a tabbed interface. | [Link](https://organizr.app/) |
 
@@ -59,8 +60,10 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Adminer | Database management in a single PHP file. Supports MySQL, MariaDB, PostgreSQL, SQLite, MS SQL, Oracle, SimpleDB, Elasticsearch, MongoDB. | [Link](https://www.adminer.org/) |
 | Nextcloud DB Dumper | Automated backup container for Nextcloud MariaDB database. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 | Nextcloud MariaDB | Relational MariaDB database tailored for Nextcloud. | [Link](https://mariadb.org/) |
+| phpMyAdmin | Web interface for managing MySQL and MariaDB databases. | [Link](https://www.phpmyadmin.net/) |
 
 ## Utilities
 
@@ -82,7 +85,9 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Filebrowser | Web-based file manager for managing your self-hosted data files and Caddyfile. | [Link](https://filebrowser.org/) |
+| Grafana Stack | The open-source platform for monitoring and observability | N/A |
 | Portainer | A powerful management UI for Docker environments. | [Link](https://www.portainer.io/) |
+| Prometheus Stack | Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring. | N/A |
 | Semaphore UI | Modern UI for Ansible, Terraform/OpenTofu/Terragrunt, PowerShell and other DevOps tools. | N/A |
 | Service Maintenance | Monitor status, updates and vulnerabilities. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 | Uptime Kuma | A self-hosted monitoring tool for proactive health checks and notifications via email, Telegram, and more | [Link](https://github.com/louislam/uptime-kuma) |

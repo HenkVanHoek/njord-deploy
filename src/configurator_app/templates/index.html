@@ -189,6 +189,46 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="form-check text-start mb-3">
+                            <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_vm" value="proxmox_vm">
+                            <label class="form-check-label fw-bold" for="method_proxmox_vm">
+                                Create New Proxmox VM Target
+                            </label>
+                            <div class="form-text mt-0 mb-2">Clone and provision a brand new QEMU VM from a Proxmox template.</div>
+                            <div class="mt-2 d-none" id="proxmox_vm_input_container">
+                                <div class="row g-2">
+                                    <div class="col-sm-6">
+                                        <label for="vm_hostname" class="form-label small mb-1">VM Name (Hostname)</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_hostname" placeholder="e.g. DebianVM, PiSelfhost" value="">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_template_select" class="form-label small mb-1">Source VM Template</label>
+                                        <div class="input-group input-group-sm">
+                                            <select class="form-select form-select-sm" id="vm_template_select">
+                                                <option value="">-- Load Templates --</option>
+                                            </select>
+                                            <input type="number" class="form-control form-control-sm" id="vm_template_manual" placeholder="VMID" style="max-width: 80px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_cores" class="form-label small mb-1">CPU Cores</label>
+                                        <input type="number" class="form-control form-control-sm" id="vm_cores" value="2" min="1">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_memory" class="form-label small mb-1">RAM (MB)</label>
+                                        <input type="number" class="form-control form-control-sm" id="vm_memory" value="4096" min="512">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_username" class="form-label small mb-1">VM Username</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_username" value="debian">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="form-check text-start">
                             <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_existing" value="proxmox_existing">
                             <label class="form-check-label fw-bold" for="method_proxmox_existing">

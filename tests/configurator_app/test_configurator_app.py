@@ -2,7 +2,7 @@
 
 import json
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from src.configurator_app.app import create_app
 
@@ -187,3 +187,93 @@ class ConfiguratorAppTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
         self.assertIn("Critical conflicts must be resolved first.", data["details"])
+
+    @patch("utils.proxmox_client.ProxmoxClient")
+    def test_list_proxmox_templates_success(self, mock_client_class):
+        """Test POST /api/proxmox/list-templates success."""
+        mock_client = mock_client_class.return_value
+        mock_client.get.return_value = {
+            "data": [
+                {"vmid": 1000, "name": "deb12-template", "template": 1},
+                {"vmid": 101, "name": "active-vm", "template": 0},
+            ]
+        }
+        with patch.dict(
+            "os.environ",
+            {
+                "PROXMOX_HOST": "https://localhost:8006",
+                "PROXMOX_USER": "root@pam",
+                "PROXMOX_TOKEN_ID": "id",
+                "PROXMOX_TOKEN_SECRET": "secret",
+                "PROXMOX_NODE": "pve",
+            },
+        ):
+            response = self.client.post(
+                "/api/proxmox/list-templates",
+                data=json.dumps({}),
+                content_type="application/json",
+            )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn("templates", data)
+        self.assertEqual(len(data["templates"]), 1)
+        templates_list = data["templates"]
+        first_template, *rest_templates = templates_list
+        self.assertEqual(first_template["vmid"], 1000)
+
+    @patch("managers.ssh_manager.SSHManager")
+    @patch("utils.proxmox_client.ProxmoxClient")
+    def test_create_proxmox_vm_success(self, mock_client_class, mock_ssh_class):
+        """Test POST /api/proxmox/create-vm success path."""
+        mock_client = mock_client_class.return_value
+        mock_client.get_next_vmid.return_value = 9000
+        mock_client.get.side_effect = [
+            {"data": []},  # Pre-flight check nodes/pve/qemu list
+            {
+                "data": {"status": "stopped", "exitstatus": "OK"}
+            },  # Task status check loop
+        ]
+        mock_client.clone_vm.return_value = {"data": "UPID:pve:00001"}
+        mock_client.configure_vm.return_value = {}
+        mock_client.start_vm.return_value = {}
+        mock_client.get_vm_ip.return_value = "192.168.178.150"
+
+        mock_ssh = mock_ssh_class.return_value
+        mock_ssh.connect.return_value = (True, "")
+        mock_ssh.execute_command.return_value = (0, "success")
+        mock_key = MagicMock()
+        mock_key.get_name.return_value = "ssh-rsa"
+        mock_key.get_base64.return_value = "AAAA..."
+        mock_ssh.get_ssh_key.return_value = mock_key
+
+        payload = {
+            "cores": 2,
+            "memory": 4096,
+            "storage_name": "local-lvm",
+            "hostname": "test-vm-new",
+            "template_vmid": 1000,
+            "username": "debian",
+            "password": "mypassword",
+        }
+
+        with patch.dict(
+            "os.environ",
+            {
+                "PROXMOX_HOST": "https://localhost:8006",
+                "PROXMOX_USER": "root@pam",
+                "PROXMOX_TOKEN_ID": "id",
+                "PROXMOX_TOKEN_SECRET": "secret",
+                "PROXMOX_NODE": "pve",
+            },
+        ):
+            response = self.client.post(
+                "/api/proxmox/create-vm",
+                data=json.dumps(payload),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data)
+        self.assertEqual(data["status"], "success")
+        self.assertEqual(data["ip"], "192.168.178.150")
+        self.assertEqual(data["vmid"], 9000)

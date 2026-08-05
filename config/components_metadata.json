@@ -41,7 +41,9 @@
             "stirling-pdf",
             "unbound",
             "vaultwarden",
-            "web-notepad"
+            "web-notepad",
+            "adminer",
+            "phpmyadmin"
         ],
         "default_group": "general",
         "global_variables": [
@@ -186,6 +188,37 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": null
+        },
+        "adminer": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Database management in a single PHP file. Supports MySQL, MariaDB, PostgreSQL, SQLite, MS SQL, Oracle, SimpleDB, Elasticsearch, MongoDB.",
+            "group": "databases",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "adminer",
+            "intent_questions": [],
+            "name": "Adminer",
+            "package_id": null,
+            "project_url": "https://www.adminer.org/",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "low",
+                "ram": "low",
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "database",
+                "management",
+                "mysql",
+                "postgres",
+                "sqlite",
+                "self-hosted"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "ADMINER_WEB_PORT"
         },
         "audiobookshelf": {
             "conflicts_with": [],
@@ -405,6 +438,62 @@
             "traefik_internal_port": null,
             "ui_port_variable": null
         },
+        "grafana": {
+            "component_version": "11.1.3",
+            "config_templates": {
+                "prometheus.yml": "grafana/provisioning/datasources/prometheus.yml"
+            },
+            "conflicts_with": [],
+            "depends_on": [
+                "prometheus"
+            ],
+            "description": "The open-source platform for monitoring and observability",
+            "docker_service_name": "grafana",
+            "group": "System Tools",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "grafana/grafana-oss",
+            "name": "Grafana Stack",
+            "package_id": "monitoring-stack",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "monitoring",
+                "observability",
+                "dashboard",
+                "metrics"
+            ],
+            "traefik_internal_port": 3000,
+            "ui_port_variable": "GRAFANA_WEB_PORT",
+            "variables": [
+                {
+                    "default": "3000",
+                    "description": "External port for the Grafana UI",
+                    "id": "GRAFANA_WEB_PORT",
+                    "label": "Grafana Web Port",
+                    "type": "port"
+                },
+                {
+                    "default": "{{ CONFIG_BASE_PATH }}/grafana/data",
+                    "description": "Host path for Grafana persistent data",
+                    "id": "GRAFANA_DATA_PATH",
+                    "label": "Grafana Data Path",
+                    "type": "text"
+                },
+                {
+                    "default": "NjB4N2E1YjQzYjU2Y2QxMjM0NTY3ODkwYQ==",
+                    "description": "Admin password for the Grafana UI",
+                    "id": "GRAFANA_ADMIN_PASSWORD",
+                    "label": "Grafana Admin Password",
+                    "type": "password"
+                }
+            ]
+        },
         "heimdall": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -481,6 +570,29 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null
+        },
+        "homepage": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "A modern, fully static, fast, secure fully proxied, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery. Homepage does not include an authentication layer itself; it is recommended to place it behind a reverse proxy with authentication if exposed to untrusted networks. For optimal file permissions on mounted volumes, the container is configured to run as root (user: 0:0) by default, overriding the PUID/PGID environment variables if set. Note: Docker integration requiring access to /var/run/docker.sock is not enabled by default for security reasons. Users can manually add this volume mount if needed.",
+            "docker_service_name": "homepage",
+            "group": "dashboard & Homepages",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "ghcr.io/gethomepage/homepage",
+            "name": "Homepage",
+            "package_id": null,
+            "protocol": "http",
+            "tags": [
+                "dashboard",
+                "homepage",
+                "docker",
+                "monitoring"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "HOMEPAGE_WEB_PORT"
         },
         "homer": {
             "component_version": "latest",
@@ -812,6 +924,39 @@
             ],
             "traefik_internal_port": null
         },
+        "phpmyadmin": {
+            "component_version": "latest",
+            "config_templates": {
+                "config.inc.php": "phpmyadmin/config/config.inc.php"
+            },
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Web interface for managing MySQL and MariaDB databases.",
+            "group": "databases",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "phpmyadmin",
+            "intent_questions": [],
+            "name": "phpMyAdmin",
+            "package_id": null,
+            "project_url": "https://www.phpmyadmin.net/",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "low",
+                "ram": "medium",
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "database",
+                "management",
+                "mariadb",
+                "mysql",
+                "self-hosted"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "PHPMYADMIN_WEB_PORT"
+        },
         "pi-hole": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -939,6 +1084,59 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": "PORTAINER_WEB_PORT"
+        },
+        "prometheus": {
+            "component_version": "v2.54.1",
+            "config_templates": {
+                "prometheus.yml": "prometheus/prometheus.yml"
+            },
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring.",
+            "docker_service_name": "prometheus",
+            "group": "System Tools",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "prom/prometheus",
+            "name": "Prometheus Stack",
+            "package_id": "monitoring-stack",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "monitoring",
+                "metrics",
+                "observability"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "PROMETHEUS_WEB_PORT",
+            "variables": [
+                {
+                    "default": "9090",
+                    "description": "The port Prometheus will listen on for its web interface.",
+                    "id": "PROMETHEUS_WEB_PORT",
+                    "label": "Prometheus Web Port",
+                    "type": "port"
+                },
+                {
+                    "default": "{{ CONFIG_BASE_PATH }}/prometheus/data",
+                    "description": "The path where Prometheus stores its time-series data.",
+                    "id": "PROMETHEUS_DATA_PATH",
+                    "label": "Prometheus Data Path",
+                    "type": "text"
+                },
+                {
+                    "default": "8080",
+                    "description": "The port cAdvisor will listen on for its web interface.",
+                    "id": "CADVISOR_WEB_PORT",
+                    "label": "cAdvisor Web Port",
+                    "type": "port"
+                }
+            ]
         },
         "prosody": {
             "conflicts_with": [],
@@ -1387,6 +1585,11 @@
         "media-stack": {
             "description": "",
             "name": "Media Stack",
+            "network_type": "bridge"
+        },
+        "monitoring-stack": {
+            "description": "Prometheus & Grafana monitoring stack to collect, store, and visualize host and container metrics in a unified dashboard.",
+            "name": "Monitoring Stack",
             "network_type": "bridge"
         },
         "nextcloud-stack": {

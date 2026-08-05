@@ -325,7 +325,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     if (!metadataPane) return;
     metadataPane.innerHTML = ''; // Clear existing content
 
-    const renderMetadataField = (type, id, label, value, readOnly = false, isCheckbox = false, rows = 1, listId = null) => {
+    const renderMetadataField = (type, id, label, value, readOnly = false, isCheckbox = false, rows = 1, listId = null, selectOptions = null) => {
         const div = document.createElement('div');
         div.className = 'mb-3';
 
@@ -347,6 +347,18 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             div.appendChild(input);
             div.appendChild(labelEl);
             return div;
+        } else if (type === 'select') {
+            input = document.createElement('select');
+            input.className = 'form-select';
+            if (Array.isArray(selectOptions)) {
+                selectOptions.forEach(opt => {
+                    const optEl = document.createElement('option');
+                    optEl.value = opt.value;
+                    optEl.textContent = opt.label;
+                    if (opt.value === value) optEl.selected = true;
+                    input.appendChild(optEl);
+                });
+            }
         } else if (type === 'textarea') {
             input = document.createElement('textarea');
             input.rows = rows;
@@ -359,7 +371,9 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             if (listId) input.setAttribute('list', listId);
         }
 
-        input.className = 'form-control';
+        if (type !== 'select') {
+            input.className = 'form-control';
+        }
         input.id = id;
 
         div.appendChild(labelEl);
@@ -467,9 +481,28 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     metadataPane.appendChild(datalistComponents);
 
 
-    // --- Checkboxes ---
+    // --- Checkboxes & Status ---
     metadataPane.appendChild(renderMetadataField('checkbox', 'comp-has-ui', 'Has Web UI', details.has_ui, false, true));
     metadataPane.appendChild(renderMetadataField('checkbox', 'comp-has-config', 'Has User Configuration', details.has_configuration, false, true));
+
+    // --- Test Status ---
+    const testStatusOptions = [
+        { value: 'untested', label: 'Untested / Pending QA' },
+        { value: 'tested', label: 'Tested & Verified' },
+        { value: 'in_progress', label: 'In Progress / Testing' },
+        { value: 'beta', label: 'Beta' }
+    ];
+    metadataPane.appendChild(renderMetadataField(
+        'select',
+        'comp-test-status',
+        'Test Status',
+        details.test_status || 'untested',
+        false,
+        false,
+        1,
+        null,
+        testStatusOptions
+    ));
 
     // --- UI Port Variable ---
     metadataPane.appendChild(renderMetadataField(

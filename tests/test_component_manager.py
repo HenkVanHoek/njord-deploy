@@ -137,3 +137,29 @@ def test_validate_component_configuration_fails_with_nested_pull_policy(tmp_path
 
     with pytest.raises(ValueError, match="nested inside the 'build' block"):
         manager.validate_component_configuration("my-service", invalid_yaml, [])
+
+
+def test_update_component_metadata_test_status(tmp_path):
+    """Test that test_status is saved properly when updating component metadata."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    meta_data = {
+        "components": {
+            "caddy": {
+                "name": "Caddy",
+                "test_status": "untested",
+            }
+        }
+    }
+    meta_path.write_text(json.dumps(meta_data), encoding="utf-8")
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    manager.update_component_metadata("caddy", {"test_status": "tested"})
+    updated = manager.get_component_details("caddy")
+    assert updated is not None
+    assert updated.get("test_status") == "tested"

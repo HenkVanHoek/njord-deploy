@@ -77,6 +77,16 @@ if __name__ == "__main__":
       when: item.mount == '/'
 
 # --- DOCKER ENGINE PROVISIONING (WITHOUT PIP OR Python LIBRARIES) ---
+    - name: Wait for cloud-init and background apt/dpkg locks to clear
+      ansible.builtin.shell: |
+        if command -v cloud-init >/dev/null 2>&1; then
+          cloud-init status --wait || true
+        fi
+        while pgrep -x apt-get >/dev/null 2>&1 || pgrep -x dpkg >/dev/null 2>&1 || (command -v fuser >/dev/null 2>&1 && fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1); do
+          sleep 2
+        done
+      changed_when: false
+
     - name: Ensure prerequisites for Docker repository are installed
       ansible.builtin.apt:
         name:
@@ -84,6 +94,7 @@ if __name__ == "__main__":
           - curl
         state: present
         update_cache: yes
+        lock_timeout: 600
 
     - name: Ensure directory for Docker archive keyring exists
       ansible.builtin.file:
@@ -112,6 +123,7 @@ if __name__ == "__main__":
           - docker-compose-plugin   # Official Docker Compose V2 plugin
         state: present
         update_cache: yes
+        lock_timeout: 600
 
     - name: Ensure SSH user is in docker group
       ansible.builtin.user:
@@ -5937,6 +5949,328 @@ def create_app(test_config=None):
                 500,
             )
 
+    @flask_app.route("/api/proxmox/list-templates", methods=["POST"])
+    def list_proxmox_templates():
+        from utils.proxmox_client import ProxmoxClient
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+        node = os.getenv("PROXMOX_NODE", "pve")
+
+        if not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Proxmox API token credentials "
+                            "are not configured in your .env file."
+                        )
+                    }
+                ),
+                500,
+            )
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+            qemu_res = client.get(f"nodes/{node}/qemu")
+            qemu_list = qemu_res.get("data", [])
+            templates = []
+            for item in qemu_list:
+                if item.get("template") or item.get("template") == 1:
+                    templates.append(
+                        {
+                            "vmid": int(item.get("vmid", 0)),
+                            "name": str(item.get("name", f"VM{item.get('vmid')}")),
+                        }
+                    )
+            return (
+                jsonify({"templates": sorted(templates, key=lambda x: x["vmid"])}),
+                200,
+            )
+
+        except Exception as e:
+            logging.error(f"Failed to list Proxmox QEMU templates: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Failed to list templates: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/proxmox/create-vm", methods=["POST"])
+    def create_proxmox_vm():
+        from managers.ssh_manager import SSHManager
+        from utils.proxmox_client import ProxmoxClient
+
+        data = request.get_json() or {}
+        cores = int(data.get("cores", 4))
+        memory = int(data.get("memory", 8192))
+        storage_name = str(data.get("storage_name", "local-lvm"))
+        node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve")))
+        password = str(data.get("password", "PiSelfhostLXC2026!"))
+        hostname = str(data.get("hostname", "")).strip()
+        template_vmid = data.get("template_vmid")
+        username = str(data.get("username", "debian")).strip()
+
+        if not template_vmid:
+            return jsonify({"error": "Template VMID is required."}), 400
+
+        try:
+            template_vmid = int(template_vmid)
+        except ValueError:
+            return jsonify({"error": "Template VMID must be an integer."}), 400
+
+        if hostname:
+            import re
+
+            hostname = re.sub(r"[\s_]+", "-", hostname)
+            hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
+            hostname = re.sub(r"-+", "-", hostname)
+            hostname = hostname.strip("-")
+            hostname = hostname[:63]
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+
+        if not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Proxmox API token credentials "
+                            "are not configured in your .env file."
+                        )
+                    }
+                ),
+                500,
+            )
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+
+            # Pre-flight check: duplicate VM name
+            qemu_res = client.get(f"nodes/{node}/qemu")
+            qemu_list = qemu_res.get("data", [])
+            if hostname:
+                duplicate_vms = [
+                    vm
+                    for vm in qemu_list
+                    if str(vm.get("name", "")).lower() == hostname.lower()
+                ]
+                if duplicate_vms:
+                    dup_vmids = sorted(int(vm.get("vmid", 0)) for vm in duplicate_vms)
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    f"Pre-flight check failed: A VM with the "
+                                    f"hostname '{hostname}' already exists on node "
+                                    f"'{node}'. Hostnames must be unique. "
+                                    f"Conflicting VMID(s): {dup_vmids}"
+                                )
+                            }
+                        ),
+                        409,
+                    )
+
+            # 1. Get next unused VMID
+            vmid = client.get_next_vmid()
+
+            # 2. Retrieve public SSH key
+            dummy_manager = SSHManager(
+                hostname="localhost", username="root", password=""
+            )  # nosec B106
+            ssh_key = dummy_manager.get_ssh_key()
+            pubkey = f"{ssh_key.get_name()} {ssh_key.get_base64()}"
+
+            # 3. Clone VM template (try linked clone, fallback to full clone)
+            logging.info(f"Cloning VM template {template_vmid} to {vmid}...")
+            try:
+                clone_res = client.clone_vm(
+                    node=node,
+                    vmid=template_vmid,
+                    newid=vmid,
+                    name=hostname or f"VM{vmid}",
+                    full=False,
+                )
+                upid = clone_res.get("data")
+            except Exception as clone_err:
+                if "Linked clone feature is not supported" in str(clone_err):
+                    logging.warning(
+                        "Linked clone not supported, falling back to full clone..."
+                    )
+                    clone_res = client.clone_vm(
+                        node=node,
+                        vmid=template_vmid,
+                        newid=vmid,
+                        name=hostname or f"VM{vmid}",
+                        full=True,
+                    )
+                    upid = clone_res.get("data")
+                else:
+                    raise
+
+            # 4. Wait for cloning task to complete
+            if upid:
+                logging.info(f"Waiting for Proxmox clone task to complete: {upid}")
+                task_deadline = 240  # cloning can take slightly longer
+                task_start = time.time()
+                while time.time() - task_start < task_deadline:
+                    try:
+                        task_res = client.get(f"nodes/{node}/tasks/{upid}/status")
+                        task_data = task_res.get("data", {})
+                        current_task_status = task_data.get("status")
+                        if current_task_status == "stopped":
+                            exit_status = task_data.get("exitstatus")
+                            if exit_status == "OK":
+                                logging.info("VM clone task completed successfully.")
+                                break
+                            else:
+                                return (
+                                    jsonify(
+                                        {
+                                            "error": (
+                                                f"VM clone task failed: "
+                                                f"{exit_status}"
+                                            )
+                                        }
+                                    ),
+                                    500,
+                                )
+                    except Exception:  # nosec B110
+                        pass
+                    time.sleep(2)
+
+            # 5. Configure Cloud-Init
+            import urllib.parse
+
+            logging.info(f"Configuring Cloud-Init for VMID {vmid}...")
+            config_data = {
+                "cores": cores,
+                "memory": memory,
+                "ciuser": username,
+                "cipassword": password,
+                "sshkeys": urllib.parse.quote(pubkey),
+                "ipconfig0": "ip=dhcp",
+                "agent": "enabled=1",
+                "ide2": f"{storage_name}:cloudinit",
+            }
+            client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+
+            # 6. Start the VM
+            logging.info(f"Starting VM {vmid}...")
+            client.start_vm(node=node, vmid=vmid)
+
+            # 7. Poll for guest agent to report IP
+            ip_address = None
+            for attempt in range(40):  # VMs can take longer to boot than containers
+                try:
+                    ip = client.get_vm_ip(node, vmid)
+                    if (
+                        ip
+                        and not ip.startswith("127.")
+                        and not ip.startswith("169.254.")
+                    ):
+                        ip_address = ip
+                        break
+                except Exception as poll_err:
+                    logging.warning(f"[VM IP poll #{attempt + 1}] error: {poll_err}")
+                time.sleep(4)
+
+            if not isinstance(ip_address, str):
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "VM created, but failed to acquire "
+                                "an IPv4 address in time via QEMU guest agent. "
+                                "Check server logs."
+                            )
+                        }
+                    ),
+                    500,
+                )
+
+            # 8. Install Docker via SSH
+            time.sleep(15)  # wait for boot completion
+            ssh = SSHManager(
+                hostname=ip_address,
+                username=username,
+                password=password,
+                allow_auto_add=True,
+                load_system_keys=False,
+            )
+
+            connected = False
+            conn_msg = ""
+            for conn_attempt in range(5):
+                connected, conn_msg = ssh.connect()
+                if connected:
+                    break
+                time.sleep(5)
+
+            if not connected:
+                return (
+                    jsonify(
+                        {"error": (f"Failed to connect to VM via SSH: " f"{conn_msg}")}
+                    ),
+                    500,
+                )
+
+            cmd_prefix = "" if username == "root" else "sudo "
+            install_commands = [
+                f"{cmd_prefix}apt-get update",
+                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
+                "curl -fsSL https://get.docker.com -o get-docker.sh",
+                f"{cmd_prefix}sh get-docker.sh",
+                f"{cmd_prefix}systemctl enable --now docker",
+            ]
+
+            if username != "root":
+                install_commands.append(f"sudo usermod -aG docker {username}")
+
+            install_commands.append(
+                f"{cmd_prefix}docker network create njorddeploy_net"
+            )
+
+            for cmd in install_commands:
+                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                if exit_code != 0:
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    f"Provisioning failed on command "
+                                    f"'{cmd}': {stdout}"
+                                )
+                            }
+                        ),
+                        500,
+                    )
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "ip": ip_address,
+                        "vmid": vmid,
+                        "hostname": hostname or f"VM{vmid}",
+                        "username": username,
+                        "password": password,
+                    }
+                ),
+                201,
+            )
+
+        except Exception as e:
+            logging.error(f"Failed to create Proxmox VM: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Proxmox VM creation failed: {str(e)}"}),
+                500,
+            )
+
     @flask_app.route("/api/proxmox/list-targets", methods=["POST"])
     def list_proxmox_targets():
         from utils.proxmox_client import ProxmoxClient
@@ -8202,6 +8536,46 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                         </div>
                     </div>
                     <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_vm" value="proxmox_vm">
+                        <label class="form-check-label fw-bold" for="method_proxmox_vm">
+                            <strong>Create New Proxmox VM Target</strong>
+                            <span class="d-block small text-muted">Clone and provision a brand new QEMU VM from a Proxmox template.</span>
+                        </label>
+                    </div>
+                    <div class="mt-2 d-none" id="proxmox_vm_input_container">
+                        <div class="row g-2">
+                            <div class="col-sm-6">
+                                <label for="vm_hostname" class="form-label small mb-1">VM Name (Hostname)</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_hostname" placeholder="e.g. njord-vm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_template_select" class="form-label small mb-1">Source VM Template</label>
+                                <div class="input-group input-group-sm">
+                                    <select class="form-select form-select-sm" id="vm_template_select">
+                                        <option value="">-- Load Templates --</option>
+                                    </select>
+                                    <input type="number" class="form-control form-control-sm" id="vm_template_manual" placeholder="VMID" style="max-width: 80px;">
+                                </div>
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_cores" class="form-label small mb-1">CPU Cores</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_cores" value="2" min="1">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_memory" class="form-label small mb-1">RAM (MB)</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_memory" value="4096" min="512">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_username" class="form-label small mb-1">VM Username</label>
+                                <input type="text" class="form-control form-control-sm" id="vm_username" value="debian">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_existing" value="proxmox_existing">
                         <label class="form-check-label fw-bold" for="method_proxmox_existing">
                             <strong>Select Existing Proxmox Target</strong>
@@ -10239,17 +10613,58 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
         const lxcRadio = document.getElementById('method_proxmox_lxc');
         const lxcContainer = document.getElementById('proxmox_lxc_input_container');
 
+        const vmRadio = document.getElementById('method_proxmox_vm');
+        const vmContainer = document.getElementById('proxmox_vm_input_container');
+
         const existingRadio = document.getElementById('method_proxmox_existing');
         const existingContainer = document.getElementById('proxmox_existing_container');
         const refreshBtn = document.getElementById('refresh-proxmox-targets-btn');
         const targetSelect = /** @type {HTMLSelectElement} */ (document.getElementById('proxmox_target_select'));
         const targetsError = document.getElementById('proxmox_targets_error');
 
-        const updateInputs = () => {
+        const loadVmTemplates = async () => {
+            const templateSelect = document.getElementById('vm_template_select');
+            if (!templateSelect) return;
+            if (templateSelect.options.length > 1) return;
+            templateSelect.innerHTML = '<option value="">-- Loading templates... --</option>';
+            try {
+                const res = await fetchAPI('/api/proxmox/list-templates', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                templateSelect.innerHTML = '<option value="">-- Select Template --</option>';
+                if (res.templates && res.templates.length > 0) {
+                    res.templates.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.vmid;
+                        opt.textContent = `[${t.vmid}] ${t.name}`;
+                        templateSelect.appendChild(opt);
+                    });
+                } else {
+                    templateSelect.innerHTML = '<option value="">-- No templates found --</option>';
+                }
+            } catch (err) {
+                console.error('Failed to load VM templates:', err);
+                templateSelect.innerHTML = '<option value="">-- Error loading templates --</option>';
+            }
+        };
+
+        const templateSelectEl = document.getElementById('vm_template_select');
+        const templateManualEl = /** @type {HTMLInputElement} */ (document.getElementById('vm_template_manual'));
+        if (templateSelectEl && templateManualEl) {
+            templateSelectEl.addEventListener('change', () => {
+                if (templateSelectEl.value) {
+                    templateManualEl.value = templateSelectEl.value;
+                }
+            });
+        }
+
+        const updateInputs = async () => {
             if (autoRadio && (/** @type {HTMLInputElement} */ (autoRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
@@ -10258,12 +10673,14 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 manualInput.focus();
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
             }
             if (directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked) {
                 manualInput.disabled = true;
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (directIpContainer) {
                     directIpContainer.classList.remove('d-none');
@@ -10274,14 +10691,25 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
             if (lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+            }
+            if (vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked) {
+                manualInput.disabled = true;
+                if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.remove('d-none');
+                if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                await loadVmTemplates();
             }
             if (existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked) {
                 manualInput.disabled = true;
                 if (directIpContainer) directIpContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
             }
@@ -10291,6 +10719,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
         if (manualRadio) manualRadio.addEventListener('change', updateInputs);
         if (directRadio) directRadio.addEventListener('change', updateInputs);
         if (lxcRadio) lxcRadio.addEventListener('change', updateInputs);
+        if (vmRadio) vmRadio.addEventListener('change', updateInputs);
         if (existingRadio) existingRadio.addEventListener('change', updateInputs);
 
         if (refreshBtn) {
@@ -10332,6 +10761,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
 
         const performScan = async () => {
             const isLxc = lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked;
+            const isVm = vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked;
             const isExisting = existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked;
 
             if (isExisting) {
@@ -10451,6 +10881,67 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 } finally {
                     setButtonState(scanBtn, false);
                     scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+                }
+                return;
+            }
+
+            if (isVm) {
+                setButtonState(scanBtn, true, {loadingText: 'Provisioning VM...'});
+                updateWizardFooter('Cloning Proxmox VM, configuring Cloud-Init, and installing Docker (this takes a few minutes)...', 'primary');
+
+                const coresVal = parseInt(document.getElementById('vm_cores').value) || 2;
+                const memVal = parseInt(document.getElementById('vm_memory').value) || 4096;
+                const storageNameVal = document.getElementById('vm_storage_name').value || 'local-lvm';
+                const hostnameVal = document.getElementById('vm_hostname').value.trim();
+                const templateManualVal = document.getElementById('vm_template_manual').value.trim();
+                const usernameVal = document.getElementById('vm_username').value.trim() || 'debian';
+
+                if (!templateManualVal) {
+                    updateWizardFooter('<i class="fa-solid fa-xmark me-2"></i>Please select a template or enter a Template VMID.', 'danger');
+                    setButtonState(scanBtn, false);
+                    scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                    return;
+                }
+
+                try {
+                    const vmResult = await fetchAPI('/api/proxmox/create-vm', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            cores: coresVal,
+                            memory: memVal,
+                            storage_name: storageNameVal,
+                            hostname: hostnameVal,
+                            template_vmid: templateManualVal,
+                            username: usernameVal
+                        })
+                    });
+
+                    // Cache credentials
+                    managedDeviceCache[vmResult.ip] = {
+                        ip: vmResult.ip,
+                        hostname: vmResult.hostname || `VM-${vmResult.vmid}`,
+                        username: vmResult.username || 'debian',
+                        password: vmResult.password
+                    };
+
+                    const virtualScanData = {
+                        hosts: [{
+                            ip: vmResult.ip,
+                            hostname: vmResult.hostname || `VM-${vmResult.vmid}`
+                        }],
+                        messages: [],
+                        permissions_error: false
+                    };
+
+                    lastScanData = virtualScanData;
+                    renderStep2_ConfigureDevices(virtualScanData);
+                } catch (error) {
+                    console.error('An error occurred during Proxmox VM creation:', error);
+                    updateWizardFooter(`<i class="fa-solid fa-xmark me-2"></i>An error occurred: ${escapeHTML(error.message)}`, 'danger');
+                } finally {
+                    setButtonState(scanBtn, false);
+                    scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
                 }
                 return;
             }
@@ -10855,6 +11346,46 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                     <div class="col-sm-6">
                                         <label for="lxc_storage_name" class="form-label small mb-1">Storage Pool</label>
                                         <input type="text" class="form-control form-control-sm" id="lxc_storage_name" value="local-lvm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-check text-start mb-3">
+                            <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_vm" value="proxmox_vm">
+                            <label class="form-check-label fw-bold" for="method_proxmox_vm">
+                                Create New Proxmox VM Target
+                            </label>
+                            <div class="form-text mt-0 mb-2">Clone and provision a brand new QEMU VM from a Proxmox template.</div>
+                            <div class="mt-2 d-none" id="proxmox_vm_input_container">
+                                <div class="row g-2">
+                                    <div class="col-sm-6">
+                                        <label for="vm_hostname" class="form-label small mb-1">VM Name (Hostname)</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_hostname" placeholder="e.g. DebianVM, PiSelfhost" value="">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_template_select" class="form-label small mb-1">Source VM Template</label>
+                                        <div class="input-group input-group-sm">
+                                            <select class="form-select form-select-sm" id="vm_template_select">
+                                                <option value="">-- Load Templates --</option>
+                                            </select>
+                                            <input type="number" class="form-control form-control-sm" id="vm_template_manual" placeholder="VMID" style="max-width: 80px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_cores" class="form-label small mb-1">CPU Cores</label>
+                                        <input type="number" class="form-control form-control-sm" id="vm_cores" value="2" min="1">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_memory" class="form-label small mb-1">RAM (MB)</label>
+                                        <input type="number" class="form-control form-control-sm" id="vm_memory" value="4096" min="512">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label for="vm_username" class="form-label small mb-1">VM Username</label>
+                                        <input type="text" class="form-control form-control-sm" id="vm_username" value="debian">
                                     </div>
                                 </div>
                             </div>
@@ -12900,6 +13431,9 @@ document.addEventListener('DOMContentLoaded', () => {
             has_ui: document.getElementById('comp-has-ui').checked,
             has_configuration: document.getElementById('comp-has-config').checked,
             has_traefik_support: document.getElementById('comp-has-traefik').checked,
+            test_status: document.getElementById('comp-test-status')
+                ? document.getElementById('comp-test-status').value
+                : 'untested',
             ui_port_variable: uiPortInput
                 ? (uiPortInput.value.trim() || null)
                 : null,
@@ -14243,6 +14777,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 packages: Object.fromEntries(packagesMap)
             };
 
+            // Update Header and Tab counts
+            const totalComponents = Object.keys(rawData).length;
+            const totalGroups = groupsMap.size;
+            const totalPackages = Object.keys(packagesData).length;
+
+            const compHeaderCount = document.getElementById('components-header-count');
+            if (compHeaderCount) compHeaderCount.textContent = `(${totalComponents})`;
+
+            const groupsTabCount = document.getElementById('groups-tab-count');
+            if (groupsTabCount) groupsTabCount.textContent = `(${totalGroups})`;
+
+            const packagesTabCount = document.getElementById('packages-tab-count');
+            if (packagesTabCount) packagesTabCount.textContent = `(${totalPackages})`;
+
             const sidebarControls = document.getElementById('sidebar-controls');
             const viewTabs = document.getElementById('view-tabs');
 
@@ -15158,6 +15706,280 @@ document.addEventListener('DOMContentLoaded', () => {
         await checkGitPermissions();
     };
 
+    const renderEcosystemStats = async () => {
+        const modalBody = document.getElementById('stats-modal-body');
+        if (!modalBody) return;
+
+        try {
+            const rawData = await fetchJson('/api/components');
+            const groupsData = await fetchJson('/api/groups').catch(() => ({}));
+            const packagesData = await fetchJson('/api/packages').catch(() => ({}));
+
+            const components = Object.values(rawData || {});
+            const totalComponents = components.length;
+            const totalGroups = Object.keys(groupsData || {}).length;
+            const totalPackages = Object.keys(packagesData || {}).length;
+
+            let testedCount = 0;
+            let inProgressCount = 0;
+            let untestedCount = 0;
+
+            let missingDescCount = 0;
+            let missingUiPortCount = 0;
+            let missingTraefikPortCount = 0;
+
+            components.forEach(comp => {
+                const status = (comp.test_status || 'untested').toLowerCase();
+                if (status === 'tested') {
+                    testedCount++;
+                } else if (status === 'in_progress' || status === 'beta' || status === 'testing') {
+                    inProgressCount++;
+                } else {
+                    untestedCount++;
+                }
+
+                if (!comp.description || !comp.description.trim()) {
+                    missingDescCount++;
+                }
+                if (comp.has_ui && !comp.ui_port_variable) {
+                    missingUiPortCount++;
+                }
+                if (comp.has_traefik_support && !comp.traefik_internal_port) {
+                    missingTraefikPortCount++;
+                }
+            });
+
+            const testedPercent = totalComponents > 0
+                ? Math.round((testedCount / totalComponents) * 100)
+                : 0;
+
+            modalBody.innerHTML = `
+                <div class="row text-center mb-3">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="all" style="cursor: pointer;" title="Click to view all components">
+                            <div class="fs-3 fw-bold text-primary">${totalComponents}</div>
+                            <div class="text-muted small">Total Components</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="tested" style="cursor: pointer;" title="Click to view tested components">
+                            <div class="fs-3 fw-bold text-success">${testedCount}</div>
+                            <div class="text-muted small">Tested &amp; Verified</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="in_progress" style="cursor: pointer;" title="Click to view components in progress">
+                            <div class="fs-3 fw-bold text-warning">${inProgressCount}</div>
+                            <div class="text-muted small">In Testing / Progress</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="untested" style="cursor: pointer;" title="Click to view untested components">
+                            <div class="fs-3 fw-bold text-danger">${untestedCount}</div>
+                            <div class="text-muted small">Untested / Pending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-check me-1 text-success"></i> Test Coverage Progress (${testedPercent}%)</h6>
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${testedPercent}%" aria-valuenow="${testedPercent}" aria-valuemin="0" aria-valuemax="100">
+                        ${testedPercent}%
+                    </div>
+                </div>
+
+                <div id="stats-drilldown-section" class="mb-3 d-none">
+                    <div class="card bg-transparent border">
+                        <div class="card-header fw-bold bg-transparent d-flex justify-content-between align-items-center py-2">
+                            <span id="drilldown-title"><i class="bi bi-list-task me-1"></i> Filtered Components</span>
+                            <button type="button" class="btn-close btn-close-sm" id="close-drilldown-btn" aria-label="Close Drilldown"></button>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="drilldown-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-transparent border shadow-sm">
+                            <div class="card-header fw-bold bg-transparent">
+                                <i class="bi bi-layers me-1 text-info"></i> Architecture Totals
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Service Groups
+                                    <span class="badge bg-info rounded-pill">${totalGroups}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Service Packages
+                                    <span class="badge bg-primary rounded-pill">${totalPackages}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-transparent border shadow-sm">
+                            <div class="card-header fw-bold bg-transparent">
+                                <i class="bi bi-clipboard-data me-1 text-warning"></i> Metadata Quality
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_desc" style="cursor: pointer;" title="Click to view components missing a description">
+                                    <span><i class="bi bi-file-earmark-text me-2 text-warning"></i>Missing Description</span>
+                                    <span class="badge ${missingDescCount > 0 ? 'bg-warning text-dark' : 'bg-secondary'} rounded-pill">${missingDescCount}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_ui_port" style="cursor: pointer;" title="Click to view components with UI enabled but missing port variable">
+                                    <span><i class="bi bi-window-sidebar me-2 text-danger"></i>UI Enabled (Missing Port Var)</span>
+                                    <span class="badge ${missingUiPortCount > 0 ? 'bg-danger' : 'bg-secondary'} rounded-pill">${missingUiPortCount}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_traefik_port" style="cursor: pointer;" title="Click to view components with Traefik enabled but missing internal port">
+                                    <span><i class="bi bi-diagram-3 me-2 text-info"></i>Traefik Enabled (Missing Port)</span>
+                                    <span class="badge ${missingTraefikPortCount > 0 ? 'bg-danger' : 'bg-secondary'} rounded-pill">${missingTraefikPortCount}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const filterCards = modalBody.querySelectorAll('.stat-filter-card');
+            const qualityCards = modalBody.querySelectorAll('.stat-quality-card');
+            const drilldownSection = modalBody.querySelector('#stats-drilldown-section');
+            const drilldownTitle = modalBody.querySelector('#drilldown-title');
+            const drilldownList = modalBody.querySelector('#drilldown-list');
+            const closeDrilldownBtn = modalBody.querySelector('#close-drilldown-btn');
+
+            const renderDrilldown = (filterType) => {
+                filterCards.forEach(card => {
+                    if (card.dataset.filter === filterType) {
+                        card.classList.add('border-primary', 'shadow');
+                    } else {
+                        card.classList.remove('border-primary', 'shadow');
+                    }
+                });
+
+                qualityCards.forEach(card => {
+                    if (card.dataset.filter === filterType) {
+                        card.classList.add('bg-primary', 'bg-opacity-25', 'fw-bold');
+                    } else {
+                        card.classList.remove('bg-primary', 'bg-opacity-25', 'fw-bold');
+                    }
+                });
+
+                let filtered = [];
+                let titleText = '';
+
+                if (filterType === 'tested') {
+                    filtered = components.filter(c => (c.test_status || '').toLowerCase() === 'tested');
+                    titleText = `<i class="bi bi-check-circle-fill me-1 text-success"></i> Tested &amp; Verified Components (${filtered.length})`;
+                } else if (filterType === 'in_progress') {
+                    filtered = components.filter(c => {
+                        const st = (c.test_status || '').toLowerCase();
+                        return st === 'in_progress' || st === 'beta' || st === 'testing';
+                    });
+                    titleText = `<i class="bi bi-hourglass-split me-1 text-warning"></i> In Testing / Progress Components (${filtered.length})`;
+                } else if (filterType === 'untested') {
+                    filtered = components.filter(c => {
+                        const st = (c.test_status || '').toLowerCase();
+                        return st === 'untested' || !st;
+                    });
+                    titleText = `<i class="bi bi-exclamation-circle-fill me-1 text-danger"></i> Untested / Pending Components (${filtered.length})`;
+                } else if (filterType === 'missing_desc') {
+                    filtered = components.filter(c => !c.description || !c.description.trim());
+                    titleText = `<i class="bi bi-file-earmark-text-fill me-1 text-warning"></i> Components Missing Description (${filtered.length})`;
+                } else if (filterType === 'missing_ui_port') {
+                    filtered = components.filter(c => c.has_ui && !c.ui_port_variable);
+                    titleText = `<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> UI Enabled (Missing Port Var) (${filtered.length})`;
+                } else if (filterType === 'missing_traefik_port') {
+                    filtered = components.filter(c => c.has_traefik_support && !c.traefik_internal_port);
+                    titleText = `<i class="bi bi-diagram-3-fill me-1 text-danger"></i> Traefik Enabled (Missing Internal Port) (${filtered.length})`;
+                } else {
+                    filtered = components;
+                    titleText = `<i class="bi bi-collection-fill me-1 text-primary"></i> All Components (${filtered.length})`;
+                }
+
+                drilldownTitle.innerHTML = titleText;
+                drilldownList.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    drilldownList.innerHTML = `
+                        <div class="p-3 text-center text-muted small"><i class="bi bi-check-all me-1 text-success"></i> Great job! No components match this filter.</div>
+                    `;
+                } else {
+                    filtered.forEach(comp => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                        const st = (comp.test_status || 'untested').toLowerCase();
+                        const statusClass = st === 'tested' ? 'bg-success' : (st === 'beta' || st === 'in_progress' ? 'bg-warning text-dark' : 'bg-danger');
+                        item.innerHTML = `
+                            <div>
+                                <span class="fw-bold text-light">${comp.name || comp.id}</span>
+                                <small class="text-muted ms-2">(${comp.group || 'general'})</small>
+                                <span class="badge ${statusClass} ms-2" style="font-size: 0.75rem;">${comp.test_status || 'untested'}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary navigate-comp-btn" data-comp-id="${comp.id}">
+                                Open <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        `;
+                        drilldownList.appendChild(item);
+                    });
+
+                    drilldownList.querySelectorAll('.navigate-comp-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const compId = e.currentTarget.dataset.compId;
+                            if (compId) {
+                                const modalEl = document.getElementById('statsModal');
+                                if (modalEl) {
+                                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                    if (modalInstance) modalInstance.hide();
+                                }
+                                await loadComponentDetails(compId, false);
+                            }
+                        });
+                    });
+                }
+
+                drilldownSection.classList.remove('d-none');
+            };
+
+            filterCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    renderDrilldown(card.dataset.filter);
+                });
+            });
+
+            qualityCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    renderDrilldown(card.dataset.filter);
+                });
+            });
+
+            if (closeDrilldownBtn) {
+                closeDrilldownBtn.addEventListener('click', () => {
+                    drilldownSection.classList.add('d-none');
+                    filterCards.forEach(card => card.classList.remove('border-primary', 'shadow'));
+                    qualityCards.forEach(card => card.classList.remove('bg-primary', 'bg-opacity-25', 'fw-bold'));
+                });
+            }
+        } catch (err) {
+            modalBody.innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    Failed to load statistics: ${err.message || err}
+                </div>
+            `;
+        }
+    };
+
+    const setupStatsModal = () => {
+        const statsModalEl = document.getElementById('statsModal');
+        if (statsModalEl) {
+            statsModalEl.addEventListener('show.bs.modal', async () => {
+                await renderEcosystemStats();
+            });
+        }
+    };
+
     // --- Main Initialization ---
 
     (async () => {
@@ -15173,6 +15995,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
+        setupStatsModal();
         await setupGitSyncFeatures();
         updateUiForDirtyState();
         await refreshSyncStatusBadge();
@@ -15507,7 +16330,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     if (!metadataPane) return;
     metadataPane.innerHTML = ''; // Clear existing content
 
-    const renderMetadataField = (type, id, label, value, readOnly = false, isCheckbox = false, rows = 1, listId = null) => {
+    const renderMetadataField = (type, id, label, value, readOnly = false, isCheckbox = false, rows = 1, listId = null, selectOptions = null) => {
         const div = document.createElement('div');
         div.className = 'mb-3';
 
@@ -15529,6 +16352,18 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             div.appendChild(input);
             div.appendChild(labelEl);
             return div;
+        } else if (type === 'select') {
+            input = document.createElement('select');
+            input.className = 'form-select';
+            if (Array.isArray(selectOptions)) {
+                selectOptions.forEach(opt => {
+                    const optEl = document.createElement('option');
+                    optEl.value = opt.value;
+                    optEl.textContent = opt.label;
+                    if (opt.value === value) optEl.selected = true;
+                    input.appendChild(optEl);
+                });
+            }
         } else if (type === 'textarea') {
             input = document.createElement('textarea');
             input.rows = rows;
@@ -15541,7 +16376,9 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             if (listId) input.setAttribute('list', listId);
         }
 
-        input.className = 'form-control';
+        if (type !== 'select') {
+            input.className = 'form-control';
+        }
         input.id = id;
 
         div.appendChild(labelEl);
@@ -15649,9 +16486,28 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     metadataPane.appendChild(datalistComponents);
 
 
-    // --- Checkboxes ---
+    // --- Checkboxes & Status ---
     metadataPane.appendChild(renderMetadataField('checkbox', 'comp-has-ui', 'Has Web UI', details.has_ui, false, true));
     metadataPane.appendChild(renderMetadataField('checkbox', 'comp-has-config', 'Has User Configuration', details.has_configuration, false, true));
+
+    // --- Test Status ---
+    const testStatusOptions = [
+        { value: 'untested', label: 'Untested / Pending QA' },
+        { value: 'tested', label: 'Tested & Verified' },
+        { value: 'in_progress', label: 'In Progress / Testing' },
+        { value: 'beta', label: 'Beta' }
+    ];
+    metadataPane.appendChild(renderMetadataField(
+        'select',
+        'comp-test-status',
+        'Test Status',
+        details.test_status || 'untested',
+        false,
+        false,
+        1,
+        null,
+        testStatusOptions
+    ));
 
     // --- UI Port Variable ---
     metadataPane.appendChild(renderMetadataField(
@@ -16109,6 +16965,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
+                <li class="nav-item me-1"><a class="nav-link d-flex align-items-center" href="#" id="stats-btn" data-bs-toggle="modal" data-bs-target="#statsModal"><i class="bi bi-bar-chart-fill me-1"></i> Stats</a></li>
                 <li class="nav-item"><a class="nav-link d-flex align-items-center" href="#" id="git-sync-btn"><i class="bi bi-git me-1"></i> Git Sync<span id="git-sync-badge" class="badge bg-danger ms-1 d-none" title="Globale metadata niet gepusht">!</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="git-upload-btn" title="Read-only: Checking permissions..." data-bs-toggle="tooltip"><i class="bi bi-cloud-arrow-up"></i> Upload to Repo</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn"><i class="bi bi-compass"></i> Quick Tour</a></li>
@@ -16126,7 +16983,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     <div class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="d-flex justify-content-between align-items-center">
-                <h4>Components</h4>
+                <h4>Components <span id="components-header-count" class="text-muted fs-6 fw-normal">(0)</span></h4>
                 <div class="d-flex align-items-center">
                     <button class="btn btn-sm btn-outline-primary me-1" id="expand-all-btn" title="Expand All"><i class="bi bi-chevron-double-down"></i></button>
                     <button class="btn btn-sm btn-outline-primary me-2" id="collapse-all-btn" title="Collapse All"><i class="bi bi-chevron-double-up"></i></button>
@@ -16144,8 +17001,8 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             </div>
             <div id="sidebar-controls" class="mb-3">
                 <div class="nav nav-pills nav-fill mb-2" id="view-tabs" role="tablist">
-                    <button class="nav-link active py-1" id="view-groups-tab" data-view="groups" type="button">Groups</button>
-                    <button class="nav-link py-1" id="view-packages-tab" data-view="packages" type="button">Packages</button>
+                    <button class="nav-link active py-1" id="view-groups-tab" data-view="groups" type="button">Groups <span id="groups-tab-count">(0)</span></button>
+                    <button class="nav-link py-1" id="view-packages-tab" data-view="packages" type="button">Packages <span id="packages-tab-count">(0)</span></button>
                 </div>
             </div>
         </div>
@@ -16702,6 +17559,29 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     </div>
 </div>
 
+<!-- Stats Overview Modal -->
+<div class="modal fade" id="statsModal" tabindex="-1" aria-labelledby="statsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="statsModalLabel">
+                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i> Ecosystem & Testing Statistics
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="stats-modal-body">
+                <div class="text-center py-4 text-muted">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2">Loading statistics...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js" integrity="sha384-7Le+JVwfZJb8qalIvvPjnRmpLO/aJJrlzAPIjywCLxhQrQ9v6dYKDTshRfeZTXZn" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js" integrity="sha384-ZYmwuq4n2gOcNxMSiJ6jyTj+BbIrilr7p6dlq6q5nmSWKmsH9UU4K1qqjycMkfmR" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.js" integrity="sha384-W8to3L7MykmlLyF9jWzrILmJdsl7pTjK9iVB9poPiy+tRKbSB6RChDmvV418vmK3" crossorigin="anonymous"></script>
@@ -16936,6 +17816,8 @@ class ComponentManager:
         for comp_id, comp_data in components.items():
             full_data = comp_data.copy()
             full_data["id"] = comp_id
+            if "test_status" not in full_data:
+                full_data["test_status"] = self.reader.get_template_status(comp_id)
             full_data["required_variables"] = self.reader.get_component_variables(
                 comp_id
             )
@@ -16957,6 +17839,8 @@ class ComponentManager:
 
         details = component_data.copy()
         details["id"] = component_id
+        if "test_status" not in details:
+            details["test_status"] = self.reader.get_template_status(component_id)
         details["required_variables"] = self.reader.get_component_variables(
             component_id
         )
@@ -17093,6 +17977,10 @@ class ComponentManager:
                     "is_exclusive": False,
                 }
                 njorddeploy_meta.setdefault("group_order", []).append(new_group_id)
+        if "test_status" in update_data:
+            self.writer.update_template_status(
+                component_id, str(update_data["test_status"])
+            )
         components[component_id].update(update_data)
         self._save_metadata()
 
@@ -17512,13 +18400,41 @@ class ComponentReader:
         self._cached_metadata = self._load_json(self.metadata_file)
         return self._cached_metadata
 
+    def get_template_status(self, component_id: str) -> str:
+        """Reads the status of a component from its template header."""
+        template_file = (
+            self.templates_path / component_id / "docker-compose.template.yml"
+        )
+        if not template_file.exists():
+            return "untested"
+        # noinspection PyBroadException
+        try:
+            content = template_file.read_text(encoding="utf-8")
+            for line in content.splitlines():
+                if line.startswith("#"):
+                    stripped = line[1:].strip()
+                    if stripped.startswith("status:"):
+                        parts = stripped.split(":", 1)
+                        if len(parts) == 2:
+                            return parts[1].strip().strip('"').strip("'")
+        except Exception:  # nosec B110
+            pass
+        return "untested"
+
     def get_all_components(self) -> Dict[str, Any]:
-        """Returns all defined components from the master metadata."""
-        return self.get_all_metadata().get("components", {})
+        """Returns all components enriched with template status if missing."""
+        components = self.get_all_metadata().get("components", {})
+        for comp_id, comp in components.items():
+            if isinstance(comp, dict) and "test_status" not in comp:
+                comp["test_status"] = self.get_template_status(comp_id)
+        return components
 
     def get_component_details(self, component_id: str) -> Optional[Dict[str, Any]]:
         """Returns metadata for a specific component ID."""
-        return self.get_all_components().get(component_id)
+        comp = self.get_all_components().get(component_id)
+        if isinstance(comp, dict) and "test_status" not in comp:
+            comp["test_status"] = self.get_template_status(component_id)
+        return comp
 
     def get_docker_service_name(self, component_id: str) -> str:
         """Gets the primary service name for a component's template."""
@@ -17658,6 +18574,37 @@ class ComponentWriter:
             return True
         except IOError as e:
             logger.error(f"Could not write template for {component_id}: {e}")
+            return False
+
+    def update_template_status(self, component_id: str, new_status: str) -> bool:
+        """Updates the # status: comment header in docker-compose.template.yml."""
+        template_file = (
+            self.templates_path / component_id / "docker-compose.template.yml"
+        )
+        if not template_file.exists():
+            return False
+        # noinspection PyBroadException
+        try:
+            content = template_file.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            updated_lines = []
+            found_status = False
+            for line in lines:
+                if line.startswith("#"):
+                    stripped = line[1:].strip()
+                    if stripped.startswith("status:"):
+                        updated_lines.append(f'# status: "{new_status}"')
+                        found_status = True
+                        continue
+                updated_lines.append(line)
+
+            if not found_status:
+                updated_lines.insert(0, f'# status: "{new_status}"')
+
+            template_file.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+            return True
+        except Exception as e:  # nosec B110
+            logger.error(f"Failed to update template status for {component_id}: {e}")
             return False
 
     def create_component_skeleton(self, component_id: str, meta: Dict) -> bool:

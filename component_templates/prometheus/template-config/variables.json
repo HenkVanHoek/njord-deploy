@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "9090",
+            "description": "The port Prometheus will listen on for its web interface.",
+            "id": "PROMETHEUS_WEB_PORT",
+            "label": "Prometheus Web Port",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/prometheus/data",
+            "description": "The path where Prometheus stores its time-series data.",
+            "id": "PROMETHEUS_DATA_PATH",
+            "label": "Prometheus Data Path",
+            "type": "text"
+        },
+        {
+            "default": "8080",
+            "description": "The port cAdvisor will listen on for its web interface.",
+            "id": "CADVISOR_WEB_PORT",
+            "label": "cAdvisor Web Port",
+            "type": "port"
+        }
+    ]
+}

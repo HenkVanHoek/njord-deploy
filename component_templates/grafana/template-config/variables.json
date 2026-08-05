@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "External port for the Grafana UI",
+            "id": "GRAFANA_WEB_PORT",
+            "label": "Grafana Web Port",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/grafana/data",
+            "description": "Host path for Grafana persistent data",
+            "id": "GRAFANA_DATA_PATH",
+            "label": "Grafana Data Path",
+            "type": "text"
+        },
+        {
+            "default": "NjB4N2E1YjQzYjU2Y2QxMjM0NTY3ODkwYQ==",
+            "description": "Admin password for the Grafana UI",
+            "id": "GRAFANA_ADMIN_PASSWORD",
+            "label": "Grafana Admin Password",
+            "type": "password"
+        }
+    ]
+}

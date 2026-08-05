@@ -462,6 +462,33 @@ repeatable, isolated environment.
 
 ---
 
+#### Story: Listing Proxmox VM Templates
+
+> As a user or developer, I want to see a list of my existing VM templates on Proxmox, so that I can easily select one to clone and provision a new target.
+
+**Acceptance Criteria:**
+
+-   **Given** Proxmox credentials are configured,
+-   **When** a `POST` request is made to `/api/proxmox/list-templates`,
+-   **Then** the backend retrieves all QEMU VM objects from the node and filters them to return only those marked as templates.
+-   **And** the templates are returned sorted by VMID and loaded into the VM template dropdown.
+
+---
+
+#### Story: Creating a Proxmox VM Target
+
+> As a user or developer, I want to clone and provision a new VM from a Proxmox template with automatic SSH key injection via cloud-init, so that I can set up a new target machine easily.
+
+**Acceptance Criteria:**
+
+-   **Given** the "Create New Proxmox VM Target" scan method is selected,
+-   **When** the user specifies a hostname, template VMID, cores, memory, storage pool, and VM username, and starts provisioning,
+-   **Then** the backend queries Proxmox for the next unused VMID, clones the template (linked clone with full clone fallback), configures Cloud-Init (setting username, password, SSH public key, ip=dhcp, guest agent enabled, and cloudinit drive), and boots the VM.
+-   **And** the backend polls the guest agent to retrieve the VM's dynamic IP address.
+-   **And** the backend connects via SSH and automatically installs Docker and sets up the `njorddeploy_net` network.
+
+---
+
 #### Story: Deploying to an Existing Proxmox Target
 
 > As a user or developer, I want to select an existing VM or LXC container from my Proxmox server, so that I can redeploy or configure services on a pre-existing machine.

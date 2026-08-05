@@ -1,0 +1,31 @@
+{
+    "variables": [
+        {
+            "default": "8084",
+            "description": "The host port on which the Adminer web interface will be accessible.",
+            "id": "ADMINER_WEB_PORT",
+            "label": "Adminer Web Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "mariadb",
+            "description": "Default database server hostname (e.g. mariadb, postgres).",
+            "id": "ADMINER_DEFAULT_SERVER",
+            "label": "Default Database Server Host",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "pepa-linha",
+            "description": "Design theme for Adminer interface (e.g. pepa-linha, flat, dracula).",
+            "id": "ADMINER_DESIGN",
+            "label": "Adminer Theme / Design",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

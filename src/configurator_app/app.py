@@ -892,6 +892,328 @@ def create_app(test_config=None):
                 500,
             )
 
+    @flask_app.route("/api/proxmox/list-templates", methods=["POST"])
+    def list_proxmox_templates():
+        from utils.proxmox_client import ProxmoxClient
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+        node = os.getenv("PROXMOX_NODE", "pve")
+
+        if not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Proxmox API token credentials "
+                            "are not configured in your .env file."
+                        )
+                    }
+                ),
+                500,
+            )
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+            qemu_res = client.get(f"nodes/{node}/qemu")
+            qemu_list = qemu_res.get("data", [])
+            templates = []
+            for item in qemu_list:
+                if item.get("template") or item.get("template") == 1:
+                    templates.append(
+                        {
+                            "vmid": int(item.get("vmid", 0)),
+                            "name": str(item.get("name", f"VM{item.get('vmid')}")),
+                        }
+                    )
+            return (
+                jsonify({"templates": sorted(templates, key=lambda x: x["vmid"])}),
+                200,
+            )
+
+        except Exception as e:
+            logging.error(f"Failed to list Proxmox QEMU templates: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Failed to list templates: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/proxmox/create-vm", methods=["POST"])
+    def create_proxmox_vm():
+        from managers.ssh_manager import SSHManager
+        from utils.proxmox_client import ProxmoxClient
+
+        data = request.get_json() or {}
+        cores = int(data.get("cores", 4))
+        memory = int(data.get("memory", 8192))
+        storage_name = str(data.get("storage_name", "local-lvm"))
+        node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve")))
+        password = str(data.get("password", "PiSelfhostLXC2026!"))
+        hostname = str(data.get("hostname", "")).strip()
+        template_vmid = data.get("template_vmid")
+        username = str(data.get("username", "debian")).strip()
+
+        if not template_vmid:
+            return jsonify({"error": "Template VMID is required."}), 400
+
+        try:
+            template_vmid = int(template_vmid)
+        except ValueError:
+            return jsonify({"error": "Template VMID must be an integer."}), 400
+
+        if hostname:
+            import re
+
+            hostname = re.sub(r"[\s_]+", "-", hostname)
+            hostname = re.sub(r"[^a-zA-Z0-9\-]", "", hostname)
+            hostname = re.sub(r"-+", "-", hostname)
+            hostname = hostname.strip("-")
+            hostname = hostname[:63]
+
+        host = os.getenv("PROXMOX_HOST", "https://192.168.178.51:8006")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+
+        if not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Proxmox API token credentials "
+                            "are not configured in your .env file."
+                        )
+                    }
+                ),
+                500,
+            )
+
+        try:
+            client = ProxmoxClient(host, user, token_id, token_secret)
+
+            # Pre-flight check: duplicate VM name
+            qemu_res = client.get(f"nodes/{node}/qemu")
+            qemu_list = qemu_res.get("data", [])
+            if hostname:
+                duplicate_vms = [
+                    vm
+                    for vm in qemu_list
+                    if str(vm.get("name", "")).lower() == hostname.lower()
+                ]
+                if duplicate_vms:
+                    dup_vmids = sorted(int(vm.get("vmid", 0)) for vm in duplicate_vms)
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    f"Pre-flight check failed: A VM with the "
+                                    f"hostname '{hostname}' already exists on node "
+                                    f"'{node}'. Hostnames must be unique. "
+                                    f"Conflicting VMID(s): {dup_vmids}"
+                                )
+                            }
+                        ),
+                        409,
+                    )
+
+            # 1. Get next unused VMID
+            vmid = client.get_next_vmid()
+
+            # 2. Retrieve public SSH key
+            dummy_manager = SSHManager(
+                hostname="localhost", username="root", password=""
+            )  # nosec B106
+            ssh_key = dummy_manager.get_ssh_key()
+            pubkey = f"{ssh_key.get_name()} {ssh_key.get_base64()}"
+
+            # 3. Clone VM template (try linked clone, fallback to full clone)
+            logging.info(f"Cloning VM template {template_vmid} to {vmid}...")
+            try:
+                clone_res = client.clone_vm(
+                    node=node,
+                    vmid=template_vmid,
+                    newid=vmid,
+                    name=hostname or f"VM{vmid}",
+                    full=False,
+                )
+                upid = clone_res.get("data")
+            except Exception as clone_err:
+                if "Linked clone feature is not supported" in str(clone_err):
+                    logging.warning(
+                        "Linked clone not supported, falling back to full clone..."
+                    )
+                    clone_res = client.clone_vm(
+                        node=node,
+                        vmid=template_vmid,
+                        newid=vmid,
+                        name=hostname or f"VM{vmid}",
+                        full=True,
+                    )
+                    upid = clone_res.get("data")
+                else:
+                    raise
+
+            # 4. Wait for cloning task to complete
+            if upid:
+                logging.info(f"Waiting for Proxmox clone task to complete: {upid}")
+                task_deadline = 240  # cloning can take slightly longer
+                task_start = time.time()
+                while time.time() - task_start < task_deadline:
+                    try:
+                        task_res = client.get(f"nodes/{node}/tasks/{upid}/status")
+                        task_data = task_res.get("data", {})
+                        current_task_status = task_data.get("status")
+                        if current_task_status == "stopped":
+                            exit_status = task_data.get("exitstatus")
+                            if exit_status == "OK":
+                                logging.info("VM clone task completed successfully.")
+                                break
+                            else:
+                                return (
+                                    jsonify(
+                                        {
+                                            "error": (
+                                                f"VM clone task failed: "
+                                                f"{exit_status}"
+                                            )
+                                        }
+                                    ),
+                                    500,
+                                )
+                    except Exception:  # nosec B110
+                        pass
+                    time.sleep(2)
+
+            # 5. Configure Cloud-Init
+            import urllib.parse
+
+            logging.info(f"Configuring Cloud-Init for VMID {vmid}...")
+            config_data = {
+                "cores": cores,
+                "memory": memory,
+                "ciuser": username,
+                "cipassword": password,
+                "sshkeys": urllib.parse.quote(pubkey),
+                "ipconfig0": "ip=dhcp",
+                "agent": "enabled=1",
+                "ide2": f"{storage_name}:cloudinit",
+            }
+            client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+
+            # 6. Start the VM
+            logging.info(f"Starting VM {vmid}...")
+            client.start_vm(node=node, vmid=vmid)
+
+            # 7. Poll for guest agent to report IP
+            ip_address = None
+            for attempt in range(40):  # VMs can take longer to boot than containers
+                try:
+                    ip = client.get_vm_ip(node, vmid)
+                    if (
+                        ip
+                        and not ip.startswith("127.")
+                        and not ip.startswith("169.254.")
+                    ):
+                        ip_address = ip
+                        break
+                except Exception as poll_err:
+                    logging.warning(f"[VM IP poll #{attempt + 1}] error: {poll_err}")
+                time.sleep(4)
+
+            if not isinstance(ip_address, str):
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "VM created, but failed to acquire "
+                                "an IPv4 address in time via QEMU guest agent. "
+                                "Check server logs."
+                            )
+                        }
+                    ),
+                    500,
+                )
+
+            # 8. Install Docker via SSH
+            time.sleep(15)  # wait for boot completion
+            ssh = SSHManager(
+                hostname=ip_address,
+                username=username,
+                password=password,
+                allow_auto_add=True,
+                load_system_keys=False,
+            )
+
+            connected = False
+            conn_msg = ""
+            for conn_attempt in range(5):
+                connected, conn_msg = ssh.connect()
+                if connected:
+                    break
+                time.sleep(5)
+
+            if not connected:
+                return (
+                    jsonify(
+                        {"error": (f"Failed to connect to VM via SSH: " f"{conn_msg}")}
+                    ),
+                    500,
+                )
+
+            cmd_prefix = "" if username == "root" else "sudo "
+            install_commands = [
+                f"{cmd_prefix}apt-get update",
+                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
+                "curl -fsSL https://get.docker.com -o get-docker.sh",
+                f"{cmd_prefix}sh get-docker.sh",
+                f"{cmd_prefix}systemctl enable --now docker",
+            ]
+
+            if username != "root":
+                install_commands.append(f"sudo usermod -aG docker {username}")
+
+            install_commands.append(
+                f"{cmd_prefix}docker network create njorddeploy_net"
+            )
+
+            for cmd in install_commands:
+                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                if exit_code != 0:
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    f"Provisioning failed on command "
+                                    f"'{cmd}': {stdout}"
+                                )
+                            }
+                        ),
+                        500,
+                    )
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "ip": ip_address,
+                        "vmid": vmid,
+                        "hostname": hostname or f"VM{vmid}",
+                        "username": username,
+                        "password": password,
+                    }
+                ),
+                201,
+            )
+
+        except Exception as e:
+            logging.error(f"Failed to create Proxmox VM: {e}", exc_info=True)
+            return (
+                jsonify({"error": f"Proxmox VM creation failed: {str(e)}"}),
+                500,
+            )
+
     @flask_app.route("/api/proxmox/list-targets", methods=["POST"])
     def list_proxmox_targets():
         from utils.proxmox_client import ProxmoxClient

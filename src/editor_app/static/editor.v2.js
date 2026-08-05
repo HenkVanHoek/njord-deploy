@@ -236,6 +236,9 @@ document.addEventListener('DOMContentLoaded', () => {
             has_ui: document.getElementById('comp-has-ui').checked,
             has_configuration: document.getElementById('comp-has-config').checked,
             has_traefik_support: document.getElementById('comp-has-traefik').checked,
+            test_status: document.getElementById('comp-test-status')
+                ? document.getElementById('comp-test-status').value
+                : 'untested',
             ui_port_variable: uiPortInput
                 ? (uiPortInput.value.trim() || null)
                 : null,
@@ -1579,6 +1582,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 packages: Object.fromEntries(packagesMap)
             };
 
+            // Update Header and Tab counts
+            const totalComponents = Object.keys(rawData).length;
+            const totalGroups = groupsMap.size;
+            const totalPackages = Object.keys(packagesData).length;
+
+            const compHeaderCount = document.getElementById('components-header-count');
+            if (compHeaderCount) compHeaderCount.textContent = `(${totalComponents})`;
+
+            const groupsTabCount = document.getElementById('groups-tab-count');
+            if (groupsTabCount) groupsTabCount.textContent = `(${totalGroups})`;
+
+            const packagesTabCount = document.getElementById('packages-tab-count');
+            if (packagesTabCount) packagesTabCount.textContent = `(${totalPackages})`;
+
             const sidebarControls = document.getElementById('sidebar-controls');
             const viewTabs = document.getElementById('view-tabs');
 
@@ -2494,6 +2511,280 @@ document.addEventListener('DOMContentLoaded', () => {
         await checkGitPermissions();
     };
 
+    const renderEcosystemStats = async () => {
+        const modalBody = document.getElementById('stats-modal-body');
+        if (!modalBody) return;
+
+        try {
+            const rawData = await fetchJson('/api/components');
+            const groupsData = await fetchJson('/api/groups').catch(() => ({}));
+            const packagesData = await fetchJson('/api/packages').catch(() => ({}));
+
+            const components = Object.values(rawData || {});
+            const totalComponents = components.length;
+            const totalGroups = Object.keys(groupsData || {}).length;
+            const totalPackages = Object.keys(packagesData || {}).length;
+
+            let testedCount = 0;
+            let inProgressCount = 0;
+            let untestedCount = 0;
+
+            let missingDescCount = 0;
+            let missingUiPortCount = 0;
+            let missingTraefikPortCount = 0;
+
+            components.forEach(comp => {
+                const status = (comp.test_status || 'untested').toLowerCase();
+                if (status === 'tested') {
+                    testedCount++;
+                } else if (status === 'in_progress' || status === 'beta' || status === 'testing') {
+                    inProgressCount++;
+                } else {
+                    untestedCount++;
+                }
+
+                if (!comp.description || !comp.description.trim()) {
+                    missingDescCount++;
+                }
+                if (comp.has_ui && !comp.ui_port_variable) {
+                    missingUiPortCount++;
+                }
+                if (comp.has_traefik_support && !comp.traefik_internal_port) {
+                    missingTraefikPortCount++;
+                }
+            });
+
+            const testedPercent = totalComponents > 0
+                ? Math.round((testedCount / totalComponents) * 100)
+                : 0;
+
+            modalBody.innerHTML = `
+                <div class="row text-center mb-3">
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="all" style="cursor: pointer;" title="Click to view all components">
+                            <div class="fs-3 fw-bold text-primary">${totalComponents}</div>
+                            <div class="text-muted small">Total Components</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="tested" style="cursor: pointer;" title="Click to view tested components">
+                            <div class="fs-3 fw-bold text-success">${testedCount}</div>
+                            <div class="text-muted small">Tested &amp; Verified</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="in_progress" style="cursor: pointer;" title="Click to view components in progress">
+                            <div class="fs-3 fw-bold text-warning">${inProgressCount}</div>
+                            <div class="text-muted small">In Testing / Progress</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6 mb-3">
+                        <div class="p-3 border rounded bg-glass shadow-sm stat-filter-card" data-filter="untested" style="cursor: pointer;" title="Click to view untested components">
+                            <div class="fs-3 fw-bold text-danger">${untestedCount}</div>
+                            <div class="text-muted small">Untested / Pending</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-check me-1 text-success"></i> Test Coverage Progress (${testedPercent}%)</h6>
+                <div class="progress mb-3" style="height: 20px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: ${testedPercent}%" aria-valuenow="${testedPercent}" aria-valuemin="0" aria-valuemax="100">
+                        ${testedPercent}%
+                    </div>
+                </div>
+
+                <div id="stats-drilldown-section" class="mb-3 d-none">
+                    <div class="card bg-transparent border">
+                        <div class="card-header fw-bold bg-transparent d-flex justify-content-between align-items-center py-2">
+                            <span id="drilldown-title"><i class="bi bi-list-task me-1"></i> Filtered Components</span>
+                            <button type="button" class="btn-close btn-close-sm" id="close-drilldown-btn" aria-label="Close Drilldown"></button>
+                        </div>
+                        <div class="card-body p-0" style="max-height: 250px; overflow-y: auto;">
+                            <div class="list-group list-group-flush" id="drilldown-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-transparent border shadow-sm">
+                            <div class="card-header fw-bold bg-transparent">
+                                <i class="bi bi-layers me-1 text-info"></i> Architecture Totals
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Service Groups
+                                    <span class="badge bg-info rounded-pill">${totalGroups}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    Service Packages
+                                    <span class="badge bg-primary rounded-pill">${totalPackages}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <div class="card bg-transparent border shadow-sm">
+                            <div class="card-header fw-bold bg-transparent">
+                                <i class="bi bi-clipboard-data me-1 text-warning"></i> Metadata Quality
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_desc" style="cursor: pointer;" title="Click to view components missing a description">
+                                    <span><i class="bi bi-file-earmark-text me-2 text-warning"></i>Missing Description</span>
+                                    <span class="badge ${missingDescCount > 0 ? 'bg-warning text-dark' : 'bg-secondary'} rounded-pill">${missingDescCount}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_ui_port" style="cursor: pointer;" title="Click to view components with UI enabled but missing port variable">
+                                    <span><i class="bi bi-window-sidebar me-2 text-danger"></i>UI Enabled (Missing Port Var)</span>
+                                    <span class="badge ${missingUiPortCount > 0 ? 'bg-danger' : 'bg-secondary'} rounded-pill">${missingUiPortCount}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between align-items-center stat-quality-card" data-filter="missing_traefik_port" style="cursor: pointer;" title="Click to view components with Traefik enabled but missing internal port">
+                                    <span><i class="bi bi-diagram-3 me-2 text-info"></i>Traefik Enabled (Missing Port)</span>
+                                    <span class="badge ${missingTraefikPortCount > 0 ? 'bg-danger' : 'bg-secondary'} rounded-pill">${missingTraefikPortCount}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const filterCards = modalBody.querySelectorAll('.stat-filter-card');
+            const qualityCards = modalBody.querySelectorAll('.stat-quality-card');
+            const drilldownSection = modalBody.querySelector('#stats-drilldown-section');
+            const drilldownTitle = modalBody.querySelector('#drilldown-title');
+            const drilldownList = modalBody.querySelector('#drilldown-list');
+            const closeDrilldownBtn = modalBody.querySelector('#close-drilldown-btn');
+
+            const renderDrilldown = (filterType) => {
+                filterCards.forEach(card => {
+                    if (card.dataset.filter === filterType) {
+                        card.classList.add('border-primary', 'shadow');
+                    } else {
+                        card.classList.remove('border-primary', 'shadow');
+                    }
+                });
+
+                qualityCards.forEach(card => {
+                    if (card.dataset.filter === filterType) {
+                        card.classList.add('bg-primary', 'bg-opacity-25', 'fw-bold');
+                    } else {
+                        card.classList.remove('bg-primary', 'bg-opacity-25', 'fw-bold');
+                    }
+                });
+
+                let filtered = [];
+                let titleText = '';
+
+                if (filterType === 'tested') {
+                    filtered = components.filter(c => (c.test_status || '').toLowerCase() === 'tested');
+                    titleText = `<i class="bi bi-check-circle-fill me-1 text-success"></i> Tested &amp; Verified Components (${filtered.length})`;
+                } else if (filterType === 'in_progress') {
+                    filtered = components.filter(c => {
+                        const st = (c.test_status || '').toLowerCase();
+                        return st === 'in_progress' || st === 'beta' || st === 'testing';
+                    });
+                    titleText = `<i class="bi bi-hourglass-split me-1 text-warning"></i> In Testing / Progress Components (${filtered.length})`;
+                } else if (filterType === 'untested') {
+                    filtered = components.filter(c => {
+                        const st = (c.test_status || '').toLowerCase();
+                        return st === 'untested' || !st;
+                    });
+                    titleText = `<i class="bi bi-exclamation-circle-fill me-1 text-danger"></i> Untested / Pending Components (${filtered.length})`;
+                } else if (filterType === 'missing_desc') {
+                    filtered = components.filter(c => !c.description || !c.description.trim());
+                    titleText = `<i class="bi bi-file-earmark-text-fill me-1 text-warning"></i> Components Missing Description (${filtered.length})`;
+                } else if (filterType === 'missing_ui_port') {
+                    filtered = components.filter(c => c.has_ui && !c.ui_port_variable);
+                    titleText = `<i class="bi bi-exclamation-triangle-fill me-1 text-danger"></i> UI Enabled (Missing Port Var) (${filtered.length})`;
+                } else if (filterType === 'missing_traefik_port') {
+                    filtered = components.filter(c => c.has_traefik_support && !c.traefik_internal_port);
+                    titleText = `<i class="bi bi-diagram-3-fill me-1 text-danger"></i> Traefik Enabled (Missing Internal Port) (${filtered.length})`;
+                } else {
+                    filtered = components;
+                    titleText = `<i class="bi bi-collection-fill me-1 text-primary"></i> All Components (${filtered.length})`;
+                }
+
+                drilldownTitle.innerHTML = titleText;
+                drilldownList.innerHTML = '';
+
+                if (filtered.length === 0) {
+                    drilldownList.innerHTML = `
+                        <div class="p-3 text-center text-muted small"><i class="bi bi-check-all me-1 text-success"></i> Great job! No components match this filter.</div>
+                    `;
+                } else {
+                    filtered.forEach(comp => {
+                        const item = document.createElement('div');
+                        item.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
+                        const st = (comp.test_status || 'untested').toLowerCase();
+                        const statusClass = st === 'tested' ? 'bg-success' : (st === 'beta' || st === 'in_progress' ? 'bg-warning text-dark' : 'bg-danger');
+                        item.innerHTML = `
+                            <div>
+                                <span class="fw-bold text-light">${comp.name || comp.id}</span>
+                                <small class="text-muted ms-2">(${comp.group || 'general'})</small>
+                                <span class="badge ${statusClass} ms-2" style="font-size: 0.75rem;">${comp.test_status || 'untested'}</span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-primary navigate-comp-btn" data-comp-id="${comp.id}">
+                                Open <i class="bi bi-arrow-right-short"></i>
+                            </button>
+                        `;
+                        drilldownList.appendChild(item);
+                    });
+
+                    drilldownList.querySelectorAll('.navigate-comp-btn').forEach(btn => {
+                        btn.addEventListener('click', async (e) => {
+                            const compId = e.currentTarget.dataset.compId;
+                            if (compId) {
+                                const modalEl = document.getElementById('statsModal');
+                                if (modalEl) {
+                                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                    if (modalInstance) modalInstance.hide();
+                                }
+                                await loadComponentDetails(compId, false);
+                            }
+                        });
+                    });
+                }
+
+                drilldownSection.classList.remove('d-none');
+            };
+
+            filterCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    renderDrilldown(card.dataset.filter);
+                });
+            });
+
+            qualityCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    renderDrilldown(card.dataset.filter);
+                });
+            });
+
+            if (closeDrilldownBtn) {
+                closeDrilldownBtn.addEventListener('click', () => {
+                    drilldownSection.classList.add('d-none');
+                    filterCards.forEach(card => card.classList.remove('border-primary', 'shadow'));
+                    qualityCards.forEach(card => card.classList.remove('bg-primary', 'bg-opacity-25', 'fw-bold'));
+                });
+            }
+        } catch (err) {
+            modalBody.innerHTML = `
+                <div class="alert alert-danger mb-0">
+                    Failed to load statistics: ${err.message || err}
+                </div>
+            `;
+        }
+    };
+
+    const setupStatsModal = () => {
+        const statsModalEl = document.getElementById('statsModal');
+        if (statsModalEl) {
+            statsModalEl.addEventListener('show.bs.modal', async () => {
+                await renderEcosystemStats();
+            });
+        }
+    };
+
     // --- Main Initialization ---
 
     (async () => {
@@ -2509,6 +2800,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
+        setupStatsModal();
         await setupGitSyncFeatures();
         updateUiForDirtyState();
         await refreshSyncStatusBadge();

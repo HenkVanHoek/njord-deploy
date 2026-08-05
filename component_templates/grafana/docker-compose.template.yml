@@ -1,0 +1,23 @@
+# status: "tested"
+# last_tested_version: "11.1.3"
+# platform_notes: "Tested successfully on Proxmox VM (template 902)."
+# breaking_changes: none
+services:
+  grafana:
+    container_name: njorddeploy-grafana
+    user: "0:0"
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ GRAFANA_WEB_PORT }}:3000"
+    volumes:
+      - "{{ GRAFANA_DATA_PATH }}:/var/lib/grafana"
+      - "{{ DATA_ROOT }}/grafana/provisioning:/etc/grafana/provisioning:ro"
+    environment:
+      - "GF_SECURITY_ADMIN_PASSWORD={{ GRAFANA_ADMIN_PASSWORD }}"
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

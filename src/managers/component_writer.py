@@ -97,6 +97,37 @@ class ComponentWriter:
             logger.error(f"Could not write template for {component_id}: {e}")
             return False
 
+    def update_template_status(self, component_id: str, new_status: str) -> bool:
+        """Updates the # status: comment header in docker-compose.template.yml."""
+        template_file = (
+            self.templates_path / component_id / "docker-compose.template.yml"
+        )
+        if not template_file.exists():
+            return False
+        # noinspection PyBroadException
+        try:
+            content = template_file.read_text(encoding="utf-8")
+            lines = content.splitlines()
+            updated_lines = []
+            found_status = False
+            for line in lines:
+                if line.startswith("#"):
+                    stripped = line[1:].strip()
+                    if stripped.startswith("status:"):
+                        updated_lines.append(f'# status: "{new_status}"')
+                        found_status = True
+                        continue
+                updated_lines.append(line)
+
+            if not found_status:
+                updated_lines.insert(0, f'# status: "{new_status}"')
+
+            template_file.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+            return True
+        except Exception as e:  # nosec B110
+            logger.error(f"Failed to update template status for {component_id}: {e}")
+            return False
+
     def create_component_skeleton(self, component_id: str, meta: Dict) -> bool:
         """Creates directory structure and initial files for a new component."""
         comp_dir = self.templates_path / component_id

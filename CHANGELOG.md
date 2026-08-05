@@ -7,6 +7,11 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Component Editor Statistics & QA Dashboard**:
+  - Added real-time component, group, and package count badges to the Editor header title and view tabs (`Components (Z)`, `Groups (X)`, `Packages (Y)`).
+  - Integrated `test_status` metadata property support across `ComponentReader`, `ComponentWriter`, and `ComponentManager`, automatically synchronizing with `# status:` headers in `docker-compose.template.yml` files.
+  - Added interactive **Stats Modal** displaying test coverage statistics (% tested), architecture totals, and metadata quality indicators (missing descriptions, missing UI port variables, missing Traefik ports).
+  - Added click-to-filter drill-down list in the Stats modal allowing instant navigation from any stat or QA metric directly to the target component in the Editor.
 - **Ansible Host Key Bypass**: Configured `ansible_ssh_common_args` to bypass strict host key verification (`StrictHostKeyChecking=no` and `UserKnownHostsFile=/dev/null`) during deployments, preventing SSH connection failures when dynamic test VMs or reinstalled hosts change their host keys.
 - **Proxmox Test Runner Skip List**: Added `gluetun` to the integration test skip list (`SKIPPED_COMPONENTS`) because VPN client containers require valid private credentials to start and cannot be verified automatically in isolated testing environments.
 

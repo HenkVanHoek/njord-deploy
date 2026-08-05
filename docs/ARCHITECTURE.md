@@ -165,10 +165,11 @@ Behavior
 - Authenticates via a Proxmox API token (`user@pam!token-id` + secret),
   configured through the `PROXMOX_HOST`, `PROXMOX_USER`, `PROXMOX_TOKEN_ID`,
   and `PROXMOX_TOKEN_SECRET` environment variables.
-- Provides LXC lifecycle operations: create, start, stop, destroy, and status
+- Provides VM and LXC lifecycle operations: clone/create, start, stop, destroy, and status
   inspection.
+- Facilitates Cloud-Init VM provisioning by injecting SSH public keys and setting username, password, network configuration, and guest agent status.
 - Used by the automated Proxmox test runner (`scripts/proxmox_test_runner.py`)
-  and by the `configurator_app` for live LXC status queries.
+  and by the `configurator_app` for live VM/LXC provisioning and status queries.
 - TLS verification is disabled by default for self-signed Proxmox certificates;
   this behaviour is intentional for homelab deployments and must not be changed
   without a migration plan.

@@ -1,0 +1,55 @@
+# status: "tested"
+# last_tested_version: "v2.54.1"
+# platform_notes: "Tested successfully on Proxmox VM (template 902)."
+# breaking_changes: none
+services:
+  prometheus:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-prometheus
+    restart: unless-stopped
+    user: "0:0"
+    ports:
+      - "{{ PROMETHEUS_WEB_PORT }}:9090"
+    volumes:
+      - "{{ DATA_ROOT }}/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+      - "{{ PROMETHEUS_DATA_PATH }}:/prometheus"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    networks:
+      - njorddeploy_net
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: njorddeploy-node-exporter
+    restart: unless-stopped
+    user: "0:0"
+    volumes:
+      - "/proc:/host/proc:ro"
+      - "/sys:/host/sys:ro"
+      - "/:/rootfs:ro"
+    command:
+      - "--path.procfs=/host/proc"
+      - "--path.rootfs=/rootfs"
+      - "--path.sysfs=/host/sys"
+    networks:
+      - njorddeploy_net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: njorddeploy-cadvisor
+    restart: unless-stopped
+    user: "0:0"
+    ports:
+      - "{{ CADVISOR_WEB_PORT }}:8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:rw"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

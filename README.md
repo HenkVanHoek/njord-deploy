@@ -2,7 +2,7 @@
 
 # Njord-Deploy
 
-Welcome to NjordDeploy! This project provides a user-friendly system to deploy and manage a suite of self-hosted services on a Raspberry Pi (or any Linux-based system) using Docker. Our goal is to make self-hosting powerful, accessible, and easy to maintain.
+Welcome to Njord-Deploy! This project provides a user-friendly system to deploy and manage a suite of self-hosted services on a Raspberry Pi (or any Linux-based system) using Docker. Our goal is to make self-hosting powerful, accessible, and easy to maintain.
 
 ## 🌟 Key Features
 
