@@ -637,10 +637,15 @@ def main():
                 logger.error(f"Failed to download Linux asset: {dl_err}")
                 sys.exit(1)
         else:
+            default_path = project_root / "dist" / "NjordDeployConfigurator"
             local_path = (
                 Path(args.binary_path)
                 if args.binary_path
-                else project_root / "dist" / "NjordDeployInstaller"
+                else (
+                    default_path
+                    if default_path.exists()
+                    else project_root / "dist" / "NjordDeployInstaller"
+                )
             )
             if not local_path.exists():
                 # Try fallback NjordDeploy-Linux
@@ -682,7 +687,12 @@ def main():
             if args.binary_path and args.binary_path.endswith(".exe"):
                 local_path = Path(args.binary_path)
             else:
-                local_path = project_root / "dist" / "NjordDeployInstaller.exe"
+                default_win = project_root / "dist" / "NjordDeployConfigurator.exe"
+                local_path = (
+                    default_win
+                    if default_win.exists()
+                    else project_root / "dist" / "NjordDeployInstaller.exe"
+                )
                 if not local_path.exists():
                     # Try fallback NjordDeploy-Windows.exe
                     fallback = project_root / "dist" / "NjordDeploy-Windows.exe"

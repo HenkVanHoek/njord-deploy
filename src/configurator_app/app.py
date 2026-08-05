@@ -2087,6 +2087,9 @@ def create_app(test_config=None):
 
 
 if __name__ == "__main__":
+    from waitress import serve
+
     app = create_app()
-    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1")
-    app.run(host="0.0.0.0", port=5001, debug=debug_mode)  # nosec B104
+    port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
+    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
+    serve(app, host=host, port=port, threads=6)

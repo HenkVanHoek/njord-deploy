@@ -7,6 +7,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Dual-Server Release Build**: Configured PyInstaller and GitHub Release Pipeline (`release.yml`) to build and release two separate executables per platform: `NjordDeployConfigurator` (port 5001) and `NjordDeployEditor` (port 5000).
+- **Waitress WSGI Production Web Server**: Replaced Flask Werkzeug development server with production-grade, cross-platform `Waitress` WSGI server (`serve()`) for both Configurator (`run_configurator.py`) and Editor (`run_editor.py`) applications.
 - **Component Editor Statistics & QA Dashboard**:
   - Added real-time component, group, and package count badges to the Editor header title and view tabs (`Components (Z)`, `Groups (X)`, `Packages (Y)`).
   - Integrated `test_status` metadata property support across `ComponentReader`, `ComponentWriter`, and `ComponentManager`, automatically synchronizing with `# status:` headers in `docker-compose.template.yml` files.

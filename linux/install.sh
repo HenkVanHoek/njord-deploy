@@ -15,14 +15,18 @@ echo "Installing NjordDeploy Configurator..."
 # Step 2: Define source and destination paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-if [ -f "$SCRIPT_DIR/../dist/NjordDeployInstaller" ]; then
+if [ -f "$SCRIPT_DIR/../dist/NjordDeployConfigurator" ]; then
+  BINARY_PATH="$SCRIPT_DIR/../dist/NjordDeployConfigurator"
+elif [ -f "$SCRIPT_DIR/../dist/NjordDeployInstaller" ]; then
   BINARY_PATH="$SCRIPT_DIR/../dist/NjordDeployInstaller"
+elif [ -f "./NjordDeployConfigurator" ]; then
+  BINARY_PATH="./NjordDeployConfigurator"
 elif [ -f "./NjordDeploy-Linux" ]; then
   BINARY_PATH="./NjordDeploy-Linux"
 elif [ -f "$SCRIPT_DIR/../NjordDeploy-Linux" ]; then
   BINARY_PATH="$SCRIPT_DIR/../NjordDeploy-Linux"
 else
-  BINARY_PATH="NjordDeploy-Linux"
+  BINARY_PATH="NjordDeployConfigurator"
 fi
 
 if [ -f "$SCRIPT_DIR/../images/njorddeploy-icon192x192.png" ]; then

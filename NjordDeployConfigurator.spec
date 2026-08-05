@@ -1,8 +1,5 @@
-# NjordDeployInstaller.spec
+# NjordDeployConfigurator.spec
 import platform
-
-# This file is a "blueprint" for PyInstaller, configured for a one-file,
-# windowed application, consistent across all operating systems.
 
 # Placeholders to prevent PyCharm unresolved reference warnings at design time
 if "Analysis" not in globals():
@@ -29,44 +26,33 @@ if "EXE" not in globals():
             pass
 
 
-# --- Define the icon based on the OS ---
 icon_file = None
 if platform.system() == "Windows":
     icon_file = "images/favicon.ico"
-elif platform.system() == "Darwin":  # Darwin is the system name for macOS
-    # Activate the icon for macOS using the file you provided.
+elif platform.system() == "Darwin":
     icon_file = "images/njorddeploy-apple.icns"
-# For other systems (like Linux), icon_file remains None.
 
 a = Analysis(
-    # Point to the correct main application script.
-    ['src/configurator_app/app.py'],
-    # Add 'src' to the path to help PyInstaller resolve local module imports.
+    ['run_configurator.py'],
     pathex=['src'],
     binaries=[],
     datas=[
-        # Flask app templates and static files
         ('src/configurator_app/templates', 'templates'),
         ('src/configurator_app/static', 'static'),
-        # Config files
         ('config', 'config'),
-        # Component templates - essential for generating configurations
         ('component_templates', 'component_templates'),
-        # Ansible playbooks and configuration files
         ('ansible', 'ansible'),
-        # Documentation files
         ('docs', 'docs'),
         ('README.md', '.'),
-        ('CONTRIBUTING.md', '.'),
-        ('UTILITIES.md', '.'),
     ],
     hiddenimports=[
+        'waitress',
         'nacl',
         'bcrypt',
-        'cryptography'
+        'cryptography',
+        'src.configurator_app.app'
     ],
     hookspath=[],
-    hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     win_no_prefer_redirects=False,
@@ -83,21 +69,10 @@ exe = EXE(
     a.binaries,
     a.zipfiles,
     a.datas,
-    name='NjordDeployInstaller',
-    # --- CHANGE 1: Enable debug output from PyInstaller's bootloader ---
-    debug=True,
-    bootloader_ignore_signals=False,
+    name='NjordDeployConfigurator',
+    debug=False,
     strip=False,
     upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    # --- CHANGE 2: Enable the console to see tracebacks ---
     console=True,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=None,
-    # This now uses the correct icon file for each OS.
     icon=icon_file
 )

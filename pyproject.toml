@@ -26,6 +26,7 @@ description = "A project to self-host services on a Raspberry Pi."
 requires-python = ">=3.11"
 dependencies = [
     "flask",
+    "waitress>=3.0.0",
     "python-dotenv",
     "python-nmap",
     "psutil",
@@ -97,6 +98,10 @@ module = [
     "managers.setup_manager",
     "pi_scanner",
     "utils.proxmox_client",
+    "waitress.*",
+    "requests.*",
+    "node_scanner",
+    "utils.ai_generator",
 ]
 ignore_missing_imports = true
 

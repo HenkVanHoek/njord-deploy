@@ -21,13 +21,10 @@ jobs:
         include:
           - os-name: Linux
             os-runner: ubuntu-22.04
-            artifact-name: NjordDeploy-Linux
           - os-name: macOS
             os-runner: macos-latest
-            artifact-name: NjordDeploy-macOS
           - os-name: Windows
             os-runner: windows-latest
-            artifact-name: NjordDeploy-Windows.exe
 
     steps:
       - name: Checkout repository
@@ -41,8 +38,6 @@ jobs:
           cache: 'pip'
           cache-dependency-path: pyproject.toml
 
-
-
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -52,35 +47,27 @@ jobs:
       - name: Run tests with Pytest
         run: pytest
 
-      - name: Build the executable with PyInstaller
+      - name: Build executables with PyInstaller
         shell: bash
         run: |
           rm -rf build dist
-          pyinstaller NjordDeployInstaller.spec
+          pyinstaller NjordDeployConfigurator.spec
+          pyinstaller NjordDeployEditor.spec
 
-      - name: Package the executable
+      - name: Package executables
         shell: bash
-        # ROBUSTNESS: Explicit check avoids wildcards to prevent shell globbing errors
         run: |
           mkdir -p artifact
-          echo "=== Listing dist/ contents ==="
-          ls -la dist/ || true
-          echo "=== Finding all files in workspace matching NjordDeploy ==="
-          find . -maxdepth 4 -name "*NjordDeploy*" || true
-          if [ -f "dist/NjordDeployInstaller.exe" ]; then
-            mv "dist/NjordDeployInstaller.exe" "artifact/${{ matrix.artifact-name }}"
-          elif [ -f "dist/NjordDeployInstaller" ]; then
-            mv "dist/NjordDeployInstaller" "artifact/${{ matrix.artifact-name }}"
-          elif [ -d "dist/NjordDeployInstaller.app" ]; then
-            echo "Found .app bundle instead of standalone binary, copying internal executable..."
-            cp "dist/NjordDeployInstaller.app/Contents/MacOS/NjordDeployInstaller" "artifact/${{ matrix.artifact-name }}"
+          if [ "${{ matrix.os-name }}" = "Windows" ]; then
+            cp dist/NjordDeployConfigurator.exe artifact/NjordDeployConfigurator.exe
+            cp dist/NjordDeployEditor.exe artifact/NjordDeployEditor.exe
           else
-            echo "ERROR: Pyinstaller executable not found in dist/"
-            exit 1
+            cp dist/NjordDeployConfigurator artifact/NjordDeployConfigurator
+            cp dist/NjordDeployEditor artifact/NjordDeployEditor
           fi
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: installer-${{ matrix.os-name }}
           path: artifact/
@@ -96,7 +83,7 @@ jobs:
 
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           path: installers
           pattern: installer-*
@@ -104,9 +91,11 @@ jobs:
 
       - name: Zip installers for release
         run: |
-          zip -j NjordDeploy-Windows.zip installers/NjordDeploy-Windows.exe
-          zip -j NjordDeploy-macOS.zip installers/NjordDeploy-macOS
-          zip -j NjordDeploy-Linux.zip installers/NjordDeploy-Linux
+          cd installers
+          zip -r ../NjordDeploy-Windows.zip NjordDeployConfigurator.exe NjordDeployEditor.exe
+          zip -r ../NjordDeploy-Linux.zip NjordDeployConfigurator NjordDeployEditor
+          zip -r ../NjordDeploy-macOS.zip NjordDeployConfigurator NjordDeployEditor
+          cd ..
 
       - name: Upload assets to release
         uses: svenstaro/upload-release-action@v2

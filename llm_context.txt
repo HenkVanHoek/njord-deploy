@@ -1046,59 +1046,174 @@ module.exports = defineConfig({
   ],
 });
 
+--- FILE: run_configurator.py ---
+# run_configurator.py
+
+"""
+Production entrypoint for running the NjordDeploy Configurator application.
+
+Launches the Flask configurator application using the Waitress WSGI server
+on port 5001 (or CONFIGURATOR_PORT environment variable).
+"""
+
+import logging
+import os
+
+from waitress import serve
+
+from src.configurator_app.app import create_app
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("NjordDeployConfigurator")
+
+if __name__ == "__main__":
+    app = create_app()
+    port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
+    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")
+
+    logger.info(
+        f"Starting NjordDeploy Configurator via Waitress WSGI server "
+        f"on http://{host}:{port}"
+    )
+    serve(app, host=host, port=port, threads=6)
+
 --- FILE: run_editor.py ---
 # run_editor.py
 
 """
-Development runner for the NjordDeploy Editor application.
+Production entrypoint for running the NjordDeploy Editor application.
 
-This script provides a dedicated entry point for running the editor in
-debug mode. It configures the Flask auto-reloader to watch for changes
-in the core metadata and all component variable files, ensuring that
-any data modification is immediately reflected in the running application
-without requiring a manual restart.
+Launches the Flask editor application using the Waitress WSGI server
+on port 5000 (or EDITOR_PORT environment variable).
 """
 
+import logging
 import os
-from pathlib import Path
+
+from waitress import serve
 
 from src.editor_app.app import create_app
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("NjordDeployEditor")
 
-def find_files_to_watch():
-    """
-    Finds the main metadata file and all component-specific variables.json
-    files to be monitored by the Flask reloader.
-    """
-    project_root = Path(__file__).parent
-    config_path = project_root / "config"
-    templates_path = project_root / "component_templates"
+if __name__ == "__main__":
+    app = create_app()
+    port = int(os.environ.get("EDITOR_PORT", 5000))
+    host = os.environ.get("EDITOR_HOST", "0.0.0.0")
 
-    # The primary metadata file
-    files = [str(config_path / "components_metadata.json")]
+    logger.info(
+        f"Starting NjordDeploy Editor via Waitress WSGI server "
+        f"on http://{host}:{port}"
+    )
+    serve(app, host=host, port=port, threads=6)
 
-    # All component-specific variables files
-    variable_files = templates_path.glob("**/variables.json")
-    files.extend([str(p) for p in variable_files])
+--- FILE: scripts/check_release_status.py ---
+#!/usr/bin/env python3
+"""
+scripts/check_release_status.py
 
-    return files
+Utility script to check the status of the latest GitHub Actions release pipeline run
+and verify the latest GitHub Release assets for NjordDeploy.
+"""
+
+import sys
+
+import requests
+
+REPO = "HenkVanHoek/njord-deploy"
+WORKFLOW_URL = f"https://api.github.com/repos/{REPO}/actions/workflows/release.yml/runs"
+RELEASES_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
+
+HEADERS = {
+    "Accept": "application/vnd.github+json",
+    "User-Agent": "NjordDeploy-Release-Checker",
+}
+
+
+def check_actions_status():
+    print(f"🔍 Querying GitHub Actions workflow runs for {REPO}...")
+    try:
+        res = requests.get(WORKFLOW_URL, headers=HEADERS, timeout=10)
+        res.raise_for_status()
+        data = res.json()
+        runs = data.get("workflow_runs", [])
+        if not runs:
+            print("⚠️ No workflow runs found for release.yml.")
+            return None
+
+        latest_run = runs[0]
+        run_id = latest_run.get("id")
+        status = latest_run.get("status")
+        conclusion = latest_run.get("conclusion")
+        head_branch = latest_run.get("head_branch")
+        html_url = latest_run.get("html_url")
+        created_at = latest_run.get("created_at")
+
+        print("\n--- GitHub Actions Release Pipeline Run ---")
+        print(f"Run ID:      {run_id}")
+        print(f"Tag/Ref:     {head_branch}")
+        print(f"Created At:  {created_at}")
+        print(f"Status:      {status}")
+        print(f"Conclusion:  {conclusion if conclusion else 'In Progress...'}")
+        print(f"URL:         {html_url}")
+
+        return latest_run
+    except Exception as e:
+        print(f"❌ Failed to fetch GitHub Actions runs: {e}")
+        return None
+
+
+def check_latest_release():
+    print("\n🔍 Querying latest published release on GitHub...")
+    try:
+        res = requests.get(RELEASES_URL, headers=HEADERS, timeout=10)
+        if res.status_code == 404:
+            print("⚠️ No published releases found yet.")
+            return None
+        res.raise_for_status()
+        rel = res.json()
+
+        tag_name = rel.get("tag_name")
+        name = rel.get("name")
+        published_at = rel.get("published_at")
+        assets = rel.get("assets", [])
+
+        print("--- Latest Published GitHub Release ---")
+        print(f"Tag Name:     {tag_name}")
+        print(f"Title:        {name}")
+        print(f"Published At: {published_at}")
+        print(f"Assets Count: {len(assets)}")
+
+        for asset in assets:
+            size_mb = asset.get("size", 0) / (1024 * 1024)
+            print(f"  - {asset.get('name')} ({size_mb:.2f} MB)")
+
+        return rel
+    except Exception as e:
+        print(f"❌ Failed to fetch latest release details: {e}")
+        return None
+
+
+def main():
+    run = check_actions_status()
+    check_latest_release()
+
+    if run and run.get("conclusion") == "failure":
+        print("\n❌ CRITICAL: The latest release pipeline failed!")
+        sys.exit(1)
+    elif run and run.get("conclusion") == "success":
+        print("\n✅ SUCCESS: The latest release pipeline completed successfully!")
+        sys.exit(0)
+    elif run and run.get("status") == "in_progress":
+        print("\n⏳ IN PROGRESS: The release pipeline is currently building...")
+        sys.exit(2)
+    else:
+        sys.exit(0)
 
 
 if __name__ == "__main__":
-    # Create an instance of the editor application using the factory
-    editor_app = create_app()
-
-    # Find all JSON data files that should trigger a reload on change
-    extra_files_to_watch = find_files_to_watch()
-
-    # Run the app dynamically based on environmental configuration
-    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1")
-
-    editor_app.run(
-        debug=debug_mode,
-        port=5001,  # Using 5001 to avoid conflicts with the main app
-        extra_files=extra_files_to_watch,
-    )
+    main()
 
 --- FILE: scripts/check_secrets.py ---
 # File: scripts/check_secrets.py
@@ -3670,10 +3785,15 @@ def main():
                 logger.error(f"Failed to download Linux asset: {dl_err}")
                 sys.exit(1)
         else:
+            default_path = project_root / "dist" / "NjordDeployConfigurator"
             local_path = (
                 Path(args.binary_path)
                 if args.binary_path
-                else project_root / "dist" / "NjordDeployInstaller"
+                else (
+                    default_path
+                    if default_path.exists()
+                    else project_root / "dist" / "NjordDeployInstaller"
+                )
             )
             if not local_path.exists():
                 # Try fallback NjordDeploy-Linux
@@ -3715,7 +3835,12 @@ def main():
             if args.binary_path and args.binary_path.endswith(".exe"):
                 local_path = Path(args.binary_path)
             else:
-                local_path = project_root / "dist" / "NjordDeployInstaller.exe"
+                default_win = project_root / "dist" / "NjordDeployConfigurator.exe"
+                local_path = (
+                    default_win
+                    if default_win.exists()
+                    else project_root / "dist" / "NjordDeployInstaller.exe"
+                )
                 if not local_path.exists():
                     # Try fallback NjordDeploy-Windows.exe
                     fallback = project_root / "dist" / "NjordDeploy-Windows.exe"
@@ -7144,9 +7269,12 @@ def create_app(test_config=None):
 
 
 if __name__ == "__main__":
+    from waitress import serve
+
     app = create_app()
-    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1")
-    app.run(host="0.0.0.0", port=5001, debug=debug_mode)  # nosec B104
+    port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
+    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")
+    serve(app, host=host, port=port, threads=6)
 
 --- FILE: src/configurator_app/static/__init__.py ---
 
@@ -13135,9 +13263,12 @@ def create_app(test_config=None):
 
 
 if __name__ == "__main__":
+    from waitress import serve
+
     editor_app = create_app()
-    debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() in ("true", "1")
-    editor_app.run(host="0.0.0.0", port=5000, debug=debug_mode)  # nosec B104
+    port = int(os.environ.get("EDITOR_PORT", 5000))
+    host = os.environ.get("EDITOR_HOST", "0.0.0.0")
+    serve(editor_app, host=host, port=port, threads=6)
 
 --- FILE: src/editor_app/static/accessibility.js ---
 (function () {
