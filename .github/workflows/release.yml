@@ -86,16 +86,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: installers
-          pattern: installer-*
-          merge-multiple: true
 
       - name: Zip installers for release
         run: |
-          cd installers
-          zip -r ../NjordDeploy-Windows.zip NjordDeployConfigurator.exe NjordDeployEditor.exe
-          zip -r ../NjordDeploy-Linux.zip NjordDeployConfigurator NjordDeployEditor
-          zip -r ../NjordDeploy-macOS.zip NjordDeployConfigurator NjordDeployEditor
-          cd ..
+          (cd installers/installer-Windows && zip -r ../../NjordDeploy-Windows.zip *)
+          (cd installers/installer-Linux && zip -r ../../NjordDeploy-Linux.zip *)
+          (cd installers/installer-macOS && zip -r ../../NjordDeploy-macOS.zip *)
 
       - name: Upload assets to release
         uses: svenstaro/upload-release-action@v2
