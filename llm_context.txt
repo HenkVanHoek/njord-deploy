@@ -1069,7 +1069,7 @@ logger = logging.getLogger("NjordDeployConfigurator")
 if __name__ == "__main__":
     app = create_app()
     port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
-    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")
+    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
 
     logger.info(
         f"Starting NjordDeploy Configurator via Waitress WSGI server "
@@ -1100,7 +1100,7 @@ logger = logging.getLogger("NjordDeployEditor")
 if __name__ == "__main__":
     app = create_app()
     port = int(os.environ.get("EDITOR_PORT", 5000))
-    host = os.environ.get("EDITOR_HOST", "0.0.0.0")
+    host = os.environ.get("EDITOR_HOST", "0.0.0.0")  # nosec B104
 
     logger.info(
         f"Starting NjordDeploy Editor via Waitress WSGI server "
@@ -7273,7 +7273,7 @@ if __name__ == "__main__":
 
     app = create_app()
     port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
-    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")
+    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
     serve(app, host=host, port=port, threads=6)
 
 --- FILE: src/configurator_app/static/__init__.py ---
@@ -12299,6 +12299,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
 
 import logging
 import os
+import sys
 from pathlib import Path
 
 import requests
@@ -12320,7 +12321,21 @@ def create_app(test_config=None):
     project_root = Path(__file__).parent.parent.parent
     load_dotenv(dotenv_path=project_root / ".env")
 
-    app = Flask(__name__)
+    if getattr(sys, "frozen", False):
+        bundle_dir = Path(sys._MEIPASS)
+        template_folder = bundle_dir / "src" / "editor_app" / "templates"
+        if not template_folder.exists():
+            template_folder = bundle_dir / "templates"
+        static_folder = bundle_dir / "src" / "editor_app" / "static"
+        if not static_folder.exists():
+            static_folder = bundle_dir / "static"
+        app = Flask(
+            __name__,
+            template_folder=str(template_folder),
+            static_folder=str(static_folder),
+        )
+    else:
+        app = Flask(__name__)
 
     # Crucial for testing: apply the test_config
     if test_config:
@@ -13267,7 +13282,7 @@ if __name__ == "__main__":
 
     editor_app = create_app()
     port = int(os.environ.get("EDITOR_PORT", 5000))
-    host = os.environ.get("EDITOR_HOST", "0.0.0.0")
+    host = os.environ.get("EDITOR_HOST", "0.0.0.0")  # nosec B104
     serve(editor_app, host=host, port=port, threads=6)
 
 --- FILE: src/editor_app/static/accessibility.js ---
