@@ -37,7 +37,9 @@ a = Analysis(
     pathex=['src'],
     binaries=[],
     datas=[
+        ('src/configurator_app/templates', 'src/configurator_app/templates'),
         ('src/configurator_app/templates', 'templates'),
+        ('src/configurator_app/static', 'src/configurator_app/static'),
         ('src/configurator_app/static', 'static'),
         ('config', 'config'),
         ('component_templates', 'component_templates'),

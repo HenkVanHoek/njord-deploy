@@ -277,3 +277,41 @@ class ConfiguratorAppTestCase(unittest.TestCase):
         self.assertEqual(data["status"], "success")
         self.assertEqual(data["ip"], "192.168.178.150")
         self.assertEqual(data["vmid"], 9000)
+
+    def test_create_app_in_pyinstaller_mode(self):
+        """Test create_app initializes template_folder correctly
+        when sys.frozen is True.
+        """
+        import sys
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmp_dir_str:
+            temp_dir = Path(tmp_dir_str)
+            temp_templates = temp_dir / "src" / "configurator_app" / "templates"
+            temp_templates.mkdir(parents=True, exist_ok=True)
+
+            with (
+                patch.object(sys, "frozen", True, create=True),
+                patch.object(sys, "_MEIPASS", str(temp_dir), create=True),
+            ):
+                frozen_app = create_app({"TESTING": True})
+                self.assertEqual(
+                    frozen_app.template_folder,
+                    str(temp_templates),
+                )
+
+        # Fallback test when subpath does not exist
+        with tempfile.TemporaryDirectory() as tmp_dir_str:
+            temp_dir = Path(tmp_dir_str)
+            fallback_templates = temp_dir / "templates"
+
+            with (
+                patch.object(sys, "frozen", True, create=True),
+                patch.object(sys, "_MEIPASS", str(temp_dir), create=True),
+            ):
+                frozen_app = create_app({"TESTING": True})
+                self.assertEqual(
+                    frozen_app.template_folder,
+                    str(fallback_templates),
+                )

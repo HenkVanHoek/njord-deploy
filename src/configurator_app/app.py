@@ -3,6 +3,7 @@
 import logging
 import os
 import re
+import sys
 import threading
 import time
 import uuid
@@ -226,7 +227,22 @@ def create_app(test_config=None):
     project_root = Path(__file__).resolve().parent.parent.parent
     load_dotenv(dotenv_path=project_root / ".env")
 
-    flask_app = Flask(__name__, static_folder="static", static_url_path="/static")
+    if getattr(sys, "frozen", False):
+        bundle_dir = Path(sys._MEIPASS)
+        template_folder = bundle_dir / "src" / "configurator_app" / "templates"
+        if not template_folder.exists():
+            template_folder = bundle_dir / "templates"
+        static_folder = bundle_dir / "src" / "configurator_app" / "static"
+        if not static_folder.exists():
+            static_folder = bundle_dir / "static"
+        flask_app = Flask(
+            __name__,
+            template_folder=str(template_folder),
+            static_folder=str(static_folder),
+            static_url_path="/static",
+        )
+    else:
+        flask_app = Flask(__name__, static_folder="static", static_url_path="/static")
 
     # Apply testing configuration if provided
     if test_config:

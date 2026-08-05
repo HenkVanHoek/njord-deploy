@@ -21,6 +21,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Default VM Test Template**: Updated the default Proxmox master template ID for integration, package, and release testing from `900` to `902` (`debian-clean-template`) to resolve IP/DHCP retrieval and QEMU guest agent timeouts.
 - **Test Reports Trailing Newlines**: Standardized test JSON and markdown report writers to ensure files end with exactly one trailing newline character, avoiding formatting failures in `pre-commit` hooks.
 
+### Fixed
+- **PyInstaller Jinja2 Template NotFound**: Fixed `jinja2.exceptions.TemplateNotFound: index.html` crash when running `NjordDeployConfigurator` executable by dynamically configuring Flask `template_folder` and `static_folder` to resolve relative to `sys._MEIPASS` when frozen, and updating `NjordDeployConfigurator.spec` to bundle both `src/configurator_app/templates` and root `templates` paths.
+
 ## [0.6.0] - 2025-10-12
 
 ### Added
