@@ -2,6 +2,7 @@
 
 import logging
 import os
+import sys
 from pathlib import Path
 
 import requests
@@ -23,7 +24,21 @@ def create_app(test_config=None):
     project_root = Path(__file__).parent.parent.parent
     load_dotenv(dotenv_path=project_root / ".env")
 
-    app = Flask(__name__)
+    if getattr(sys, "frozen", False):
+        bundle_dir = Path(sys._MEIPASS)
+        template_folder = bundle_dir / "src" / "editor_app" / "templates"
+        if not template_folder.exists():
+            template_folder = bundle_dir / "templates"
+        static_folder = bundle_dir / "src" / "editor_app" / "static"
+        if not static_folder.exists():
+            static_folder = bundle_dir / "static"
+        app = Flask(
+            __name__,
+            template_folder=str(template_folder),
+            static_folder=str(static_folder),
+        )
+    else:
+        app = Flask(__name__)
 
     # Crucial for testing: apply the test_config
     if test_config:

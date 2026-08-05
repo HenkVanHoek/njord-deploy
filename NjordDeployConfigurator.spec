@@ -72,7 +72,7 @@ exe = EXE(
     name='NjordDeployConfigurator',
     debug=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=True,
     icon=icon_file
 )

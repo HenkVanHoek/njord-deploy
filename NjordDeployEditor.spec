@@ -37,7 +37,9 @@ a = Analysis(
     pathex=['src'],
     binaries=[],
     datas=[
+        ('src/editor_app/templates', 'src/editor_app/templates'),
         ('src/editor_app/templates', 'templates'),
+        ('src/editor_app/static', 'src/editor_app/static'),
         ('src/editor_app/static', 'static'),
         ('config', 'config'),
         ('component_templates', 'component_templates'),
@@ -70,7 +72,7 @@ exe = EXE(
     name='NjordDeployEditor',
     debug=False,
     strip=False,
-    upx=True,
+    upx=False,
     console=True,
     icon=icon_file
 )
