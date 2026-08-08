@@ -725,7 +725,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modelSelect = document.getElementById('ai-model-select');
         const modelCustomGroup = document.getElementById('ai-model-custom-group');
         const modelCustomInput = document.getElementById('ai-model-custom');
-        const hostyouraiHelp = document.getElementById('ai-hostyourai-help');
+        const providerHelpGroup = document.getElementById('ai-provider-help');
+        const providerHelpLink = document.getElementById('ai-provider-help-link');
+        const providerHelpText = document.getElementById('ai-provider-help-text');
         const statusContainer = document.getElementById('ai-status-container');
         const statusBadge = document.getElementById('ai-status-badge');
         const statusDetails = document.getElementById('ai-status-details');
@@ -751,8 +753,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const previewConfigContent = document.getElementById('ai-preview-config-content');
 
         let generatedData = null;
-
         let installedOllamaModels = [];
+        let aiProvidersRegistry = {};
+
+        const fetchAiProviders = async () => {
+            try {
+                const response = await fetch('/api/ai/providers');
+                if (response.ok) {
+                    const data = await response.json();
+                    aiProvidersRegistry = data.providers || {};
+                    populateProviderDropdown();
+                }
+            } catch (e) {
+                console.error('Failed to fetch AI providers registry:', e);
+            }
+        };
+
+        const populateProviderDropdown = () => {
+            if (!providerSelect || Object.keys(aiProvidersRegistry).length === 0) return;
+            const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
+            providerSelect.innerHTML = '';
+
+            for (const [key, p] of Object.entries(aiProvidersRegistry)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = p.name || key;
+                if (key === savedProvider) {
+                    option.selected = true;
+                    option.setAttribute('selected', 'selected');
+                }
+                providerSelect.appendChild(option);
+            }
+            if (savedProvider && providerSelect.value !== savedProvider) {
+                providerSelect.value = savedProvider;
+            }
+        };
 
         const checkStatus = async () => {
             const provider = providerSelect.value;
@@ -804,46 +839,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const populateModels = (provider, modelsList = []) => {
             modelSelect.innerHTML = '';
-            hostyouraiHelp.classList.add('d-none');
+            if (providerHelpGroup) {
+                providerHelpGroup.classList.add('d-none');
+            }
 
+            const pInfo = aiProvidersRegistry[provider] || {};
             let options = [];
 
-            if (provider === 'gemini') {
-                options = [
-                    { value: 'gemini-2.5-flash', text: 'Gemini 2.5 Flash (Aanbevolen - Snel)' },
-                    { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro (Deep Coding Reasoning)' },
-                    { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash (Legacy Snel)' },
-                    { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro (Legacy)' }
-                ];
-            } else if (provider === 'openai') {
-                options = [
-                    { value: 'gpt-4o-mini', text: 'GPT-4o Mini (Aanbevolen - Snel)' },
-                    { value: 'gpt-4o', text: 'GPT-4o (Krachtig)' },
-                    { value: 'o1-mini', text: 'o1 Mini (Redeneren)' },
-                    { value: 'custom', text: 'Handmatig model invoeren...' }
-                ];
-            } else if (provider === 'hostyourai') {
-                options = [
-                    { value: 'mistral-7b-instruct', text: 'Mistral 7B Instruct (Default)' },
-                    { value: 'meta-llama-3-8b-instruct', text: 'Meta Llama 3 8B Instruct' },
-                    { value: 'mixtral-8x7b-instruct', text: 'Mixtral 8x7B Instruct (Krachtig)' },
-                    { value: 'custom', text: 'Handmatig model invoeren...' }
-                ];
-                hostyouraiHelp.classList.remove('d-none');
-            } else if (provider === 'ollama') {
-                if (modelsList.length > 0) {
-                    modelsList.forEach(model => {
-                        options.push({ value: model, text: model });
-                    });
-                    options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
-                } else {
-                    options = [
-                        { value: 'qwen2.5-coder:14b-instruct-q4_K_M', text: 'Qwen 2.5 Coder 14B Q4_K_M (Aanbevolen)' },
-                        { value: 'qwen2.5-coder:7b', text: 'Qwen 2.5 Coder 7B' },
-                        { value: 'llama3:latest', text: 'Llama 3' },
-                        { value: 'custom', text: 'Handmatig model invoeren...' }
-                    ];
-                }
+            if (provider === 'ollama' && modelsList.length > 0) {
+                modelsList.forEach(m => options.push({ value: m, text: m }));
+                options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
+            } else if (pInfo.models && pInfo.models.length > 0) {
+                options = [...pInfo.models];
+            } else {
+                options = [{ value: 'custom', text: 'Handmatig model invoeren...' }];
             }
 
             options.forEach(opt => {
@@ -853,20 +862,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelSelect.appendChild(el);
             });
 
-            // Set default selections
-            if (provider === 'gemini') {
-                modelSelect.value = 'gemini-2.5-flash';
-            } else if (provider === 'openai') {
-                modelSelect.value = 'gpt-4o-mini';
-            } else if (provider === 'hostyourai') {
-                modelSelect.value = 'mistral-7b-instruct';
-            } else if (provider === 'ollama') {
-                if (modelsList.length > 0) {
-                    const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
-                    modelSelect.value = qwenModel || modelsList[0];
-                } else {
-                    modelSelect.value = 'qwen2.5-coder:14b-instruct-q4_K_M';
-                }
+            // Set default model
+            if (provider === 'ollama' && modelsList.length > 0) {
+                const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
+                modelSelect.value = qwenModel || modelsList[0];
+            } else if (pInfo.default_model) {
+                modelSelect.value = pInfo.default_model;
+            }
+
+            if (pInfo.help_url && pInfo.help_text && providerHelpGroup && providerHelpLink && providerHelpText) {
+                providerHelpLink.href = pInfo.help_url;
+                providerHelpText.textContent = pInfo.help_text;
+                providerHelpGroup.classList.remove('d-none');
             }
 
             handleModelSelectChange();
@@ -886,85 +893,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateProviderFields = () => {
             const provider = providerSelect.value;
+            const pInfo = aiProvidersRegistry[provider] || {};
 
             apiKeyGroup.classList.add('d-none');
             baseUrlGroup.classList.add('d-none');
             modelSelectGroup.classList.add('d-none');
             modelCustomGroup.classList.add('d-none');
-            hostyouraiHelp.classList.add('d-none');
+            if (providerHelpGroup) {
+                providerHelpGroup.classList.add('d-none');
+            }
 
-            if (provider === 'ollama') {
-                baseUrlGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                baseUrlInput.placeholder = 'http://localhost:11434/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = 'http://localhost:11434/v1';
-                }
-                populateModels('ollama', installedOllamaModels);
-            } else if (provider === 'gemini') {
+            const requiresKey = pInfo.requires_api_key !== false;
+            if (requiresKey || pInfo.env_var) {
                 apiKeyGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
                 const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The GEMINI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter Gemini API key (leave blank to use .env key)';
-                populateModels('gemini');
-            } else if (provider === 'hostyourai') {
-                apiKeyGroup.classList.remove('d-none');
-                baseUrlGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The HOSTYOURAI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter HostYourAI API key (leave blank to use .env key)';
-
-                baseUrlInput.placeholder = 'https://api.hostyourai.eu/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = 'https://api.hostyourai.eu/v1';
-                }
-                populateModels('hostyourai');
-            } else if (provider === 'openai') {
-                apiKeyGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The OPENAI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter OpenAI API key (leave blank to use .env key)';
-                populateModels('openai');
-            } else if (provider === 'custom') {
-                apiKeyGroup.classList.remove('d-none');
-                baseUrlGroup.classList.remove('d-none');
-                modelCustomGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
+                if (helpText && pInfo.env_var) {
+                    helpText.textContent = `The ${pInfo.env_var} from your .env file will be used if left blank.`;
+                    apiKeyInput.placeholder = `Enter API key (leave blank to use ${pInfo.env_var})`;
+                } else if (helpText) {
                     helpText.textContent = 'API Key or Token for custom endpoint.';
+                    apiKeyInput.placeholder = 'Enter API Key / Token';
                 }
-                apiKeyInput.placeholder = 'Enter Custom Endpoint Token';
+            }
 
-                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+            if (pInfo.allow_custom_base_url) {
+                baseUrlGroup.classList.remove('d-none');
+                baseUrlInput.placeholder = pInfo.default_base_url || 'http://localhost:11434/v1';
                 if (!baseUrlInput.value) {
-                    baseUrlInput.value = '';
+                    baseUrlInput.value = pInfo.default_base_url || '';
                 }
-                modelCustomInput.value = '';
+            }
+
+            if (provider === 'custom') {
+                modelCustomGroup.classList.remove('d-none');
                 modelCustomInput.placeholder = 'e.g., custom-model-name';
+            } else {
+                modelSelectGroup.classList.remove('d-none');
+                populateModels(provider, provider === 'ollama' ? installedOllamaModels : []);
             }
 
             checkStatus();
         };
 
-        providerSelect.addEventListener('change', updateProviderFields);
+        // Fetch registry on modal initialization
+        fetchAiProviders();
+
+        providerSelect.addEventListener('change', () => {
+            if (providerSelect.value) {
+                localStorage.setItem('njord_ai_provider', providerSelect.value);
+            }
+            updateProviderFields();
+        });
         baseUrlInput.addEventListener('change', checkStatus);
 
         createAiBtn.addEventListener('click', async () => {
+            const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
             form.reset();
+            if (savedProvider && providerSelect.querySelector(`option[value="${savedProvider}"]`)) {
+                providerSelect.value = savedProvider;
+            }
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
@@ -2800,8 +2787,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
-        setupStatsModal();
-        await setupGitSyncFeatures();
+        document.addEventListener('click', (e) => {
+            const target = /** @type {HTMLElement} */ (e.target);
+            const btn = target.closest('.toggle-password-btn');
+            if (!btn) return;
+            e.preventDefault();
+            const group = btn.closest('.input-group');
+            if (!group) return;
+            const input = /** @type {HTMLInputElement | null} */ (group.querySelector('input'));
+            if (!input) return;
+
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            }
+        });
         updateUiForDirtyState();
         await refreshSyncStatusBadge();
     })();

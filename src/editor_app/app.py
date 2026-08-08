@@ -46,39 +46,9 @@ def create_app(test_config=None):
 
     def save_api_key_to_env(key: str, provider: str = "gemini"):
         """Saves the API key to the local .env file based on the provider."""
-        env_map = {
-            "gemini": "GEMINI_API_KEY",
-            "hostyourai": "HOSTYOURAI_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "custom": "CUSTOM_AI_API_KEY",
-        }
-        var_name = env_map.get(provider)
-        if not var_name:
-            return
+        from utils.ai_provider_manager import save_api_key_to_env_file
 
-        env_path = project_root / ".env"
-        lines = []
-        key_written = False
-        if env_path.exists():
-            with open(env_path, "r") as f:
-                lines = f.readlines()
-
-            for i, line in enumerate(lines):
-                if line.strip().startswith(f"{var_name}="):
-                    lines[i] = f"{var_name}={key}\n"
-                    key_written = True
-                    break
-
-        if not key_written:
-            if lines and not lines[-1].endswith("\n"):
-                lines.append("\n")
-            lines.append(f"{var_name}={key}\n")
-
-        with open(env_path, "w") as f:
-            f.writelines(lines)
-
-        # Update current process environment
-        os.environ[var_name] = key
+        save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
 
     meta_file_path, temp_path_obj = get_components_paths()
     meta_file = str(meta_file_path)
@@ -686,9 +656,20 @@ def create_app(test_config=None):
 
         return jsonify({"hashed_user_string": hashed_str}), 200
 
+    @app.route("/api/ai/providers", methods=["GET"])
+    def get_ai_providers():
+        """Returns the registry of supported AI providers."""
+        from utils.ai_provider_manager import load_ai_providers_registry
+
+        providers = load_ai_providers_registry()
+        return jsonify({"providers": providers}), 200
+
     @app.route("/api/ai/status", methods=["GET", "POST"])
     def ai_status():
         """Checks the status of the requested or default AI provider."""
+        from utils.ai_provider_manager import load_ai_providers_registry
+
+        registry = load_ai_providers_registry()
         provider = None
         base_url = None
         if request.method == "POST":
@@ -698,13 +679,6 @@ def create_app(test_config=None):
 
         if not provider:
             provider = os.getenv("AI_PROVIDER", "ollama")
-
-        env_map = {
-            "gemini": "GEMINI_API_KEY",
-            "hostyourai": "HOSTYOURAI_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "custom": "CUSTOM_AI_API_KEY",
-        }
 
         status = "offline"
         details = ""
@@ -740,8 +714,14 @@ def create_app(test_config=None):
                 status = "offline"
                 details = f"Could not connect to Ollama at {url}: {e}"
         else:
-            var_name = env_map.get(provider)
-            if not var_name:
+            provider_info = registry.get(provider, {})
+            var_name = provider_info.get("env_var")
+            requires_key = provider_info.get("requires_api_key", True)
+
+            if not requires_key:
+                status = "online"
+                details = f"Provider {provider} configured."
+            elif not var_name:
                 status = "offline"
                 details = f"Unknown provider {provider}"
             else:
@@ -825,12 +805,13 @@ def create_app(test_config=None):
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
-                msg = "AI Generation request was invalid"
+                msg = err_msg
             return jsonify({"error": msg}), 400
         except Exception as e:
             logging.error(f"Failed to generate component via AI: {e}", exc_info=True)
             err_msg = str(e)
-            if "timeout" in err_msg.lower():
+            err_msg_lower = err_msg.lower()
+            if "timeout" in err_msg_lower:
                 return (
                     jsonify(
                         {
@@ -844,7 +825,22 @@ def create_app(test_config=None):
                     ),
                     504,
                 )
-            elif "api error" in err_msg.lower() or "openai" in err_msg.lower():
+            elif (
+                "connection refused" in err_msg_lower
+                or "could not connect" in err_msg_lower
+                or "apiconnectionerror" in err_msg_lower
+                or "connection error" in err_msg_lower
+            ):
+                return (
+                    jsonify(
+                        {
+                            "error": "AI Connection Error",
+                            "details": err_msg,
+                        }
+                    ),
+                    502,
+                )
+            elif "api error" in err_msg_lower or "openai" in err_msg_lower:
                 return (
                     jsonify(
                         {
@@ -857,7 +853,10 @@ def create_app(test_config=None):
             else:
                 return (
                     jsonify(
-                        {"error": ("AI Generation failed due to an internal error")}
+                        {
+                            "error": "AI Generation Failed",
+                            "details": err_msg,
+                        }
                     ),
                     500,
                 )

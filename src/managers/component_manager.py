@@ -461,6 +461,11 @@ class ComponentManager:
         )
         context["image_name"] = component_details.get("image_name", "")
 
+        ui_port_var = component_details.get("ui_port_variable")
+        if isinstance(ui_port_var, str) and ui_port_var not in context:
+            default_port = component_details.get("traefik_internal_port") or 8080
+            context[ui_port_var] = default_port
+
         traefik_internal_port = component_details.get("traefik_internal_port")
         traefik_host = context.get("TRAEFIK_HOST")
         fqdn_suffix = context.get("FQDN_SUFFIX")

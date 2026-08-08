@@ -347,6 +347,14 @@
                         <input type="text" class="form-control" name="direct_target_ip" id="direct_target_ip" placeholder="e.g., 100.121.216.150 or b8:27:eb:01:02:03" aria-label="Direct Target IP">
                     </div>
                     <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="scanMethod" id="method_tailscale" value="tailscale" disabled>
+                        <label class="form-check-label" for="method_tailscale">
+                            <strong><i class="fa-solid fa-network-wired me-1"></i> Tailscale / Headscale Mesh Discovery</strong>
+                            <span class="badge bg-secondary ms-2" id="tailscale-status-badge"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Checking...</span>
+                            <span class="d-block small text-muted">Automatically discover online nodes across your Tailscale / Headscale overlay network.</span>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_lxc" value="proxmox_lxc">
                         <label class="form-check-label fw-bold" for="method_proxmox_lxc">
                             <strong>Create New Proxmox LXC Target</strong>
@@ -410,6 +418,10 @@
                             <div class="col-sm-6">
                                 <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
                                 <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_storage_size" class="form-label small mb-1">Storage Size (GB)</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_storage_size" value="32" min="10">
                             </div>
                             <div class="col-sm-6">
                                 <label for="vm_username" class="form-label small mb-1">VM Username</label>
@@ -486,7 +498,12 @@
                                 <input type="text" class="form-control form-control-sm" id="master-username" placeholder="Username">
                             </div>
                             <div class="col-sm-4">
-                                <input type="password" class="form-control form-control-sm" id="master-password" placeholder="Password">
+                                <div class="input-group input-group-sm">
+                                    <input type="password" class="form-control form-control-sm" id="master-password" placeholder="Password">
+                                    <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-sm-2 d-grid">
                                 <button class="btn btn-secondary btn-sm" id="apply-to-all-btn">Apply</button>
@@ -496,7 +513,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="device-cards-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-3"></div>
+                    <div id="device-cards-container" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
                     <div class="d-grid gap-2 col-8 mx-auto my-4" id="step2-action-area"></div>
                 </div>
             `;
@@ -581,13 +598,23 @@
 
             const colPassword = document.createElement('div');
             colPassword.className = 'col-sm-6';
+            const passGroup = document.createElement('div');
+            passGroup.className = 'input-group input-group-sm';
             const passwordInput = document.createElement('input');
             passwordInput.type = 'password';
             passwordInput.className = 'form-control form-control-sm device-password';
             passwordInput.placeholder = 'Password';
             passwordInput.value = savedPass;
             passwordInput.disabled = !isManaged;
-            colPassword.appendChild(passwordInput);
+            const passToggleBtn = document.createElement('button');
+            passToggleBtn.type = 'button';
+            passToggleBtn.className = 'btn btn-outline-secondary btn-sm toggle-password-btn';
+            passToggleBtn.tabIndex = -1;
+            passToggleBtn.title = 'Show/Hide Password';
+            passToggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+            passGroup.appendChild(passwordInput);
+            passGroup.appendChild(passToggleBtn);
+            colPassword.appendChild(passGroup);
 
             rowG2.appendChild(colUsername);
             rowG2.appendChild(colPassword);
@@ -1243,9 +1270,17 @@
         } else if (variable.type === 'select' && variable.options) {
             const optionsHTML = variable.options.map(opt => `<option value="${escapeHTML(opt)}" ${opt === savedValue ? 'selected' : ''}>${escapeHTML(opt)}</option>`).join('');
             inputHTML = `<select class="form-select form-select-sm" id="${inputId}" name="${escapeHTML(variable.id)}">${optionsHTML}</select>`;
+        } else if (variable.type === 'password') {
+            inputHTML = `
+                <div class="input-group input-group-sm">
+                    <input type="password" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">
+                    <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            `;
         } else {
-            const inputType = variable.type === 'password' ? 'password' : 'text';
-            inputHTML = `<input type="${inputType}" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">`;
+            inputHTML = `<input type="text" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">`;
         }
 
         return `
@@ -2295,15 +2330,26 @@
                     const finalActions = document.getElementById('final-actions-container');
                     if (finalActions) {
                         finalActions.innerHTML = `
-                            <div class="sticky-action-bar">
+                            <div class="sticky-action-bar d-flex gap-2 justify-content-center">
                                  <button id="show-summary-btn" class="btn btn-info btn-lg">
                                     <i class="fa-solid fa-list-check me-2"></i>Access Your Services
+                                 </button>
+                                 <button id="ai-eval-btn" class="btn btn-primary btn-lg">
+                                    <i class="fa-solid fa-robot me-2"></i>AI Health Report
                                  </button>
                             </div>`;
                         document.getElementById('show-summary-btn').addEventListener('click', async () => {
                             await showServicesSummary(taskId);
                         });
+                        document.getElementById('ai-eval-btn').addEventListener('click', async () => {
+                            await triggerDeploymentEvaluation(taskId);
+                        });
                     }
+
+                    // Automatically trigger AI evaluation modal upon completion
+                    setTimeout(() => {
+                        triggerDeploymentEvaluation(taskId);
+                    }, 800);
                 }
             };
         } catch (error) {
@@ -2452,6 +2498,7 @@
         const autoRadio = document.getElementById('autoDetectRadio');
         const manualRadio = document.getElementById('manualScanRadio');
         const directRadio = document.getElementById('method_direct_ip');
+        const tsRadio = document.getElementById('method_tailscale');
         const lxcRadio = document.getElementById('method_proxmox_lxc');
         const lxcContainer = document.getElementById('proxmox_lxc_input_container');
 
@@ -2463,6 +2510,36 @@
         const refreshBtn = document.getElementById('refresh-proxmox-targets-btn');
         const targetSelect = /** @type {HTMLSelectElement} */ (document.getElementById('proxmox_target_select'));
         const targetsError = document.getElementById('proxmox_targets_error');
+
+        // Check Tailscale status dynamically on Step 1 setup
+        fetch('/tailscale-status')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('tailscale-status-badge');
+                if (!tsRadio || !badge) return;
+                if (data.active) {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = false;
+                    badge.className = 'badge bg-success ms-2';
+                    badge.innerHTML = `<i class="fa-solid fa-check me-1"></i> Active (${data.peers ? data.peers.length : 0} peers)`;
+                } else if (data.timed_out) {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = false;
+                    badge.className = 'badge bg-warning text-dark ms-2';
+                    badge.innerHTML = '<i class="fa-solid fa-clock me-1"></i> Active (Busy / Click to Scan)';
+                    badge.title = 'Tailscale CLI daemon timed out during background check, but radio option remains available.';
+                } else {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = true;
+                    badge.className = 'badge bg-secondary ms-2';
+                    badge.textContent = 'Inactive / Not Found';
+                    badge.title = data.reason || 'Tailscale is not active on this host';
+                }
+            })
+            .catch(() => {
+                const badge = document.getElementById('tailscale-status-badge');
+                if (badge) {
+                    badge.className = 'badge bg-secondary ms-2';
+                    badge.textContent = 'Inactive';
+                }
+            });
 
         const loadVmTemplates = async () => {
             const templateSelect = document.getElementById('vm_template_select');
@@ -2501,6 +2578,78 @@
             });
         }
 
+        const methodHelpMap = {
+            auto: {
+                icon: 'fa-solid fa-wifi',
+                title: 'Auto-Detect Local Subnet (L2 ARP Broadcast)',
+                text: 'Scans your primary local subnet using L2 ARP broadcasts (nmap -sn -PR). Ideal for Raspberry Pi or SBCs connected directly to your local router.',
+                snippet: 'ssh-copy-id pi@192.168.1.50'
+            },
+            manual: {
+                icon: 'fa-solid fa-network-wired',
+                title: 'Manual Subnet Scan (Custom CIDR)',
+                text: 'Scans a custom IP range (e.g. 192.168.2.0/24 or 10.0.0.0/24). Use this if your target devices are on a separate VLAN, IoT network, or sub-router.',
+                snippet: 'ssh-copy-id username@192.168.2.100'
+            },
+            direct: {
+                icon: 'fa-solid fa-bullseye',
+                title: 'Direct Target Deployment (IP / Hostname / MAC)',
+                text: 'Directly connects to a specific IP (192.168.1.50 or Tailscale IP 100.x.y.z), local domain (my-server.local), or MAC address without scanning the network.',
+                snippet: 'ssh-copy-id username@target-ip'
+            },
+            tailscale: {
+                icon: 'fa-solid fa-diagram-project',
+                title: 'Tailscale / Headscale Mesh Discovery',
+                text: 'Automatically queries your local Tailscale daemon status to list all online nodes across your global overlay network. Bypasses L2 local subnet sweeps entirely.',
+                snippet: 'ssh-copy-id username@100.x.y.z'
+            },
+            lxc: {
+                icon: 'fa-solid fa-box',
+                title: 'Automated Proxmox LXC Provisioning',
+                text: 'Provisions a brand new Debian LXC container on your Proxmox VE server via API/SSH, automatically installs Docker Engine, and sets up root SSH access.',
+                snippet: 'ssh-copy-id root@proxmox-host-ip'
+            },
+            vm: {
+                icon: 'fa-solid fa-desktop',
+                title: 'Automated Proxmox QEMU VM Cloning',
+                text: 'Clones a clean Debian cloud-init master template on your Proxmox VE server, configures CPU/RAM/Disk, and boots up a brand-new QEMU Virtual Machine target.',
+                snippet: 'ssh-copy-id debian@vm-ip'
+            },
+            existing: {
+                icon: 'fa-solid fa-server',
+                title: 'Existing Proxmox VE Target Selection',
+                text: 'Fetches existing LXC containers and VMs from your Proxmox server, allowing you to select and auto-start an existing target for service deployment.',
+                snippet: 'ssh-copy-id root@target-ip'
+            }
+        };
+
+        const updateMethodHelpCard = (key) => {
+            const data = methodHelpMap[key] || methodHelpMap.auto;
+            const iconEl = document.getElementById('method-help-icon');
+            const titleEl = document.getElementById('method-help-title');
+            const textEl = document.getElementById('method-help-text');
+            const snippetEl = document.getElementById('method-help-snippet');
+            if (iconEl) iconEl.innerHTML = `<i class="${data.icon}"></i>`;
+            if (titleEl) titleEl.textContent = data.title;
+            if (textEl) textEl.textContent = data.text;
+            if (snippetEl) snippetEl.textContent = data.snippet;
+        };
+
+        const copyBtn = document.getElementById('copy-snippet-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const snippetEl = document.getElementById('method-help-snippet');
+                if (snippetEl && snippetEl.textContent) {
+                    navigator.clipboard.writeText(snippetEl.textContent).then(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-solid fa-copy me-1"></i> Copy';
+                        }, 2000);
+                    });
+                }
+            });
+        }
+
         const updateInputs = async () => {
             if (autoRadio && (/** @type {HTMLInputElement} */ (autoRadio)).checked) {
                 manualInput.disabled = true;
@@ -2509,6 +2658,7 @@
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('auto');
             }
             if (manualRadio && (/** @type {HTMLInputElement} */ (manualRadio)).checked) {
                 manualInput.disabled = false;
@@ -2518,6 +2668,7 @@
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('manual');
             }
             if (directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked) {
                 manualInput.disabled = true;
@@ -2529,6 +2680,16 @@
                     if (directIpInput) directIpInput.focus();
                 }
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('direct');
+            }
+            if (tsRadio && (/** @type {HTMLInputElement} */ (tsRadio)).checked) {
+                manualInput.disabled = true;
+                if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
+                if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Discover Tailscale Mesh';
+                updateMethodHelpCard('tailscale');
             }
             if (lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked) {
                 manualInput.disabled = true;
@@ -2537,6 +2698,7 @@
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+                updateMethodHelpCard('lxc');
             }
             if (vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked) {
                 manualInput.disabled = true;
@@ -2545,6 +2707,7 @@
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (vmContainer) vmContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                updateMethodHelpCard('vm');
                 await loadVmTemplates();
             }
             if (existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked) {
@@ -2554,12 +2717,14 @@
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
+                updateMethodHelpCard('existing');
             }
         };
 
         if (autoRadio) autoRadio.addEventListener('change', updateInputs);
         if (manualRadio) manualRadio.addEventListener('change', updateInputs);
         if (directRadio) directRadio.addEventListener('change', updateInputs);
+        if (tsRadio) tsRadio.addEventListener('change', updateInputs);
         if (lxcRadio) lxcRadio.addEventListener('change', updateInputs);
         if (vmRadio) vmRadio.addEventListener('change', updateInputs);
         if (existingRadio) existingRadio.addEventListener('change', updateInputs);
@@ -2731,12 +2896,13 @@
                 setButtonState(scanBtn, true, {loadingText: 'Provisioning VM...'});
                 updateWizardFooter('Cloning Proxmox VM, configuring Cloud-Init, and installing Docker (this takes a few minutes)...', 'primary');
 
-                const coresVal = parseInt(document.getElementById('vm_cores').value) || 2;
-                const memVal = parseInt(document.getElementById('vm_memory').value) || 4096;
-                const storageNameVal = document.getElementById('vm_storage_name').value || 'local-lvm';
-                const hostnameVal = document.getElementById('vm_hostname').value.trim();
-                const templateManualVal = document.getElementById('vm_template_manual').value.trim();
-                const usernameVal = document.getElementById('vm_username').value.trim() || 'debian';
+                const coresVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_cores')).value) || 2;
+                const memVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_memory')).value) || 4096;
+                const storageNameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_storage_name'))).value || 'local-lvm';
+                const storageSizeVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_storage_size')).value) || 32;
+                const hostnameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_hostname'))).value.trim();
+                const templateManualVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_template_manual'))).value.trim();
+                const usernameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_username'))).value.trim() || 'debian';
 
                 if (!templateManualVal) {
                     updateWizardFooter('<i class="fa-solid fa-xmark me-2"></i>Please select a template or enter a Template VMID.', 'danger');
@@ -2753,6 +2919,7 @@
                             cores: coresVal,
                             memory: memVal,
                             storage_name: storageNameVal,
+                            storage_size: storageSizeVal,
                             hostname: hostnameVal,
                             template_vmid: templateManualVal,
                             username: usernameVal
@@ -2793,17 +2960,19 @@
 
             const isDirectIp = directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked;
             const isManual = manualRadio && (/** @type {HTMLInputElement} */ (manualRadio)).checked;
+            const isTailscale = tsRadio && (/** @type {HTMLInputElement} */ (tsRadio)).checked;
             const subnetToScan = isManual ? manualInput.value : null;
             const directIpValue = isDirectIp ? (directIpInput ? directIpInput.value : "") : null;
 
             try {
+                const discoveryMethod = isTailscale ? 'tailscale' : (isDirectIp ? 'direct_ip' : (isManual ? 'manual' : 'auto'));
                 /** @type {ScanData} */
                 const data = await fetchAPI('/scan-pis', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         subnet: subnetToScan,
-                        discovery_method: isDirectIp ? 'direct_ip' : (isManual ? 'manual' : 'auto'),
+                        discovery_method: discoveryMethod,
                         direct_target_ip: directIpValue
                     })
                 });
@@ -2855,6 +3024,117 @@
             setTimeout(updateLogoVisibility, 50);
         });
     });
+
+    // Delegated click event for password visibility toggle buttons
+    document.addEventListener('click', (e) => {
+        const target = /** @type {HTMLElement} */ (e.target);
+        const btn = target.closest('.toggle-password-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const group = btn.closest('.input-group');
+        if (!group) return;
+        const input = /** @type {HTMLInputElement | null} */ (group.querySelector('input'));
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        }
+    });
+
+    /**
+     * Triggers AI Deployment Health Evaluation and displays report modal.
+     * @param {string} taskId
+     * @param {string} [componentName='NjordDeploy Service Stack']
+     */
+    async function triggerDeploymentEvaluation(taskId, componentName = 'NjordDeploy Service Stack') {
+        const modalEl = document.getElementById('deploymentEvalModal');
+        if (!modalEl) return;
+
+        // @ts-ignore
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const banner = document.getElementById('evalStatusBanner');
+        const icon = document.getElementById('evalStatusIcon');
+        const title = document.getElementById('evalStatusTitle');
+        const summary = document.getElementById('evalSummaryText');
+        const actionCard = document.getElementById('evalActionCard');
+        const bugCard = document.getElementById('evalBugCard');
+
+        if (banner) banner.className = 'alert alert-info d-flex align-items-center mb-3';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        if (title) title.textContent = 'Analyzing Deployment Log & Health Status...';
+        if (summary) summary.textContent = 'Evaluating log output with AI provider...';
+        if (actionCard) actionCard.classList.add('d-none');
+        if (bugCard) bugCard.classList.add('d-none');
+
+        modal.show();
+
+        try {
+            const response = await fetch(`/api/deployment/${taskId}/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component_name: componentName, use_ai: true })
+            });
+            const res = await response.json();
+
+            if (summary) summary.textContent = res.summary || 'No summary provided.';
+
+            if (res.status === 'GREEN') {
+                if (banner) banner.className = 'alert alert-success d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-check text-success"></i>';
+                if (title) title.textContent = 'Deployment Healthy (Everything OK)';
+            } else if (res.status === 'YELLOW') {
+                if (banner) banner.className = 'alert alert-warning d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning"></i>';
+                if (title) title.textContent = 'Configuration Tuning Recommended';
+
+                if (actionCard) actionCard.classList.remove('d-none');
+                const actionText = document.getElementById('evalActionText');
+                if (actionText) actionText.textContent = res.user_action || 'Review configuration parameters.';
+
+                if (res.doc_anchor) {
+                    const docContainer = document.getElementById('evalDocLinkContainer');
+                    const docLink = document.getElementById('evalDocLink');
+                    if (docContainer) docContainer.classList.remove('d-none');
+                    if (docLink) {
+                        // @ts-ignore
+                        docLink.href = `https://github.com/HenkVanHoek/njord-deploy/blob/main/docs/${res.doc_anchor}`;
+                    }
+                }
+            } else {
+                if (banner) banner.className = 'alert alert-danger d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-danger"></i>';
+                if (title) title.textContent = 'Showstopper / Bug Identified';
+
+                if (bugCard) bugCard.classList.remove('d-none');
+
+                const keywords = res.github_keywords || componentName;
+                const searchUrl = `https://github.com/HenkVanHoek/njord-deploy/issues?q=${encodeURIComponent(keywords)}`;
+                const searchLink = document.getElementById('evalSearchGithubLink');
+                if (searchLink) {
+                    // @ts-ignore
+                    searchLink.href = searchUrl;
+                }
+
+                const issueTitle = `[Bug] Deployment failure in ${componentName}`;
+                const issueBody = `### Component\n${componentName}\n\n### Summary\n${res.summary}\n\n### Log Excerpt\n${res.user_action}`;
+                const newIssueUrl = `https://github.com/HenkVanHoek/njord-deploy/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+                const reportLink = document.getElementById('evalReportGithubLink');
+                if (reportLink) {
+                    // @ts-ignore
+                    reportLink.href = newIssueUrl;
+                }
+            }
+        } catch (err) {
+            if (banner) banner.className = 'alert alert-danger d-flex align-items-center mb-3';
+            if (icon) icon.innerHTML = '<i class="fa-solid fa-exclamation-circle text-danger"></i>';
+            if (title) title.textContent = 'Evaluation Failed';
+            if (summary) summary.textContent = 'Failed to analyze deployment logs: ' + err.message;
+        }
+    }
 
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();

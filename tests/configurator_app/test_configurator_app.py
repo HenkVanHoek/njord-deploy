@@ -278,6 +278,72 @@ class ConfiguratorAppTestCase(unittest.TestCase):
         self.assertEqual(data["ip"], "192.168.178.150")
         self.assertEqual(data["vmid"], 9000)
 
+    @patch("time.sleep", return_value=None)
+    @patch("managers.ssh_manager.SSHManager")
+    @patch("utils.proxmox_client.ProxmoxClient")
+    def test_create_proxmox_vm_dpkg_lock_retry(
+        self, mock_client_class, mock_ssh_class, mock_sleep
+    ):
+        """Test POST /api/proxmox/create-vm retries when dpkg lock is held."""
+        mock_client = mock_client_class.return_value
+        mock_client.get_next_vmid.return_value = 9001
+        mock_client.get.side_effect = [
+            {"data": []},
+            {"data": {"status": "stopped", "exitstatus": "OK"}},
+        ]
+        mock_client.clone_vm.return_value = {"data": "UPID:pve:00002"}
+        mock_client.configure_vm.return_value = {}
+        mock_client.start_vm.return_value = {}
+        mock_client.get_vm_ip.return_value = "192.168.178.151"
+
+        mock_ssh = mock_ssh_class.return_value
+        mock_ssh.connect.return_value = (True, "")
+        mock_ssh.execute_command.side_effect = [
+            (100, "E: Could not get lock /var/lib/dpkg/lock-frontend"),
+            (0, "success"),
+            (0, "success"),
+            (0, "success"),
+            (0, "success"),
+            (0, "success"),
+            (0, "success"),
+            (0, "success"),
+        ]
+        mock_key = MagicMock()
+        mock_key.get_name.return_value = "ssh-rsa"
+        mock_key.get_base64.return_value = "AAAA..."
+        mock_ssh.get_ssh_key.return_value = mock_key
+
+        payload = {
+            "cores": 2,
+            "memory": 4096,
+            "storage_name": "local-lvm",
+            "hostname": "test-vm-retry",
+            "template_vmid": 1000,
+            "username": "debian",
+            "password": "mypassword",
+        }
+
+        with patch.dict(
+            "os.environ",
+            {
+                "PROXMOX_HOST": "https://localhost:8006",
+                "PROXMOX_USER": "root@pam",
+                "PROXMOX_TOKEN_ID": "id",
+                "PROXMOX_TOKEN_SECRET": "secret",
+                "PROXMOX_NODE": "pve",
+            },
+        ):
+            response = self.client.post(
+                "/api/proxmox/create-vm",
+                data=json.dumps(payload),
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data)
+        self.assertEqual(data["status"], "success")
+        self.assertTrue(mock_sleep.called)
+
     def test_create_app_in_pyinstaller_mode(self):
         """Test create_app initializes template_folder correctly
         when sys.frozen is True.
@@ -315,3 +381,29 @@ class ConfiguratorAppTestCase(unittest.TestCase):
                     frozen_app.template_folder,
                     str(fallback_templates),
                 )
+
+    def test_evaluate_deployment_api_endpoint(self):
+        """Test POST /api/deployment/<target_task_id>/evaluate endpoint."""
+        # Seed a mock deployment task in flask_app.deployment_tasks
+        task_id = "test-task-123"
+        self.app.deployment_tasks[task_id] = {
+            "status": "completed",
+            "logs": ["Deployment started", "Service running successfully"],
+            "errors": [],
+        }
+
+        payload = {
+            "component_name": "adguard-home",
+            "use_ai": False,
+        }
+
+        response = self.client.post(
+            f"/api/deployment/{task_id}/evaluate",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertEqual(data["status"], "GREEN")
+        self.assertIn("summary", data)

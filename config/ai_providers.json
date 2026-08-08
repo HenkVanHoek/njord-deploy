@@ -1,0 +1,98 @@
+{
+  "providers": {
+    "ollama": {
+      "name": "Ollama Local (RTX 3060)",
+      "env_var": null,
+      "requires_api_key": false,
+      "default_base_url": "http://localhost:11434/v1",
+      "allow_custom_base_url": true,
+      "default_model": "qwen2.5-coder:14b-instruct-q4_K_M",
+      "models": [
+        {"value": "qwen2.5-coder:14b-instruct-q4_K_M", "text": "Qwen 2.5 Coder 14B Q4_K_M (Aanbevolen)"},
+        {"value": "qwen2.5-coder:7b", "text": "Qwen 2.5 Coder 7B"},
+        {"value": "llama3:latest", "text": "Llama 3"},
+        {"value": "custom", "text": "Handmatig model invoeren..."}
+      ]
+    },
+    "gemini": {
+      "name": "Google Gemini",
+      "env_var": "GEMINI_API_KEY",
+      "requires_api_key": true,
+      "default_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+      "allow_custom_base_url": false,
+      "default_model": "gemini-2.5-flash",
+      "models": [
+        {"value": "gemini-2.5-flash", "text": "Gemini 2.5 Flash (Aanbevolen - Snel)"},
+        {"value": "gemini-2.5-pro", "text": "Gemini 2.5 Pro (Deep Coding Reasoning)"},
+        {"value": "gemini-1.5-flash", "text": "Gemini 1.5 Flash (Legacy Snel)"},
+        {"value": "gemini-1.5-pro", "text": "Gemini 1.5 Pro (Legacy)"}
+      ]
+    },
+    "hostyourai": {
+      "name": "HostYourAI / Loes (EU)",
+      "env_var": "HOSTYOURAI_API_KEY",
+      "requires_api_key": true,
+      "default_base_url": "https://api.hostyourai.eu/v1",
+      "allow_custom_base_url": true,
+      "default_model": "mistral-7b-instruct",
+      "models": [
+        {"value": "mistral-7b-instruct", "text": "Mistral 7B Instruct (Default)"},
+        {"value": "meta-llama-3-8b-instruct", "text": "Meta Llama 3 8B Instruct"},
+        {"value": "mixtral-8x7b-instruct", "text": "Mixtral 8x7B Instruct (Krachtig)"},
+        {"value": "custom", "text": "Handmatig model invoeren..."}
+      ],
+      "help_url": "https://hostyourai.eu",
+      "help_text": "Bekijk alle HostYourAI-modellen op de website"
+    },
+    "openai": {
+      "name": "OpenAI",
+      "env_var": "OPENAI_API_KEY",
+      "requires_api_key": true,
+      "default_base_url": "https://api.openai.com/v1",
+      "allow_custom_base_url": false,
+      "default_model": "gpt-4o-mini",
+      "models": [
+        {"value": "gpt-4o-mini", "text": "GPT-4o Mini (Aanbevolen - Snel)"},
+        {"value": "gpt-4o", "text": "GPT-4o (Krachtig)"},
+        {"value": "o1-mini", "text": "o1 Mini (Redeneren)"},
+        {"value": "custom", "text": "Handmatig model invoeren..."}
+      ]
+    },
+    "deepseek": {
+      "name": "DeepSeek AI",
+      "env_var": "DEEPSEEK_API_KEY",
+      "requires_api_key": true,
+      "default_base_url": "https://api.deepseek.com/v1",
+      "allow_custom_base_url": false,
+      "default_model": "deepseek-coder",
+      "models": [
+        {"value": "deepseek-coder", "text": "DeepSeek Coder (Aanbevolen)"},
+        {"value": "deepseek-chat", "text": "DeepSeek V3 Chat"},
+        {"value": "custom", "text": "Handmatig model invoeren..."}
+      ]
+    },
+    "openrouter": {
+      "name": "OpenRouter (Multi-Model Router)",
+      "env_var": "OPENROUTER_API_KEY",
+      "requires_api_key": true,
+      "default_base_url": "https://openrouter.ai/api/v1",
+      "allow_custom_base_url": false,
+      "default_model": "anthropic/claude-3.5-sonnet",
+      "models": [
+        {"value": "anthropic/claude-3.5-sonnet", "text": "Claude 3.5 Sonnet (OpenRouter)"},
+        {"value": "deepseek/deepseek-r1", "text": "DeepSeek R1 (OpenRouter)"},
+        {"value": "meta-llama/llama-3.3-70b-instruct", "text": "Llama 3.3 70B (OpenRouter)"},
+        {"value": "custom", "text": "Handmatig model invoeren..."}
+      ]
+    },
+    "custom": {
+      "name": "Custom Endpoint (vLLM / LM Studio / LocalAI)",
+      "env_var": "CUSTOM_AI_API_KEY",
+      "requires_api_key": false,
+      "default_base_url": "http://localhost:11434/v1",
+      "allow_custom_base_url": true,
+      "default_model": "default",
+      "models": []
+    }
+  }
+}

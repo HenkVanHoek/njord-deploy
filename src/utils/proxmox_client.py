@@ -127,6 +127,20 @@ class ProxmoxClient:
         endpoint = f"nodes/{node}/qemu/{vmid}"
         return self.delete(endpoint, params={"purge": 1})
 
+    def resize_vm_disk(self, node: str, vmid: int, disk: str, size: str) -> dict:
+        """Resizes a VM disk (e.g. disk='scsi0', size='32G' or '+10G')."""
+        endpoint = f"nodes/{node}/qemu/{vmid}/resize"
+        url = f"{self.api_url}/{endpoint.lstrip('/')}"
+        response = requests.put(
+            url,
+            headers=self.headers,
+            data={"disk": disk, "size": size},
+            verify=self.verify_ssl,
+            timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def get_vm_ip(self, node: str, vmid: int) -> str | None:
         """
         Retrieves the first non-loopback IPv4 address of the VM

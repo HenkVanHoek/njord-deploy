@@ -34,17 +34,25 @@ The sync manager, defined in [sync_manager.py](file:///home/hvhoek/PycharmProjec
 
 ---
 
-## 2. AI-Assisted Component Generator (Google Gemini)
+## 2. AI-Assisted Component Generator (Multi-Provider Support)
 
 The component editor includes an AI assistant that automatically bootstraps new components using a GitHub repository URL.
 
-### Setup and Configuration
+### Supported AI Providers & Configuration
 
-The generator communicates with the Gemini REST API using the model "gemini-2.5-flash".
+The AI generator supports multiple AI providers with per-provider API key storage in the local `.env` file:
 
-To use this feature, you must provide a Gemini API Key:
-- Option A: Define the key in the ".env" file using the variable "GEMINI_API_KEY".
-- Option B: Enter the key in the Create with AI dialog in the web interface. The key is saved locally in browser storage.
+- **Google Gemini**: Uses `GEMINI_API_KEY`. Endpoint is fixed to Google's official API (`https://generativelanguage.googleapis.com/v1beta/openai/`). Recommended model: `gemini-2.5-flash`.
+- **HostYourAI / Loes (EU)**: Uses `HOSTYOURAI_API_KEY`. Default base URL is `https://api.hostyourai.eu/v1` (configurable via `HOSTYOURAI_BASE_URL` or UI). Default model: `mistral-7b-instruct`.
+- **OpenAI**: Uses `OPENAI_API_KEY`. Endpoint is fixed to `https://api.openai.com/v1`. Recommended model: `gpt-4o-mini`.
+- **Ollama (Local LLM)**: Uses local endpoint (default `http://localhost:11434/v1`, configurable via `OLLAMA_BASE_URL`). Recommended model: `qwen2.5-coder:14b-instruct-q4_K_M`.
+- **Custom Endpoint**: Uses `CUSTOM_AI_API_KEY` and configurable base URL (`CUSTOM_AI_BASE_URL`) for self-hosted OpenAI-compatible APIs (LM Studio, vLLM, LocalAI).
+
+### Key Management & Provider Switching
+
+- **Per-Provider Keys:** API keys are stored separately per provider in `.env` (`GEMINI_API_KEY`, `HOSTYOURAI_API_KEY`, `OPENAI_API_KEY`, `CUSTOM_AI_API_KEY`). Switching providers in the Editor App preserves stored keys without overwriting other providers.
+- **Global Default Provider:** The `AI_PROVIDER` environment variable sets the global fallback provider.
+- **Just-in-Time UI Saving:** In the "Import via AI" modal in the Editor App, entering an API key with "Save API key to local .env file" checked will automatically validate and save the key to `.env` upon successful component generation.
 
 ### How to Use
 

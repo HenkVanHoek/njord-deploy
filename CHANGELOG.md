@@ -7,6 +7,18 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Post-Deployment AI Log Evaluator & Health Report**:
+  - Integrated automated post-deployment log evaluation engine (`src/managers/deployment_evaluator.py`) using `ai_provider_manager` (Gemini, Ollama, HostYourAI, OpenAI) with deterministic rule-based fallback.
+  - Added regex log sanitizer (`sanitize_logs()`) to scrub passwords, tokens, API keys, and SSH private keys before AI processing.
+  - Categorized health reports into 3 actionable scenarios: `GREEN` (Clean run), `YELLOW` (Parameter tuning with documentation link), and `RED` (Showstopper/Bug with GitHub issue search and pre-filled GitHub issue draft).
+  - Added `/api/deployment/<target_task_id>/evaluate` API endpoint and Bootstrap 5 frontend modal (`#deploymentEvalModal`) in `configurator_app` with auto-triggering on session completion and manual `🤖 AI Health Report` button.
+  - Created architectural specification document [`docs/DEPLOYMENT_EVALUATION_SPEC.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/DEPLOYMENT_EVALUATION_SPEC.md).
+- **Tailscale / Headscale Mesh Discovery**:
+  - Integrated native Tailscale CLI daemon inspector (`get_tailscale_status`) and `/tailscale-status` endpoint.
+  - Added permanent **Tailscale / Headscale Mesh Discovery** scan option on Step 1 with dynamic status badge (`Active` with online peer count vs `Inactive / Not Found`) and background checking spinner.
+  - Enabled 1-click discovery of all online Tailnet mesh nodes without requiring L2 ARP sweeps.
+- **SSH Key Authentication Guidance**:
+  - Added an interactive SSH key authentication guidance banner on Step 1 providing clear instructions for authorizing public SSH keys (`ssh-copy-id username@target-ip`) on target nodes.
 - **Dual-Server Release Build**: Configured PyInstaller and GitHub Release Pipeline (`release.yml`) to build and release two separate executables per platform: `NjordDeployConfigurator` (port 5001) and `NjordDeployEditor` (port 5000).
 - **Waitress WSGI Production Web Server**: Replaced Flask Werkzeug development server with production-grade, cross-platform `Waitress` WSGI server (`serve()`) for both Configurator (`run_configurator.py`) and Editor (`run_editor.py`) applications.
 - **Component Editor Statistics & QA Dashboard**:
@@ -18,11 +30,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Proxmox Test Runner Skip List**: Added `gluetun` to the integration test skip list (`SKIPPED_COMPONENTS`) because VPN client containers require valid private credentials to start and cannot be verified automatically in isolated testing environments.
 
 ### Changed
-- **Default VM Test Template**: Updated the default Proxmox master template ID for integration, package, and release testing from `900` to `902` (`debian-clean-template`) to resolve IP/DHCP retrieval and QEMU guest agent timeouts.
-- **Test Reports Trailing Newlines**: Standardized test JSON and markdown report writers to ensure files end with exactly one trailing newline character, avoiding formatting failures in `pre-commit` hooks.
+- **Spacious Device Credentials Layout**: Refactored Step 2 discovered devices grid from cramped 6-column layout (`row-cols-xxl-6`) to maximum 3 spacious columns per row (`row-cols-1 row-cols-md-2 row-cols-xl-3 g-3`), providing full visibility for long hostnames, IP addresses, MACs, and credential text fields.
 
 ### Fixed
-- **PyInstaller Jinja2 Template NotFound**: Fixed `jinja2.exceptions.TemplateNotFound: index.html` crash when running `NjordDeployConfigurator` executable by dynamically configuring Flask `template_folder` and `static_folder` to resolve relative to `sys._MEIPASS` when frozen, and updating `NjordDeployConfigurator.spec` to bundle both `src/configurator_app/templates` and root `templates` paths.
+- **Actionable `nmap` Missing Error Handling**: Added explicit pre-scan executable check and `nmap.PortScannerError` handling in `NodeScanner`, returning clear package installation guidance (`sudo apt install nmap`) directly to the UI instead of generic error messages.
 
 ## [0.6.0] - 2025-10-12
 

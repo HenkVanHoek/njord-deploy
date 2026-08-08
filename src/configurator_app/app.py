@@ -14,9 +14,10 @@ from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
 from managers.component_manager import ComponentManager
+from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
-from node_scanner import NodeScanner
+from node_scanner import NodeScanner, get_tailscale_status
 from utils.resource_utils import get_components_paths
 
 logging.basicConfig(
@@ -280,6 +281,7 @@ def create_app(test_config=None):
         docs = {}
         for doc_name, filename in [
             ("Introduction", "README.md"),
+            ("User & Network Guide", "docs/USER_GUIDE.md"),
             ("Contributing Guide", "CONTRIBUTING.md"),
             ("Helper Utilities", "UTILITIES.md"),
         ]:
@@ -409,10 +411,44 @@ def create_app(test_config=None):
         else:
             return jsonify({"error": "Invalid update mode"}), 400
 
+    @flask_app.route("/tailscale-status", methods=["GET"])
+    def tailscale_status():
+        return jsonify(get_tailscale_status())
+
     @flask_app.route("/scan-pis", methods=["POST"])
     def scan_pis():
         data = request.get_json(silent=True) or {}
         discovery_method = data.get("discovery_method")
+        if discovery_method == "tailscale":
+            ts_status = get_tailscale_status()
+            if ts_status.get("active"):
+                return jsonify(
+                    {
+                        "hosts": ts_status.get("peers", []),
+                        "messages": [
+                            "✅ Tailscale Mesh Discovery found "
+                            f"{len(ts_status.get('peers', []))} online node(s)."
+                        ],
+                        "error": None,
+                        "detection_info": {
+                            "success": True,
+                            "method_used": "tailscale",
+                        },
+                    }
+                )
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Tailscale discovery failed: "
+                            f"{ts_status.get('reason', 'Tailscale inactive')}"
+                        ),
+                        "messages": [],
+                    }
+                ),
+                400,
+            )
+
         if discovery_method == "direct_ip":
             target_ip = data.get("direct_target_ip", "").strip()
             if not target_ip:
@@ -541,7 +577,7 @@ def create_app(test_config=None):
             if error:
                 logging.error(f"Scanner scan failed: {error}")
                 return (
-                    jsonify({"error": "Network scan failed.", "messages": messages}),
+                    jsonify({"error": error, "messages": messages}),
                     500,
                 )
             return jsonify(
@@ -734,9 +770,66 @@ def create_app(test_config=None):
 
             if not ostemplate:
                 default_storage = next(iter(storages), "local")
-                ostemplate = (
-                    f"{default_storage}:vztmpl/debian-12-standard_12.2-1_"
-                    f"amd64.tar.zst"
+                try:
+                    aplinfo_res = client.get(f"nodes/{node}/aplinfo")
+                    apl_data = aplinfo_res.get("data", [])
+                    deb_apls = [
+                        item
+                        for item in apl_data
+                        if "debian" in item.get("package", "").lower()
+                        and "standard" in item.get("package", "").lower()
+                    ]
+                    if not deb_apls:
+                        deb_apls = [
+                            item
+                            for item in apl_data
+                            if "ubuntu" in item.get("package", "").lower()
+                        ]
+                    if deb_apls:
+                        deb_apls.sort(key=lambda x: x.get("template", ""), reverse=True)
+                        target_tpl = deb_apls[0].get("template")
+                        if target_tpl:
+                            logging.info(
+                                f"Downloading LXC template '{target_tpl}' "
+                                f"to '{default_storage}' storage on node '{node}'..."
+                            )
+                            dl_res = client.post(
+                                f"nodes/{node}/aplinfo",
+                                data={
+                                    "template": target_tpl,
+                                    "storage": default_storage,
+                                },
+                            )
+                            upid = dl_res.get("data")
+                            if upid and isinstance(upid, str):
+                                for _ in range(30):
+                                    time.sleep(3)
+                                    status_res = client.get(
+                                        f"nodes/{node}/tasks/{upid}/status"
+                                    )
+                                    s_data = status_res.get("data", {})
+                                    if s_data.get("status") == "stopped":
+                                        break
+                            ostemplate = f"{default_storage}:vztmpl/{target_tpl}"
+                except Exception as apl_err:
+                    logging.warning(
+                        f"Failed to auto-download LXC template via aplinfo: {apl_err}"
+                    )
+
+            if not ostemplate:
+                storage_display = storages[0] if storages else "local"
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                f"No LXC template found on Proxmox host. "
+                                f"Please download a Debian LXC template in Proxmox "
+                                f"(Storage '{storage_display}' -> "
+                                f"CT Templates -> Templates)."
+                            )
+                        }
+                    ),
+                    400,
                 )
 
             # 4. Create LXC
@@ -873,8 +966,14 @@ def create_app(test_config=None):
             ]
 
             for cmd in install_commands:
-                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
-                if exit_code != 0:
+                max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
+                for attempt in range(max_retries):
+                    exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                    if exit_code == 0:
+                        break
+                    if "lock" in stdout and attempt < max_retries - 1:
+                        time.sleep(5)
+                        continue
                     return (
                         jsonify(
                             {
@@ -965,6 +1064,7 @@ def create_app(test_config=None):
         cores = int(data.get("cores", 4))
         memory = int(data.get("memory", 8192))
         storage_name = str(data.get("storage_name", "local-lvm"))
+        storage_size = data.get("storage_size")
         node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve")))
         password = str(data.get("password", "PiSelfhostLXC2026!"))
         hostname = str(data.get("hostname", "")).strip()
@@ -1102,6 +1202,33 @@ def create_app(test_config=None):
                         pass
                     time.sleep(2)
 
+            # 4.5 Resize Disk (if requested)
+            if storage_size:
+                try:
+                    storage_size_gb = int(storage_size)
+                    vm_cfg_res = client.get(f"nodes/{node}/qemu/{vmid}/config")
+                    vm_cfg = vm_cfg_res.get("data", {})
+                    bootdisk = vm_cfg.get("bootdisk")
+                    if not bootdisk:
+                        for candidate in ["scsi0", "virtio0", "sata0", "ide0"]:
+                            if candidate in vm_cfg:
+                                bootdisk = candidate
+                                break
+                    if not bootdisk:
+                        bootdisk = "scsi0"
+
+                    logging.info(
+                        f"Resizing VM {vmid} disk '{bootdisk}' to {storage_size_gb}G..."
+                    )
+                    client.resize_vm_disk(
+                        node=node,
+                        vmid=vmid,
+                        disk=bootdisk,
+                        size=f"{storage_size_gb}G",
+                    )
+                except Exception as resize_err:
+                    logging.warning(f"Could not resize VM {vmid} disk: {resize_err}")
+
             # 5. Configure Cloud-Init
             import urllib.parse
 
@@ -1114,9 +1241,18 @@ def create_app(test_config=None):
                 "sshkeys": urllib.parse.quote(pubkey),
                 "ipconfig0": "ip=dhcp",
                 "agent": "enabled=1",
-                "ide2": f"{storage_name}:cloudinit",
+                "cpu": "host",
             }
-            client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+            try:
+                client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+            except Exception as cfg_err:
+                if "already exists" in str(cfg_err):
+                    logging.warning(
+                        f"Cloud-Init drive already exists for VM {vmid}: {cfg_err}"
+                    )
+                else:
+                    config_data["ide2"] = f"{storage_name}:cloudinit"
+                    client.configure_vm(node=node, vmid=vmid, config_data=config_data)
 
             # 6. Start the VM
             logging.info(f"Starting VM {vmid}...")
@@ -1195,8 +1331,14 @@ def create_app(test_config=None):
             )
 
             for cmd in install_commands:
-                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
-                if exit_code != 0:
+                max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
+                for attempt in range(max_retries):
+                    exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                    if exit_code == 0:
+                        break
+                    if "lock" in stdout and attempt < max_retries - 1:
+                        time.sleep(5)
+                        continue
                     return (
                         jsonify(
                             {
@@ -1724,8 +1866,17 @@ def create_app(test_config=None):
         snapshot, err = analysis_scanner.get_system_snapshot(device.get("ip"))
 
         if err:
+            logging.error(
+                f"Pre-deployment analysis failed for {device.get('ip')}: {err}"
+            )
             return (
-                jsonify({"error": "Failed to retrieve system details for analysis."}),
+                jsonify(
+                    {
+                        "error": (
+                            f"Failed to retrieve system details for analysis: {err}"
+                        )
+                    }
+                ),
                 500,
             )
 
@@ -1920,6 +2071,31 @@ def create_app(test_config=None):
         if not isinstance(task, dict):
             return jsonify({"error": "Task not found"}), 404
         return jsonify(task)
+
+    @flask_app.route("/api/deployment/<target_task_id>/evaluate", methods=["POST"])
+    def evaluate_deployment_task(target_task_id):
+        """Evaluates deployment session logs and returns a health report."""
+        task = flask_app.deployment_tasks.get(target_task_id)
+        if not isinstance(task, dict):
+            return jsonify({"error": "Deployment task not found"}), 404
+
+        data = request.get_json(force=True) if request.data else {}
+        component_name = data.get("component_name", "deployed-stack")
+        use_ai = data.get("use_ai", True)
+
+        logs_list = task.get("logs", [])
+        log_text = "\n".join(logs_list)
+        status_str = task.get("status", "failed")
+        exit_code = 0 if status_str == "completed" else 1
+
+        result = evaluate_deployment(
+            component_name=component_name,
+            log_text=log_text,
+            exit_code=exit_code,
+            container_status={"running": exit_code == 0},
+            use_ai=use_ai,
+        )
+        return jsonify(result)
 
     @flask_app.route("/get-container-logs", methods=["POST"])
     def get_container_logs():

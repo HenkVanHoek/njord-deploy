@@ -5,7 +5,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 # Assuming your file is named node_scanner.py
-from node_scanner import NodeScanner, is_port_open, is_raspberry_pi, is_supported_sbc
+from node_scanner import (
+    NodeScanner,
+    get_tailscale_status,
+    is_port_open,
+    is_raspberry_pi,
+    is_supported_sbc,
+)
 
 
 # Fixture for a reusable NodeScanner instance
@@ -69,7 +75,8 @@ class TestNodeScannerStaticMethods:
 class TestNodeScannerScan:
     """Tests for the main network scan functionality."""
 
-    def test_scan_finds_pi(self, mock_nmap, scanner):
+    @patch("shutil.which", return_value="/usr/bin/nmap")
+    def test_scan_finds_pi(self, mock_which, mock_nmap, scanner):
         """Test a scan where a Raspberry Pi is found."""
         mock_nmap_instance = mock_nmap.return_value
         mock_nmap_instance.scan.return_value = {
@@ -83,6 +90,48 @@ class TestNodeScannerScan:
         hosts, _, err, _ = scanner.scan(subnet="192.168.1.0/24")
         assert not err
         assert len(hosts) == 1
+
+    @patch("shutil.which", return_value=None)
+    def test_scan_nmap_not_installed(self, mock_which, mock_nmap, scanner):
+        """Test that scan returns clear error when nmap is not installed."""
+        hosts, _, err, info = scanner.scan(subnet="192.168.1.0/24")
+        assert hosts == []
+        assert "nmap' is not installed" in err
+        assert info["success"] is False
+
+
+class TestTailscaleStatus:
+    """Tests for the Tailscale mesh discovery helper."""
+
+    @patch("shutil.which", return_value=None)
+    def test_tailscale_not_installed(self, mock_which):
+        status = get_tailscale_status()
+        assert status["active"] is False
+        assert "CLI not installed" in status["reason"]
+
+    @patch("subprocess.run")
+    @patch("shutil.which", return_value="/usr/bin/tailscale")
+    def test_tailscale_active_with_peers(self, mock_which, mock_run):
+        mock_res = MagicMock()
+        mock_res.returncode = 0
+        mock_res.stdout = """{
+            "BackendState": "Running",
+            "Self": {"HostName": "my-desktop", "TailscaleIPs": ["100.1.1.1"]},
+            "Peer": {
+                "p1": {
+                    "Online": true,
+                    "HostName": "pi-node",
+                    "OS": "linux",
+                    "TailscaleIPs": ["100.1.1.2"]
+                }
+            }
+        }"""
+        mock_run.return_value = mock_res
+        status = get_tailscale_status()
+        assert status["active"] is True
+        assert len(status["peers"]) == 1
+        assert status["peers"][0]["ip"] == "100.1.1.2"
+        assert status["peers"][0]["hostname"] == "pi-node"
 
 
 # --- NEW TEST SUITE FOR SYSTEM SNAPSHOT ---

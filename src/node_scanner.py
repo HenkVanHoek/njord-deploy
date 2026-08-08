@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import socket
 import subprocess  # nosec B404
 
@@ -56,6 +57,90 @@ def is_port_open(host, port):
         return True
     except (socket.timeout, ConnectionRefusedError):
         return False
+
+
+def get_tailscale_status() -> dict:
+    """Checks if Tailscale is installed and active on the host machine.
+
+    Returns dict with 'active', 'peers', 'self', and 'reason'.
+    """
+    tailscale_bin = shutil.which("tailscale")
+    if not tailscale_bin:
+        return {
+            "active": False,
+            "reason": "Tailscale CLI not installed on host.",
+            "peers": [],
+        }
+
+    try:
+        res = subprocess.run(  # nosec B603
+            [tailscale_bin, "status", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if res.returncode != 0:
+            return {
+                "active": False,
+                "reason": "Tailscale daemon is not running or logged out.",
+                "peers": [],
+            }
+        data = json.loads(res.stdout)
+        backend_state = data.get("BackendState", "")
+        if backend_state != "Running":
+            return {
+                "active": False,
+                "reason": f"Tailscale state is '{backend_state}'.",
+                "peers": [],
+            }
+
+        peers_dict = data.get("Peer", {})
+        peers = []
+        for _peer_key, peer_info in peers_dict.items():
+            if not peer_info.get("Online", False):
+                continue
+            addrs = peer_info.get("TailscaleIPs", [])
+            primary_ip = next(iter(addrs), "")
+            if not primary_ip:
+                continue
+            dns_name = peer_info.get("DNSName", "")
+            first_dns_part = next(iter(dns_name.split(".")), "")
+            hostname = peer_info.get("HostName") or first_dns_part or "tailscale-node"
+            peers.append(
+                {
+                    "ip": primary_ip,
+                    "mac": "tailscale-overlay",
+                    "vendor": f"Tailscale ({peer_info.get('OS', 'Linux')})",
+                    "hostname": hostname,
+                    "os": peer_info.get("OS", "unknown"),
+                    "online": True,
+                }
+            )
+
+        return {
+            "active": True,
+            "reason": f"{len(peers)} online peer(s) found.",
+            "peers": peers,
+            "self": {
+                "hostname": data.get("Self", {}).get("HostName", ""),
+                "ips": data.get("Self", {}).get("TailscaleIPs", []),
+            },
+        }
+    except subprocess.TimeoutExpired:
+        logger.warning("Tailscale status check timed out after 10s")
+        return {
+            "active": False,
+            "timed_out": True,
+            "reason": "Tailscale status check timed out (daemon busy).",
+            "peers": [],
+        }
+    except Exception as e:
+        logger.warning(f"Tailscale status check failed: {e}")
+        return {
+            "active": False,
+            "reason": f"Error checking Tailscale: {str(e)}",
+            "peers": [],
+        }
 
 
 class NodeScanner:
@@ -138,6 +223,15 @@ class NodeScanner:
         else:
             detection_info = {"success": True, "method_used": "user_provided"}
             messages.append(f"🎯 Using provided network: {subnet}")
+        if not shutil.which("nmap"):
+            error_msg = (
+                "❌ Scan failed: 'nmap' is not installed on this system. "
+                "Please install nmap (e.g. 'sudo apt install nmap' or "
+                "'sudo apk add nmap')."
+            )
+            detection_info["success"] = False
+            return [], messages, error_msg, detection_info
+
         try:
             nm = nmap.PortScanner()
             result = nm.scan(hosts=subnet, arguments="-sn -PR", sudo=True)
@@ -156,6 +250,13 @@ class NodeScanner:
                         }
                     )
             return hosts, messages, "", detection_info
+        except nmap.PortScannerError as e:
+            error_msg = (
+                f"❌ Scan failed: {str(e)}. "
+                "Please ensure 'nmap' is installed (e.g. 'sudo apt install nmap')."
+            )
+            detection_info["success"] = False
+            return [], messages, error_msg, detection_info
         except Exception as e:
             error_msg = f"❌ Scan failed: {str(e)}"
             detection_info["success"] = False

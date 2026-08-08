@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "The port on the host to access the Open WebUI interface.",
+            "id": "OPEN_WEBUI_PORT",
+            "label": "Open WebUI Port",
+            "type": "port"
+        },
+        {
+            "default": "njorddeploy_secret_key_openwebui_2026",
+            "description": "A secret key for Open WebUI. Generate a strong, random string.",
+            "id": "WEBUI_SECRET_KEY",
+            "label": "WebUI Secret Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Optional: Your OpenAI API key for OpenAI API usage. Leave empty if not using OpenAI.",
+            "id": "OPENAI_API_KEY",
+            "label": "OpenAI API Key",
+            "type": "password"
+        },
+        {
+            "default": "latest",
+            "description": "The Docker image tag for the bundled Ollama service (e.g., latest, 0.1.30).",
+            "id": "OLLAMA_VERSION",
+            "label": "Ollama Image Version",
+            "type": "text"
+        }
+    ]
+}

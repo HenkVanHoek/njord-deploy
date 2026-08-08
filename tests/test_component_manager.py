@@ -163,3 +163,74 @@ def test_update_component_metadata_test_status(tmp_path):
     updated = manager.get_component_details("caddy")
     assert updated is not None
     assert updated.get("test_status") == "tested"
+
+
+def test_render_open_webui_template_default_fallbacks(tmp_path):
+    """Test rendering open-webui template without variables succeeds via defaults."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    comp_dir = templates_dir / "open-webui"
+    comp_dir.mkdir()
+
+    compose_template_content = (
+        "services:\n"
+        "  ollama:\n"
+        "    container_name: njorddeploy-ollama\n"
+        "    image: ollama/ollama:{{ OLLAMA_VERSION | default('latest') }}\n"
+        "  open-webui:\n"
+        "    container_name: njorddeploy-open-webui\n"
+        '    image: \'{{ image_name | default("ghcr.io/open-webui/open-webui") }}:'
+        '{{ component_version | default("main") }}\'\n'
+        "    ports:\n"
+        "      - '{{ OPEN_WEBUI_PORT | default(\"8080\") }}:8080'\n"
+    )
+    (comp_dir / "docker-compose.template.yml").write_text(
+        compose_template_content, encoding="utf-8"
+    )
+
+    meta_data = {
+        "components": {
+            "open-webui": {
+                "name": "Open WebUI",
+                "component_version": "main",
+                "image_name": "ghcr.io/open-webui/open-webui",
+                "traefik_internal_port": 8080,
+                "ui_port_variable": "OPEN_WEBUI_PORT",
+            }
+        }
+    }
+    meta_path.write_text(json.dumps(meta_data), encoding="utf-8")
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    selected_components_data = [
+        {
+            "id": "open-webui",
+            "name": "Open WebUI",
+            "component_version": "main",
+            "image_name": "ghcr.io/open-webui/open-webui",
+            "traefik_internal_port": 8080,
+            "ui_port_variable": "OPEN_WEBUI_PORT",
+        }
+    ]
+    output_dir = tmp_path / "output"
+
+    manager.generate_deployment_artifacts(
+        selected_components_data=selected_components_data,
+        global_vars={},
+        output_path=output_dir,
+    )
+
+    compose_path = output_dir / "docker-compose.yml"
+    assert compose_path.exists()
+
+    with open(compose_path, "r", encoding="utf-8") as f:
+        compose_data = yaml.safe_load(f)
+
+    assert "open-webui" in compose_data["services"]
+    assert "ollama" in compose_data["services"]
+    assert compose_data["services"]["open-webui"]["ports"] == ["8080:8080"]

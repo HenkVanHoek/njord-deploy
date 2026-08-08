@@ -560,15 +560,20 @@
 
                         <div class="mb-3 d-none" id="ai-api-key-group">
                             <label for="ai-api-key" class="form-label">API Key</label>
-                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                             <div class="form-text" id="ai-api-key-help">An API key is required for cloud providers.</div>
                         </div>
 
                         <div class="mb-3 d-none" id="ai-model-select-group">
                             <label for="ai-model-select" class="form-label">Model</label>
                             <select class="form-select" id="ai-model-select"></select>
-                            <div class="form-text d-none" id="ai-hostyourai-help">
-                                <a href="https://hostyourai.eu" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> Bekijk alle HostYourAI-modellen op de website</a>
+                            <div class="form-text d-none" id="ai-provider-help">
+                                <a id="ai-provider-help-link" href="#" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> <span id="ai-provider-help-text"></span></a>
                             </div>
                         </div>
 
@@ -759,11 +764,21 @@
                     </div>
                     <div class="mb-3">
                         <label for="hash-password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="hash-password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="hash-password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="hash-password-confirm" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="hash-password-confirm" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="hash-password-confirm" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="invalid-feedback" id="password-match-feedback">Passwords do not match.</div>
                     </div>
                     <div class="d-grid">

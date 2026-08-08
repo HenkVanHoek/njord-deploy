@@ -899,6 +899,30 @@
             ],
             "traefik_internal_port": null
         },
+        "open-webui": {
+            "component_version": "main",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes.",
+            "docker_service_name": "open-webui",
+            "group": "Productivity",
+            "has_configuration": false,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/open-webui/open-webui",
+            "name": "Open WebUI with Ollama",
+            "package_id": null,
+            "protocol": "http",
+            "tags": [
+                "AI",
+                "LLM",
+                "Ollama",
+                "OpenAI",
+                "Chatbot"
+            ],
+            "traefik_internal_port": 8080,
+            "ui_port_variable": "OPEN_WEBUI_PORT"
+        },
         "organizr": {
             "component_version": "latest",
             "conflicts_with": [],

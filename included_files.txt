@@ -1,4 +1,4 @@
-Tokens: 248254 | VRAM Status: CRITICAL
+Tokens: 261889 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -57,6 +57,7 @@ src/managers/artifact_generator.py
 src/managers/component_manager.py
 src/managers/component_reader.py
 src/managers/component_writer.py
+src/managers/deployment_evaluator.py
 src/managers/deployment_manager.py
 src/managers/setup_manager.py
 src/managers/ssh_manager.py
@@ -66,6 +67,7 @@ src/setup.py
 src/utils/__init__.py
 src/utils/ai_generator.py
 src/utils/ai_generator_engine.py
+src/utils/ai_provider_manager.py
 src/utils/auth_utils.py
 src/utils/dashy_updater.py
 src/utils/frigate_camera_config_tool.py

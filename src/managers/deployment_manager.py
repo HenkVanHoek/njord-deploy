@@ -133,6 +133,32 @@ class DeploymentManager:
                     "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
                 )
 
+                # Log deployment manifest and docker-compose.yml contents
+                out_path_obj = Path(output_path)
+                if out_path_obj.exists():
+                    file_list = [
+                        str(p.relative_to(out_path_obj))
+                        for p in out_path_obj.rglob("*")
+                        if p.is_file()
+                    ]
+                    self.tasks[task_id]["logs"].append(
+                        f"MANIFEST: Transferring {len(file_list)} files to "
+                        f"target /opt/njorddeploy: {', '.join(file_list)}"
+                    )
+                    compose_file = out_path_obj / "docker-compose.yml"
+                    if compose_file.exists():
+                        try:
+                            compose_text = compose_file.read_text(encoding="utf-8")
+                            self.tasks[task_id]["logs"].append(
+                                "MANIFEST: Target docker-compose.yml contents:"
+                            )
+                            for line in compose_text.splitlines():
+                                self.tasks[task_id]["logs"].append(f"  {line}")
+                        except Exception as read_ex:
+                            logger.warning(
+                                f"Could not read compose file manifest: {read_ex}"
+                            )
+
                 processed_events: set[str] = set()
 
                 def handle_single_event(evt: Dict[str, Any]) -> bool:
@@ -153,6 +179,12 @@ class DeploymentManager:
                         # Catch warnings embedded in the task result
                         res = event_data.get("res", {})
                         if isinstance(res, dict):
+                            stdout_val = res.get("stdout")
+                            if isinstance(stdout_val, str) and stdout_val.strip():
+                                for line in stdout_val.strip().splitlines():
+                                    self.tasks[task_id]["logs"].append(
+                                        f"STDOUT [{task_name}]: {line}"
+                                    )
                             if (
                                 "msg" in res
                                 and str(res["msg"]).strip()

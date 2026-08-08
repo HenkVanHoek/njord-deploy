@@ -124,6 +124,7 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | N/A |
 | Nextcloud | File storage, sharing, productivity and collaboration platform. | [Link](https://nextcloud.com/) |
+| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | N/A |
 | Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | N/A |
 | Voicebox | The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine. | N/A |
 

@@ -71,6 +71,35 @@ class TestAIGenerator(unittest.TestCase):
 
         self.assertIn("temporarily unavailable", str(context.exception))
 
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_ollama_connection_refused_friendly_message(self, mock_generate):
+        """Verify friendly error message when Ollama server is offline."""
+        mock_generate.side_effect = Exception(
+            "Connection error. [Errno 111] Connection refused"
+        )
+        ollama_gen = AIGenerator(provider="ollama")
+
+        with self.assertRaises(RuntimeError) as context:
+            ollama_gen.generate_component_data("https://github.com/owner/repo")
+
+        self.assertIn(
+            "Could not connect to Ollama local server", str(context.exception)
+        )
+        self.assertIn("running locally", str(context.exception))
+
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_remote_connection_error_friendly_message(self, mock_generate):
+        """Verify friendly error message when remote AI API connection fails."""
+        mock_generate.side_effect = Exception("APIConnectionError - Connection error.")
+        remote_gen = AIGenerator(
+            provider="openai", base_url="https://api.openai.com/v1"
+        )
+
+        with self.assertRaises(RuntimeError) as context:
+            remote_gen.generate_component_data("https://github.com/owner/repo")
+
+        self.assertIn("Could not connect to AI API endpoint", str(context.exception))
+
     def test_run_security_checks_detects_issues(self):
         """Verify that _run_security_checks correctly flags vulnerabilities."""
         # Setup data with various security issues

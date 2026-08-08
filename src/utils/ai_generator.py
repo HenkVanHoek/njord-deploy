@@ -225,8 +225,38 @@ class AIGenerator:
                     ) from e
                 elif "400" in err_msg or "bad request" in err_msg:
                     raise RuntimeError(
-                        "AI API rejected the request as invalid " "(400 Bad Request)."
+                        "AI API rejected the request as invalid (400 Bad Request)."
                     ) from e
+                elif (
+                    "connection error" in err_msg
+                    or "connection refused" in err_msg
+                    or "connect error" in err_msg
+                    or "connecterror" in err_msg
+                    or "[errno 111]" in err_msg
+                    or "apiconnectionerror" in err_msg
+                ):
+                    provider_name = self.provider or "ollama"
+                    target_url = self.base_url or (
+                        "http://localhost:11434/v1" if provider_name == "ollama" else ""
+                    )
+                    if (
+                        provider_name == "ollama"
+                        or "localhost" in target_url
+                        or "127.0.0.1" in target_url
+                    ):
+                        url_str = f" at {target_url}" if target_url else ""
+                        raise RuntimeError(
+                            f"Could not connect to Ollama local server{url_str} "
+                            "(Connection refused). Please ensure Ollama is installed "
+                            "and running locally, or select a cloud provider "
+                            "(such as Gemini or OpenAI) with an API key."
+                        ) from e
+                    else:
+                        url_str = f" at {target_url}" if target_url else ""
+                        raise RuntimeError(
+                            f"Could not connect to AI API endpoint{url_str}. "
+                            "Please check your internet connection and API base URL."
+                        ) from e
                 elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
                     if attempt < max_attempts:
                         attempt += 1

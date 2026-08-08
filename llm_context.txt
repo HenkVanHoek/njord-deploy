@@ -5196,9 +5196,10 @@ from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
 from managers.component_manager import ComponentManager
+from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
-from node_scanner import NodeScanner
+from node_scanner import NodeScanner, get_tailscale_status
 from utils.resource_utils import get_components_paths
 
 logging.basicConfig(
@@ -5462,6 +5463,7 @@ def create_app(test_config=None):
         docs = {}
         for doc_name, filename in [
             ("Introduction", "README.md"),
+            ("User & Network Guide", "docs/USER_GUIDE.md"),
             ("Contributing Guide", "CONTRIBUTING.md"),
             ("Helper Utilities", "UTILITIES.md"),
         ]:
@@ -5591,10 +5593,44 @@ def create_app(test_config=None):
         else:
             return jsonify({"error": "Invalid update mode"}), 400
 
+    @flask_app.route("/tailscale-status", methods=["GET"])
+    def tailscale_status():
+        return jsonify(get_tailscale_status())
+
     @flask_app.route("/scan-pis", methods=["POST"])
     def scan_pis():
         data = request.get_json(silent=True) or {}
         discovery_method = data.get("discovery_method")
+        if discovery_method == "tailscale":
+            ts_status = get_tailscale_status()
+            if ts_status.get("active"):
+                return jsonify(
+                    {
+                        "hosts": ts_status.get("peers", []),
+                        "messages": [
+                            "✅ Tailscale Mesh Discovery found "
+                            f"{len(ts_status.get('peers', []))} online node(s)."
+                        ],
+                        "error": None,
+                        "detection_info": {
+                            "success": True,
+                            "method_used": "tailscale",
+                        },
+                    }
+                )
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Tailscale discovery failed: "
+                            f"{ts_status.get('reason', 'Tailscale inactive')}"
+                        ),
+                        "messages": [],
+                    }
+                ),
+                400,
+            )
+
         if discovery_method == "direct_ip":
             target_ip = data.get("direct_target_ip", "").strip()
             if not target_ip:
@@ -5723,7 +5759,7 @@ def create_app(test_config=None):
             if error:
                 logging.error(f"Scanner scan failed: {error}")
                 return (
-                    jsonify({"error": "Network scan failed.", "messages": messages}),
+                    jsonify({"error": error, "messages": messages}),
                     500,
                 )
             return jsonify(
@@ -5916,9 +5952,66 @@ def create_app(test_config=None):
 
             if not ostemplate:
                 default_storage = next(iter(storages), "local")
-                ostemplate = (
-                    f"{default_storage}:vztmpl/debian-12-standard_12.2-1_"
-                    f"amd64.tar.zst"
+                try:
+                    aplinfo_res = client.get(f"nodes/{node}/aplinfo")
+                    apl_data = aplinfo_res.get("data", [])
+                    deb_apls = [
+                        item
+                        for item in apl_data
+                        if "debian" in item.get("package", "").lower()
+                        and "standard" in item.get("package", "").lower()
+                    ]
+                    if not deb_apls:
+                        deb_apls = [
+                            item
+                            for item in apl_data
+                            if "ubuntu" in item.get("package", "").lower()
+                        ]
+                    if deb_apls:
+                        deb_apls.sort(key=lambda x: x.get("template", ""), reverse=True)
+                        target_tpl = deb_apls[0].get("template")
+                        if target_tpl:
+                            logging.info(
+                                f"Downloading LXC template '{target_tpl}' "
+                                f"to '{default_storage}' storage on node '{node}'..."
+                            )
+                            dl_res = client.post(
+                                f"nodes/{node}/aplinfo",
+                                data={
+                                    "template": target_tpl,
+                                    "storage": default_storage,
+                                },
+                            )
+                            upid = dl_res.get("data")
+                            if upid and isinstance(upid, str):
+                                for _ in range(30):
+                                    time.sleep(3)
+                                    status_res = client.get(
+                                        f"nodes/{node}/tasks/{upid}/status"
+                                    )
+                                    s_data = status_res.get("data", {})
+                                    if s_data.get("status") == "stopped":
+                                        break
+                            ostemplate = f"{default_storage}:vztmpl/{target_tpl}"
+                except Exception as apl_err:
+                    logging.warning(
+                        f"Failed to auto-download LXC template via aplinfo: {apl_err}"
+                    )
+
+            if not ostemplate:
+                storage_display = storages[0] if storages else "local"
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                f"No LXC template found on Proxmox host. "
+                                f"Please download a Debian LXC template in Proxmox "
+                                f"(Storage '{storage_display}' -> "
+                                f"CT Templates -> Templates)."
+                            )
+                        }
+                    ),
+                    400,
                 )
 
             # 4. Create LXC
@@ -6055,8 +6148,14 @@ def create_app(test_config=None):
             ]
 
             for cmd in install_commands:
-                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
-                if exit_code != 0:
+                max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
+                for attempt in range(max_retries):
+                    exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                    if exit_code == 0:
+                        break
+                    if "lock" in stdout and attempt < max_retries - 1:
+                        time.sleep(5)
+                        continue
                     return (
                         jsonify(
                             {
@@ -6147,6 +6246,7 @@ def create_app(test_config=None):
         cores = int(data.get("cores", 4))
         memory = int(data.get("memory", 8192))
         storage_name = str(data.get("storage_name", "local-lvm"))
+        storage_size = data.get("storage_size")
         node = str(data.get("node", os.getenv("PROXMOX_NODE", "pve")))
         password = str(data.get("password", "PiSelfhostLXC2026!"))
         hostname = str(data.get("hostname", "")).strip()
@@ -6284,6 +6384,33 @@ def create_app(test_config=None):
                         pass
                     time.sleep(2)
 
+            # 4.5 Resize Disk (if requested)
+            if storage_size:
+                try:
+                    storage_size_gb = int(storage_size)
+                    vm_cfg_res = client.get(f"nodes/{node}/qemu/{vmid}/config")
+                    vm_cfg = vm_cfg_res.get("data", {})
+                    bootdisk = vm_cfg.get("bootdisk")
+                    if not bootdisk:
+                        for candidate in ["scsi0", "virtio0", "sata0", "ide0"]:
+                            if candidate in vm_cfg:
+                                bootdisk = candidate
+                                break
+                    if not bootdisk:
+                        bootdisk = "scsi0"
+
+                    logging.info(
+                        f"Resizing VM {vmid} disk '{bootdisk}' to {storage_size_gb}G..."
+                    )
+                    client.resize_vm_disk(
+                        node=node,
+                        vmid=vmid,
+                        disk=bootdisk,
+                        size=f"{storage_size_gb}G",
+                    )
+                except Exception as resize_err:
+                    logging.warning(f"Could not resize VM {vmid} disk: {resize_err}")
+
             # 5. Configure Cloud-Init
             import urllib.parse
 
@@ -6296,9 +6423,18 @@ def create_app(test_config=None):
                 "sshkeys": urllib.parse.quote(pubkey),
                 "ipconfig0": "ip=dhcp",
                 "agent": "enabled=1",
-                "ide2": f"{storage_name}:cloudinit",
+                "cpu": "host",
             }
-            client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+            try:
+                client.configure_vm(node=node, vmid=vmid, config_data=config_data)
+            except Exception as cfg_err:
+                if "already exists" in str(cfg_err):
+                    logging.warning(
+                        f"Cloud-Init drive already exists for VM {vmid}: {cfg_err}"
+                    )
+                else:
+                    config_data["ide2"] = f"{storage_name}:cloudinit"
+                    client.configure_vm(node=node, vmid=vmid, config_data=config_data)
 
             # 6. Start the VM
             logging.info(f"Starting VM {vmid}...")
@@ -6377,8 +6513,14 @@ def create_app(test_config=None):
             )
 
             for cmd in install_commands:
-                exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
-                if exit_code != 0:
+                max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
+                for attempt in range(max_retries):
+                    exit_code, stdout = ssh.execute_command(cmd, lambda x: None)
+                    if exit_code == 0:
+                        break
+                    if "lock" in stdout and attempt < max_retries - 1:
+                        time.sleep(5)
+                        continue
                     return (
                         jsonify(
                             {
@@ -6906,8 +7048,17 @@ def create_app(test_config=None):
         snapshot, err = analysis_scanner.get_system_snapshot(device.get("ip"))
 
         if err:
+            logging.error(
+                f"Pre-deployment analysis failed for {device.get('ip')}: {err}"
+            )
             return (
-                jsonify({"error": "Failed to retrieve system details for analysis."}),
+                jsonify(
+                    {
+                        "error": (
+                            f"Failed to retrieve system details for analysis: {err}"
+                        )
+                    }
+                ),
                 500,
             )
 
@@ -7102,6 +7253,31 @@ def create_app(test_config=None):
         if not isinstance(task, dict):
             return jsonify({"error": "Task not found"}), 404
         return jsonify(task)
+
+    @flask_app.route("/api/deployment/<target_task_id>/evaluate", methods=["POST"])
+    def evaluate_deployment_task(target_task_id):
+        """Evaluates deployment session logs and returns a health report."""
+        task = flask_app.deployment_tasks.get(target_task_id)
+        if not isinstance(task, dict):
+            return jsonify({"error": "Deployment task not found"}), 404
+
+        data = request.get_json(force=True) if request.data else {}
+        component_name = data.get("component_name", "deployed-stack")
+        use_ai = data.get("use_ai", True)
+
+        logs_list = task.get("logs", [])
+        log_text = "\n".join(logs_list)
+        status_str = task.get("status", "failed")
+        exit_code = 0 if status_str == "completed" else 1
+
+        result = evaluate_deployment(
+            component_name=component_name,
+            log_text=log_text,
+            exit_code=exit_code,
+            container_status={"running": exit_code == 0},
+            use_ai=use_ai,
+        )
+        return jsonify(result)
 
     @flask_app.route("/get-container-logs", methods=["POST"])
     def get_container_logs():
@@ -8649,6 +8825,14 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                         <input type="text" class="form-control" name="direct_target_ip" id="direct_target_ip" placeholder="e.g., 100.121.216.150 or b8:27:eb:01:02:03" aria-label="Direct Target IP">
                     </div>
                     <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="scanMethod" id="method_tailscale" value="tailscale" disabled>
+                        <label class="form-check-label" for="method_tailscale">
+                            <strong><i class="fa-solid fa-network-wired me-1"></i> Tailscale / Headscale Mesh Discovery</strong>
+                            <span class="badge bg-secondary ms-2" id="tailscale-status-badge"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Checking...</span>
+                            <span class="d-block small text-muted">Automatically discover online nodes across your Tailscale / Headscale overlay network.</span>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2">
                         <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_lxc" value="proxmox_lxc">
                         <label class="form-check-label fw-bold" for="method_proxmox_lxc">
                             <strong>Create New Proxmox LXC Target</strong>
@@ -8712,6 +8896,10 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             <div class="col-sm-6">
                                 <label for="vm_storage_name" class="form-label small mb-1">Storage Pool</label>
                                 <input type="text" class="form-control form-control-sm" id="vm_storage_name" value="local-lvm">
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="vm_storage_size" class="form-label small mb-1">Storage Size (GB)</label>
+                                <input type="number" class="form-control form-control-sm" id="vm_storage_size" value="32" min="10">
                             </div>
                             <div class="col-sm-6">
                                 <label for="vm_username" class="form-label small mb-1">VM Username</label>
@@ -8788,7 +8976,12 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                 <input type="text" class="form-control form-control-sm" id="master-username" placeholder="Username">
                             </div>
                             <div class="col-sm-4">
-                                <input type="password" class="form-control form-control-sm" id="master-password" placeholder="Password">
+                                <div class="input-group input-group-sm">
+                                    <input type="password" class="form-control form-control-sm" id="master-password" placeholder="Password">
+                                    <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-sm-2 d-grid">
                                 <button class="btn btn-secondary btn-sm" id="apply-to-all-btn">Apply</button>
@@ -8798,7 +8991,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             </div>
                         </div>
                     </div>
-                    <div id="device-cards-container" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 row-cols-xxl-6 g-3"></div>
+                    <div id="device-cards-container" class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3"></div>
                     <div class="d-grid gap-2 col-8 mx-auto my-4" id="step2-action-area"></div>
                 </div>
             `;
@@ -8883,13 +9076,23 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
 
             const colPassword = document.createElement('div');
             colPassword.className = 'col-sm-6';
+            const passGroup = document.createElement('div');
+            passGroup.className = 'input-group input-group-sm';
             const passwordInput = document.createElement('input');
             passwordInput.type = 'password';
             passwordInput.className = 'form-control form-control-sm device-password';
             passwordInput.placeholder = 'Password';
             passwordInput.value = savedPass;
             passwordInput.disabled = !isManaged;
-            colPassword.appendChild(passwordInput);
+            const passToggleBtn = document.createElement('button');
+            passToggleBtn.type = 'button';
+            passToggleBtn.className = 'btn btn-outline-secondary btn-sm toggle-password-btn';
+            passToggleBtn.tabIndex = -1;
+            passToggleBtn.title = 'Show/Hide Password';
+            passToggleBtn.innerHTML = '<i class="fa-solid fa-eye"></i>';
+            passGroup.appendChild(passwordInput);
+            passGroup.appendChild(passToggleBtn);
+            colPassword.appendChild(passGroup);
 
             rowG2.appendChild(colUsername);
             rowG2.appendChild(colPassword);
@@ -9545,9 +9748,17 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
         } else if (variable.type === 'select' && variable.options) {
             const optionsHTML = variable.options.map(opt => `<option value="${escapeHTML(opt)}" ${opt === savedValue ? 'selected' : ''}>${escapeHTML(opt)}</option>`).join('');
             inputHTML = `<select class="form-select form-select-sm" id="${inputId}" name="${escapeHTML(variable.id)}">${optionsHTML}</select>`;
+        } else if (variable.type === 'password') {
+            inputHTML = `
+                <div class="input-group input-group-sm">
+                    <input type="password" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">
+                    <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                        <i class="fa-solid fa-eye"></i>
+                    </button>
+                </div>
+            `;
         } else {
-            const inputType = variable.type === 'password' ? 'password' : 'text';
-            inputHTML = `<input type="${inputType}" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">`;
+            inputHTML = `<input type="text" class="form-control form-control-sm" id="${inputId}" name="${escapeHTML(variable.id)}" value="${escapeHTML(savedValue)}">`;
         }
 
         return `
@@ -10597,15 +10808,26 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                     const finalActions = document.getElementById('final-actions-container');
                     if (finalActions) {
                         finalActions.innerHTML = `
-                            <div class="sticky-action-bar">
+                            <div class="sticky-action-bar d-flex gap-2 justify-content-center">
                                  <button id="show-summary-btn" class="btn btn-info btn-lg">
                                     <i class="fa-solid fa-list-check me-2"></i>Access Your Services
+                                 </button>
+                                 <button id="ai-eval-btn" class="btn btn-primary btn-lg">
+                                    <i class="fa-solid fa-robot me-2"></i>AI Health Report
                                  </button>
                             </div>`;
                         document.getElementById('show-summary-btn').addEventListener('click', async () => {
                             await showServicesSummary(taskId);
                         });
+                        document.getElementById('ai-eval-btn').addEventListener('click', async () => {
+                            await triggerDeploymentEvaluation(taskId);
+                        });
                     }
+
+                    // Automatically trigger AI evaluation modal upon completion
+                    setTimeout(() => {
+                        triggerDeploymentEvaluation(taskId);
+                    }, 800);
                 }
             };
         } catch (error) {
@@ -10754,6 +10976,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
         const autoRadio = document.getElementById('autoDetectRadio');
         const manualRadio = document.getElementById('manualScanRadio');
         const directRadio = document.getElementById('method_direct_ip');
+        const tsRadio = document.getElementById('method_tailscale');
         const lxcRadio = document.getElementById('method_proxmox_lxc');
         const lxcContainer = document.getElementById('proxmox_lxc_input_container');
 
@@ -10765,6 +10988,36 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
         const refreshBtn = document.getElementById('refresh-proxmox-targets-btn');
         const targetSelect = /** @type {HTMLSelectElement} */ (document.getElementById('proxmox_target_select'));
         const targetsError = document.getElementById('proxmox_targets_error');
+
+        // Check Tailscale status dynamically on Step 1 setup
+        fetch('/tailscale-status')
+            .then(res => res.json())
+            .then(data => {
+                const badge = document.getElementById('tailscale-status-badge');
+                if (!tsRadio || !badge) return;
+                if (data.active) {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = false;
+                    badge.className = 'badge bg-success ms-2';
+                    badge.innerHTML = `<i class="fa-solid fa-check me-1"></i> Active (${data.peers ? data.peers.length : 0} peers)`;
+                } else if (data.timed_out) {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = false;
+                    badge.className = 'badge bg-warning text-dark ms-2';
+                    badge.innerHTML = '<i class="fa-solid fa-clock me-1"></i> Active (Busy / Click to Scan)';
+                    badge.title = 'Tailscale CLI daemon timed out during background check, but radio option remains available.';
+                } else {
+                    (/** @type {HTMLInputElement} */ (tsRadio)).disabled = true;
+                    badge.className = 'badge bg-secondary ms-2';
+                    badge.textContent = 'Inactive / Not Found';
+                    badge.title = data.reason || 'Tailscale is not active on this host';
+                }
+            })
+            .catch(() => {
+                const badge = document.getElementById('tailscale-status-badge');
+                if (badge) {
+                    badge.className = 'badge bg-secondary ms-2';
+                    badge.textContent = 'Inactive';
+                }
+            });
 
         const loadVmTemplates = async () => {
             const templateSelect = document.getElementById('vm_template_select');
@@ -10803,6 +11056,78 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
             });
         }
 
+        const methodHelpMap = {
+            auto: {
+                icon: 'fa-solid fa-wifi',
+                title: 'Auto-Detect Local Subnet (L2 ARP Broadcast)',
+                text: 'Scans your primary local subnet using L2 ARP broadcasts (nmap -sn -PR). Ideal for Raspberry Pi or SBCs connected directly to your local router.',
+                snippet: 'ssh-copy-id pi@192.168.1.50'
+            },
+            manual: {
+                icon: 'fa-solid fa-network-wired',
+                title: 'Manual Subnet Scan (Custom CIDR)',
+                text: 'Scans a custom IP range (e.g. 192.168.2.0/24 or 10.0.0.0/24). Use this if your target devices are on a separate VLAN, IoT network, or sub-router.',
+                snippet: 'ssh-copy-id username@192.168.2.100'
+            },
+            direct: {
+                icon: 'fa-solid fa-bullseye',
+                title: 'Direct Target Deployment (IP / Hostname / MAC)',
+                text: 'Directly connects to a specific IP (192.168.1.50 or Tailscale IP 100.x.y.z), local domain (my-server.local), or MAC address without scanning the network.',
+                snippet: 'ssh-copy-id username@target-ip'
+            },
+            tailscale: {
+                icon: 'fa-solid fa-diagram-project',
+                title: 'Tailscale / Headscale Mesh Discovery',
+                text: 'Automatically queries your local Tailscale daemon status to list all online nodes across your global overlay network. Bypasses L2 local subnet sweeps entirely.',
+                snippet: 'ssh-copy-id username@100.x.y.z'
+            },
+            lxc: {
+                icon: 'fa-solid fa-box',
+                title: 'Automated Proxmox LXC Provisioning',
+                text: 'Provisions a brand new Debian LXC container on your Proxmox VE server via API/SSH, automatically installs Docker Engine, and sets up root SSH access.',
+                snippet: 'ssh-copy-id root@proxmox-host-ip'
+            },
+            vm: {
+                icon: 'fa-solid fa-desktop',
+                title: 'Automated Proxmox QEMU VM Cloning',
+                text: 'Clones a clean Debian cloud-init master template on your Proxmox VE server, configures CPU/RAM/Disk, and boots up a brand-new QEMU Virtual Machine target.',
+                snippet: 'ssh-copy-id debian@vm-ip'
+            },
+            existing: {
+                icon: 'fa-solid fa-server',
+                title: 'Existing Proxmox VE Target Selection',
+                text: 'Fetches existing LXC containers and VMs from your Proxmox server, allowing you to select and auto-start an existing target for service deployment.',
+                snippet: 'ssh-copy-id root@target-ip'
+            }
+        };
+
+        const updateMethodHelpCard = (key) => {
+            const data = methodHelpMap[key] || methodHelpMap.auto;
+            const iconEl = document.getElementById('method-help-icon');
+            const titleEl = document.getElementById('method-help-title');
+            const textEl = document.getElementById('method-help-text');
+            const snippetEl = document.getElementById('method-help-snippet');
+            if (iconEl) iconEl.innerHTML = `<i class="${data.icon}"></i>`;
+            if (titleEl) titleEl.textContent = data.title;
+            if (textEl) textEl.textContent = data.text;
+            if (snippetEl) snippetEl.textContent = data.snippet;
+        };
+
+        const copyBtn = document.getElementById('copy-snippet-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const snippetEl = document.getElementById('method-help-snippet');
+                if (snippetEl && snippetEl.textContent) {
+                    navigator.clipboard.writeText(snippetEl.textContent).then(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i> Copied!';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-solid fa-copy me-1"></i> Copy';
+                        }, 2000);
+                    });
+                }
+            });
+        }
+
         const updateInputs = async () => {
             if (autoRadio && (/** @type {HTMLInputElement} */ (autoRadio)).checked) {
                 manualInput.disabled = true;
@@ -10811,6 +11136,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('auto');
             }
             if (manualRadio && (/** @type {HTMLInputElement} */ (manualRadio)).checked) {
                 manualInput.disabled = false;
@@ -10820,6 +11146,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('manual');
             }
             if (directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked) {
                 manualInput.disabled = true;
@@ -10831,6 +11158,16 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                     if (directIpInput) directIpInput.focus();
                 }
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-search me-2"></i> Begin Scan';
+                updateMethodHelpCard('direct');
+            }
+            if (tsRadio && (/** @type {HTMLInputElement} */ (tsRadio)).checked) {
+                manualInput.disabled = true;
+                if (directIpContainer) directIpContainer.classList.add('d-none');
+                if (lxcContainer) lxcContainer.classList.add('d-none');
+                if (vmContainer) vmContainer.classList.add('d-none');
+                if (existingContainer) existingContainer.classList.add('d-none');
+                if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Discover Tailscale Mesh';
+                updateMethodHelpCard('tailscale');
             }
             if (lxcRadio && (/** @type {HTMLInputElement} */ (lxcRadio)).checked) {
                 manualInput.disabled = true;
@@ -10839,6 +11176,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (lxcContainer) lxcContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision LXC';
+                updateMethodHelpCard('lxc');
             }
             if (vmRadio && (/** @type {HTMLInputElement} */ (vmRadio)).checked) {
                 manualInput.disabled = true;
@@ -10847,6 +11185,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 if (existingContainer) existingContainer.classList.add('d-none');
                 if (vmContainer) vmContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-cloud-plus me-2"></i> Create & Provision VM';
+                updateMethodHelpCard('vm');
                 await loadVmTemplates();
             }
             if (existingRadio && (/** @type {HTMLInputElement} */ (existingRadio)).checked) {
@@ -10856,12 +11195,14 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 if (vmContainer) vmContainer.classList.add('d-none');
                 if (existingContainer) existingContainer.classList.remove('d-none');
                 if (scanBtn) scanBtn.innerHTML = '<i class="fa-solid fa-network-wired me-2"></i> Use Selected Target';
+                updateMethodHelpCard('existing');
             }
         };
 
         if (autoRadio) autoRadio.addEventListener('change', updateInputs);
         if (manualRadio) manualRadio.addEventListener('change', updateInputs);
         if (directRadio) directRadio.addEventListener('change', updateInputs);
+        if (tsRadio) tsRadio.addEventListener('change', updateInputs);
         if (lxcRadio) lxcRadio.addEventListener('change', updateInputs);
         if (vmRadio) vmRadio.addEventListener('change', updateInputs);
         if (existingRadio) existingRadio.addEventListener('change', updateInputs);
@@ -11033,12 +11374,13 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 setButtonState(scanBtn, true, {loadingText: 'Provisioning VM...'});
                 updateWizardFooter('Cloning Proxmox VM, configuring Cloud-Init, and installing Docker (this takes a few minutes)...', 'primary');
 
-                const coresVal = parseInt(document.getElementById('vm_cores').value) || 2;
-                const memVal = parseInt(document.getElementById('vm_memory').value) || 4096;
-                const storageNameVal = document.getElementById('vm_storage_name').value || 'local-lvm';
-                const hostnameVal = document.getElementById('vm_hostname').value.trim();
-                const templateManualVal = document.getElementById('vm_template_manual').value.trim();
-                const usernameVal = document.getElementById('vm_username').value.trim() || 'debian';
+                const coresVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_cores')).value) || 2;
+                const memVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_memory')).value) || 4096;
+                const storageNameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_storage_name'))).value || 'local-lvm';
+                const storageSizeVal = parseInt(/** @type {HTMLInputElement} */ (document.getElementById('vm_storage_size')).value) || 32;
+                const hostnameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_hostname'))).value.trim();
+                const templateManualVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_template_manual'))).value.trim();
+                const usernameVal = (/** @type {HTMLInputElement} */ (document.getElementById('vm_username'))).value.trim() || 'debian';
 
                 if (!templateManualVal) {
                     updateWizardFooter('<i class="fa-solid fa-xmark me-2"></i>Please select a template or enter a Template VMID.', 'danger');
@@ -11055,6 +11397,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             cores: coresVal,
                             memory: memVal,
                             storage_name: storageNameVal,
+                            storage_size: storageSizeVal,
                             hostname: hostnameVal,
                             template_vmid: templateManualVal,
                             username: usernameVal
@@ -11095,17 +11438,19 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
 
             const isDirectIp = directRadio && (/** @type {HTMLInputElement} */ (directRadio)).checked;
             const isManual = manualRadio && (/** @type {HTMLInputElement} */ (manualRadio)).checked;
+            const isTailscale = tsRadio && (/** @type {HTMLInputElement} */ (tsRadio)).checked;
             const subnetToScan = isManual ? manualInput.value : null;
             const directIpValue = isDirectIp ? (directIpInput ? directIpInput.value : "") : null;
 
             try {
+                const discoveryMethod = isTailscale ? 'tailscale' : (isDirectIp ? 'direct_ip' : (isManual ? 'manual' : 'auto'));
                 /** @type {ScanData} */
                 const data = await fetchAPI('/scan-pis', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         subnet: subnetToScan,
-                        discovery_method: isDirectIp ? 'direct_ip' : (isManual ? 'manual' : 'auto'),
+                        discovery_method: discoveryMethod,
                         direct_target_ip: directIpValue
                     })
                 });
@@ -11157,6 +11502,117 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
             setTimeout(updateLogoVisibility, 50);
         });
     });
+
+    // Delegated click event for password visibility toggle buttons
+    document.addEventListener('click', (e) => {
+        const target = /** @type {HTMLElement} */ (e.target);
+        const btn = target.closest('.toggle-password-btn');
+        if (!btn) return;
+        e.preventDefault();
+        const group = btn.closest('.input-group');
+        if (!group) return;
+        const input = /** @type {HTMLInputElement | null} */ (group.querySelector('input'));
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+        }
+    });
+
+    /**
+     * Triggers AI Deployment Health Evaluation and displays report modal.
+     * @param {string} taskId
+     * @param {string} [componentName='NjordDeploy Service Stack']
+     */
+    async function triggerDeploymentEvaluation(taskId, componentName = 'NjordDeploy Service Stack') {
+        const modalEl = document.getElementById('deploymentEvalModal');
+        if (!modalEl) return;
+
+        // @ts-ignore
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const banner = document.getElementById('evalStatusBanner');
+        const icon = document.getElementById('evalStatusIcon');
+        const title = document.getElementById('evalStatusTitle');
+        const summary = document.getElementById('evalSummaryText');
+        const actionCard = document.getElementById('evalActionCard');
+        const bugCard = document.getElementById('evalBugCard');
+
+        if (banner) banner.className = 'alert alert-info d-flex align-items-center mb-3';
+        if (icon) icon.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        if (title) title.textContent = 'Analyzing Deployment Log & Health Status...';
+        if (summary) summary.textContent = 'Evaluating log output with AI provider...';
+        if (actionCard) actionCard.classList.add('d-none');
+        if (bugCard) bugCard.classList.add('d-none');
+
+        modal.show();
+
+        try {
+            const response = await fetch(`/api/deployment/${taskId}/evaluate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ component_name: componentName, use_ai: true })
+            });
+            const res = await response.json();
+
+            if (summary) summary.textContent = res.summary || 'No summary provided.';
+
+            if (res.status === 'GREEN') {
+                if (banner) banner.className = 'alert alert-success d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-check text-success"></i>';
+                if (title) title.textContent = 'Deployment Healthy (Everything OK)';
+            } else if (res.status === 'YELLOW') {
+                if (banner) banner.className = 'alert alert-warning d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-warning"></i>';
+                if (title) title.textContent = 'Configuration Tuning Recommended';
+
+                if (actionCard) actionCard.classList.remove('d-none');
+                const actionText = document.getElementById('evalActionText');
+                if (actionText) actionText.textContent = res.user_action || 'Review configuration parameters.';
+
+                if (res.doc_anchor) {
+                    const docContainer = document.getElementById('evalDocLinkContainer');
+                    const docLink = document.getElementById('evalDocLink');
+                    if (docContainer) docContainer.classList.remove('d-none');
+                    if (docLink) {
+                        // @ts-ignore
+                        docLink.href = `https://github.com/HenkVanHoek/njord-deploy/blob/main/docs/${res.doc_anchor}`;
+                    }
+                }
+            } else {
+                if (banner) banner.className = 'alert alert-danger d-flex align-items-center mb-3';
+                if (icon) icon.innerHTML = '<i class="fa-solid fa-circle-xmark text-danger"></i>';
+                if (title) title.textContent = 'Showstopper / Bug Identified';
+
+                if (bugCard) bugCard.classList.remove('d-none');
+
+                const keywords = res.github_keywords || componentName;
+                const searchUrl = `https://github.com/HenkVanHoek/njord-deploy/issues?q=${encodeURIComponent(keywords)}`;
+                const searchLink = document.getElementById('evalSearchGithubLink');
+                if (searchLink) {
+                    // @ts-ignore
+                    searchLink.href = searchUrl;
+                }
+
+                const issueTitle = `[Bug] Deployment failure in ${componentName}`;
+                const issueBody = `### Component\n${componentName}\n\n### Summary\n${res.summary}\n\n### Log Excerpt\n${res.user_action}`;
+                const newIssueUrl = `https://github.com/HenkVanHoek/njord-deploy/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+                const reportLink = document.getElementById('evalReportGithubLink');
+                if (reportLink) {
+                    // @ts-ignore
+                    reportLink.href = newIssueUrl;
+                }
+            }
+        } catch (err) {
+            if (banner) banner.className = 'alert alert-danger d-flex align-items-center mb-3';
+            if (icon) icon.innerHTML = '<i class="fa-solid fa-exclamation-circle text-danger"></i>';
+            if (title) title.textContent = 'Evaluation Failed';
+            if (summary) summary.textContent = 'Failed to analyze deployment logs: ' + err.message;
+        }
+    }
 
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();
@@ -11463,6 +11919,14 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                 <input type="text" class="form-control" name="direct_target_ip" id="direct_target_ip" placeholder="e.g., 100.121.216.150 or b8:27:eb:01:02:03" aria-label="Direct Target IP">
                             </div>
                         </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="radio" name="scanMethod" id="method_tailscale" value="tailscale" disabled>
+                            <label class="form-check-label fw-bold" for="method_tailscale">
+                                <i class="fa-solid fa-network-wired me-1"></i> Tailscale / Headscale Mesh Discovery
+                                <span class="badge bg-secondary ms-2" id="tailscale-status-badge"><i class="fa-solid fa-circle-notch fa-spin me-1"></i>Checking...</span>
+                            </label>
+                            <div class="form-text mt-0 mb-2">Automatically discover online nodes across your Tailscale / Headscale overlay network.</div>
+                        </div>
                         <div class="form-check text-start">
                             <input class="form-check-input" type="radio" name="scanMethod" id="method_proxmox_lxc" value="proxmox_lxc">
                             <label class="form-check-label fw-bold" for="method_proxmox_lxc">
@@ -11553,6 +12017,38 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             </div>
                         </div>
                     </div>
+
+                    <!-- Dynamic Contextual Method Help Box -->
+                    <div class="card border-0 shadow-sm mt-3 text-start" id="method-help-card" style="background-color: var(--glass-bg, rgba(248, 249, 250, 0.95)); border: 1px solid var(--glass-border, rgba(0,0,0,0.08)) !important;">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-start">
+                                <div class="me-3 fs-4 text-primary" id="method-help-icon">
+                                    <i class="fa-solid fa-wifi"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="fw-bold mb-1" id="method-help-title">Auto-Detect Local Subnet (L2 ARP Broadcast)</h6>
+                                    <p class="small text-muted mb-2" id="method-help-text">Scans your primary local subnet using L2 ARP broadcasts. Best for Raspberry Pi or SBCs on your local network.</p>
+                                    <div class="d-flex align-items-center bg-body p-2 rounded border small" id="method-help-snippet-container">
+                                        <code class="me-2 flex-grow-1" id="method-help-snippet">ssh-copy-id pi@192.168.1.50</code>
+                                        <button class="btn btn-sm btn-outline-primary py-0 px-2" id="copy-snippet-btn" type="button" title="Copy command">
+                                            <i class="fa-solid fa-copy me-1"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info border-0 shadow-sm mt-3 text-start small">
+                        <div class="d-flex align-items-top">
+                            <i class="fa-solid fa-key text-primary me-2 mt-1 fs-5"></i>
+                            <div>
+                                <strong>SSH Key Authentication Tip:</strong> For passwordless deployment or servers with password login disabled, authorize your public SSH key on the target node using:<br>
+                                <code>ssh-copy-id username@target-ip</code>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 </div>
 
                 <div class="d-grid gap-2 col-8 mx-auto my-4">
@@ -11570,8 +12066,68 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
     </div>
 </div>
 
+<!-- AI Deployment Health Evaluation Modal -->
+<div class="modal fade" id="deploymentEvalModal" tabindex="-1" aria-labelledby="deploymentEvalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0" id="evalModalHeader">
+                <h5 class="modal-title fw-bold" id="deploymentEvalModalLabel">
+                    <i class="fa-solid fa-robot me-2 text-primary"></i> Deployment Health Report
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-start">
+                <div id="evalStatusBanner" class="alert d-flex align-items-center mb-3">
+                    <div id="evalStatusIcon" class="me-3 fs-2"></div>
+                    <div>
+                        <h6 class="fw-bold mb-0" id="evalStatusTitle">Analyzing Deployment Results...</h6>
+                        <span class="small" id="evalStatusBadge"></span>
+                    </div>
+                </div>
+
+                <div class="card bg-light border-0 mb-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Summary</h6>
+                        <p class="mb-0 text-dark" id="evalSummaryText">Loading log analysis...</p>
+                    </div>
+                </div>
+
+                <div class="card border-warning mb-3 d-none" id="evalActionCard">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-warning-emphasis mb-2"><i class="fa-solid fa-wrench me-2"></i>Recommended Action</h6>
+                        <p class="mb-2 small text-dark" id="evalActionText"></p>
+                        <div id="evalDocLinkContainer" class="mt-2 d-none">
+                            <a id="evalDocLink" href="#" target="_blank" class="btn btn-sm btn-outline-warning">
+                                <i class="fa-solid fa-book-bookmark me-1"></i> View User Guide
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-danger mb-3 d-none" id="evalBugCard">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-bug me-2"></i>Software / Package Issue Identified</h6>
+                        <p class="mb-2 small text-dark" id="evalBugText">A template or system execution issue was detected.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a id="evalSearchGithubLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <i class="fa-brands fa-github me-1"></i> Search Existing Issues
+                            </a>
+                            <a id="evalReportGithubLink" href="#" target="_blank" class="btn btn-sm btn-danger">
+                                <i class="fa-brands fa-github me-1"></i> Report Issue on GitHub
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}?v=1.5"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=1.6"></script>
 </body>
 </html>
 
@@ -12043,7 +12599,12 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                         </div>
                                         <div class="col-md-6">
                                             <label for="PROXMOX_TOKEN_SECRET" class="form-label small fw-bold">API Token Secret</label>
-                                            <input type="password" class="form-control" id="PROXMOX_TOKEN_SECRET" value="{{ env_vars.get('PROXMOX_TOKEN_SECRET', '') }}" placeholder="••••••••••••••••••••••••••••••••">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="PROXMOX_TOKEN_SECRET" value="{{ env_vars.get('PROXMOX_TOKEN_SECRET', '') }}" placeholder="••••••••••••••••••••••••••••••••">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="PROXMOX_NODE" class="form-label small fw-bold">Default Target Node</label>
@@ -12089,7 +12650,12 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                         </div>
                                         <div class="col-12">
                                             <label for="PI_SCANNER_PASSWORD" class="form-label small fw-bold">Scanner SSH Password</label>
-                                            <input type="password" class="form-control" id="PI_SCANNER_PASSWORD" value="{{ env_vars.get('PI_SCANNER_PASSWORD', 'dummy') }}">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="PI_SCANNER_PASSWORD" value="{{ env_vars.get('PI_SCANNER_PASSWORD', 'dummy') }}">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div class="col-6">
                                             <label for="PUID" class="form-label small fw-bold">Docker PUID</label>
@@ -12116,7 +12682,12 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                         </div>
                                         <div class="col-12">
                                             <label for="DB_PASS" class="form-label small fw-bold">Default DB Password</label>
-                                            <input type="password" class="form-control" id="DB_PASS" value="{{ env_vars.get('DB_PASS', 'secure_password') }}">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="DB_PASS" value="{{ env_vars.get('DB_PASS', 'secure_password') }}">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -12131,7 +12702,12 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label for="GEMINI_API_KEY" class="form-label small fw-bold">Gemini API Key</label>
-                                            <input type="password" class="form-control" id="GEMINI_API_KEY" value="{{ env_vars.get('GEMINI_API_KEY', '') }}" placeholder="AIzaSy...">
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="GEMINI_API_KEY" value="{{ env_vars.get('GEMINI_API_KEY', '') }}" placeholder="AIzaSy...">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                             <div class="form-text small mt-1">Used by the component editor to generate software profiles automatically.</div>
                                         </div>
                                     </div>
@@ -12253,6 +12829,21 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
             } finally {
                 saveRawBtn.disabled = false;
                 saveRawBtn.innerHTML = originalHtml;
+        // Password toggle button listener
+        document.addEventListener("click", (e) => {
+            const btn = e.target.closest(".toggle-password-btn");
+            if (!btn) return;
+            e.preventDefault();
+            const group = btn.closest(".input-group");
+            if (!group) return;
+            const input = group.querySelector("input");
+            if (!input) return;
+
+            const isPassword = input.type === "password";
+            input.type = isPassword ? "text" : "password";
+            const icon = btn.querySelector("i");
+            if (icon) {
+                icon.className = isPassword ? "fa-solid fa-eye-slash" : "fa-solid fa-eye";
             }
         });
     });
@@ -12359,39 +12950,9 @@ def create_app(test_config=None):
 
     def save_api_key_to_env(key: str, provider: str = "gemini"):
         """Saves the API key to the local .env file based on the provider."""
-        env_map = {
-            "gemini": "GEMINI_API_KEY",
-            "hostyourai": "HOSTYOURAI_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "custom": "CUSTOM_AI_API_KEY",
-        }
-        var_name = env_map.get(provider)
-        if not var_name:
-            return
+        from utils.ai_provider_manager import save_api_key_to_env_file
 
-        env_path = project_root / ".env"
-        lines = []
-        key_written = False
-        if env_path.exists():
-            with open(env_path, "r") as f:
-                lines = f.readlines()
-
-            for i, line in enumerate(lines):
-                if line.strip().startswith(f"{var_name}="):
-                    lines[i] = f"{var_name}={key}\n"
-                    key_written = True
-                    break
-
-        if not key_written:
-            if lines and not lines[-1].endswith("\n"):
-                lines.append("\n")
-            lines.append(f"{var_name}={key}\n")
-
-        with open(env_path, "w") as f:
-            f.writelines(lines)
-
-        # Update current process environment
-        os.environ[var_name] = key
+        save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
 
     meta_file_path, temp_path_obj = get_components_paths()
     meta_file = str(meta_file_path)
@@ -12999,9 +13560,20 @@ def create_app(test_config=None):
 
         return jsonify({"hashed_user_string": hashed_str}), 200
 
+    @app.route("/api/ai/providers", methods=["GET"])
+    def get_ai_providers():
+        """Returns the registry of supported AI providers."""
+        from utils.ai_provider_manager import load_ai_providers_registry
+
+        providers = load_ai_providers_registry()
+        return jsonify({"providers": providers}), 200
+
     @app.route("/api/ai/status", methods=["GET", "POST"])
     def ai_status():
         """Checks the status of the requested or default AI provider."""
+        from utils.ai_provider_manager import load_ai_providers_registry
+
+        registry = load_ai_providers_registry()
         provider = None
         base_url = None
         if request.method == "POST":
@@ -13011,13 +13583,6 @@ def create_app(test_config=None):
 
         if not provider:
             provider = os.getenv("AI_PROVIDER", "ollama")
-
-        env_map = {
-            "gemini": "GEMINI_API_KEY",
-            "hostyourai": "HOSTYOURAI_API_KEY",
-            "openai": "OPENAI_API_KEY",
-            "custom": "CUSTOM_AI_API_KEY",
-        }
 
         status = "offline"
         details = ""
@@ -13053,8 +13618,14 @@ def create_app(test_config=None):
                 status = "offline"
                 details = f"Could not connect to Ollama at {url}: {e}"
         else:
-            var_name = env_map.get(provider)
-            if not var_name:
+            provider_info = registry.get(provider, {})
+            var_name = provider_info.get("env_var")
+            requires_key = provider_info.get("requires_api_key", True)
+
+            if not requires_key:
+                status = "online"
+                details = f"Provider {provider} configured."
+            elif not var_name:
                 status = "offline"
                 details = f"Unknown provider {provider}"
             else:
@@ -13138,12 +13709,13 @@ def create_app(test_config=None):
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
-                msg = "AI Generation request was invalid"
+                msg = err_msg
             return jsonify({"error": msg}), 400
         except Exception as e:
             logging.error(f"Failed to generate component via AI: {e}", exc_info=True)
             err_msg = str(e)
-            if "timeout" in err_msg.lower():
+            err_msg_lower = err_msg.lower()
+            if "timeout" in err_msg_lower:
                 return (
                     jsonify(
                         {
@@ -13157,7 +13729,22 @@ def create_app(test_config=None):
                     ),
                     504,
                 )
-            elif "api error" in err_msg.lower() or "openai" in err_msg.lower():
+            elif (
+                "connection refused" in err_msg_lower
+                or "could not connect" in err_msg_lower
+                or "apiconnectionerror" in err_msg_lower
+                or "connection error" in err_msg_lower
+            ):
+                return (
+                    jsonify(
+                        {
+                            "error": "AI Connection Error",
+                            "details": err_msg,
+                        }
+                    ),
+                    502,
+                )
+            elif "api error" in err_msg_lower or "openai" in err_msg_lower:
                 return (
                     jsonify(
                         {
@@ -13170,7 +13757,10 @@ def create_app(test_config=None):
             else:
                 return (
                     jsonify(
-                        {"error": ("AI Generation failed due to an internal error")}
+                        {
+                            "error": "AI Generation Failed",
+                            "details": err_msg,
+                        }
                     ),
                     500,
                 )
@@ -14082,7 +14672,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const modelSelect = document.getElementById('ai-model-select');
         const modelCustomGroup = document.getElementById('ai-model-custom-group');
         const modelCustomInput = document.getElementById('ai-model-custom');
-        const hostyouraiHelp = document.getElementById('ai-hostyourai-help');
+        const providerHelpGroup = document.getElementById('ai-provider-help');
+        const providerHelpLink = document.getElementById('ai-provider-help-link');
+        const providerHelpText = document.getElementById('ai-provider-help-text');
         const statusContainer = document.getElementById('ai-status-container');
         const statusBadge = document.getElementById('ai-status-badge');
         const statusDetails = document.getElementById('ai-status-details');
@@ -14108,8 +14700,41 @@ document.addEventListener('DOMContentLoaded', () => {
         const previewConfigContent = document.getElementById('ai-preview-config-content');
 
         let generatedData = null;
-
         let installedOllamaModels = [];
+        let aiProvidersRegistry = {};
+
+        const fetchAiProviders = async () => {
+            try {
+                const response = await fetch('/api/ai/providers');
+                if (response.ok) {
+                    const data = await response.json();
+                    aiProvidersRegistry = data.providers || {};
+                    populateProviderDropdown();
+                }
+            } catch (e) {
+                console.error('Failed to fetch AI providers registry:', e);
+            }
+        };
+
+        const populateProviderDropdown = () => {
+            if (!providerSelect || Object.keys(aiProvidersRegistry).length === 0) return;
+            const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
+            providerSelect.innerHTML = '';
+
+            for (const [key, p] of Object.entries(aiProvidersRegistry)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = p.name || key;
+                if (key === savedProvider) {
+                    option.selected = true;
+                    option.setAttribute('selected', 'selected');
+                }
+                providerSelect.appendChild(option);
+            }
+            if (savedProvider && providerSelect.value !== savedProvider) {
+                providerSelect.value = savedProvider;
+            }
+        };
 
         const checkStatus = async () => {
             const provider = providerSelect.value;
@@ -14161,46 +14786,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const populateModels = (provider, modelsList = []) => {
             modelSelect.innerHTML = '';
-            hostyouraiHelp.classList.add('d-none');
+            if (providerHelpGroup) {
+                providerHelpGroup.classList.add('d-none');
+            }
 
+            const pInfo = aiProvidersRegistry[provider] || {};
             let options = [];
 
-            if (provider === 'gemini') {
-                options = [
-                    { value: 'gemini-2.5-flash', text: 'Gemini 2.5 Flash (Aanbevolen - Snel)' },
-                    { value: 'gemini-2.5-pro', text: 'Gemini 2.5 Pro (Deep Coding Reasoning)' },
-                    { value: 'gemini-1.5-flash', text: 'Gemini 1.5 Flash (Legacy Snel)' },
-                    { value: 'gemini-1.5-pro', text: 'Gemini 1.5 Pro (Legacy)' }
-                ];
-            } else if (provider === 'openai') {
-                options = [
-                    { value: 'gpt-4o-mini', text: 'GPT-4o Mini (Aanbevolen - Snel)' },
-                    { value: 'gpt-4o', text: 'GPT-4o (Krachtig)' },
-                    { value: 'o1-mini', text: 'o1 Mini (Redeneren)' },
-                    { value: 'custom', text: 'Handmatig model invoeren...' }
-                ];
-            } else if (provider === 'hostyourai') {
-                options = [
-                    { value: 'mistral-7b-instruct', text: 'Mistral 7B Instruct (Default)' },
-                    { value: 'meta-llama-3-8b-instruct', text: 'Meta Llama 3 8B Instruct' },
-                    { value: 'mixtral-8x7b-instruct', text: 'Mixtral 8x7B Instruct (Krachtig)' },
-                    { value: 'custom', text: 'Handmatig model invoeren...' }
-                ];
-                hostyouraiHelp.classList.remove('d-none');
-            } else if (provider === 'ollama') {
-                if (modelsList.length > 0) {
-                    modelsList.forEach(model => {
-                        options.push({ value: model, text: model });
-                    });
-                    options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
-                } else {
-                    options = [
-                        { value: 'qwen2.5-coder:14b-instruct-q4_K_M', text: 'Qwen 2.5 Coder 14B Q4_K_M (Aanbevolen)' },
-                        { value: 'qwen2.5-coder:7b', text: 'Qwen 2.5 Coder 7B' },
-                        { value: 'llama3:latest', text: 'Llama 3' },
-                        { value: 'custom', text: 'Handmatig model invoeren...' }
-                    ];
-                }
+            if (provider === 'ollama' && modelsList.length > 0) {
+                modelsList.forEach(m => options.push({ value: m, text: m }));
+                options.push({ value: 'custom', text: 'Handmatig model invoeren...' });
+            } else if (pInfo.models && pInfo.models.length > 0) {
+                options = [...pInfo.models];
+            } else {
+                options = [{ value: 'custom', text: 'Handmatig model invoeren...' }];
             }
 
             options.forEach(opt => {
@@ -14210,20 +14809,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelSelect.appendChild(el);
             });
 
-            // Set default selections
-            if (provider === 'gemini') {
-                modelSelect.value = 'gemini-2.5-flash';
-            } else if (provider === 'openai') {
-                modelSelect.value = 'gpt-4o-mini';
-            } else if (provider === 'hostyourai') {
-                modelSelect.value = 'mistral-7b-instruct';
-            } else if (provider === 'ollama') {
-                if (modelsList.length > 0) {
-                    const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
-                    modelSelect.value = qwenModel || modelsList[0];
-                } else {
-                    modelSelect.value = 'qwen2.5-coder:14b-instruct-q4_K_M';
-                }
+            // Set default model
+            if (provider === 'ollama' && modelsList.length > 0) {
+                const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
+                modelSelect.value = qwenModel || modelsList[0];
+            } else if (pInfo.default_model) {
+                modelSelect.value = pInfo.default_model;
+            }
+
+            if (pInfo.help_url && pInfo.help_text && providerHelpGroup && providerHelpLink && providerHelpText) {
+                providerHelpLink.href = pInfo.help_url;
+                providerHelpText.textContent = pInfo.help_text;
+                providerHelpGroup.classList.remove('d-none');
             }
 
             handleModelSelectChange();
@@ -14243,85 +14840,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateProviderFields = () => {
             const provider = providerSelect.value;
+            const pInfo = aiProvidersRegistry[provider] || {};
 
             apiKeyGroup.classList.add('d-none');
             baseUrlGroup.classList.add('d-none');
             modelSelectGroup.classList.add('d-none');
             modelCustomGroup.classList.add('d-none');
-            hostyouraiHelp.classList.add('d-none');
+            if (providerHelpGroup) {
+                providerHelpGroup.classList.add('d-none');
+            }
 
-            if (provider === 'ollama') {
-                baseUrlGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                baseUrlInput.placeholder = 'http://localhost:11434/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = 'http://localhost:11434/v1';
-                }
-                populateModels('ollama', installedOllamaModels);
-            } else if (provider === 'gemini') {
+            const requiresKey = pInfo.requires_api_key !== false;
+            if (requiresKey || pInfo.env_var) {
                 apiKeyGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
                 const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The GEMINI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter Gemini API key (leave blank to use .env key)';
-                populateModels('gemini');
-            } else if (provider === 'hostyourai') {
-                apiKeyGroup.classList.remove('d-none');
-                baseUrlGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The HOSTYOURAI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter HostYourAI API key (leave blank to use .env key)';
-
-                baseUrlInput.placeholder = 'https://api.hostyourai.eu/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = 'https://api.hostyourai.eu/v1';
-                }
-                populateModels('hostyourai');
-            } else if (provider === 'openai') {
-                apiKeyGroup.classList.remove('d-none');
-                modelSelectGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
-                    helpText.textContent = 'The OPENAI_API_KEY from your .env file will be used if left blank.';
-                }
-                apiKeyInput.placeholder = 'Enter OpenAI API key (leave blank to use .env key)';
-                populateModels('openai');
-            } else if (provider === 'custom') {
-                apiKeyGroup.classList.remove('d-none');
-                baseUrlGroup.classList.remove('d-none');
-                modelCustomGroup.classList.remove('d-none');
-
-                const helpText = document.getElementById('ai-api-key-help');
-                if (helpText) {
+                if (helpText && pInfo.env_var) {
+                    helpText.textContent = `The ${pInfo.env_var} from your .env file will be used if left blank.`;
+                    apiKeyInput.placeholder = `Enter API key (leave blank to use ${pInfo.env_var})`;
+                } else if (helpText) {
                     helpText.textContent = 'API Key or Token for custom endpoint.';
+                    apiKeyInput.placeholder = 'Enter API Key / Token';
                 }
-                apiKeyInput.placeholder = 'Enter Custom Endpoint Token';
+            }
 
-                baseUrlInput.placeholder = 'http://localhost:11434/v1';
+            if (pInfo.allow_custom_base_url) {
+                baseUrlGroup.classList.remove('d-none');
+                baseUrlInput.placeholder = pInfo.default_base_url || 'http://localhost:11434/v1';
                 if (!baseUrlInput.value) {
-                    baseUrlInput.value = '';
+                    baseUrlInput.value = pInfo.default_base_url || '';
                 }
-                modelCustomInput.value = '';
+            }
+
+            if (provider === 'custom') {
+                modelCustomGroup.classList.remove('d-none');
                 modelCustomInput.placeholder = 'e.g., custom-model-name';
+            } else {
+                modelSelectGroup.classList.remove('d-none');
+                populateModels(provider, provider === 'ollama' ? installedOllamaModels : []);
             }
 
             checkStatus();
         };
 
-        providerSelect.addEventListener('change', updateProviderFields);
+        // Fetch registry on modal initialization
+        fetchAiProviders();
+
+        providerSelect.addEventListener('change', () => {
+            if (providerSelect.value) {
+                localStorage.setItem('njord_ai_provider', providerSelect.value);
+            }
+            updateProviderFields();
+        });
         baseUrlInput.addEventListener('change', checkStatus);
 
         createAiBtn.addEventListener('click', async () => {
+            const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
             form.reset();
+            if (savedProvider && providerSelect.querySelector(`option[value="${savedProvider}"]`)) {
+                providerSelect.value = savedProvider;
+            }
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
@@ -16157,8 +16734,23 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
-        setupStatsModal();
-        await setupGitSyncFeatures();
+        document.addEventListener('click', (e) => {
+            const target = /** @type {HTMLElement} */ (e.target);
+            const btn = target.closest('.toggle-password-btn');
+            if (!btn) return;
+            e.preventDefault();
+            const group = btn.closest('.input-group');
+            if (!group) return;
+            const input = /** @type {HTMLInputElement | null} */ (group.querySelector('input'));
+            if (!input) return;
+
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            const icon = btn.querySelector('i');
+            if (icon) {
+                icon.className = isPassword ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+            }
+        });
         updateUiForDirtyState();
         await refreshSyncStatusBadge();
     })();
@@ -17421,15 +18013,20 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
 
                         <div class="mb-3 d-none" id="ai-api-key-group">
                             <label for="ai-api-key" class="form-label">API Key</label>
-                            <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="ai-api-key" autocomplete="new-password" placeholder="Enter API Key">
+                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                             <div class="form-text" id="ai-api-key-help">An API key is required for cloud providers.</div>
                         </div>
 
                         <div class="mb-3 d-none" id="ai-model-select-group">
                             <label for="ai-model-select" class="form-label">Model</label>
                             <select class="form-select" id="ai-model-select"></select>
-                            <div class="form-text d-none" id="ai-hostyourai-help">
-                                <a href="https://hostyourai.eu" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> Bekijk alle HostYourAI-modellen op de website</a>
+                            <div class="form-text d-none" id="ai-provider-help">
+                                <a id="ai-provider-help-link" href="#" target="_blank" class="text-info"><i class="bi bi-box-arrow-up-right"></i> <span id="ai-provider-help-text"></span></a>
                             </div>
                         </div>
 
@@ -17620,11 +18217,21 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                     </div>
                     <div class="mb-3">
                         <label for="hash-password" class="form-label">Password</label>
-                        <input type="password" class="form-control" id="hash-password" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="hash-password" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label for="hash-password-confirm" class="form-label">Confirm Password</label>
-                        <input type="password" class="form-control" id="hash-password-confirm" required>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="hash-password-confirm" required>
+                            <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="invalid-feedback" id="password-match-feedback">Passwords do not match.</div>
                     </div>
                     <div class="d-grid">
@@ -18329,6 +18936,11 @@ class ComponentManager:
         )
         context["image_name"] = component_details.get("image_name", "")
 
+        ui_port_var = component_details.get("ui_port_variable")
+        if isinstance(ui_port_var, str) and ui_port_var not in context:
+            default_port = component_details.get("traefik_internal_port") or 8080
+            context[ui_port_var] = default_port
+
         traefik_internal_port = component_details.get("traefik_internal_port")
         traefik_host = context.get("TRAEFIK_HOST")
         fqdn_suffix = context.get("FQDN_SUFFIX")
@@ -18860,6 +19472,226 @@ class ComponentWriter:
         except (json.JSONDecodeError, IOError):
             return False
 
+--- FILE: src/managers/deployment_evaluator.py ---
+# src/managers/deployment_evaluator.py
+
+import json
+import logging
+import re
+from typing import Any, Dict, Optional
+
+from utils.ai_generator_engine import AIGeneratorEngine
+
+logger = logging.getLogger(__name__)
+
+# Patterns for scrubbing sensitive credentials from logs
+SENSITIVE_PATTERNS = [
+    (
+        r"(?i)(PASSWORD|SECRET|TOKEN|AUTH|PASS|KEY|PRIVATE_KEY)=([^\s\n]+)",
+        r"\1=***MASKED***",
+    ),
+    (
+        r"(?i)(Bearer\s+)[A-Za-z0-9\-\_\.\=]+",
+        r"\1***MASKED***",
+    ),
+    (
+        r"(://[^:]+:)[^@]+(@)",
+        r"\1***MASKED***\2",
+    ),
+]
+
+
+def sanitize_logs(log_text: str) -> str:
+    """Removes sensitive passwords, tokens, and private credentials from log output."""
+    sanitized = log_text
+    for pattern, replacement in SENSITIVE_PATTERNS:
+        sanitized = re.sub(pattern, replacement, sanitized)
+    return sanitized
+
+
+class DeploymentEvaluator:
+    """Evaluates deployment execution logs and statuses into human-actionable reports."""
+
+    def evaluate_with_rules(
+        self,
+        component_name: str,
+        log_text: str,
+        exit_code: int,
+        container_status: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Deterministic rule-based log analysis when AI is offline or disabled."""
+        sanitized = sanitize_logs(log_text)
+        is_running = container_status.get("running", True)
+
+        if exit_code == 0 and is_running and "error" not in sanitized.lower():
+            return {
+                "status": "GREEN",
+                "summary": (
+                    f"Component '{component_name}' was deployed successfully and "
+                    "all health checks passed."
+                ),
+                "user_action": "",
+                "doc_anchor": "",
+                "github_keywords": "",
+            }
+
+        # Rule checks for Scenario 2 (Yellow - User/Config Tuning)
+        if "bind: address already in use" in sanitized:
+            return {
+                "status": "YELLOW",
+                "summary": (
+                    f"Port conflict detected for component '{component_name}'. "
+                    "A required network port is already in use by another service."
+                ),
+                "user_action": (
+                    "Change the conflicting port parameter in the service "
+                    "configuration or stop the existing service on the node."
+                ),
+                "doc_anchor": "USER_GUIDE.md#port-conflicts",
+                "github_keywords": "",
+            }
+
+        if "permission denied" in sanitized.lower():
+            return {
+                "status": "YELLOW",
+                "summary": (
+                    f"Permission denied error during deployment of '{component_name}'."
+                ),
+                "user_action": (
+                    "Verify file storage permissions and path mappings on the node."
+                ),
+                "doc_anchor": "USER_GUIDE.md#storage-permissions",
+                "github_keywords": "",
+            }
+
+        if "no space left on device" in sanitized.lower():
+            return {
+                "status": "YELLOW",
+                "summary": "Node storage is full.",
+                "user_action": "Free up disk space on the target node before retrying.",
+                "doc_anchor": "USER_GUIDE.md#disk-space",
+                "github_keywords": "",
+            }
+
+        # Rule checks for Scenario 3 (Red - System/Package Bug)
+        if (
+            "jinja2.exceptions" in sanitized
+            or "syntax error" in sanitized.lower()
+            or "undefinederror" in sanitized.lower()
+        ):
+            # Extract error keyword safely using unpacking mandate
+            lines = [line for line in sanitized.splitlines() if "Error" in line]
+            err_line = next(iter(lines), "template execution error")
+            return {
+                "status": "RED",
+                "summary": (
+                    f"Fatal template rendering error in component '{component_name}'."
+                ),
+                "user_action": (
+                    "Report this issue on GitHub so developers can update "
+                    "the service template."
+                ),
+                "doc_anchor": "",
+                "github_keywords": f"{component_name} {err_line}",
+            }
+
+        # Default fallback for unknown non-zero exit
+        return {
+            "status": "RED" if exit_code != 0 else "YELLOW",
+            "summary": f"Deployment of '{component_name}' finished with errors.",
+            "user_action": "Inspect the container logs for details.",
+            "doc_anchor": "",
+            "github_keywords": f"{component_name} deployment failure",
+        }
+
+    def evaluate_with_ai(
+        self,
+        component_name: str,
+        log_text: str,
+        exit_code: int,
+        container_status: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        """Evaluates deployment logs using the configured AI provider engine."""
+        sanitized_logs = sanitize_logs(log_text)
+
+        system_prompt = (
+            "You are an expert DevOps AI assistant for NjordDeploy. "
+            "Analyze the deployment execution log and status of a self-hosted service. "
+            "Categorize the result into one of 3 statuses:\n"
+            "- GREEN: Service deployed cleanly, zero errors.\n"
+            "- YELLOW: Configuration/parameter tuning issue fixable by user "
+            "(e.g., port conflict, invalid env var, missing permissions).\n"
+            "- RED: Fatal software bug in NjordDeploy or docker template.\n\n"
+            "Return strictly JSON with keys: "
+            '{"status": "GREEN|YELLOW|RED", "summary": "...", "user_action": "...", '
+            '"doc_anchor": "...", "github_keywords": "..."}'
+        )
+
+        user_prompt = (
+            f"Component: {component_name}\n"
+            f"Exit Code: {exit_code}\n"
+            f"Container Status: {container_status}\n"
+            f"Sanitized Logs (last 100 lines):\n{sanitized_logs[-3000:]}"
+        )
+
+        engine = AIGeneratorEngine()
+        raw_response = engine.generate(
+            prompt=user_prompt,
+            system_context=system_prompt,
+        )
+
+        # Clean potential markdown formatting ```json ... ```
+        cleaned = raw_response.strip()
+        if cleaned.startswith("```"):
+            lines = cleaned.splitlines()
+            # Enforce Unpacking-First Mandate for slicing list
+            if len(lines) >= 2:
+                # Omit first and last line if fenced codeblock
+                cleaned = "\n".join(lines[1:-1])
+
+        parsed_data = json.loads(cleaned)
+        return {
+            "status": str(parsed_data.get("status", "YELLOW")).upper(),
+            "summary": str(parsed_data.get("summary", "")),
+            "user_action": str(parsed_data.get("user_action", "")),
+            "doc_anchor": str(parsed_data.get("doc_anchor", "")),
+            "github_keywords": str(parsed_data.get("github_keywords", "")),
+        }
+
+
+def evaluate_deployment(
+    component_name: str,
+    log_text: str,
+    exit_code: int = 0,
+    container_status: Optional[Dict[str, Any]] = None,
+    use_ai: bool = True,
+) -> Dict[str, Any]:
+    """Main entry point for evaluating a deployment session result."""
+    status_dict = container_status or {"running": exit_code == 0}
+    evaluator = DeploymentEvaluator()
+
+    if use_ai:
+        # noinspection PyBroadException
+        try:
+            return evaluator.evaluate_with_ai(
+                component_name=component_name,
+                log_text=log_text,
+                exit_code=exit_code,
+                container_status=status_dict,
+            )
+        except Exception as err:
+            logger.warning(
+                f"AI evaluation failed or unavailable: {err}. "
+                "Falling back to rule-based evaluation."
+            )
+
+    return evaluator.evaluate_with_rules(
+        component_name=component_name,
+        log_text=log_text,
+        exit_code=exit_code,
+        container_status=status_dict,
+    )
+
 --- FILE: src/managers/deployment_manager.py ---
 # src/managers/deployment_manager.py
 import logging
@@ -18996,6 +19828,32 @@ class DeploymentManager:
                     "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
                 )
 
+                # Log deployment manifest and docker-compose.yml contents
+                out_path_obj = Path(output_path)
+                if out_path_obj.exists():
+                    file_list = [
+                        str(p.relative_to(out_path_obj))
+                        for p in out_path_obj.rglob("*")
+                        if p.is_file()
+                    ]
+                    self.tasks[task_id]["logs"].append(
+                        f"MANIFEST: Transferring {len(file_list)} files to "
+                        f"target /opt/njorddeploy: {', '.join(file_list)}"
+                    )
+                    compose_file = out_path_obj / "docker-compose.yml"
+                    if compose_file.exists():
+                        try:
+                            compose_text = compose_file.read_text(encoding="utf-8")
+                            self.tasks[task_id]["logs"].append(
+                                "MANIFEST: Target docker-compose.yml contents:"
+                            )
+                            for line in compose_text.splitlines():
+                                self.tasks[task_id]["logs"].append(f"  {line}")
+                        except Exception as read_ex:
+                            logger.warning(
+                                f"Could not read compose file manifest: {read_ex}"
+                            )
+
                 processed_events: set[str] = set()
 
                 def handle_single_event(evt: Dict[str, Any]) -> bool:
@@ -19016,6 +19874,12 @@ class DeploymentManager:
                         # Catch warnings embedded in the task result
                         res = event_data.get("res", {})
                         if isinstance(res, dict):
+                            stdout_val = res.get("stdout")
+                            if isinstance(stdout_val, str) and stdout_val.strip():
+                                for line in stdout_val.strip().splitlines():
+                                    self.tasks[task_id]["logs"].append(
+                                        f"STDOUT [{task_name}]: {line}"
+                                    )
                             if (
                                 "msg" in res
                                 and str(res["msg"]).strip()
@@ -20256,6 +21120,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import socket
 import subprocess  # nosec B404
 
@@ -20309,6 +21174,90 @@ def is_port_open(host, port):
         return True
     except (socket.timeout, ConnectionRefusedError):
         return False
+
+
+def get_tailscale_status() -> dict:
+    """Checks if Tailscale is installed and active on the host machine.
+
+    Returns dict with 'active', 'peers', 'self', and 'reason'.
+    """
+    tailscale_bin = shutil.which("tailscale")
+    if not tailscale_bin:
+        return {
+            "active": False,
+            "reason": "Tailscale CLI not installed on host.",
+            "peers": [],
+        }
+
+    try:
+        res = subprocess.run(  # nosec B603
+            [tailscale_bin, "status", "--json"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if res.returncode != 0:
+            return {
+                "active": False,
+                "reason": "Tailscale daemon is not running or logged out.",
+                "peers": [],
+            }
+        data = json.loads(res.stdout)
+        backend_state = data.get("BackendState", "")
+        if backend_state != "Running":
+            return {
+                "active": False,
+                "reason": f"Tailscale state is '{backend_state}'.",
+                "peers": [],
+            }
+
+        peers_dict = data.get("Peer", {})
+        peers = []
+        for _peer_key, peer_info in peers_dict.items():
+            if not peer_info.get("Online", False):
+                continue
+            addrs = peer_info.get("TailscaleIPs", [])
+            primary_ip = next(iter(addrs), "")
+            if not primary_ip:
+                continue
+            dns_name = peer_info.get("DNSName", "")
+            first_dns_part = next(iter(dns_name.split(".")), "")
+            hostname = peer_info.get("HostName") or first_dns_part or "tailscale-node"
+            peers.append(
+                {
+                    "ip": primary_ip,
+                    "mac": "tailscale-overlay",
+                    "vendor": f"Tailscale ({peer_info.get('OS', 'Linux')})",
+                    "hostname": hostname,
+                    "os": peer_info.get("OS", "unknown"),
+                    "online": True,
+                }
+            )
+
+        return {
+            "active": True,
+            "reason": f"{len(peers)} online peer(s) found.",
+            "peers": peers,
+            "self": {
+                "hostname": data.get("Self", {}).get("HostName", ""),
+                "ips": data.get("Self", {}).get("TailscaleIPs", []),
+            },
+        }
+    except subprocess.TimeoutExpired:
+        logger.warning("Tailscale status check timed out after 10s")
+        return {
+            "active": False,
+            "timed_out": True,
+            "reason": "Tailscale status check timed out (daemon busy).",
+            "peers": [],
+        }
+    except Exception as e:
+        logger.warning(f"Tailscale status check failed: {e}")
+        return {
+            "active": False,
+            "reason": f"Error checking Tailscale: {str(e)}",
+            "peers": [],
+        }
 
 
 class NodeScanner:
@@ -20391,6 +21340,15 @@ class NodeScanner:
         else:
             detection_info = {"success": True, "method_used": "user_provided"}
             messages.append(f"🎯 Using provided network: {subnet}")
+        if not shutil.which("nmap"):
+            error_msg = (
+                "❌ Scan failed: 'nmap' is not installed on this system. "
+                "Please install nmap (e.g. 'sudo apt install nmap' or "
+                "'sudo apk add nmap')."
+            )
+            detection_info["success"] = False
+            return [], messages, error_msg, detection_info
+
         try:
             nm = nmap.PortScanner()
             result = nm.scan(hosts=subnet, arguments="-sn -PR", sudo=True)
@@ -20409,6 +21367,13 @@ class NodeScanner:
                         }
                     )
             return hosts, messages, "", detection_info
+        except nmap.PortScannerError as e:
+            error_msg = (
+                f"❌ Scan failed: {str(e)}. "
+                "Please ensure 'nmap' is installed (e.g. 'sudo apt install nmap')."
+            )
+            detection_info["success"] = False
+            return [], messages, error_msg, detection_info
         except Exception as e:
             error_msg = f"❌ Scan failed: {str(e)}"
             detection_info["success"] = False
@@ -21149,8 +22114,38 @@ class AIGenerator:
                     ) from e
                 elif "400" in err_msg or "bad request" in err_msg:
                     raise RuntimeError(
-                        "AI API rejected the request as invalid " "(400 Bad Request)."
+                        "AI API rejected the request as invalid (400 Bad Request)."
                     ) from e
+                elif (
+                    "connection error" in err_msg
+                    or "connection refused" in err_msg
+                    or "connect error" in err_msg
+                    or "connecterror" in err_msg
+                    or "[errno 111]" in err_msg
+                    or "apiconnectionerror" in err_msg
+                ):
+                    provider_name = self.provider or "ollama"
+                    target_url = self.base_url or (
+                        "http://localhost:11434/v1" if provider_name == "ollama" else ""
+                    )
+                    if (
+                        provider_name == "ollama"
+                        or "localhost" in target_url
+                        or "127.0.0.1" in target_url
+                    ):
+                        url_str = f" at {target_url}" if target_url else ""
+                        raise RuntimeError(
+                            f"Could not connect to Ollama local server{url_str} "
+                            "(Connection refused). Please ensure Ollama is installed "
+                            "and running locally, or select a cloud provider "
+                            "(such as Gemini or OpenAI) with an API key."
+                        ) from e
+                    else:
+                        url_str = f" at {target_url}" if target_url else ""
+                        raise RuntimeError(
+                            f"Could not connect to AI API endpoint{url_str}. "
+                            "Please check your internet connection and API base URL."
+                        ) from e
                 elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
                     if attempt < max_attempts:
                         attempt += 1
@@ -21479,6 +22474,8 @@ from typing import Any, Dict, List, Optional, Union
 
 from openai import OpenAI
 
+from utils.ai_provider_manager import get_provider_resolved_config
+
 
 class AIGeneratorEngine:
     """Core interface for routing queries to different AI providers."""
@@ -21507,6 +22504,7 @@ class AIGeneratorEngine:
         client = OpenAI(
             api_key=config["api_key"],
             base_url=config["base_url"],
+            timeout=60.0,
         )
 
         if isinstance(prompt, list):
@@ -21536,52 +22534,12 @@ class AIGeneratorEngine:
 
     def _get_provider_config(self, provider: str) -> Dict[str, Any]:
         """Retrieves config parameters for the active provider."""
-        configs: Dict[str, Dict[str, Any]] = {
-            "gemini": {
-                "api_key": os.getenv("GEMINI_API_KEY"),
-                "base_url": (
-                    "https://generativelanguage.googleapis.com/v1beta/openai/"
-                ),
-                "model": "gemini-2.5-flash",
-            },
-            "hostyourai": {
-                "api_key": os.getenv("HOSTYOURAI_API_KEY", "dummy"),
-                "base_url": os.getenv(
-                    "HOSTYOURAI_BASE_URL", "https://api.hostyourai.eu/v1"
-                ),
-                "model": "mistral-7b-instruct",
-            },
-            "openai": {
-                "api_key": os.getenv("OPENAI_API_KEY"),
-                "base_url": "https://api.openai.com/v1",
-                "model": "gpt-4o-mini",
-            },
-            "ollama": {
-                "api_key": "ollama",  # Required by OpenAI SDK
-                "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-                "model": os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct-q4_K_M"),
-            },
-            "custom": {
-                "api_key": os.getenv("CUSTOM_AI_API_KEY", "dummy"),
-                "base_url": os.getenv(
-                    "CUSTOM_AI_BASE_URL", "http://localhost:11434/v1"
-                ),
-                "model": "default",
-            },
-        }
-
-        if provider not in configs:
-            raise ValueError(f"Unsupported AI provider: {provider}")
-
-        cfg = configs[provider]
-
-        # Apply any runtime overrides passed via constructor
-        if self.api_key:
-            cfg["api_key"] = self.api_key
-        if self.base_url:
-            cfg["base_url"] = self.base_url
-        if self.model:
-            cfg["model"] = self.model
+        cfg = get_provider_resolved_config(
+            provider=provider,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            model=self.model,
+        )
 
         if not cfg["api_key"] and provider != "ollama":
             raise ValueError(
@@ -21590,6 +22548,194 @@ class AIGeneratorEngine:
             )
 
         return cfg
+
+--- FILE: src/utils/ai_provider_manager.py ---
+# src/utils/ai_provider_manager.py
+
+import json
+import logging
+import os
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
+
+
+DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
+    "ollama": {
+        "name": "Ollama Local (RTX 3060)",
+        "env_var": None,
+        "requires_api_key": False,
+        "default_base_url": "http://localhost:11434/v1",
+        "allow_custom_base_url": True,
+        "default_model": "qwen2.5-coder:14b-instruct-q4_K_M",
+        "models": [],
+    },
+    "gemini": {
+        "name": "Google Gemini",
+        "env_var": "GEMINI_API_KEY",
+        "requires_api_key": True,
+        "default_base_url": (
+            "https://generativelanguage.googleapis.com/v1beta/openai/"
+        ),
+        "allow_custom_base_url": False,
+        "default_model": "gemini-2.5-flash",
+        "models": [],
+    },
+    "hostyourai": {
+        "name": "HostYourAI / Loes (EU)",
+        "env_var": "HOSTYOURAI_API_KEY",
+        "requires_api_key": True,
+        "default_base_url": "https://api.hostyourai.eu/v1",
+        "allow_custom_base_url": True,
+        "default_model": "mistral-7b-instruct",
+        "models": [],
+    },
+    "openai": {
+        "name": "OpenAI",
+        "env_var": "OPENAI_API_KEY",
+        "requires_api_key": True,
+        "default_base_url": "https://api.openai.com/v1",
+        "allow_custom_base_url": False,
+        "default_model": "gpt-4o-mini",
+        "models": [],
+    },
+    "custom": {
+        "name": "Custom Endpoint",
+        "env_var": "CUSTOM_AI_API_KEY",
+        "requires_api_key": False,
+        "default_base_url": "http://localhost:11434/v1",
+        "allow_custom_base_url": True,
+        "default_model": "default",
+        "models": [],
+    },
+}
+
+
+def get_providers_json_path() -> Path:
+    """Returns the path to the ai_providers.json configuration file."""
+    current_dir = Path(__file__).resolve().parent
+    project_root = current_dir.parent.parent
+    return project_root / "config" / "ai_providers.json"
+
+
+def load_ai_providers_registry() -> Dict[str, Any]:
+    """Loads the AI providers registry from config/ai_providers.json."""
+    json_path = get_providers_json_path()
+    if not json_path.exists():
+        logger.warning(f"AI providers config file not found at {json_path}")
+        return DEFAULT_PROVIDERS_REGISTRY
+
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data.get("providers", DEFAULT_PROVIDERS_REGISTRY)
+    except Exception as e:
+        logger.error(f"Failed to load AI providers registry: {e}")
+        return DEFAULT_PROVIDERS_REGISTRY
+
+
+def get_provider_resolved_config(
+    provider: str,
+    api_key: Optional[str] = None,
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Resolves full configuration for a given provider combining defaults,
+
+    environment variables, and runtime overrides.
+    """
+    registry = load_ai_providers_registry()
+
+    if provider not in registry:
+        raise ValueError(f"Unsupported AI provider: {provider}")
+
+    provider_def = registry[provider]
+    env_var = provider_def.get("env_var")
+
+    # Determine API key: explicit override -> env var -> dummy fallback
+    resolved_api_key = api_key
+    if not resolved_api_key and env_var:
+        resolved_api_key = os.getenv(env_var)
+
+    if not resolved_api_key:
+        if provider == "ollama":
+            resolved_api_key = "ollama"
+        elif provider in ("hostyourai", "custom"):
+            resolved_api_key = "dummy"
+
+    # Determine Base URL
+    resolved_base_url = base_url
+    if not resolved_base_url:
+        if env_var and f"{provider.upper()}_BASE_URL" in os.environ:
+            resolved_base_url = os.getenv(f"{provider.upper()}_BASE_URL")
+        elif provider == "ollama" and os.getenv("OLLAMA_BASE_URL"):
+            resolved_base_url = os.getenv("OLLAMA_BASE_URL")
+        elif provider == "custom" and os.getenv("CUSTOM_AI_BASE_URL"):
+            resolved_base_url = os.getenv("CUSTOM_AI_BASE_URL")
+        else:
+            resolved_base_url = provider_def.get("default_base_url")
+
+    # Determine Model
+    resolved_model = model
+    if not resolved_model:
+        if provider == "ollama" and os.getenv("OLLAMA_MODEL"):
+            resolved_model = os.getenv("OLLAMA_MODEL")
+        else:
+            resolved_model = provider_def.get("default_model")
+
+    return {
+        "provider": provider,
+        "name": provider_def.get("name"),
+        "api_key": resolved_api_key,
+        "base_url": resolved_base_url,
+        "model": resolved_model,
+        "env_var": env_var,
+        "requires_api_key": provider_def.get("requires_api_key", True),
+    }
+
+
+def save_api_key_to_env_file(
+    key: str, provider: str = "gemini", project_root: Optional[Path] = None
+) -> bool:
+    """Saves the API key to the local .env file using provider's env_var."""
+    registry = load_ai_providers_registry()
+    provider_def = registry.get(provider, {})
+    var_name = provider_def.get("env_var")
+
+    if not var_name:
+        logger.warning(
+            f"No env_var defined for provider '{provider}'. Key not saved."
+        )
+        return False
+
+    if not project_root:
+        project_root = Path(__file__).resolve().parent.parent.parent
+
+    env_path = project_root / ".env"
+    lines = []
+    key_written = False
+
+    if env_path.exists():
+        with open(env_path, "r") as f:
+            lines = f.readlines()
+
+        for i, line in enumerate(lines):
+            if line.strip().startswith(f"{var_name}="):
+                lines[i] = f"{var_name}={key}\n"
+                key_written = True
+                break
+
+    if not key_written:
+        if lines and not lines[-1].endswith("\n"):
+            lines.append("\n")
+        lines.append(f"{var_name}={key}\n")
+
+    with open(env_path, "w") as f:
+        f.writelines(lines)
+
+    os.environ[var_name] = key
+    return True
 
 --- FILE: src/utils/auth_utils.py ---
 # src/utils/auth_utils.py
@@ -22242,6 +23388,20 @@ class ProxmoxClient:
         """Destroys the VM (purging all associated resources)."""
         endpoint = f"nodes/{node}/qemu/{vmid}"
         return self.delete(endpoint, params={"purge": 1})
+
+    def resize_vm_disk(self, node: str, vmid: int, disk: str, size: str) -> dict:
+        """Resizes a VM disk (e.g. disk='scsi0', size='32G' or '+10G')."""
+        endpoint = f"nodes/{node}/qemu/{vmid}/resize"
+        url = f"{self.api_url}/{endpoint.lstrip('/')}"
+        response = requests.put(
+            url,
+            headers=self.headers,
+            data={"disk": disk, "size": size},
+            verify=self.verify_ssl,
+            timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()
 
     def get_vm_ip(self, node: str, vmid: int) -> str | None:
         """

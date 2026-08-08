@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional, Union
 
 from openai import OpenAI
 
+from utils.ai_provider_manager import get_provider_resolved_config
+
 
 class AIGeneratorEngine:
     """Core interface for routing queries to different AI providers."""
@@ -33,6 +35,7 @@ class AIGeneratorEngine:
         client = OpenAI(
             api_key=config["api_key"],
             base_url=config["base_url"],
+            timeout=60.0,
         )
 
         if isinstance(prompt, list):
@@ -62,52 +65,12 @@ class AIGeneratorEngine:
 
     def _get_provider_config(self, provider: str) -> Dict[str, Any]:
         """Retrieves config parameters for the active provider."""
-        configs: Dict[str, Dict[str, Any]] = {
-            "gemini": {
-                "api_key": os.getenv("GEMINI_API_KEY"),
-                "base_url": (
-                    "https://generativelanguage.googleapis.com/v1beta/openai/"
-                ),
-                "model": "gemini-2.5-flash",
-            },
-            "hostyourai": {
-                "api_key": os.getenv("HOSTYOURAI_API_KEY", "dummy"),
-                "base_url": os.getenv(
-                    "HOSTYOURAI_BASE_URL", "https://api.hostyourai.eu/v1"
-                ),
-                "model": "mistral-7b-instruct",
-            },
-            "openai": {
-                "api_key": os.getenv("OPENAI_API_KEY"),
-                "base_url": "https://api.openai.com/v1",
-                "model": "gpt-4o-mini",
-            },
-            "ollama": {
-                "api_key": "ollama",  # Required by OpenAI SDK
-                "base_url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1"),
-                "model": os.getenv("OLLAMA_MODEL", "qwen2.5-coder:14b-instruct-q4_K_M"),
-            },
-            "custom": {
-                "api_key": os.getenv("CUSTOM_AI_API_KEY", "dummy"),
-                "base_url": os.getenv(
-                    "CUSTOM_AI_BASE_URL", "http://localhost:11434/v1"
-                ),
-                "model": "default",
-            },
-        }
-
-        if provider not in configs:
-            raise ValueError(f"Unsupported AI provider: {provider}")
-
-        cfg = configs[provider]
-
-        # Apply any runtime overrides passed via constructor
-        if self.api_key:
-            cfg["api_key"] = self.api_key
-        if self.base_url:
-            cfg["base_url"] = self.base_url
-        if self.model:
-            cfg["model"] = self.model
+        cfg = get_provider_resolved_config(
+            provider=provider,
+            api_key=self.api_key,
+            base_url=self.base_url,
+            model=self.model,
+        )
 
         if not cfg["api_key"] and provider != "ollama":
             raise ValueError(
