@@ -432,10 +432,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!codeEditor) {
-            const themeSelector = /** @type {HTMLSelectElement} */ (
-                document.getElementById('theme-selector')
-            );
-            const selectedTheme = themeSelector ? themeSelector.value : 'default';
+            const currentAppTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            const isLightTheme = currentAppTheme === 'light' || currentAppTheme === 'high-contrast-light';
+            const selectedTheme = isLightTheme ? 'default' : 'material-darker';
             codeEditor = CodeMirror.fromTextArea(
                 document.getElementById('template-editor'),
                 {
@@ -646,15 +645,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setupThemeSelector = () => {
-        const themeSelector = document.getElementById('theme-selector');
-        if (!themeSelector) return;
-        const savedTheme = localStorage.getItem('editorTheme');
-        if (savedTheme) themeSelector.value = savedTheme;
-        themeSelector.addEventListener('change', (event) => {
-            const newTheme = event.target.value;
-            localStorage.setItem('editorTheme', newTheme);
-            if (codeEditor) codeEditor.setOption('theme', newTheme);
+        const syncCmTheme = (themeName) => {
+            if (!codeEditor) return;
+            const isLight = themeName === 'light' || themeName === 'high-contrast-light';
+            codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+        };
+
+        document.addEventListener('themeChanged', (e) => {
+            const themeName = (e.detail && e.detail.theme) || document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            syncCmTheme(themeName);
         });
+
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+        syncCmTheme(currentTheme);
     };
 
     const setupCreateComponentModal = () => {

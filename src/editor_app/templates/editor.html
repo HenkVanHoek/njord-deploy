@@ -239,11 +239,24 @@
         .introjs-arrow.right {
             border-left-color: rgba(15, 23, 42, 0.95) !important;
         }
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border) !important;
+        }
+        .editor-navbar .navbar-brand,
+        .editor-navbar .nav-link {
+            color: var(--text-color) !important;
+        }
+        .editor-navbar .nav-link:hover,
+        .editor-navbar .nav-link:focus {
+            color: var(--brand-blue) !important;
+        }
 
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand-lg fixed-top editor-navbar">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="https://njorddeploy.com" target="_blank">
             <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}" alt="NjordDeploy Logo" width="30" height="30" class="me-2">

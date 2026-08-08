@@ -31,6 +31,7 @@
                         if (themeName) {
                             document.documentElement.setAttribute("data-theme", themeName);
                             localStorage.setItem("user-theme-preference", themeName);
+                            document.dispatchEvent(new CustomEvent("themeChanged", { detail: { theme: themeName } }));
                             console.log("Accessibility: Theme changed to:", themeName);
                         }
                     });
