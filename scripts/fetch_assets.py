@@ -33,6 +33,9 @@ def fetch_assets():
     response = requests.get(css_url, timeout=10)  # nosec
     response.raise_for_status()
     (STATIC_DIR / "css" / "njorddeploy-style.css").write_text(response.text)
+    editor_css_dir = Path("src/editor_app/static/css")
+    editor_css_dir.mkdir(parents=True, exist_ok=True)
+    (editor_css_dir / "njorddeploy-style.css").write_text(response.text)
     print("✅ CSS updated successfully.")
 
     # 2. Fetch the logo

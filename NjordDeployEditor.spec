@@ -41,6 +41,7 @@ a = Analysis(
         ('src/editor_app/templates', 'templates'),
         ('src/editor_app/static', 'src/editor_app/static'),
         ('src/editor_app/static', 'static'),
+        ('src/configurator_app/static/css', 'src/configurator_app/static/css'),
         ('config', 'config'),
         ('component_templates', 'component_templates'),
         ('README.md', '.'),

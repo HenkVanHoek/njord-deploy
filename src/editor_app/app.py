@@ -385,12 +385,21 @@ def create_app(test_config=None):
     def serve_shared_css():
         from flask import send_from_directory
 
-        shared_css_dir = project_root / "src" / "configurator_app" / "static" / "css"
-        if not shared_css_dir.exists():
-            shared_css_dir = (
-                Path(__file__).parent.parent / "configurator_app" / "static" / "css"
-            )
-        return send_from_directory(shared_css_dir, "njorddeploy-style.css")
+        from utils.resource_utils import resource_path
+
+        candidate_dirs = [
+            resource_path("src/editor_app/static/css"),
+            resource_path("src/configurator_app/static/css"),
+            project_root / "src" / "editor_app" / "static" / "css",
+            project_root / "src" / "configurator_app" / "static" / "css",
+            Path(__file__).parent / "static" / "css",
+            Path(__file__).parent.parent / "configurator_app" / "static" / "css",
+        ]
+        for css_dir in candidate_dirs:
+            if (css_dir / "njorddeploy-style.css").exists():
+                return send_from_directory(css_dir, "njorddeploy-style.css")
+
+        abort(404, "njorddeploy-style.css not found")
 
     @app.route("/")
     def index():
