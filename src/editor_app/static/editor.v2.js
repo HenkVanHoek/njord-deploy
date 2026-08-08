@@ -645,19 +645,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setupThemeSelector = () => {
-        const syncCmTheme = (themeName) => {
-            if (!codeEditor) return;
-            const isLight = themeName === 'light' || themeName === 'high-contrast-light';
-            codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+        const themeSelector = /** @type {HTMLSelectElement | null} */ (
+            document.getElementById('theme-selector')
+        );
+
+        const syncAllThemeControls = (themeName) => {
+            if (themeSelector) {
+                themeSelector.value = themeName;
+            }
+            if (codeEditor) {
+                const isLight = themeName === 'light' || themeName === 'high-contrast-light';
+                codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+            }
         };
+
+        if (themeSelector) {
+            themeSelector.addEventListener('change', (event) => {
+                const newTheme = /** @type {HTMLSelectElement} */ (event.target).value;
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('user-theme-preference', newTheme);
+                document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+            });
+        }
 
         document.addEventListener('themeChanged', (e) => {
             const themeName = (e.detail && e.detail.theme) || document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
-            syncCmTheme(themeName);
+            syncAllThemeControls(themeName);
         });
 
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
-        syncCmTheme(currentTheme);
+        const initialTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+        syncAllThemeControls(initialTheme);
     };
 
     const setupCreateComponentModal = () => {
