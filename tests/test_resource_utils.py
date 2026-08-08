@@ -89,7 +89,9 @@ def test_get_components_paths_user_data_dir(monkeypatch, tmp_path):
     components_dir = tmp_path / "components"
     components_dir.mkdir(parents=True, exist_ok=True)
     (components_dir / "components_metadata.json").touch()
-    (components_dir / "component_templates").mkdir(parents=True, exist_ok=True)
+    user_templates_dir = components_dir / "component_templates"
+    user_templates_dir.mkdir(parents=True, exist_ok=True)
+    (user_templates_dir / "dummy_comp").mkdir(parents=True, exist_ok=True)
 
     from src.utils.resource_utils import get_components_paths
 

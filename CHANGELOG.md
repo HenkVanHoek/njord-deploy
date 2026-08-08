@@ -7,6 +7,13 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Automatic Component Package Auto-Seeding**:
+  - Added automatic background seeding (`seed_user_components_if_needed()`) in `src/utils/resource_utils.py` upon initial application startup.
+  - Automatically fetches and initializes component templates from remote GitHub (`HenkVanHoek/njord-deploy-components`) when starting on fresh systems.
+  - Added graceful offline fallback to built-in resources with user notification on screen (`downloaded` vs `fallback` warning).
+- **Automatic System Browser Launcher**:
+  - Integrated `webbrowser` launching in `run_editor.py` and `run_configurator.py` after Waitress server startup, opening `http://localhost:5000` / `http://localhost:5001` automatically.
+  - Added `NO_BROWSER` environment variable flag for headless server deployments.
 - **Post-Deployment AI Log Evaluator & Health Report**:
   - Integrated automated post-deployment log evaluation engine (`src/managers/deployment_evaluator.py`) using `ai_provider_manager` (Gemini, Ollama, HostYourAI, OpenAI) with deterministic rule-based fallback.
   - Added regex log sanitizer (`sanitize_logs()`) to scrub passwords, tokens, API keys, and SSH private keys before AI processing.

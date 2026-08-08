@@ -50,6 +50,9 @@ def create_app(test_config=None):
 
         save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
 
+    from utils.resource_utils import seed_user_components_if_needed
+
+    seed_user_components_if_needed()
     meta_file_path, temp_path_obj = get_components_paths()
     meta_file = str(meta_file_path)
     temp_path = str(temp_path_obj)
@@ -69,7 +72,11 @@ def create_app(test_config=None):
     @app.route("/api/sync/status", methods=["GET"])
     def sync_status():
         try:
-            return jsonify(sync_manager.get_sync_status()), 200
+            status_data = sync_manager.get_sync_status()
+            from utils.resource_utils import get_last_seed_status
+
+            status_data["initial_seed_info"] = get_last_seed_status()
+            return jsonify(status_data), 200
         except Exception as e:
             logging.error(f"Failed to get sync status: {e}", exc_info=True)
             abort(500, "Internal error getting sync status")

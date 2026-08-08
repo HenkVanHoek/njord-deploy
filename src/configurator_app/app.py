@@ -18,7 +18,7 @@ from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
 from node_scanner import NodeScanner, get_tailscale_status
-from utils.resource_utils import get_components_paths
+from utils.resource_utils import get_components_paths, seed_user_components_if_needed
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -253,6 +253,7 @@ def create_app(test_config=None):
         "FLASK_SECRET_KEY", "a-default-secret-key-for-development"
     )
 
+    seed_user_components_if_needed()
     metadata_path_obj, templates_path_obj = get_components_paths()
     metadata_path = str(metadata_path_obj)
     templates_path = str(templates_path_obj)

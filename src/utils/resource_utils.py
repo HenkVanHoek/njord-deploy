@@ -1,7 +1,119 @@
-# src/utils/resource_utils.py
+import logging
 import sys
 import tomllib
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
+_LAST_SEED_STATUS: dict[str, str] = {
+    "status": "already_seeded",
+    "message": "",
+}
+
+
+def get_last_seed_status() -> dict[str, str]:
+    """Returns the status dictionary from the last auto-seeding attempt."""
+    return dict(_LAST_SEED_STATUS)
+
+
+def seed_user_components_if_needed() -> dict[str, str]:
+    """
+    Ensures local user data components directory is seeded with the latest
+    component templates and metadata from GitHub if not already present.
+    """
+    global _LAST_SEED_STATUS
+    import os
+    import shutil
+
+    from appdirs import user_data_dir
+
+    if os.environ.get("PI_SELFHOSTING_COMPONENTS_DIR"):
+        _LAST_SEED_STATUS = {
+            "status": "already_seeded",
+            "message": "Using environment variable components path.",
+        }
+        return _LAST_SEED_STATUS
+
+    app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+    user_components_dir = app_data_dir / "components"
+    user_metadata = user_components_dir / "components_metadata.json"
+    user_templates = user_components_dir / "component_templates"
+
+    # noinspection PyBroadException
+    try:
+        has_templates = user_templates.exists() and any(user_templates.iterdir())
+    except Exception:
+        has_templates = False
+
+    if user_metadata.exists() and has_templates:
+        _LAST_SEED_STATUS = {
+            "status": "already_seeded",
+            "message": "Components already initialized.",
+        }
+        return _LAST_SEED_STATUS
+
+    # If running inside pytest unit test suite, skip network download and seed fallback
+    if "pytest" in sys.modules:
+        user_components_dir.mkdir(parents=True, exist_ok=True)
+        fallback_meta = resource_path("config/components_metadata.json")
+        fallback_temp = resource_path("component_templates")
+        if fallback_meta.exists() and not user_metadata.exists():
+            shutil.copy2(fallback_meta, user_metadata)
+        if fallback_temp.exists() and not user_templates.exists():
+            shutil.copytree(fallback_temp, user_templates)
+        _LAST_SEED_STATUS = {
+            "status": "already_seeded",
+            "message": "Test mode fallback seeded.",
+        }
+        return _LAST_SEED_STATUS
+
+    # Attempt to fetch latest packages from remote GitHub repo
+    # noinspection PyBroadException
+    try:
+        from managers.sync_manager import SyncManager
+
+        user_components_dir.mkdir(parents=True, exist_ok=True)
+        sync = SyncManager(
+            local_metadata_path=user_metadata,
+            local_templates_path=user_templates,
+        )
+        if sync.fetch_from_remote() and sync.sync_all():
+            _LAST_SEED_STATUS = {
+                "status": "downloaded",
+                "message": (
+                    "De nieuwste componentpakketten en templates zijn "
+                    "automatisch gedownload van GitHub."
+                ),
+            }
+            return _LAST_SEED_STATUS
+    except Exception as e:
+        logger.warning(f"Auto-fetch remote components failed: {e}")
+
+    # Fallback to built-in resources if download fails or offline
+    # noinspection PyBroadException
+    try:
+        user_components_dir.mkdir(parents=True, exist_ok=True)
+        fallback_meta = resource_path("config/components_metadata.json")
+        fallback_temp = resource_path("component_templates")
+
+        if fallback_meta.exists() and not user_metadata.exists():
+            shutil.copy2(fallback_meta, user_metadata)
+
+        if fallback_temp.exists() and not user_templates.exists():
+            shutil.copytree(fallback_temp, user_templates)
+    except Exception as e:
+        logger.error(f"Failed to copy fallback components to user directory: {e}")
+
+    _LAST_SEED_STATUS = {
+        "status": "fallback",
+        "message": (
+            "Kon geen verbinding maken met GitHub om de nieuwste "
+            "pakketten te downloaden. Er is een actieve internetverbinding "
+            "nodig om pakket-updates op te halen. "
+            "Ingebouwde componentpakketten zijn geïnstalleerd als fallback."
+        ),
+    }
+    return _LAST_SEED_STATUS
 
 
 def resource_path(relative_path: str = "") -> Path:
@@ -75,7 +187,13 @@ def get_components_paths() -> tuple[Path, Path]:
     user_metadata = user_components_dir / "components_metadata.json"
     user_templates = user_components_dir / "component_templates"
 
-    if user_metadata.exists() and user_templates.exists():
+    # noinspection PyBroadException
+    try:
+        has_templates = user_templates.exists() and any(user_templates.iterdir())
+    except Exception:
+        has_templates = False
+
+    if user_metadata.exists() and has_templates:
         return user_metadata, user_templates
 
     # 3. Fallback to built-in resources

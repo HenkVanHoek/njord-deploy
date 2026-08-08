@@ -187,6 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const refreshSyncStatusBadge = async () => {
         try {
             const statusData = await fetchJson("/api/sync/status");
+            if (statusData.initial_seed_info && statusData.initial_seed_info.status !== "already_seeded") {
+                const seedInfo = statusData.initial_seed_info;
+                if (seedInfo.status === "downloaded") {
+                    showAlert(seedInfo.message || "De nieuwste componentpakketten zijn automatisch gedownload van GitHub.", "success");
+                } else if (seedInfo.status === "fallback") {
+                    showAlert(seedInfo.message || "Geen netwerkverbinding. Ingebouwde pakketten geïnstalleerd als fallback.", "warning");
+                }
+                statusData.initial_seed_info.status = "already_seeded";
+            }
             const badge = document.getElementById("git-sync-badge");
             if (badge) {
                 if (statusData.global_metadata_out_of_sync) {
