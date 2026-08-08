@@ -412,6 +412,25 @@ def create_app(test_config=None):
         else:
             return jsonify({"error": "Invalid update mode"}), 400
 
+    @flask_app.route("/nmap-status", methods=["GET"])
+    def nmap_status():
+        import shutil
+
+        installed = shutil.which("nmap") is not None
+        return jsonify(
+            {
+                "installed": installed,
+                "message": (
+                    "nmap is installed."
+                    if installed
+                    else (
+                        "nmap is not installed. Install via "
+                        "'sudo apt install nmap' for L2 subnet scanning."
+                    )
+                ),
+            }
+        )
+
     @flask_app.route("/tailscale-status", methods=["GET"])
     def tailscale_status():
         return jsonify(get_tailscale_status())
