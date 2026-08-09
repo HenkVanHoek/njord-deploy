@@ -162,7 +162,7 @@
         }
     },
     "components": {
-        "adguardhome": {
+        "adguard-home": {
             "component_version": "latest",
             "conflicts_with": [
                 "pi-hole"

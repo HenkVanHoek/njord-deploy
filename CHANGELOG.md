@@ -44,6 +44,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Fixed
 - **Actionable `nmap` Missing Error Handling**: Added explicit pre-scan executable check and `nmap.PortScannerError` handling in `NodeScanner`, returning clear package installation guidance (`sudo apt install nmap`) directly to the UI instead of generic error messages.
+- **Git Sync & Write Permission Diagnostics**: Fixed Git write access permission check in `SyncManager` (`check_write_access_details()`) to return detailed diagnostic error messages to the frontend UI when permission checks fail or dry-run fails.
+- **Component Directory Name Normalization**: Enhanced template folder lookup (`_resolve_component_dir()`) in `SyncManager` to handle hyphenated component IDs (e.g. `adguard-home` vs `adguardhome`), resolving sync errors when local template folders use normalized naming conventions.
+- **Component Template Directory Standardization**: Renamed local template directory `component_templates/adguardhome/` to `component_templates/adguard-home/` to strictly align with component metadata naming.
 
 ## [0.6.0] - 2025-10-12
 

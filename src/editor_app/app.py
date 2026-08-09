@@ -174,8 +174,8 @@ def create_app(test_config=None):
     @app.route("/api/git/check_permission", methods=["GET"])
     def git_check_permission():
         try:
-            has_write = sync_manager.check_write_access()
-            return jsonify({"has_write_access": has_write}), 200
+            has_write, details = sync_manager.check_write_access_details()
+            return jsonify({"has_write_access": has_write, "details": details}), 200
         except Exception as e:
             logging.error(f"Failed to check git permissions: {e}", exc_info=True)
             abort(500, "Internal error checking git permissions")

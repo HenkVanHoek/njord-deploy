@@ -303,9 +303,9 @@ class SyncManager:
             logger.error(f"Failed to sync all components: {e}")
             return False
 
-    def check_write_access(self) -> bool:
+    def check_write_access_details(self) -> tuple[bool, str]:
         """Verifies if the local environment has write access to the components'
-        repository.
+        repository and returns (has_write_access, details_message).
         """
         import subprocess  # nosec B404
 
@@ -324,6 +324,7 @@ class SyncManager:
             if not git_cwd:
                 git_cwd = str(self.local_metadata_path.parent.parent)
 
+        last_err = ""
         # Try SSH push dry run
         ssh_url = "git@github.com:HenkVanHoek/njord-deploy-components.git"
         try:
@@ -344,9 +345,13 @@ class SyncManager:
                 and "denied" not in res.stderr.lower()
                 and "fatal" not in res.stderr.lower()
             ):
-                return True
+                return True, "Write permissions verified via SSH"
+            last_err = (
+                res.stderr.strip() or f"SSH check exited with code {res.returncode}"
+            )
         except Exception as e:
             logger.error(f"SSH write access check failed: {e}")
+            last_err = str(e)
 
         # Try HTTPS push dry run
         https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
@@ -368,11 +373,22 @@ class SyncManager:
                 and "denied" not in res.stderr.lower()
                 and "fatal" not in res.stderr.lower()
             ):
-                return True
+                return True, "Write permissions verified via HTTPS"
+            last_err = (
+                res.stderr.strip() or f"HTTPS check exited with code {res.returncode}"
+            )
         except Exception as e:
             logger.error(f"HTTPS write access check failed: {e}")
+            last_err = str(e)
 
-        return False
+        return False, last_err or "No write permissions for repository"
+
+    def check_write_access(self) -> bool:
+        """Verifies if the local environment has write access to the components'
+        repository.
+        """
+        has_write, _ = self.check_write_access_details()
+        return has_write
 
     def _prepare_git_repo(self) -> str:
         """Clones or updates the local git cache for components repo."""
@@ -423,12 +439,35 @@ class SyncManager:
 
         raise RuntimeError(f"Failed to clone components repository: {res.stderr}")
 
+    def _resolve_component_dir(self, component_id: str) -> Path | None:
+        """Finds existing template directory for component_id.
+
+        Tries alternate hyphen/underscore forms if needed.
+        """
+        possible_names = [
+            component_id,
+            (
+                component_id.replace("home", "-home")
+                if "home" in component_id and "-home" not in component_id
+                else component_id
+            ),
+            component_id.replace("-", ""),
+            component_id.replace("_", "-"),
+            component_id.replace("-", "_"),
+        ]
+        for name in possible_names:
+            p = self.local_templates_path / name
+            if p.exists() and (p / "docker-compose.template.yml").exists():
+                return p
+        return None
+
     def validate_metadata_header(self, component_id: str) -> bool:
         """Checks if the component template has the four metadata header comments."""
         filename = "docker-compose.template.yml"
-        filepath = self.local_templates_path / component_id / filename
-        if not filepath.exists():
+        comp_dir = self._resolve_component_dir(component_id)
+        if not comp_dir:
             return False
+        filepath = comp_dir / filename
 
         # noinspection PyBroadException
         try:
@@ -467,11 +506,14 @@ class SyncManager:
         self._prepare_git_repo()
 
         # 2. Copy component template folder
-        src_dir = self.local_templates_path / component_id
-        dest_dir = self.git_repo_dir / "component_templates" / component_id
-
+        src_dir = self._resolve_component_dir(component_id)
+        if not src_dir:
+            src_dir = self.local_templates_path / component_id
         if not src_dir.exists():
             raise FileNotFoundError(f"Local template dir {src_dir} does not exist.")
+
+        target_id = src_dir.name
+        dest_dir = self.git_repo_dir / "component_templates" / target_id
 
         if dest_dir.exists():
             shutil.rmtree(dest_dir)
@@ -485,10 +527,14 @@ class SyncManager:
         if "components" not in remote_data:
             remote_data["components"] = {}
 
-        if component_id in local_data.get("components", {}):
-            remote_data["components"][component_id] = local_data["components"][
-                component_id
-            ]
+        # Look up metadata using component_id or resolved target_id
+        meta_id = (
+            component_id
+            if component_id in local_data.get("components", {})
+            else target_id
+        )
+        if meta_id in local_data.get("components", {}):
+            remote_data["components"][target_id] = local_data["components"][meta_id]
             with open(remote_metadata_path, "w", encoding="utf-8") as f:
                 json.dump(remote_data, f, indent=4)
 

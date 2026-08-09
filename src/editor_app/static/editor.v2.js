@@ -2072,10 +2072,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const gitSyncBtn = document.getElementById('git-sync-btn');
         const componentSyncBtn = document.getElementById('component-sync-btn');
 
-        if (!gitSyncModalEl || !gitDiffModalEl || !gitSyncBtn || !componentSyncBtn) return;
-
-        const gitSyncModal = new bootstrap.Modal(gitSyncModalEl);
-        const gitDiffModal = new bootstrap.Modal(gitDiffModalEl);
+        const gitSyncModal = gitSyncModalEl ? new bootstrap.Modal(gitSyncModalEl) : null;
+        const gitDiffModal = gitDiffModalEl ? new bootstrap.Modal(gitDiffModalEl) : null;
 
         const gitFetchBtn = document.getElementById('git-fetch-btn');
         const gitSyncAllBtn = document.getElementById('git-sync-all-btn');
@@ -2363,80 +2361,73 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        gitSyncBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            gitSyncModal.show();
-            await loadSyncStatus();
-        });
+        if (gitSyncBtn && gitSyncModal) {
+            gitSyncBtn.addEventListener('click', async (e) => {
+                e.preventDefault();
+                gitSyncModal.show();
+                await loadSyncStatus();
+            });
+        }
 
-        componentSyncBtn.addEventListener('click', async () => {
-            const compIdEl = document.getElementById('comp-id');
-            if (compIdEl && compIdEl.value) {
-                await showDiffForComponent(compIdEl.value);
-            }
-        });
+        if (componentSyncBtn) {
+            componentSyncBtn.addEventListener('click', async () => {
+                const compIdEl = document.getElementById('comp-id');
+                if (compIdEl && compIdEl.value) {
+                    await showDiffForComponent(compIdEl.value);
+                }
+            });
+        }
 
         const gitUploadBtn = document.getElementById('git-upload-btn');
         const gitUploadSidebarBtn = document.getElementById('git-upload-sidebar-btn');
         const gitUploadAllBtn = document.getElementById('git-upload-all-btn');
 
+        const updateBtnTooltip = (el, titleText, isWritable) => {
+            if (!el) return;
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                const inst = bootstrap.Tooltip.getInstance(el);
+                if (inst) {
+                    inst.dispose();
+                }
+            }
+            el.setAttribute('title', titleText);
+            el.removeAttribute('data-bs-original-title');
+            if (isWritable) {
+                el.classList.remove('disabled');
+                el.removeAttribute('style');
+                el.disabled = false;
+            } else {
+                el.classList.add('disabled');
+                el.style.pointerEvents = 'none';
+                el.style.opacity = '0.5';
+                el.disabled = true;
+            }
+            if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                new bootstrap.Tooltip(el);
+            }
+        };
+
         const checkGitPermissions = async () => {
             try {
                 const data = await fetchJson('/api/git/check_permission');
                 if (data.has_write_access) {
-                    if (gitUploadBtn) {
-                        gitUploadBtn.classList.remove('disabled');
-                        gitUploadBtn.removeAttribute('style');
-                        gitUploadBtn.setAttribute('title', 'Upload active component to repository');
-                        new bootstrap.Tooltip(gitUploadBtn);
-                    }
-                    if (gitUploadSidebarBtn) {
-                        gitUploadSidebarBtn.disabled = false;
-                        gitUploadSidebarBtn.setAttribute('title', 'Upload active component to repository');
-                        new bootstrap.Tooltip(gitUploadSidebarBtn);
-                    }
-                    if (gitUploadAllBtn) {
-                        gitUploadAllBtn.disabled = false;
-                        gitUploadAllBtn.setAttribute('title', 'Upload all local components to repository');
-                        new bootstrap.Tooltip(gitUploadAllBtn);
-                    }
+                    updateBtnTooltip(gitUploadBtn, 'Upload active component to repository', true);
+                    updateBtnTooltip(gitUploadSidebarBtn, 'Upload active component to repository', true);
+                    updateBtnTooltip(gitUploadAllBtn, 'Upload all local components to repository', true);
                 } else {
-                    const readOnlyMsg = "Read-only: No write permissions for this repository.";
-                    if (gitUploadBtn) {
-                        gitUploadBtn.classList.add('disabled');
-                        gitUploadBtn.style.pointerEvents = 'none';
-                        gitUploadBtn.style.opacity = '0.5';
-                        gitUploadBtn.setAttribute('title', readOnlyMsg);
-                        new bootstrap.Tooltip(gitUploadBtn);
-                    }
-                    if (gitUploadSidebarBtn) {
-                        gitUploadSidebarBtn.disabled = true;
-                        gitUploadSidebarBtn.setAttribute('title', readOnlyMsg);
-                        new bootstrap.Tooltip(gitUploadSidebarBtn);
-                    }
-                    if (gitUploadAllBtn) {
-                        gitUploadAllBtn.disabled = true;
-                        gitUploadAllBtn.setAttribute('title', readOnlyMsg);
-                        new bootstrap.Tooltip(gitUploadAllBtn);
-                    }
+                    const readOnlyMsg = data.details
+                        ? `Read-only: ${data.details}`
+                        : "Read-only: No write permissions for this repository.";
+                    updateBtnTooltip(gitUploadBtn, readOnlyMsg, false);
+                    updateBtnTooltip(gitUploadSidebarBtn, readOnlyMsg, false);
+                    updateBtnTooltip(gitUploadAllBtn, readOnlyMsg, false);
                 }
             } catch (err) {
                 console.error("Failed to check git write permissions:", err);
-                const readOnlyMsg = "Read-only: No write permissions for this repository.";
-                if (gitUploadBtn) {
-                    gitUploadBtn.classList.add('disabled');
-                    gitUploadBtn.style.pointerEvents = 'none';
-                    gitUploadBtn.style.opacity = '0.5';
-                    gitUploadBtn.setAttribute('title', readOnlyMsg);
-                }
-                if (gitUploadSidebarBtn) {
-                    gitUploadSidebarBtn.disabled = true;
-                    gitUploadSidebarBtn.setAttribute('title', readOnlyMsg);
-                }
-                if (gitUploadAllBtn) {
-                    gitUploadAllBtn.disabled = true;
-                    gitUploadAllBtn.setAttribute('title', readOnlyMsg);
-                }
+                const readOnlyMsg = `Read-only: Permission check failed (${err.message || 'Network error'})`;
+                updateBtnTooltip(gitUploadBtn, readOnlyMsg, false);
+                updateBtnTooltip(gitUploadSidebarBtn, readOnlyMsg, false);
+                updateBtnTooltip(gitUploadAllBtn, readOnlyMsg, false);
             }
         };
 
@@ -2821,6 +2812,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
+        await setupGitSyncFeatures();
         document.addEventListener('click', (e) => {
             const target = /** @type {HTMLElement} */ (e.target);
             const btn = target.closest('.toggle-password-btn');
