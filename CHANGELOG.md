@@ -7,6 +7,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **UI Port Variable Validation & Access Link Fallback**:
+  - Enforced frontend and backend metadata validation blocking `Save All Changes` in Editor when `has_ui` is `true` but `ui_port_variable` is empty or missing.
+  - Added numeric literal port fallback in Configurator app (`app.js`) ensuring web UI access links render correctly even when `ui_port_variable` specifies a direct port number (e.g., `"3000"`).
 - **Automatic Component Package Auto-Seeding**:
   - Added automatic background seeding (`seed_user_components_if_needed()`) in `src/utils/resource_utils.py` upon initial application startup.
   - Automatically fetches and initializes component templates from remote GitHub (`HenkVanHoek/njord-deploy-components`) when starting on fresh systems.

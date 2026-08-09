@@ -427,6 +427,8 @@ def create_app(test_config=None):
             return jsonify({"status": "updated"}), 200
         except KeyError:
             abort(404, f"Component '{comp_id}' not found")
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
             logging.error(
                 f"Failed to update metadata for {comp_id}: {e}", exc_info=True

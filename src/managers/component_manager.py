@@ -261,6 +261,18 @@ class ComponentManager:
         components = self._components_data.setdefault("components", {})
         if component_id not in components:
             raise KeyError(f"Component '{component_id}' not found.")
+        current_comp = components[component_id]
+        merged_has_ui = update_data.get("has_ui", current_comp.get("has_ui", False))
+        merged_ui_port_var = update_data.get(
+            "ui_port_variable", current_comp.get("ui_port_variable")
+        )
+        if merged_has_ui and (
+            merged_ui_port_var is None or not str(merged_ui_port_var).strip()
+        ):
+            raise ValueError(
+                "Validation Error: 'ui_port_variable' is required "
+                "when 'has_ui' is enabled."
+            )
         new_group_id = update_data.get("group")
         if isinstance(new_group_id, str) and new_group_id:
             njorddeploy_meta = self._components_data.setdefault("_njorddeploy", {})

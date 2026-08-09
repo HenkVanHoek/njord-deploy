@@ -1,0 +1,40 @@
+{
+    "variables": [
+        {
+            "default": "80",
+            "description": "The host port for accessing the AdGuard Home web interface (HTTP).",
+            "id": "ADGUARDHOME_WEB_PORT",
+            "label": "AdGuard Home Web Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "53",
+            "description": "The host port for AdGuard Home's DNS service (TCP).",
+            "id": "ADGUARDHOME_DNS_PORT_TCP",
+            "label": "AdGuard Home DNS TCP Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "53",
+            "description": "The host port for AdGuard Home's DNS service (UDP).",
+            "id": "ADGUARDHOME_DNS_PORT_UDP",
+            "label": "AdGuard Home DNS UDP Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "Etc/UTC",
+            "description": "Specify the timezone for the container (e.g., 'America/New_York', 'Europe/London').",
+            "id": "TZ",
+            "label": "Timezone",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

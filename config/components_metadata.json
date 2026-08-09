@@ -1,7 +1,6 @@
 {
     "_njorddeploy": {
         "components_order": [
-            "adguard-home",
             "pi-hole",
             "audiobookshelf",
             "caddy",
@@ -163,31 +162,38 @@
         }
     },
     "components": {
-        "adguard-home": {
+        "adguardhome": {
             "component_version": "latest",
-            "conflicts_with": [],
+            "conflicts_with": [
+                "pi-hole"
+            ],
             "depends_on": [],
-            "description": "Network-wide ad & tracker blocking DNS server. An alternative to Pi-hole.",
+            "description": "AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a \u201cblack hole\u201d, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0).",
+            "docker_service_name": "adguardhome",
             "group": "dns_blocker",
             "has_configuration": false,
-            "has_traefik_support": false,
+            "has_traefik_support": true,
             "has_ui": true,
             "image_name": "adguard/adguardhome",
-            "intent_questions": [],
             "name": "AdGuard Home",
             "package_id": null,
-            "project_url": "https://github.com/AdguardTeam/AdGuardHome",
             "protocol": "http",
             "resource_profile": {
                 "cpu": "medium",
                 "ram": "medium",
+                "recommended_cores": null,
+                "recommended_ram_mb": null,
+                "recommended_storage_gb": null,
                 "storage_type": "persistent"
             },
             "tags": [
-                "self-hosted"
+                "dns",
+                "adblock",
+                "privacy"
             ],
-            "traefik_internal_port": null,
-            "ui_port_variable": null
+            "test_status": "beta",
+            "traefik_internal_port": 80,
+            "ui_port_variable": "ADGUARDHOME_WEB_PORT"
         },
         "adminer": {
             "component_version": "latest",

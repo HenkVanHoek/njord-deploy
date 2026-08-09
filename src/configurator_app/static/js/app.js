@@ -2448,6 +2448,9 @@
                             const varDef = comp.required_variables.find(v => v.id === comp.ui_port_variable);
                             if (varDef) port = varDef.default;
                         }
+                        if (!port && /^\d+$/.test(String(comp.ui_port_variable).trim())) {
+                            port = String(comp.ui_port_variable).trim();
+                        }
                         const protocol = comp.protocol || 'http';
                         if (port) {
                             allLinks.push({

@@ -6,7 +6,7 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| AdGuard Home | Network-wide ad & tracker blocking DNS server. An alternative to Pi-hole. | [Link](https://github.com/AdguardTeam/AdGuardHome) |
+| AdGuard Home | AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0). | N/A |
 | Pi-hole | A network-wide ad blocker that acts as a DNS sinkhole. | [Link](https://pi-hole.net/) |
 
 ## General Components

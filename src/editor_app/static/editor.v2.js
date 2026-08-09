@@ -256,6 +256,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 : parseInt(portInput.value) || null
         };
 
+        if (payload.has_ui && !payload.ui_port_variable) {
+            showAlert("Validation Error: 'UI Port Variable' (or port number) is required when 'Has Web UI' is checked.", "danger");
+            throw new Error("UI Port Variable is required when Has Web UI is checked.");
+        }
+
         await fetchJson(`/api/components/${componentId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },

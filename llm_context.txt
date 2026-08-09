@@ -1058,6 +1058,8 @@ on port 5001 (or CONFIGURATOR_PORT environment variable).
 
 import logging
 import os
+import socket
+import sys
 import threading
 import webbrowser
 
@@ -1069,6 +1071,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NjordDeployConfigurator")
 
 
+def is_port_in_use(host: str, port: int) -> bool:
+    """Checks if the specified host and TCP port are already in use."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        check_host = "127.0.0.1" if host == "0.0.0.0" else host  # nosec B104
+        return s.connect_ex((check_host, port)) == 0
+
+
 def open_browser(url: str):
     """Opens the default system browser to the specified URL."""
     try:
@@ -1078,21 +1088,43 @@ def open_browser(url: str):
 
 
 if __name__ == "__main__":
-    app = create_app()
     port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
     host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
 
     url_host = "localhost" if host == "0.0.0.0" else host  # nosec B104
     url = f"http://{url_host}:{port}"
 
-    logger.info(
-        f"Starting NjordDeploy Configurator via Waitress WSGI server " f"on {url}"
-    )
+    if is_port_in_use(host, port):
+        logger.info(
+            f"NjordDeploy Configurator is already running on {url}. "
+            f"Opening existing instance in browser..."
+        )
+        if not os.environ.get("NO_BROWSER"):
+            open_browser(url)
+        sys.exit(0)
+
+    app = create_app()
+
+    logger.info(f"Starting NjordDeploy Configurator via Waitress WSGI server on {url}")
 
     if not os.environ.get("NO_BROWSER"):
         threading.Timer(1.2, open_browser, args=[url]).start()
 
-    serve(app, host=host, port=port, threads=6)
+    try:
+        serve(app, host=host, port=port, threads=6)
+    except OSError as err:
+        if "already in use" in str(err).lower() or getattr(err, "errno", None) in (
+            98,
+            10048,
+        ):
+            logger.info(
+                f"Port {port} is already in use. "
+                f"Opening existing instance in browser..."
+            )
+            if not os.environ.get("NO_BROWSER"):
+                open_browser(url)
+            sys.exit(0)
+        raise
 
 --- FILE: run_editor.py ---
 # run_editor.py
@@ -1106,6 +1138,8 @@ on port 5000 (or EDITOR_PORT environment variable).
 
 import logging
 import os
+import socket
+import sys
 import threading
 import webbrowser
 
@@ -1117,6 +1151,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NjordDeployEditor")
 
 
+def is_port_in_use(host: str, port: int) -> bool:
+    """Checks if the specified host and TCP port are already in use."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        check_host = "127.0.0.1" if host == "0.0.0.0" else host  # nosec B104
+        return s.connect_ex((check_host, port)) == 0
+
+
 def open_browser(url: str):
     """Opens the default system browser to the specified URL."""
     try:
@@ -1126,19 +1168,43 @@ def open_browser(url: str):
 
 
 if __name__ == "__main__":
-    app = create_app()
     port = int(os.environ.get("EDITOR_PORT", 5000))
     host = os.environ.get("EDITOR_HOST", "0.0.0.0")  # nosec B104
 
     url_host = "localhost" if host == "0.0.0.0" else host  # nosec B104
     url = f"http://{url_host}:{port}"
 
-    logger.info(f"Starting NjordDeploy Editor via Waitress WSGI server " f"on {url}")
+    if is_port_in_use(host, port):
+        logger.info(
+            f"NjordDeploy Editor is already running on {url}. "
+            f"Opening existing instance in browser..."
+        )
+        if not os.environ.get("NO_BROWSER"):
+            open_browser(url)
+        sys.exit(0)
+
+    app = create_app()
+
+    logger.info(f"Starting NjordDeploy Editor via Waitress WSGI server on {url}")
 
     if not os.environ.get("NO_BROWSER"):
         threading.Timer(1.2, open_browser, args=[url]).start()
 
-    serve(app, host=host, port=port, threads=6)
+    try:
+        serve(app, host=host, port=port, threads=6)
+    except OSError as err:
+        if "already in use" in str(err).lower() or getattr(err, "errno", None) in (
+            98,
+            10048,
+        ):
+            logger.info(
+                f"Port {port} is already in use. "
+                f"Opening existing instance in browser..."
+            )
+            if not os.environ.get("NO_BROWSER"):
+                open_browser(url)
+            sys.exit(0)
+        raise
 
 --- FILE: scripts/check_release_status.py ---
 #!/usr/bin/env python3
@@ -1863,6 +1929,9 @@ def fetch_assets():
     response = requests.get(css_url, timeout=10)  # nosec
     response.raise_for_status()
     (STATIC_DIR / "css" / "njorddeploy-style.css").write_text(response.text)
+    editor_css_dir = Path("src/editor_app/static/css")
+    editor_css_dir.mkdir(parents=True, exist_ok=True)
+    (editor_css_dir / "njorddeploy-style.css").write_text(response.text)
     print("✅ CSS updated successfully.")
 
     # 2. Fetch the logo
@@ -5160,6 +5229,154 @@ def main():
 if __name__ == "__main__":
     main()
 
+--- FILE: scripts/search_chat_history.py ---
+#!/usr/bin/env python3
+"""CLI utility to search through local Antigravity chat history transcripts.
+
+Usage:
+    python scripts/search_chat_history.py <query>
+    python scripts/search_chat_history.py --conv-id <conversation_id>
+"""
+
+import argparse
+import glob
+import json
+import os
+import sys
+from typing import Dict, List, Optional
+
+
+def find_brain_directory() -> str:
+    """Return the absolute path to the Antigravity brain directory."""
+    home_dir = os.path.expanduser("~")
+    brain_path = os.path.join(
+        home_dir, ".gemini", "antigravity-cli", "brain"
+    )
+    return brain_path
+
+
+def search_transcripts(
+    query: str,
+    conv_id: Optional[str] = None,
+    case_sensitive: bool = False,
+    max_results: int = 20,
+) -> List[Dict[str, str]]:
+    """Search transcript JSONL files for a given query string or conv_id."""
+    brain_dir = find_brain_directory()
+    if not os.path.isdir(brain_dir):
+        print(f"Error: Brain directory not found at {brain_dir}")
+        return []
+
+    pattern = os.path.join(
+        brain_dir, "*", ".system_generated", "logs", "transcript.jsonl"
+    )
+    files = glob.glob(pattern)
+
+    results = []
+    search_term = query if case_sensitive else query.lower()
+
+    for file_path in files:
+        current_conv_id = file_path.split(os.sep)[-4]
+        if conv_id and current_conv_id != conv_id:
+            continue
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    data = json.loads(line)
+                    content = str(data.get("content", ""))
+                    source = data.get("source", "")
+                    created_at = data.get("created_at", "")
+
+                    target_text = content if case_sensitive else content.lower()
+
+                    if query and search_term in target_text:
+                        results.append(
+                            {
+                                "conv_id": current_conv_id,
+                                "created_at": created_at,
+                                "source": source,
+                                "content": content,
+                            }
+                        )
+                    elif not query and conv_id:
+                        results.append(
+                            {
+                                "conv_id": current_conv_id,
+                                "created_at": created_at,
+                                "source": source,
+                                "content": content,
+                            }
+                        )
+        except Exception:
+            continue
+
+    return results[:max_results]
+
+
+def main() -> None:
+    """Parse CLI arguments and display search results."""
+    parser = argparse.ArgumentParser(
+        description="Search through Antigravity chat history."
+    )
+    parser.add_argument(
+        "query",
+        nargs="?",
+        default="",
+        help="Search query term (e.g. 'positionering')",
+    )
+    parser.add_argument(
+        "--conv-id",
+        type=str,
+        default=None,
+        help="Filter or display a specific conversation ID",
+    )
+    parser.add_argument(
+        "--case-sensitive",
+        action="store_true",
+        help="Perform case-sensitive search",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Maximum number of result steps to display (default: 20)",
+    )
+
+    args = parser.parse_args()
+
+    if not args.query and not args.conv_id:
+        parser.print_help()
+        sys.exit(1)
+
+    print(f"🔍 Searching chat history for: '{args.query or args.conv_id}'...\n")
+    matches = search_transcripts(
+        query=args.query,
+        conv_id=args.conv_id,
+        case_sensitive=args.case_sensitive,
+        max_results=args.limit,
+    )
+
+    if not matches:
+        print("Geen resultaten gevonden.")
+        return
+
+    print(f"Totaal {len(matches)} match(es) gevonden:\n" + "=" * 60)
+    for idx, match in enumerate(matches, start=1):
+        print(
+            f"[{idx}] Conversation ID: {match['conv_id']}\n"
+            f"    Datum/Tijd     : {match['created_at']}\n"
+            f"    Bron           : {match['source']}\n"
+        )
+        snippet = match["content"].replace("\n", " ")
+        if len(snippet) > 300:
+            snippet = snippet[:300] + "..."
+        print(f"    Inhoud Snippet : {snippet}\n" + "-" * 60)
+
+
+if __name__ == "__main__":
+    main()
+
 --- FILE: scripts/update_docs.py ---
 # scripts/update_docs.py
 import subprocess  # nosec B404
@@ -5625,6 +5842,25 @@ def create_app(test_config=None):
 
         else:
             return jsonify({"error": "Invalid update mode"}), 400
+
+    @flask_app.route("/nmap-status", methods=["GET"])
+    def nmap_status():
+        import shutil
+
+        installed = shutil.which("nmap") is not None
+        return jsonify(
+            {
+                "installed": installed,
+                "message": (
+                    "nmap is installed."
+                    if installed
+                    else (
+                        "nmap is not installed. Install via "
+                        "'sudo apt install nmap' for L2 subnet scanning."
+                    )
+                ),
+            }
+        )
 
     @flask_app.route("/tailscale-status", methods=["GET"])
     def tailscale_status():
@@ -8489,6 +8725,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                         if (themeName) {
                             document.documentElement.setAttribute("data-theme", themeName);
                             localStorage.setItem("user-theme-preference", themeName);
+                            document.dispatchEvent(new CustomEvent("themeChanged", { detail: { theme: themeName } }));
                             console.log("Accessibility: Theme changed to:", themeName);
                         }
                     });
@@ -10959,6 +11196,9 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             const varDef = comp.required_variables.find(v => v.id === comp.ui_port_variable);
                             if (varDef) port = varDef.default;
                         }
+                        if (!port && /^\d+$/.test(String(comp.ui_port_variable).trim())) {
+                            port = String(comp.ui_port_variable).trim();
+                        }
                         const protocol = comp.protocol || 'http';
                         if (port) {
                             allLinks.push({
@@ -13322,12 +13562,21 @@ def create_app(test_config=None):
     def serve_shared_css():
         from flask import send_from_directory
 
-        shared_css_dir = project_root / "src" / "configurator_app" / "static" / "css"
-        if not shared_css_dir.exists():
-            shared_css_dir = (
-                Path(__file__).parent.parent / "configurator_app" / "static" / "css"
-            )
-        return send_from_directory(shared_css_dir, "njorddeploy-style.css")
+        from utils.resource_utils import resource_path
+
+        candidate_dirs = [
+            resource_path("src/editor_app/static/css"),
+            resource_path("src/configurator_app/static/css"),
+            project_root / "src" / "editor_app" / "static" / "css",
+            project_root / "src" / "configurator_app" / "static" / "css",
+            Path(__file__).parent / "static" / "css",
+            Path(__file__).parent.parent / "configurator_app" / "static" / "css",
+        ]
+        for css_dir in candidate_dirs:
+            if (css_dir / "njorddeploy-style.css").exists():
+                return send_from_directory(css_dir, "njorddeploy-style.css")
+
+        abort(404, "njorddeploy-style.css not found")
 
     @app.route("/")
     def index():
@@ -13355,6 +13604,8 @@ def create_app(test_config=None):
             return jsonify({"status": "updated"}), 200
         except KeyError:
             abort(404, f"Component '{comp_id}' not found")
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 400
         except Exception as e:
             logging.error(
                 f"Failed to update metadata for {comp_id}: {e}", exc_info=True
@@ -13965,6 +14216,7 @@ if __name__ == "__main__":
                         if (themeName) {
                             document.documentElement.setAttribute("data-theme", themeName);
                             localStorage.setItem("user-theme-preference", themeName);
+                            document.dispatchEvent(new CustomEvent("themeChanged", { detail: { theme: themeName } }));
                             console.log("Accessibility: Theme changed to:", themeName);
                         }
                     });
@@ -13983,6 +14235,534 @@ if __name__ == "__main__":
         }
     });
 })();
+
+--- FILE: src/editor_app/static/css/njorddeploy-style.css ---
+/* NjordDeploy / SBCDeploy Official Futuristic Glassmorphic Theme */
+
+:root, html[data-theme="dark"], html[data-theme="futuristic-dark"] {
+    /* Glowing Neon Accent Colors */
+    --brand-green: #00e676; /* Neon Green */
+    --brand-blue: #00b0ff;  /* Glowing Neon Blue */
+    --brand-gray: #90a4ae;  /* Soft Gray-Blue */
+
+    /* Dark Theme Backgrounds */
+    --dark-bg-start: #0a1128; /* Midnight Blue */
+    --dark-bg-end: #02040a;   /* Rich Dark Black */
+
+    /* Glassmorphic Tokens */
+    --glass-bg: rgba(30, 41, 59, 0.45); /* Semi-transparent dark slate */
+    --glass-border: rgba(255, 255, 255, 0.08); /* Soft white border highlight */
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 176, 255, 0.22);
+
+    /* Override Bootstrap's Root Variables */
+    --bs-body-bg: var(--dark-bg-end);
+    --bs-body-color: #f8fafc; /* Very light slate text */
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 176, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 144, 164, 174;
+
+    /* Theme-specific Overrides */
+    --bs-heading-color: #ffffff;
+    --navbar-bg: rgba(15, 23, 42, 0.7);
+    --navbar-color: #cbd5e1;
+    --input-bg: rgba(15, 23, 42, 0.6);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-color: #f8fafc;
+    --text-muted-color: #94a3b8;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: rgba(15, 23, 42, 0.95);
+    --introjs-border: var(--brand-blue);
+    --introjs-text: #cbd5e1;
+    --introjs-title: #ffffff;
+    --introjs-btn-bg: rgba(255, 255, 255, 0.05);
+    --introjs-btn-border: rgba(255, 255, 255, 0.1);
+    --introjs-btn-text: #cbd5e1;
+}
+
+html[data-theme="light"] {
+    --brand-green: #00c853;
+    --brand-blue: #0d6efd;
+    --brand-gray: #6c757d;
+    --dark-bg-start: #f8f9fa;
+    --dark-bg-end: #ffffff;
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    --bs-body-bg: var(--dark-bg-end);
+    --bs-body-color: #212529;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 13, 110, 253;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 108, 117, 125;
+    --bs-heading-color: #212529;
+    --navbar-bg: rgba(248, 249, 250, 0.85);
+    --navbar-color: #212529;
+    --input-bg: #ffffff;
+    --input-border: #ced4da;
+    --input-color: #212529;
+    --text-muted-color: #6c757d;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #ffffff;
+    --introjs-border: var(--brand-blue);
+    --introjs-text: #212529;
+    --introjs-title: #212529;
+    --introjs-btn-bg: #f8f9fa;
+    --introjs-btn-border: #ced4da;
+    --introjs-btn-text: #212529;
+}
+
+html[data-theme="high-contrast-dark"] {
+    --brand-green: #00e676;
+    --brand-blue: #00e5ff;
+    --brand-gray: #a1a1aa;
+    --dark-bg-start: #000000;
+    --dark-bg-end: #000000;
+    --glass-bg: #121212;
+    --glass-border: #ffffff;
+    --glass-shadow: none;
+    --bs-body-bg: #000000;
+    --bs-body-color: #ffffff;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 229, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 161, 161, 170;
+    --bs-heading-color: #ffffff;
+    --navbar-bg: #000000;
+    --navbar-color: #ffffff;
+    --input-bg: #000000;
+    --input-border: #ffffff;
+    --input-color: #ffffff;
+    --text-muted-color: #a1a1aa;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #000000;
+    --introjs-border: #ffffff;
+    --introjs-text: #ffffff;
+    --introjs-title: #ffffff;
+    --introjs-btn-bg: #000000;
+    --introjs-btn-border: #ffffff;
+    --introjs-btn-text: #ffffff;
+}
+
+html[data-theme="high-contrast-light"] {
+    --brand-green: #00c853;
+    --brand-blue: #0000ff;
+    --brand-gray: #4b5563;
+    --dark-bg-start: #ffffff;
+    --dark-bg-end: #ffffff;
+    --glass-bg: #ffffff;
+    --glass-border: #000000;
+    --glass-shadow: none;
+    --bs-body-bg: #ffffff;
+    --bs-body-color: #000000;
+    --bs-primary: var(--brand-blue);
+    --bs-primary-rgb: 0, 0, 255;
+    --bs-secondary: var(--brand-gray);
+    --bs-secondary-rgb: 75, 85, 99;
+    --bs-heading-color: #000000;
+    --navbar-bg: #ffffff;
+    --navbar-color: #000000;
+    --input-bg: #ffffff;
+    --input-border: #000000;
+    --input-color: #000000;
+    --text-muted-color: #4b5563;
+
+    /* Tooltip & Tour Theme Variables */
+    --introjs-bg: #ffffff;
+    --introjs-border: #000000;
+    --introjs-text: #000000;
+    --introjs-title: #000000;
+    --introjs-btn-bg: #ffffff;
+    --introjs-btn-border: #000000;
+    --introjs-btn-text: #000000;
+}
+
+/* 1. Base Body & Background */
+body {
+    font-family: 'Roboto', sans-serif;
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMTc2LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScwLjUnPjxsaW5lIHgxPScxNScgeTE9JzE1JyB4Mj0nNzUnIHkyPSc0NScgLz48bGluZSB4MT0nNzUnIHkxPSc0NScgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nNDUnIHkyPScxMDUnIC8+PGxpbmUgeDE9JzQ1JyB5MT0nMTA1JyB4Mj0nMTUnIHkyPScxNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxMDUnIHkyPScxMjAnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPScxMDUnIHkxPScxMjAnIHgyPSc3NScgeTI9JzQ1JyAvPjwvZz48ZyBmaWxsPSdyZ2JhKDAsMTc2LDI1NSwwLjI1KSc+PGNpcmNsZSBjeD0nMTUnIGN5PScxNScgcj0nMS41JyAvPjxjaXJjbGUgY3g9Jzc1JyBjeT0nNDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTM1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc0NScgY3k9JzEwNScgcj0nMicgLz48Y2lyY2xlIGN4PScxMDUnIGN5PScxMjAnIHI9JzEuOCcgLz48L2c+PC9zdmc+") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+    color: var(--bs-body-color);
+    min-height: 100vh;
+}
+
+html[data-theme="dark"] body, html[data-theme="futuristic-dark"] body {
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMTc2LDI1NSwwLjE1KScgc3Ryb2tlLXdpZHRoPScwLjUnPjxsaW5lIHgxPScxNScgeTE9JzE1JyB4Mj0nNzUnIHkyPSc0NScgLz48bGluZSB4MT0nNzUnIHkxPSc0NScgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nNDUnIHkyPScxMDUnIC8+PGxpbmUgeDE9JzQ1JyB5MT0nMTA1JyB4Mj0nMTUnIHkyPScxNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxMDUnIHkyPScxMjAnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9JzEzNScgeTI9JzE1JyAvPjxsaW5lIHgxPScxMDUnIHkxPScxMjAnIHgyPSc3NScgeTI9JzQ1JyAvPjwvZz48ZyBmaWxsPSdyZ2JhKDAsMTc2LDI1NSwwLjI1KSc+PGNpcmNsZSBjeD0nMTUnIGN5PScxNScgcj0nMS41JyAvPjxjaXJjbGUgY3g9Jzc1JyBjeT0nNDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTM1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc0NScgY3k9JzEwNScgcj0nMicgLz48Y2lyY2xlIGN4PScxMDUnIGN5PScxMjAnIHI9JzEuOCcgLz48L2c+PC9zdmc+") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+}
+
+html[data-theme="light"] body {
+    background:
+        url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxNTAnIGhlaWdodD0nMTUwJyB2aWV3Qm94PScwIDAgMTUwIDE1MCc+PGcgc3Ryb2tlPSdyZ2JhKDAsMCwwLDAuMDIpJyBzdHJva2Utd2lkdGg9JzAuNSc+PGxpbmUgeDE9JzE1JyB5MT0nMTUnIHgyPSc3NScgeTI9JzQ1JyAvPjxsaW5lIHgxPSc3NScgeTE9JzQ1JyB4Mj0nMTM1JyB5Mj0nMTUnIC8+PGxpbmUgeDE9Jzc1JyB5MT0nNDUnIHgyPSc0NScgeTI9JzEwNScgLz48bGluZSB4MT0nNDUnIHkxPScxMDUnIHgyPScxNScgeTI9JzE1JyAvPjxsaW5lIHgxPSc0NScgeTE9JzEwNScgeDI9JzEwNScgeTI9JzEyMCcgLz48bGluZSB4MT0nMTA1JyB5MT0nMTIwJyB4Mj0nMTM1JyB5Mj0nMTUnIC8+PGxpbmUgeDE9JzEwNScgeTE9JzEyMCcgeDI9Jzc1JyB5Mj0nNDUnIC8+PC9nPjxnIGZpbGw9J3JnYmEoMCwwLDAsMC4wMyknPjxjaXJjbGUgY3g9JzE1JyBjeT0nMTUnIHI9JzEuNScgLz48Y2lyY2xlIGN4PSc3NScgY3k9JzQ1JyByPScyJyAvPjxjaXJjbGUgY3g9JzEzNScgY3k9JzE1JyByPScxLjUnIC8+PGNpcmNsZSBjeD0nNDUnIGN5PScxMDUnIHI9JzInIC8+PGNpcmNsZSBjeD0nMTA1JyBjeT0nMTIwJyByPScxLjgnIC8+PC9nPjwvc3ZnPg==") repeat,
+        radial-gradient(circle at top left, var(--dark-bg-start), var(--dark-bg-end)) no-repeat;
+    background-attachment: fixed;
+}
+
+html[data-theme="high-contrast-dark"] body {
+    background: #000000 !important;
+}
+
+html[data-theme="high-contrast-light"] body {
+    background: #ffffff !important;
+}
+
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--bs-heading-color) !important;
+}
+
+/* 2. Glassmorphic Containers and Cards */
+.container, .card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: 12px !important;
+    transition: box-shadow 0.3s ease, transform 0.3s ease !important;
+}
+
+.card:hover {
+    box-shadow: 0 0 30px rgba(0, 176, 255, 0.45) !important;
+    transform: translateY(-2px);
+}
+
+html[data-theme="high-contrast-dark"] .card:hover,
+html[data-theme="high-contrast-light"] .card:hover {
+    transform: none;
+    box-shadow: none !important;
+}
+
+/* Override card header and footer back to transparent */
+.card-header, .card-footer {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border-color: var(--glass-border) !important;
+    color: #cbd5e1 !important;
+}
+
+/* 3. Glowing Interactive Inputs */
+.form-control, input[type="text"], input[type="password"] {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    color: var(--input-color) !important;
+    border-radius: 6px;
+    padding: 0.6em;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-control::placeholder,
+input[type="text"]::placeholder,
+input[type="password"]::placeholder {
+    color: var(--text-muted-color) !important;
+    opacity: 0.65 !important;
+}
+
+.form-control:focus, input[type="text"]:focus, input[type="password"]:focus {
+    border-color: var(--brand-blue) !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.35) !important;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+}
+
+/* 4. Neon Buttons & Overrides */
+.btn-primary {
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 0 25px rgba(0, 176, 255, 0.7);
+    transform: translateY(-1px);
+}
+
+.btn-accent {
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.4);
+    color: #ffffff !important;
+}
+
+.btn-accent:hover {
+    box-shadow: 0 0 25px rgba(0, 176, 255, 0.7);
+    color: #ffffff !important;
+}
+
+.btn-success, #begin-scan-btn, .button {
+    background: linear-gradient(135deg, #00e676, #00c853) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(0, 230, 118, 0.4);
+    color: #ffffff !important;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover, #begin-scan-btn:hover {
+    box-shadow: 0 0 25px rgba(0, 230, 118, 0.7);
+    transform: translateY(-1px);
+}
+
+/* 5. Progress Bar Neon Glow */
+.progress {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px;
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--brand-blue), #00e676) !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.7);
+}
+
+/* 6. Navigation Bar Glass */
+.navbar {
+    background: var(--navbar-bg) !important;
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.navbar .nav-link, .navbar-brand {
+    color: var(--navbar-color) !important;
+}
+
+/* 7. Typography Adjustments */
+.text-muted {
+    color: var(--text-muted-color) !important; /* Theme-specific gray text */
+}
+
+.bg-light {
+    background-color: transparent !important;
+}
+
+.bg-white {
+    background-color: var(--glass-bg) !important;
+}
+
+/* 8. Navigation Tabs (Bootstrap Overrides) */
+.nav-tabs {
+    border-bottom: 1px solid var(--glass-border) !important;
+}
+
+.nav-tabs .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected tabs */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-bottom: -1px;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    color: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.08) rgba(255, 255, 255, 0.08) transparent !important;
+    background-color: rgba(255, 255, 255, 0.02) !important;
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--brand-blue) !important; /* Neon blue text for selected tab */
+    background-color: rgba(255, 255, 255, 0.05) !important; /* Subtle glass back */
+    border-color: var(--glass-border) var(--glass-border) transparent !important;
+    border-bottom: 2px solid var(--brand-blue) !important;
+    text-shadow: 0 0 8px rgba(0, 176, 255, 0.4);
+}
+
+/* 9. Navigation Pills (Bootstrap Overrides for Sidebar Tabs) */
+.nav-pills .nav-link {
+    color: #cbd5e1 !important; /* Light text for unselected pills */
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    text-align: left;
+    transition: all 0.2s ease;
+}
+
+.nav-pills .nav-link:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--glass-border) !important;
+}
+
+.nav-pills .nav-link.active {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #00b0ff, #0091ea) !important; /* Neon blue gradient */
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.45) !important;
+    border-color: var(--glass-border) !important;
+    font-weight: 600;
+}
+
+/* Dropdown menu & item styling */
+.dropdown-menu {
+    background-color: var(--glass-bg) !important;
+    border: 1px solid var(--glass-border) !important;
+    backdrop-filter: blur(16px);
+}
+.dropdown-menu .dropdown-item {
+    color: var(--navbar-color) !important;
+    transition: all 0.2s ease;
+}
+.dropdown-menu .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+html[data-theme="light"] .dropdown-menu .dropdown-item {
+    color: #212529 !important;
+}
+html[data-theme="light"] .dropdown-menu .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    color: #000000 !important;
+}
+html[data-theme="high-contrast-light"] .dropdown-menu .dropdown-item {
+    color: #000000 !important;
+}
+html[data-theme="high-contrast-light"] .dropdown-menu .dropdown-item:hover {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+
+/* Tooltip styling */
+.tooltip-inner {
+    background-color: var(--introjs-bg) !important;
+    color: var(--introjs-text) !important;
+    border: 1px solid var(--introjs-border) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+.tooltip-arrow::before {
+    border-top-color: var(--introjs-bg) !important;
+    border-bottom-color: var(--introjs-bg) !important;
+}
+
+/* IntroJS Custom Styling */
+.introjs-tooltip {
+    background-color: var(--introjs-bg) !important;
+    border: 1px solid var(--introjs-border) !important;
+    color: var(--introjs-text) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25) !important;
+    border-radius: 12px !important;
+    min-width: 320px !important;
+}
+.introjs-tooltip-title {
+    color: var(--introjs-title) !important;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+}
+.introjs-tooltiptext {
+    color: var(--introjs-text) !important;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.introjs-button {
+    background-color: var(--introjs-btn-bg) !important;
+    border: 1px solid var(--introjs-btn-border) !important;
+    color: var(--introjs-btn-text) !important;
+    text-shadow: none !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease-in-out !important;
+}
+.introjs-button:hover {
+    background: var(--bs-primary) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(0, 176, 255, 0.4) !important;
+}
+html[data-theme="high-contrast-light"] .introjs-button:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+.introjs-disabled {
+    background-color: rgba(255, 255, 255, 0.02) !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+    color: #475569 !important;
+    opacity: 0.5;
+}
+.introjs-progress {
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 4px !important;
+}
+.introjs-progressbar {
+    background: linear-gradient(90deg, var(--brand-blue), #00e676) !important;
+    box-shadow: 0 0 8px rgba(0, 176, 255, 0.5) !important;
+}
+.introjs-skipbutton {
+    color: var(--text-muted-color) !important;
+}
+.introjs-skipbutton:hover {
+    color: var(--introjs-title) !important;
+}
+.introjs-arrow.top { border-bottom-color: var(--introjs-bg) !important; }
+.introjs-arrow.bottom { border-top-color: var(--introjs-bg) !important; }
+.introjs-arrow.left { border-right-color: var(--introjs-bg) !important; }
+.introjs-arrow.right { border-left-color: var(--introjs-bg) !important; }
+
+/* Sidebar Tabs (#view-tabs) */
+#view-tabs {
+    background-color: rgba(15, 23, 42, 0.6) !important;
+}
+html[data-theme="light"] #view-tabs {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+html[data-theme="high-contrast-dark"] #view-tabs {
+    background-color: #000000 !important;
+    border: 1px solid #ffffff !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs {
+    background-color: #ffffff !important;
+    border: 1px solid #000000 !important;
+}
+#view-tabs .nav-link {
+    color: var(--text-muted-color) !important;
+}
+#view-tabs .nav-link.active {
+    background: var(--bs-primary) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 15px rgba(0, 176, 255, 0.35) !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs .nav-link.active {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+html[data-theme="high-contrast-light"] #view-tabs .nav-link {
+    color: #000000 !important;
+}
+
+/* Welcome detailed guide */
+#welcome-detailed-guide {
+    color: var(--bs-body-color) !important;
+}
+
+/* Disabled inputs and buttons contrast */
+.btn:disabled, .btn-success:disabled, .btn-primary:disabled {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: var(--text-muted-color) !important;
+    border: 1px solid var(--glass-border) !important;
+}
+html[data-theme="high-contrast-dark"] .btn:disabled,
+html[data-theme="high-contrast-dark"] .btn-success:disabled,
+html[data-theme="high-contrast-dark"] .btn-primary:disabled {
+    background: #27272a !important;
+    color: #cbd5e1 !important;
+    border: 1px solid #ffffff !important;
+}
+html[data-theme="high-contrast-light"] .btn:disabled,
+html[data-theme="high-contrast-light"] .btn-success:disabled,
+html[data-theme="high-contrast-light"] .btn-primary:disabled {
+    background: #e4e4e7 !important;
+    color: #1f2937 !important;
+    border: 1px solid #000000 !important;
+}
+.nav-link.disabled {
+    color: var(--text-muted-color) !important;
+}
 
 --- FILE: src/editor_app/static/editor.v2.js ---
 // src/editor_app/static/editor.v2.js
@@ -14243,6 +15023,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 : parseInt(portInput.value) || null
         };
 
+        if (payload.has_ui && !payload.ui_port_variable) {
+            showAlert("Validation Error: 'UI Port Variable' (or port number) is required when 'Has Web UI' is checked.", "danger");
+            throw new Error("UI Port Variable is required when Has Web UI is checked.");
+        }
+
         await fetchJson(`/api/components/${componentId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
@@ -14419,10 +15204,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (!codeEditor) {
-            const themeSelector = /** @type {HTMLSelectElement} */ (
-                document.getElementById('theme-selector')
-            );
-            const selectedTheme = themeSelector ? themeSelector.value : 'default';
+            const currentAppTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            const isLightTheme = currentAppTheme === 'light' || currentAppTheme === 'high-contrast-light';
+            const selectedTheme = isLightTheme ? 'default' : 'material-darker';
             codeEditor = CodeMirror.fromTextArea(
                 document.getElementById('template-editor'),
                 {
@@ -14633,15 +15417,36 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setupThemeSelector = () => {
-        const themeSelector = document.getElementById('theme-selector');
-        if (!themeSelector) return;
-        const savedTheme = localStorage.getItem('editorTheme');
-        if (savedTheme) themeSelector.value = savedTheme;
-        themeSelector.addEventListener('change', (event) => {
-            const newTheme = event.target.value;
-            localStorage.setItem('editorTheme', newTheme);
-            if (codeEditor) codeEditor.setOption('theme', newTheme);
+        const themeSelector = /** @type {HTMLSelectElement | null} */ (
+            document.getElementById('theme-selector')
+        );
+
+        const syncAllThemeControls = (themeName) => {
+            if (themeSelector) {
+                themeSelector.value = themeName;
+            }
+            if (codeEditor) {
+                const isLight = themeName === 'light' || themeName === 'high-contrast-light';
+                codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+            }
+        };
+
+        if (themeSelector) {
+            themeSelector.addEventListener('change', (event) => {
+                const newTheme = /** @type {HTMLSelectElement} */ (event.target).value;
+                document.documentElement.setAttribute('data-theme', newTheme);
+                localStorage.setItem('user-theme-preference', newTheme);
+                document.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: newTheme } }));
+            });
+        }
+
+        document.addEventListener('themeChanged', (e) => {
+            const themeName = (e.detail && e.detail.theme) || document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            syncAllThemeControls(themeName);
         });
+
+        const initialTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+        syncAllThemeControls(initialTheme);
     };
 
     const setupCreateComponentModal = () => {
@@ -17741,11 +18546,24 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
         .introjs-arrow.right {
             border-left-color: rgba(15, 23, 42, 0.95) !important;
         }
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border) !important;
+        }
+        .editor-navbar .navbar-brand,
+        .editor-navbar .nav-link {
+            color: var(--text-color) !important;
+        }
+        .editor-navbar .nav-link:hover,
+        .editor-navbar .nav-link:focus {
+            color: var(--brand-blue) !important;
+        }
 
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand-lg fixed-top editor-navbar">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="https://njorddeploy.com" target="_blank">
             <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}" alt="NjordDeploy Logo" width="30" height="30" class="me-2">
@@ -17909,12 +18727,12 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                     <button class="btn btn-outline-info btn-sm me-3" id="generate-hash-btn" title="Generate Secure Hash for Basic Auth" data-bs-toggle="modal" data-bs-target="#hashGeneratorModal">
                         <i class="bi bi-lock"></i> Generate Hash
                     </button>
-                    <label for="theme-selector" class="form-label me-2 mb-0">Theme:</label>
+                    <label for="theme-selector" class="form-label me-2 mb-0"><i class="bi bi-palette me-1"></i>Theme:</label>
                     <select class="form-select form-select-sm" id="theme-selector" style="width: auto;">
-                        <option value="material-darker">Material Darker</option>
-                        <option value="monokai">Monokai</option>
-                        <option value="dracula">Dracula</option>
-                        <option value="solarized light">Solarized Light</option>
+                        <option value="futuristic-dark">Futuristic Dark</option>
+                        <option value="light">Standard Light</option>
+                        <option value="high-contrast-dark">High Contrast Dark</option>
+                        <option value="high-contrast-light">High Contrast Light</option>
                     </select>
                     <button class="btn btn-outline-warning btn-sm me-3" id="component-sync-btn" title="Sync / Diff with Repo">
                         <i class="bi bi-git"></i> Sync &amp; Diff
@@ -18785,6 +19603,18 @@ class ComponentManager:
         components = self._components_data.setdefault("components", {})
         if component_id not in components:
             raise KeyError(f"Component '{component_id}' not found.")
+        current_comp = components[component_id]
+        merged_has_ui = update_data.get("has_ui", current_comp.get("has_ui", False))
+        merged_ui_port_var = update_data.get(
+            "ui_port_variable", current_comp.get("ui_port_variable")
+        )
+        if merged_has_ui and (
+            merged_ui_port_var is None or not str(merged_ui_port_var).strip()
+        ):
+            raise ValueError(
+                "Validation Error: 'ui_port_variable' is required "
+                "when 'has_ui' is enabled."
+            )
         new_group_id = update_data.get("group")
         if isinstance(new_group_id, str) and new_group_id:
             njorddeploy_meta = self._components_data.setdefault("_njorddeploy", {})

@@ -1,4 +1,4 @@
-Tokens: 263412 | VRAM Status: CRITICAL
+Tokens: 270864 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -22,6 +22,7 @@ scripts/proxmox_package_test_runner.py
 scripts/proxmox_release_test_runner.py
 scripts/proxmox_test_runner.py
 scripts/run_batch_tests.py
+scripts/search_chat_history.py
 scripts/update_docs.py
 src/__init__.py
 src/configurator_app/__init__.py
@@ -45,6 +46,7 @@ src/configurator_app/templates/summary.html
 src/editor_app/__init__.py
 src/editor_app/app.py
 src/editor_app/static/accessibility.js
+src/editor_app/static/css/njorddeploy-style.css
 src/editor_app/static/editor.v2.js
 src/editor_app/static/ui_render_utils.js
 src/editor_app/templates/editor.html

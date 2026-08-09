@@ -165,6 +165,33 @@ def test_update_component_metadata_test_status(tmp_path):
     assert updated.get("test_status") == "tested"
 
 
+def test_update_component_metadata_validates_ui_port_variable(tmp_path):
+    """Test that setting has_ui=True without a ui_port_variable raises ValueError."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    meta_data = {
+        "components": {
+            "testcomp": {
+                "name": "TestComp",
+                "has_ui": False,
+                "ui_port_variable": None,
+            }
+        }
+    }
+    meta_path.write_text(json.dumps(meta_data), encoding="utf-8")
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    with pytest.raises(ValueError, match="ui_port_variable"):
+        manager.update_component_metadata(
+            "testcomp", {"has_ui": True, "ui_port_variable": ""}
+        )
+
+
 def test_render_open_webui_template_default_fallbacks(tmp_path):
     """Test rendering open-webui template without variables succeeds via defaults."""
     meta_path = tmp_path / "metadata.json"
