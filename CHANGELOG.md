@@ -7,6 +7,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Comprehensive Project FAQ & Q&A Documentation**:
+  - Created [`docs/FAQ.md`](docs/FAQ.md) structured along the 6 stages of the user lifecycle (Concept & Comparison, Hardware Requirements, Networking & Security, Operations & Backups, Troubleshooting, and Developer/Architecture).
+  - Added coverage for custom local AI models (Open WebUI & Ollama), GitLab container customization & backups, and updated Linux OS support matrices (Debian 11/12/13, Ubuntu 22.04/24.04/26.04 LTS).
 - **Generic Git Repository Ingestion for AI Component Generator**:
   - Expanded the AI component bootstrap engine from GitHub-only to support any public or self-hosted Git repository URL, including **GitLab** (with full support for arbitrarily nested groups and namespaces), **Gitea**, **Forgejo**, **Codeberg**, **Bitbucket**, and self-hosted Git servers.
   - Implemented multi-format documentation and compose file discovery (`README.md`, `readme.md`, `README`, `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml`) across multiple branches (`main`, `master`) for rich AI context enrichment.
