@@ -25,7 +25,7 @@ NjordDeploy provides a curated catalog of over 46+ modular services across multi
 * **Dashboards & Monitoring:** Homepage, Homarr, Heimdall, Homer, Organizr, Prometheus & Grafana Stack, Uptime Kuma.
 * **Databases & Utilities:** Nextcloud, Vaultwarden, Filebrowser, MariaDB, phpMyAdmin, Adminer, Stirling PDF, Microbin.
 * **Communication & Proxies:** Jitsi Meet, Conduit (Matrix), FluffyChat Web, Prosody (XMPP), Traefik, Caddy, Nginx Proxy Manager.
-*(See [SUPPORTED_SERVICES.md](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/SUPPORTED_SERVICES.md) for the full detailed matrix).*
+*(See [SUPPORTED_SERVICES.md](SUPPORTED_SERVICES.md) for the full detailed matrix).*
 
 ### 1.4 Can I run my own custom AI models using NjordDeploy's AI stack?
 **Answer:**
