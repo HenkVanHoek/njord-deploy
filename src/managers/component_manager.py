@@ -2,6 +2,7 @@
 
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, cast
 
@@ -102,7 +103,9 @@ class ComponentManager:
             del self._components_data["packages"][pkg_id]
             self._save_metadata()
 
-    def get_all_components(self) -> List[Dict[str, Any]]:
+    def get_all_components(
+        self, include_variables: bool = False
+    ) -> List[Dict[str, Any]]:
         """Returns a list of all components with their essential data."""
         self._components_data = self._load_metadata()
         components = self._components_data.get("components", {})
@@ -112,10 +115,14 @@ class ComponentManager:
             full_data["id"] = comp_id
             if "test_status" not in full_data:
                 full_data["test_status"] = self.reader.get_template_status(comp_id)
-            full_data["required_variables"] = self.reader.get_component_variables(
-                comp_id
-            )
-            full_data["variables"] = full_data["required_variables"]
+            if include_variables:
+                full_data["required_variables"] = self.reader.get_component_variables(
+                    comp_id
+                )
+                full_data["variables"] = full_data["required_variables"]
+            else:
+                full_data["required_variables"] = []
+                full_data["variables"] = []
             all_comps.append(full_data)
         return all_comps
 
@@ -287,7 +294,21 @@ class ComponentManager:
             self.writer.update_template_status(
                 component_id, str(update_data["test_status"])
             )
+            update_data["last_tested"] = datetime.now(timezone.utc).isoformat()
+
+        update_data["last_updated"] = datetime.now(timezone.utc).isoformat()
         components[component_id].update(update_data)
+        self._save_metadata()
+
+    def mark_component_tested(self, component_id: str, test_status: str = "stable"):
+        self._components_data = self._load_metadata()
+        components = self._components_data.setdefault("components", {})
+        if component_id not in components:
+            raise KeyError(f"Component '{component_id}' not found.")
+        now_iso = datetime.now(timezone.utc).isoformat()
+        components[component_id]["last_tested"] = now_iso
+        components[component_id]["test_status"] = test_status
+        self.writer.update_template_status(component_id, test_status)
         self._save_metadata()
 
     def update_component_group(self, component_id: str, new_group_id: str):

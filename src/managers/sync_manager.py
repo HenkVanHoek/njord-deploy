@@ -6,6 +6,7 @@ import os
 import shutil
 import tempfile
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests  # type: ignore
@@ -29,11 +30,12 @@ class SyncManager:
         self.cache_metadata_path = self.cache_dir / "components_metadata.json"
         self.cache_templates_path = self.cache_dir / "component_templates"
         self.git_repo_dir = app_data_dir / "remote_components_git"
+        self.is_offline = False
 
-    def fetch_from_remote(self) -> bool:
+    def fetch_from_remote(self, timeout: int = 3) -> bool:
         """
         Downloads the latest ZIP from GitHub and extracts it to the cache directory.
-        Returns True if successful, False otherwise.
+        Returns True if successful, False if network is offline or request failed.
         """
         repo = os.environ.get(
             "PI_SELFHOSTING_COMPONENTS_REPO",
@@ -43,13 +45,14 @@ class SyncManager:
         url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
 
         try:
-            logger.info(f"Fetching remote components from {url}")
-            response = requests.get(url, timeout=30)
+            logger.info(f"Fetching remote components from {url} (timeout={timeout}s)")
+            response = requests.get(url, timeout=timeout)
             if response.status_code != 200:
-                logger.error(
+                logger.warning(
                     f"Failed to download repository ZIP from {url}. "
                     f"Status code: {response.status_code}"
                 )
+                self.is_offline = False
                 return False
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -66,7 +69,9 @@ class SyncManager:
                     logger.error("No subdirectory found in extracted ZIP archive")
                     return False
 
-                repo_root, *_ = subdirs
+                repo_root = next(iter(subdirs), None)
+                if not repo_root:
+                    return False
 
                 # Ensure clean target cache directory
                 if self.cache_dir.exists():
@@ -81,9 +86,15 @@ class SyncManager:
                 if remote_templates.exists():
                     shutil.copytree(remote_templates, self.cache_templates_path)
 
+            self.is_offline = False
             logger.info("Successfully fetched and cached remote components")
             return True
+        except (requests.exceptions.RequestException, OSError) as e:
+            self.is_offline = True
+            logger.info(f"Remote fetch skipped/failed (offline or timeout): {e}")
+            return False
         except Exception as e:
+            self.is_offline = True
             logger.error(f"Error fetching remote components: {e}", exc_info=True)
             return False
 
@@ -209,9 +220,21 @@ class SyncManager:
 
         all_comps = local_comps.union(remote_comps)
         status_dict = {}
+        component_timestamps = {}
+        remote_updates_available = 0
 
         for comp_id in all_comps:
-            status_dict[comp_id] = self.compare_component(comp_id)
+            comp_status = self.compare_component(comp_id)
+            status_dict[comp_id] = comp_status
+            if comp_status in ("modified", "remote_only"):
+                remote_updates_available += 1
+
+            local_meta = local_data.get("components", {}).get(comp_id, {})
+            component_timestamps[comp_id] = {
+                "last_updated": local_meta.get("last_updated"),
+                "last_tested": local_meta.get("last_tested"),
+                "test_status": local_meta.get("test_status", "untested"),
+            }
 
         global_out_of_sync = False
         if remote_fetched:
@@ -233,9 +256,51 @@ class SyncManager:
 
         return {
             "remote_fetched": remote_fetched,
+            "is_offline": self.is_offline,
             "components": status_dict,
+            "component_timestamps": component_timestamps,
+            "remote_updates_available": remote_updates_available,
             "global_metadata_out_of_sync": global_out_of_sync,
         }
+
+    def mark_component_tested(
+        self, component_id: str, test_status: str = "stable"
+    ) -> bool:
+        """Updates last_tested timestamp and test_status for a component."""
+        data = self._load_json(self.local_metadata_path)
+        comp = data.get("components", {}).get(component_id)
+        if not comp:
+            return False
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        comp["last_tested"] = now_iso
+        comp["test_status"] = test_status
+
+        try:
+            with open(self.local_metadata_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update last_tested for {component_id}: {e}")
+            return False
+
+    def update_component_timestamp(self, component_id: str) -> bool:
+        """Updates last_updated timestamp for a component."""
+        data = self._load_json(self.local_metadata_path)
+        comp = data.get("components", {}).get(component_id)
+        if not comp:
+            return False
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        comp["last_updated"] = now_iso
+
+        try:
+            with open(self.local_metadata_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update last_updated for {component_id}: {e}")
+            return False
 
     def sync_component(self, component_id: str) -> bool:
         """

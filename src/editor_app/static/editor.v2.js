@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshSyncStatusBadge = async () => {
         try {
-            const statusData = await fetchJson("/api/sync/status");
+            const statusData = await fetchJson("/api/sync/check-updates", { method: "POST" });
             if (statusData.initial_seed_info && statusData.initial_seed_info.status !== "already_seeded") {
                 const seedInfo = statusData.initial_seed_info;
                 if (seedInfo.status === "downloaded") {
@@ -198,10 +198,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const badge = document.getElementById("git-sync-badge");
             if (badge) {
-                if (statusData.global_metadata_out_of_sync) {
-                    badge.classList.remove("d-none");
+                badge.classList.remove("d-none");
+                if (statusData.is_offline) {
+                    badge.className = "badge bg-secondary ms-1";
+                    badge.textContent = "Offline";
+                    badge.title = "Geen internetverbinding - Lokale modus actief";
+                } else if (statusData.remote_updates_available > 0) {
+                    badge.className = "badge bg-warning text-dark ms-1";
+                    badge.textContent = `${statusData.remote_updates_available} Update(s)`;
+                    badge.title = `${statusData.remote_updates_available} component(en) bijgewerkt in remote repository`;
+                } else if (statusData.global_metadata_out_of_sync) {
+                    badge.className = "badge bg-danger ms-1";
+                    badge.textContent = "Unsynced!";
+                    badge.title = "Globale metadata niet gepusht";
                 } else {
-                    badge.classList.add("d-none");
+                    badge.className = "badge bg-success ms-1";
+                    badge.textContent = "Synced";
+                    badge.title = "Alle componenten up-to-date";
                 }
             }
             const globalAlert = document.getElementById("git-global-warning-alert");
@@ -214,6 +227,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error("Failed to refresh sync status badge:", err);
+            const badge = document.getElementById("git-sync-badge");
+            if (badge) {
+                badge.classList.remove("d-none");
+                badge.className = "badge bg-secondary ms-1";
+                badge.textContent = "Offline";
+                badge.title = "Geen netwerkverbinding";
+            }
         }
     };
 
@@ -457,6 +477,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const validateBtn = document.getElementById('validate-template-btn');
         if (validateBtn) {
             validateBtn.onclick = () => runValidation(componentId);
+        }
+
+        const markTestedBtn = document.getElementById('btn-mark-component-tested');
+        if (markTestedBtn) {
+            markTestedBtn.onclick = async () => {
+                try {
+                    const testStatusInput = document.getElementById('comp-test-status');
+                    const testStatus = testStatusInput ? testStatusInput.value : 'stable';
+                    const res = await fetchJson(`/api/components/${componentId}/mark-tested`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ test_status: testStatus })
+                    });
+                    if (res && res.status === 'success') {
+                        const nowFormatted = new Date().toLocaleString('nl-NL');
+                        const label = document.getElementById('comp-tested-date-label');
+                        if (label) label.textContent = nowFormatted;
+                        showAlert(`Component '${componentId}' succesvol gemarkeerd als getest (${testStatus})!`, "success");
+                        refreshSyncStatusBadge();
+                    } else {
+                        showAlert(`Fout bij markeren van component '${componentId}' als getest.`, "danger");
+                    }
+                } catch (err) {
+                    console.error("Error marking component as tested:", err);
+                    showAlert("Fout bij markeren als getest: " + err.message, "danger");
+                }
+            };
         }
 
         const addHeaderBtn = document.getElementById('add-header-btn');
@@ -2009,7 +2056,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         {
                             element: document.getElementById("create-new-ai-btn"),
                             title: "Bootstrap with AI",
-                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a GitHub repository URL.",
+                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a Git repository URL.",
                             position: "bottom"
                         },
                         {
@@ -2537,9 +2584,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modalBody) return;
 
         try {
-            const rawData = await fetchJson('/api/components');
-            const groupsData = await fetchJson('/api/groups').catch(() => ({}));
-            const packagesData = await fetchJson('/api/packages').catch(() => ({}));
+            const [rawData, groupsData, packagesData] = await Promise.all([
+                fetchJson('/api/components'),
+                fetchJson('/api/groups').catch(() => ({})),
+                fetchJson('/api/packages').catch(() => ({}))
+            ]);
 
             const components = Object.values(rawData || {});
             const totalComponents = components.length;
@@ -2738,11 +2787,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
                         const st = (comp.test_status || 'untested').toLowerCase();
                         const statusClass = st === 'tested' ? 'bg-success' : (st === 'beta' || st === 'in_progress' ? 'bg-warning text-dark' : 'bg-danger');
+                        const testedDate = comp.last_tested ? new Date(comp.last_tested).toLocaleDateString('nl-NL') : 'Nog niet getest';
+
                         item.innerHTML = `
                             <div>
                                 <span class="fw-bold text-light">${comp.name || comp.id}</span>
                                 <small class="text-muted ms-2">(${comp.group || 'general'})</small>
                                 <span class="badge ${statusClass} ms-2" style="font-size: 0.75rem;">${comp.test_status || 'untested'}</span>
+                                <small class="text-muted ms-2"><i class="bi bi-patch-check me-1"></i>Getest: ${testedDate}</small>
                             </div>
                             <button class="btn btn-sm btn-outline-primary navigate-comp-btn" data-comp-id="${comp.id}">
                                 Open <i class="bi bi-arrow-right-short"></i>
@@ -2804,6 +2856,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 await renderEcosystemStats();
             });
         }
+        const statsBtn = document.getElementById('stats-btn');
+        if (statsBtn) {
+            statsBtn.addEventListener('click', async () => {
+                await renderEcosystemStats();
+            });
+        }
     };
 
     // --- Main Initialization ---
@@ -2821,6 +2879,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
+        setupStatsModal();
         await setupGitSyncFeatures();
         document.addEventListener('click', (e) => {
             const target = /** @type {HTMLElement} */ (e.target);

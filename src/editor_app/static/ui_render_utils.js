@@ -504,6 +504,30 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
         testStatusOptions
     ));
 
+    // --- Timestamps & QA Verification Info ---
+    const timestampContainer = document.createElement('div');
+    timestampContainer.className = 'card bg-dark text-white mb-3 border-secondary p-3 small mt-2';
+
+    const formattedUpdated = details.last_updated ? new Date(details.last_updated).toLocaleString('nl-NL') : 'Onbekend';
+    const formattedTested = details.last_tested ? new Date(details.last_tested).toLocaleString('nl-NL') : 'Nog niet getest';
+
+    timestampContainer.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${formattedUpdated}</span>
+            </div>
+            <div>
+                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${formattedTested}</span>
+            </div>
+        </div>
+        <div class="mt-2 text-end">
+            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${details.id || ''}">
+                <i class="bi bi-check-circle me-1"></i> Markeer als getest (Vandaag)
+            </button>
+        </div>
+    `;
+    metadataPane.appendChild(timestampContainer);
+
     // --- UI Port Variable ---
     metadataPane.appendChild(renderMetadataField(
         'text',

@@ -132,18 +132,18 @@ self-hosted services that are available to the end-user.
 
 #### Story: AI-Assisted Component Generation
 
-> As a Developer (Charlie), I want to create a component by specifying a GitHub repository URL and custom instructions, so that the metadata, compose templates, variables, and config templates are automatically generated using AI.
+> As a Developer (Charlie), I want to create a component by specifying a Git repository URL (from GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, or self-hosted Git servers) and custom instructions, so that the metadata, compose templates, variables, and config templates are automatically generated using AI.
 
 **Acceptance Criteria:**
 
 - **Given** I am on the component editor page,
 - **When** I click the "Create with AI" button,
-- **And** I enter a valid GitHub repository URL and optional instructions,
-- **And** I provide a Gemini API Key (or rely on the GEMINI_API_KEY environment variable),
+- **And** I enter a valid Git repository URL and optional instructions,
+- **And** I select an AI provider (Ollama, Gemini, OpenAI, HostYourAI) or provide the required API credentials,
 - **And** I click "Generate Component",
-- **Then** the system contacts the Gemini API and generates the component structure.
-- **And** the system automatically retrieves the public repository's `README.md` and `docker-compose.yml`/`docker-compose.yaml` files from GitHub to enrich the prompt context before calling the API.
-- **And** the system automatically validates the generated image name on Docker Hub and displays any warnings or errors in the preview modal.
+- **Then** the system contacts the selected AI engine and generates the component structure.
+- **And** the system automatically retrieves the public repository's `README.md` and compose configuration files across multiple standard naming variations and branches to enrich the prompt context before calling the AI engine.
+- **And** the system automatically validates the generated image name on Docker Hub / OCI registries and displays any warnings or errors in the preview modal.
 - **And** I can preview the generated metadata, variables, compose template, and configuration templates in a preview modal.
 - **And** when I click "Accept and Create", the component is registered and saved to the filesystem.
 

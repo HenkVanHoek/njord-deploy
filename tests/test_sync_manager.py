@@ -322,3 +322,44 @@ def test_check_write_access_fail(temp_dirs, monkeypatch):
 
     monkeypatch.setattr(subprocess, "run", mock_run)
     assert manager.check_write_access() is False
+
+
+def test_fetch_from_remote_offline_graceful(temp_dirs, monkeypatch):
+    local_meta, local_templates = temp_dirs
+    manager = SyncManager(local_meta, local_templates)
+
+    import requests
+
+    def mock_get(*_args, **_kwargs):
+        raise requests.exceptions.ConnectionError("Failed to connect")
+
+    monkeypatch.setattr("requests.get", mock_get)
+    result = manager.fetch_from_remote(timeout=3)
+    assert result is False
+    assert manager.is_offline is True
+
+
+def test_mark_component_tested_and_timestamp(temp_dirs):
+    local_meta, local_templates = temp_dirs
+    manager = SyncManager(local_meta, local_templates)
+
+    # Test mark_component_tested
+    success = manager.mark_component_tested("test-comp", test_status="stable")
+    assert success is True
+
+    meta = manager.get_local_component_meta("test-comp")
+    assert "last_tested" in meta
+    assert meta["test_status"] == "stable"
+
+    # Test update_component_timestamp
+    success_ts = manager.update_component_timestamp("test-comp")
+    assert success_ts is True
+
+    meta_updated = manager.get_local_component_meta("test-comp")
+    assert "last_updated" in meta_updated
+
+    # Verify status report includes timestamps
+    status = manager.get_sync_status()
+    assert "component_timestamps" in status
+    assert "test-comp" in status["component_timestamps"]
+    assert status["component_timestamps"]["test-comp"]["test_status"] == "stable"

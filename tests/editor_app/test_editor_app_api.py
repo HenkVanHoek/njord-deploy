@@ -185,3 +185,35 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertEqual(res_data["status"], "created")
         mock_create.assert_called_once_with("caddy", "Caddy")
         mock_update_meta.assert_called_once_with("caddy", payload["metadata"])
+
+    @patch("managers.sync_manager.SyncManager.fetch_from_remote")
+    @patch("managers.sync_manager.SyncManager.get_sync_status")
+    def test_sync_check_updates_route(self, mock_get_status, mock_fetch):
+        """Tests /api/sync/check-updates endpoint."""
+        mock_fetch.return_value = True
+        mock_get_status.return_value = {
+            "remote_fetched": True,
+            "is_offline": False,
+            "remote_updates_available": 2,
+            "components": {},
+        }
+
+        response = self.client.get("/api/sync/check-updates")
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertIn("remote_updates_available", res_data)
+        self.assertEqual(res_data["remote_updates_available"], 2)
+        mock_fetch.assert_called_once_with(timeout=3)
+
+    @patch("managers.component_manager.ComponentManager.mark_component_tested")
+    def test_mark_component_tested_route(self, mock_mark):
+        """Tests /api/components/<comp_id>/mark-tested endpoint."""
+        response = self.client.post(
+            "/api/components/pi-hole/mark-tested",
+            data=json.dumps({"test_status": "stable"}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "success")
+        mock_mark.assert_called_once_with("pi-hole", test_status="stable")

@@ -32,34 +32,45 @@ class AIGenerator:
         custom_instructions: Optional[str] = None,
         existing_groups: Optional[list[str]] = None,
     ) -> dict:
-        """Analyzes a GitHub repository and returns structured component configuration.
+        """Analyzes a Git repository and returns structured component configuration.
 
         Uses the multi-provider AIGeneratorEngine.
         """
         # Clean and validate the repository URL
-        parsed_url = urllib.parse.urlparse(repo_url)
-        if not parsed_url.netloc or "github.com" not in parsed_url.netloc:
-            raise ValueError("A valid GitHub repository URL is required.")
+        parsed_url = urllib.parse.urlparse(repo_url.strip())
+        if not parsed_url.scheme or not parsed_url.netloc:
+            raise ValueError("A valid Git repository URL is required.")
 
-        path_parts = [p for p in parsed_url.path.split("/") if p]
-        if len(path_parts) < 2:
+        raw_path = parsed_url.path.strip("/")
+        if raw_path.endswith(".git"):
+            raw_path = raw_path[:-4]
+
+        path_parts = [p for p in raw_path.split("/") if p]
+        if not path_parts:
             raise ValueError(
-                "Invalid repository URL format. Must contain owner and repository name."
+                "Invalid repository URL format. "
+                "Must contain at least a repository name."
             )
 
-        owner = path_parts[0]
-        repo_name = path_parts[1].replace(".git", "")
+        repo_name = path_parts[-1]
+        owner = path_parts[0] if len(path_parts) > 1 else ""
+        repo_path = "/".join(path_parts)
         component_id = repo_name.lower()
 
         # Fetch README and compose files from the repository
-        readme_content = self._fetch_github_file(owner, repo_name, "README.md")
-        compose_content = self._fetch_github_file(
-            owner, repo_name, "docker-compose.yml"
+        readme_content = self._fetch_repo_file(
+            parsed_url.netloc, repo_path, ["README.md", "readme.md", "README"]
         )
-        if not compose_content:
-            compose_content = self._fetch_github_file(
-                owner, repo_name, "docker-compose.yaml"
-            )
+        compose_content = self._fetch_repo_file(
+            parsed_url.netloc,
+            repo_path,
+            [
+                "docker-compose.yml",
+                "docker-compose.yaml",
+                "compose.yml",
+                "compose.yaml",
+            ],
+        )
 
         # Compile System Prompt and instructions
         from utils.resource_utils import resource_path
@@ -90,9 +101,8 @@ class AIGenerator:
             else:
                 system_prompt += f"{rule_num}. {rule}\n"
 
-        user_prompt = (
-            f"Analyze the repository: {owner}/{repo_name} (URL: {repo_url}).\n"
-        )
+        repo_display = f"{owner}/{repo_name}" if owner else repo_name
+        user_prompt = f"Analyze the repository: {repo_display} (URL: {repo_url}).\n"
         if readme_content:
             user_prompt += (
                 f"\n--- START OF REPOSITORY README.MD ---\n"
@@ -101,9 +111,9 @@ class AIGenerator:
             )
         if compose_content:
             user_prompt += (
-                f"\n--- START OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+                f"\n--- START OF REPOSITORY DOCKER COMPOSE CONFIGURATION ---\n"
                 f"{compose_content[:5000]}"
-                f"\n--- END OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+                f"\n--- END OF REPOSITORY DOCKER COMPOSE CONFIGURATION ---\n"
             )
         if custom_instructions:
             user_prompt += f"Custom User Instructions: {custom_instructions}\n"
@@ -285,20 +295,66 @@ class AIGenerator:
                         f"Failed to communicate with AI API: {type(e).__name__} - {e}"
                     ) from e
 
-    def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
-        """Tries to fetch a file from the repository's main or master branch."""
-        for branch in ["main", "master"]:
-            url = (
-                f"https://raw.githubusercontent.com/{owner}/{repo}/"
-                f"{branch}/{filename}"
-            )
-            try:
-                response = requests.get(url, timeout=5)
-                if response.status_code == 200:
-                    return response.text
-            except Exception:  # nosec B110
-                pass
+    def _get_raw_file_urls(
+        self, netloc: str, repo_path: str, filename: str
+    ) -> list[str]:
+        """Builds a list of potential raw file URLs across supported Git platforms."""
+        urls: list[str] = []
+        branches = ["main", "master"]
+        parts = [p for p in repo_path.split("/") if p]
+        owner = parts[0] if parts else ""
+        repo = parts[-1] if len(parts) > 1 else ""
+
+        host = netloc.lower()
+
+        if "github.com" in host and owner and repo:
+            for branch in branches:
+                urls.append(
+                    f"https://raw.githubusercontent.com/{owner}/{repo}/"
+                    f"{branch}/{filename}"
+                )
+        elif "gitlab" in host:
+            for branch in branches:
+                urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
+        elif "bitbucket.org" in host:
+            for branch in branches:
+                urls.append(
+                    f"https://bitbucket.org/{repo_path}/raw/{branch}/{filename}"
+                )
+        elif "codeberg.org" in host or "gitea" in host or "forgejo" in host:
+            for branch in branches:
+                urls.append(
+                    f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"
+                )
+        else:
+            # Generic / self-hosted: try Gitea/Forgejo, GitLab, and direct raw
+            for branch in branches:
+                urls.append(
+                    f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"
+                )
+                urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
+                urls.append(f"https://{netloc}/{repo_path}/raw/{branch}/{filename}")
+
+        return urls
+
+    def _fetch_repo_file(
+        self, netloc: str, repo_path: str, filenames: list[str]
+    ) -> Optional[str]:
+        """Tries to fetch content for candidate filenames across multiple patterns."""
+        for filename in filenames:
+            urls = self._get_raw_file_urls(netloc, repo_path, filename)
+            for url in urls:
+                try:
+                    response = requests.get(url, timeout=5)
+                    if response.status_code == 200 and response.text:
+                        return response.text
+                except Exception:  # nosec B110
+                    pass
         return None
+
+    def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
+        """Tries to fetch a file from a GitHub repository's main or master branch."""
+        return self._fetch_repo_file("github.com", f"{owner}/{repo}", [filename])
 
     def _check_docker_image_exists(self, image_name: str) -> bool:
         """Verifies if a given docker image exists on its registry."""

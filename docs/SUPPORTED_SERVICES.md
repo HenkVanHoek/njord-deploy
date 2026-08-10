@@ -6,7 +6,7 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| AdGuard Home | AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0). | N/A |
+| AdGuard Home | AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0). | [Link](https://adguard.com/en/adguard-home/overview.html) |
 | Pi-hole | A network-wide ad and tracker blocker that functions as a DNS sinkhole, protecting all local network devices without requiring client-side software. | [Link](https://pi-hole.net/) |
 
 ## General Components
@@ -40,7 +40,7 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | Heimdall | An elegant, customizable application dashboard for organizing shortcuts and status widgets for all your self-hosted web services. | [Link](https://heimdall.site/) |
 | Homarr | A modern, customizable server dashboard with direct integrations for monitoring homelab services, Docker container statuses, and media clients. | [Link](https://homarr.dev/) |
-| Homepage | A modern, fully static, fast, secure fully proxied, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery. Homepage does not include an authentication layer itself; it is recommended to place it behind a reverse proxy with authentication if exposed to untrusted networks. For optimal file permissions on mounted volumes, the container is configured to run as root (user: 0:0) by default, overriding the PUID/PGID environment variables if set. Note: Docker integration requiring access to /var/run/docker.sock is not enabled by default for security reasons. Users can manually add this volume mount if needed. | N/A |
+| Homepage | A modern, fully static, fast, secure fully proxied, highly customizable application dashboard with integrations for over 100 services and translations into multiple languages. Easily configured via YAML files or through docker label discovery. Homepage does not include an authentication layer itself; it is recommended to place it behind a reverse proxy with authentication if exposed to untrusted networks. For optimal file permissions on mounted volumes, the container is configured to run as root (user: 0:0) by default, overriding the PUID/PGID environment variables if set. Note: Docker integration requiring access to /var/run/docker.sock is not enabled by default for security reasons. Users can manually add this volume mount if needed. | [Link](https://gethomepage.dev/) |
 | Homer | A lightweight, static application dashboard configured via YAML, designed for fast landing-page access to all your homelab services. | [Link](https://github.com/bastienwirtz/homer) |
 | Organizr | A unified server management portal that organizes all your self-hosted applications into a single tabbed interface with custom user permissions. | [Link](https://organizr.app/) |
 
@@ -48,9 +48,9 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| Gluetun | A lightweight, multi-provider VPN client container supporting OpenVPN and WireGuard protocols to route Docker service traffic securely. | N/A |
+| Gluetun | A lightweight, multi-provider VPN client container supporting OpenVPN and WireGuard protocols to route Docker service traffic securely. | [Link](https://github.com/qdm12/gluetun) |
 | Jellyfin | A Free Software Media System that puts you in control of your media. | [Link](https://jellyfin.org/) |
-| Prowlarr | Prowlarr is an indexer manager/proxy built on the popular *arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers. | N/A |
+| Prowlarr | Prowlarr is an indexer manager/proxy built on the popular *arr .net/reactjs base stack to integrate with your various PVR apps. Prowlarr supports management of both Torrent Trackers and Usenet Indexers. | [Link](https://prowlarr.com/) |
 | qBittorrent | A lightweight, open-source BitTorrent download client featuring a full-featured web interface, bandwidth scheduling, and built-in search engines. | [Link](https://www.qbittorrent.org/) |
 | Radarr | An automated movie collection manager and PVR that monitors RSS feeds for new releases, triggers download clients, and automatically organizes media files. | [Link](https://radarr.video/) |
 | SABnzbd | An automated Usenet binary newsreader and download manager featuring automatic repair, unpacking, and seamless PVR stack integration. | [Link](https://sabnzbd.org/) |
@@ -85,12 +85,12 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Filebrowser | A lightweight web-based file manager allowing users to upload, edit, delete, preview, and share files on server storage volumes. | [Link](https://filebrowser.org/) |
-| Grafana Stack | An open-source visualization and analytics platform that turns metrics and logs into dynamic, interactive dashboards for comprehensive system observability. | N/A |
+| Grafana Stack | An open-source visualization and analytics platform that turns metrics and logs into dynamic, interactive dashboards for comprehensive system observability. | [Link](https://grafana.com/) |
 | Portainer | A powerful, user-friendly management UI that simplifies configuring, monitoring, and deploying Docker containers, stacks, and persistent volumes. | [Link](https://www.portainer.io/) |
-| Prometheus Stack | Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring. | N/A |
-| Semaphore UI | Modern UI for Ansible, Terraform/OpenTofu/Terragrunt, PowerShell and other DevOps tools. | N/A |
+| Prometheus Stack | Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring. | [Link](https://prometheus.io/) |
+| Semaphore UI | Modern UI for Ansible, Terraform/OpenTofu/Terragrunt, PowerShell and other DevOps tools. | [Link](https://semaphoreui.com/) |
 | Service Maintenance | A system management component for monitoring service health, checking software updates, and auditing container vulnerabilities across NjordDeploy services. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
-| Uptime Kuma | A feature-rich, self-hosted monitoring tool providing real-time status pages, HTTP/ping health checks, and alerts via multiple notification channels. | [Link](https://github.com/louislam/uptime-kuma) |
+| Uptime Kuma | A feature-rich, self-hosted monitoring tool providing real-time status pages, HTTP/ping health checks, and alerts via multiple notification channels. | [Link](https://uptime.kuma.pet/) |
 
 ## Security & Utilities
 
@@ -104,32 +104,32 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| FluffyChat Web | A modern, cute, and cross-platform Matrix client web interface, packaged as a NjordDeploy component. | N/A |
+| FluffyChat Web | A modern, cute, and cross-platform Matrix client web interface, packaged as a NjordDeploy component. | [Link](https://fluffychat.im/) |
 
 ## Communications
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| jitsi-meet | Jitsi Meet is a collection of open-source projects that provides a secure, simple, and scalable video conferencing solution. This component sets up a complete Jitsi Meet instance with optional Etherpad collaboration and recording capabilities. | N/A |
+| jitsi-meet | Jitsi Meet is a collection of open-source projects that provides a secure, simple, and scalable video conferencing solution. This component sets up a complete Jitsi Meet instance with optional Etherpad collaboration and recording capabilities. | [Link](https://jitsi.org/) |
 
 ## Utilities
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| Microbin | Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service. | N/A |
+| Microbin | Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service. | [Link](https://microbin.eu/) |
 
 ## Productivity
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | N/A |
+| n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | [Link](https://n8n.io/) |
 | Nextcloud | A comprehensive self-hosted productivity and collaboration suite offering secure file storage, online document editing, calendar, and contacts synchronization. | [Link](https://nextcloud.com/) |
-| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | N/A |
-| Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | N/A |
-| Voicebox | The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine. | N/A |
+| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | [Link](https://openwebui.com/) |
+| Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | [Link](https://stirlingpdf.com/) |
+| Voicebox | The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 
 ## Media Servers
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
-| Audiobookshelf | A self-hosted audiobook and podcast server for organizing, streaming, and tracking playback progress across your personal audio media library. | N/A |
+| Audiobookshelf | A self-hosted audiobook and podcast server for organizing, streaming, and tracking playback progress across your personal audio media library. | [Link](https://www.audiobookshelf.org/) |

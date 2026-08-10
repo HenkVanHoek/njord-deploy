@@ -7,6 +7,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Generic Git Repository Ingestion for AI Component Generator**:
+  - Expanded the AI component bootstrap engine from GitHub-only to support any public or self-hosted Git repository URL, including **GitLab** (with full support for arbitrarily nested groups and namespaces), **Gitea**, **Forgejo**, **Codeberg**, **Bitbucket**, and self-hosted Git servers.
+  - Implemented multi-format documentation and compose file discovery (`README.md`, `readme.md`, `README`, `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml`) across multiple branches (`main`, `master`) for rich AI context enrichment.
+  - Updated Editor UI modals, tour guides, and backend error handlers to reflect universal Git repository support.
 - **UI Port Variable Validation & Access Link Fallback**:
   - Enforced frontend and backend metadata validation blocking `Save All Changes` in Editor when `has_ui` is `true` but `ui_port_variable` is empty or missing.
   - Added numeric literal port fallback in Configurator app (`app.js`) ensuring web UI access links render correctly even when `ui_port_variable` specifies a direct port number (e.g., `"3000"`).

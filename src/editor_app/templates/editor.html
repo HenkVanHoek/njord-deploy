@@ -379,7 +379,7 @@
                             <div class="card-body">
                                 <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> AI Component Bootstrap</h5>
                                 <p class="card-text small text-muted">
-                                    Generate new components automatically from any GitHub repository. Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
+                                    Generate new components automatically from any Git repository (GitHub, GitLab, Gitea, Codeberg, etc.). Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
                                 </p>
                             </div>
                         </div>
@@ -546,9 +546,9 @@
                 <div id="ai-input-step">
                     <form id="ai-generator-form">
                         <div class="mb-3">
-                            <label for="ai-repo-url" class="form-label">GitHub Repository URL</label>
+                            <label for="ai-repo-url" class="form-label">Git Repository URL</label>
                             <input type="url" class="form-control" id="ai-repo-url" required autocomplete="off" placeholder="https://github.com/caddyserver/caddy">
-                            <div class="form-text">The official or community GitHub repository URL of the application.</div>
+                            <div class="form-text">The official or community Git repository URL (GitHub, GitLab, Gitea, Codeberg, etc.) of the application.</div>
                         </div>
                         <div class="mb-3">
                             <label for="ai-instructions" class="form-label">Custom Instructions (Optional)</label>
@@ -624,7 +624,7 @@
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <h5 class="text-dark">Generating Component...</h5>
-                    <p class="text-muted">Analyzing GitHub repository and generating configuration files. This may take up to a minute.</p>
+                    <p class="text-muted">Analyzing Git repository and generating configuration files. This may take up to a minute.</p>
                 </div>
 
                 <!-- Step 2.5: Error State -->

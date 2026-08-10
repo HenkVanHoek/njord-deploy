@@ -309,6 +309,21 @@ def update_template_status(
 
         new_content = "\n".join(updated_lines) + "\n"
         template_file.write_text(new_content, encoding="utf-8")
+
+        meta_file = templates_path.parent / "config" / "components_metadata.json"
+        if meta_file.exists():
+            # noinspection PyBroadException
+            try:
+                comp_mgr = ComponentManager(
+                    templates_path=str(templates_path),
+                    metadata_file_path=str(meta_file),
+                )
+                comp_mgr.mark_component_tested(component_id, test_status="tested")
+            except Exception as ex:
+                logger.warning(
+                    f"Could not update metadata timestamp for {component_id}: {ex}"
+                )
+
         logger.info(
             f"Updated template status headers for {component_id} to "
             f"'tested' (version: {tested_version}, notes: {platform_notes})"

@@ -4309,6 +4309,21 @@ def update_template_status(
 
         new_content = "\n".join(updated_lines) + "\n"
         template_file.write_text(new_content, encoding="utf-8")
+
+        meta_file = templates_path.parent / "config" / "components_metadata.json"
+        if meta_file.exists():
+            # noinspection PyBroadException
+            try:
+                comp_mgr = ComponentManager(
+                    templates_path=str(templates_path),
+                    metadata_file_path=str(meta_file),
+                )
+                comp_mgr.mark_component_tested(component_id, test_status="tested")
+            except Exception as ex:
+                logger.warning(
+                    f"Could not update metadata timestamp for {component_id}: {ex}"
+                )
+
         logger.info(
             f"Updated template status headers for {component_id} to "
             f"'tested' (version: {tested_version}, notes: {platform_notes})"
@@ -13318,6 +13333,51 @@ def create_app(test_config=None):
             logging.error(f"Failed to get sync status: {e}", exc_info=True)
             abort(500, "Internal error getting sync status")
 
+    @app.route("/api/sync/check-updates", methods=["GET", "POST"])
+    def sync_check_updates():
+        try:
+            sync_manager.fetch_from_remote(timeout=3)
+            status_data = sync_manager.get_sync_status()
+            from utils.resource_utils import get_last_seed_status
+
+            status_data["initial_seed_info"] = get_last_seed_status()
+            return jsonify(status_data), 200
+        except Exception as e:
+            logging.error(f"Failed to check updates: {e}", exc_info=True)
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "is_offline": True,
+                        "message": str(e),
+                    }
+                ),
+                200,
+            )
+
+    @app.route("/api/components/<comp_id>/mark-tested", methods=["POST"])
+    def mark_component_tested_route(comp_id):
+        try:
+            data = request.get_json(silent=True) or {}
+            test_status = data.get("test_status", "stable")
+            component_manager.mark_component_tested(comp_id, test_status=test_status)
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Component '{comp_id}' marked as tested",
+                    }
+                ),
+                200,
+            )
+        except KeyError:
+            abort(404, f"Component '{comp_id}' not found")
+        except Exception as e:
+            logging.error(
+                f"Failed to mark component {comp_id} as tested: {e}", exc_info=True
+            )
+            abort(500, f"Internal error marking component {comp_id} as tested")
+
     @app.route("/api/sync/fetch", methods=["POST"])
     def sync_fetch():
         try:
@@ -13645,7 +13705,8 @@ def create_app(test_config=None):
 
     @app.route("/api/components", methods=["GET"])
     def list_components():
-        all_comps = component_manager.get_all_components()
+        include_vars = request.args.get("include_variables", "false").lower() == "true"
+        all_comps = component_manager.get_all_components(include_variables=include_vars)
         # Return mapped by ID dict for loadComponents frontend utility
         return jsonify({comp["id"]: comp for comp in all_comps}), 200
 
@@ -14011,7 +14072,7 @@ def create_app(test_config=None):
         model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
-            abort(400, "A valid GitHub repository URL is required")
+            abort(400, "A valid Git repository URL is required")
 
         if isinstance(api_key, str):
             api_key = api_key.strip()
@@ -14056,7 +14117,7 @@ def create_app(test_config=None):
             if "API key missing for provider" in err_msg:
                 msg = err_msg
             elif "repository URL is required" in err_msg:
-                msg = "A valid GitHub repository URL is required"
+                msg = "A valid Git repository URL is required"
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
@@ -15077,7 +15138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const refreshSyncStatusBadge = async () => {
         try {
-            const statusData = await fetchJson("/api/sync/status");
+            const statusData = await fetchJson("/api/sync/check-updates", { method: "POST" });
             if (statusData.initial_seed_info && statusData.initial_seed_info.status !== "already_seeded") {
                 const seedInfo = statusData.initial_seed_info;
                 if (seedInfo.status === "downloaded") {
@@ -15089,10 +15150,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const badge = document.getElementById("git-sync-badge");
             if (badge) {
-                if (statusData.global_metadata_out_of_sync) {
-                    badge.classList.remove("d-none");
+                badge.classList.remove("d-none");
+                if (statusData.is_offline) {
+                    badge.className = "badge bg-secondary ms-1";
+                    badge.textContent = "Offline";
+                    badge.title = "Geen internetverbinding - Lokale modus actief";
+                } else if (statusData.remote_updates_available > 0) {
+                    badge.className = "badge bg-warning text-dark ms-1";
+                    badge.textContent = `${statusData.remote_updates_available} Update(s)`;
+                    badge.title = `${statusData.remote_updates_available} component(en) bijgewerkt in remote repository`;
+                } else if (statusData.global_metadata_out_of_sync) {
+                    badge.className = "badge bg-danger ms-1";
+                    badge.textContent = "Unsynced!";
+                    badge.title = "Globale metadata niet gepusht";
                 } else {
-                    badge.classList.add("d-none");
+                    badge.className = "badge bg-success ms-1";
+                    badge.textContent = "Synced";
+                    badge.title = "Alle componenten up-to-date";
                 }
             }
             const globalAlert = document.getElementById("git-global-warning-alert");
@@ -15105,6 +15179,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.error("Failed to refresh sync status badge:", err);
+            const badge = document.getElementById("git-sync-badge");
+            if (badge) {
+                badge.classList.remove("d-none");
+                badge.className = "badge bg-secondary ms-1";
+                badge.textContent = "Offline";
+                badge.title = "Geen netwerkverbinding";
+            }
         }
     };
 
@@ -15348,6 +15429,33 @@ document.addEventListener('DOMContentLoaded', () => {
         const validateBtn = document.getElementById('validate-template-btn');
         if (validateBtn) {
             validateBtn.onclick = () => runValidation(componentId);
+        }
+
+        const markTestedBtn = document.getElementById('btn-mark-component-tested');
+        if (markTestedBtn) {
+            markTestedBtn.onclick = async () => {
+                try {
+                    const testStatusInput = document.getElementById('comp-test-status');
+                    const testStatus = testStatusInput ? testStatusInput.value : 'stable';
+                    const res = await fetchJson(`/api/components/${componentId}/mark-tested`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ test_status: testStatus })
+                    });
+                    if (res && res.status === 'success') {
+                        const nowFormatted = new Date().toLocaleString('nl-NL');
+                        const label = document.getElementById('comp-tested-date-label');
+                        if (label) label.textContent = nowFormatted;
+                        showAlert(`Component '${componentId}' succesvol gemarkeerd als getest (${testStatus})!`, "success");
+                        refreshSyncStatusBadge();
+                    } else {
+                        showAlert(`Fout bij markeren van component '${componentId}' als getest.`, "danger");
+                    }
+                } catch (err) {
+                    console.error("Error marking component as tested:", err);
+                    showAlert("Fout bij markeren als getest: " + err.message, "danger");
+                }
+            };
         }
 
         const addHeaderBtn = document.getElementById('add-header-btn');
@@ -16900,7 +17008,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         {
                             element: document.getElementById("create-new-ai-btn"),
                             title: "Bootstrap with AI",
-                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a GitHub repository URL.",
+                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a Git repository URL.",
                             position: "bottom"
                         },
                         {
@@ -17428,9 +17536,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!modalBody) return;
 
         try {
-            const rawData = await fetchJson('/api/components');
-            const groupsData = await fetchJson('/api/groups').catch(() => ({}));
-            const packagesData = await fetchJson('/api/packages').catch(() => ({}));
+            const [rawData, groupsData, packagesData] = await Promise.all([
+                fetchJson('/api/components'),
+                fetchJson('/api/groups').catch(() => ({})),
+                fetchJson('/api/packages').catch(() => ({}))
+            ]);
 
             const components = Object.values(rawData || {});
             const totalComponents = components.length;
@@ -17629,11 +17739,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.className = 'list-group-item d-flex justify-content-between align-items-center py-2';
                         const st = (comp.test_status || 'untested').toLowerCase();
                         const statusClass = st === 'tested' ? 'bg-success' : (st === 'beta' || st === 'in_progress' ? 'bg-warning text-dark' : 'bg-danger');
+                        const testedDate = comp.last_tested ? new Date(comp.last_tested).toLocaleDateString('nl-NL') : 'Nog niet getest';
+
                         item.innerHTML = `
                             <div>
                                 <span class="fw-bold text-light">${comp.name || comp.id}</span>
                                 <small class="text-muted ms-2">(${comp.group || 'general'})</small>
                                 <span class="badge ${statusClass} ms-2" style="font-size: 0.75rem;">${comp.test_status || 'untested'}</span>
+                                <small class="text-muted ms-2"><i class="bi bi-patch-check me-1"></i>Getest: ${testedDate}</small>
                             </div>
                             <button class="btn btn-sm btn-outline-primary navigate-comp-btn" data-comp-id="${comp.id}">
                                 Open <i class="bi bi-arrow-right-short"></i>
@@ -17695,6 +17808,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 await renderEcosystemStats();
             });
         }
+        const statsBtn = document.getElementById('stats-btn');
+        if (statsBtn) {
+            statsBtn.addEventListener('click', async () => {
+                await renderEcosystemStats();
+            });
+        }
     };
 
     // --- Main Initialization ---
@@ -17712,6 +17831,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupDirtyFormHandling();
         setupHashGenerator();
         setupOnboardingGuide();
+        setupStatsModal();
         await setupGitSyncFeatures();
         document.addEventListener('click', (e) => {
             const target = /** @type {HTMLElement} */ (e.target);
@@ -18241,6 +18361,30 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
         null,
         testStatusOptions
     ));
+
+    // --- Timestamps & QA Verification Info ---
+    const timestampContainer = document.createElement('div');
+    timestampContainer.className = 'card bg-dark text-white mb-3 border-secondary p-3 small mt-2';
+
+    const formattedUpdated = details.last_updated ? new Date(details.last_updated).toLocaleString('nl-NL') : 'Onbekend';
+    const formattedTested = details.last_tested ? new Date(details.last_tested).toLocaleString('nl-NL') : 'Nog niet getest';
+
+    timestampContainer.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${formattedUpdated}</span>
+            </div>
+            <div>
+                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${formattedTested}</span>
+            </div>
+        </div>
+        <div class="mt-2 text-end">
+            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${details.id || ''}">
+                <i class="bi bi-check-circle me-1"></i> Markeer als getest (Vandaag)
+            </button>
+        </div>
+    `;
+    metadataPane.appendChild(timestampContainer);
 
     // --- UI Port Variable ---
     metadataPane.appendChild(renderMetadataField(
@@ -18811,7 +18955,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <div class="card-body">
                                 <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> AI Component Bootstrap</h5>
                                 <p class="card-text small text-muted">
-                                    Generate new components automatically from any GitHub repository. Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
+                                    Generate new components automatically from any Git repository (GitHub, GitLab, Gitea, Codeberg, etc.). Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
                                 </p>
                             </div>
                         </div>
@@ -18978,9 +19122,9 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                 <div id="ai-input-step">
                     <form id="ai-generator-form">
                         <div class="mb-3">
-                            <label for="ai-repo-url" class="form-label">GitHub Repository URL</label>
+                            <label for="ai-repo-url" class="form-label">Git Repository URL</label>
                             <input type="url" class="form-control" id="ai-repo-url" required autocomplete="off" placeholder="https://github.com/caddyserver/caddy">
-                            <div class="form-text">The official or community GitHub repository URL of the application.</div>
+                            <div class="form-text">The official or community Git repository URL (GitHub, GitLab, Gitea, Codeberg, etc.) of the application.</div>
                         </div>
                         <div class="mb-3">
                             <label for="ai-instructions" class="form-label">Custom Instructions (Optional)</label>
@@ -19056,7 +19200,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <h5 class="text-dark">Generating Component...</h5>
-                    <p class="text-muted">Analyzing GitHub repository and generating configuration files. This may take up to a minute.</p>
+                    <p class="text-muted">Analyzing Git repository and generating configuration files. This may take up to a minute.</p>
                 </div>
 
                 <!-- Step 2.5: Error State -->
@@ -19479,6 +19623,7 @@ class ArtifactGenerator:
 
 import json
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, cast
 
@@ -19579,7 +19724,9 @@ class ComponentManager:
             del self._components_data["packages"][pkg_id]
             self._save_metadata()
 
-    def get_all_components(self) -> List[Dict[str, Any]]:
+    def get_all_components(
+        self, include_variables: bool = False
+    ) -> List[Dict[str, Any]]:
         """Returns a list of all components with their essential data."""
         self._components_data = self._load_metadata()
         components = self._components_data.get("components", {})
@@ -19589,10 +19736,14 @@ class ComponentManager:
             full_data["id"] = comp_id
             if "test_status" not in full_data:
                 full_data["test_status"] = self.reader.get_template_status(comp_id)
-            full_data["required_variables"] = self.reader.get_component_variables(
-                comp_id
-            )
-            full_data["variables"] = full_data["required_variables"]
+            if include_variables:
+                full_data["required_variables"] = self.reader.get_component_variables(
+                    comp_id
+                )
+                full_data["variables"] = full_data["required_variables"]
+            else:
+                full_data["required_variables"] = []
+                full_data["variables"] = []
             all_comps.append(full_data)
         return all_comps
 
@@ -19764,7 +19915,21 @@ class ComponentManager:
             self.writer.update_template_status(
                 component_id, str(update_data["test_status"])
             )
+            update_data["last_tested"] = datetime.now(timezone.utc).isoformat()
+
+        update_data["last_updated"] = datetime.now(timezone.utc).isoformat()
         components[component_id].update(update_data)
+        self._save_metadata()
+
+    def mark_component_tested(self, component_id: str, test_status: str = "stable"):
+        self._components_data = self._load_metadata()
+        components = self._components_data.setdefault("components", {})
+        if component_id not in components:
+            raise KeyError(f"Component '{component_id}' not found.")
+        now_iso = datetime.now(timezone.utc).isoformat()
+        components[component_id]["last_tested"] = now_iso
+        components[component_id]["test_status"] = test_status
+        self.writer.update_template_status(component_id, test_status)
         self._save_metadata()
 
     def update_component_group(self, component_id: str, new_group_id: str):
@@ -21532,6 +21697,7 @@ import os
 import shutil
 import tempfile
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests  # type: ignore
@@ -21555,11 +21721,12 @@ class SyncManager:
         self.cache_metadata_path = self.cache_dir / "components_metadata.json"
         self.cache_templates_path = self.cache_dir / "component_templates"
         self.git_repo_dir = app_data_dir / "remote_components_git"
+        self.is_offline = False
 
-    def fetch_from_remote(self) -> bool:
+    def fetch_from_remote(self, timeout: int = 3) -> bool:
         """
         Downloads the latest ZIP from GitHub and extracts it to the cache directory.
-        Returns True if successful, False otherwise.
+        Returns True if successful, False if network is offline or request failed.
         """
         repo = os.environ.get(
             "PI_SELFHOSTING_COMPONENTS_REPO",
@@ -21569,13 +21736,14 @@ class SyncManager:
         url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
 
         try:
-            logger.info(f"Fetching remote components from {url}")
-            response = requests.get(url, timeout=30)
+            logger.info(f"Fetching remote components from {url} (timeout={timeout}s)")
+            response = requests.get(url, timeout=timeout)
             if response.status_code != 200:
-                logger.error(
+                logger.warning(
                     f"Failed to download repository ZIP from {url}. "
                     f"Status code: {response.status_code}"
                 )
+                self.is_offline = False
                 return False
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -21592,7 +21760,9 @@ class SyncManager:
                     logger.error("No subdirectory found in extracted ZIP archive")
                     return False
 
-                repo_root, *_ = subdirs
+                repo_root = next(iter(subdirs), None)
+                if not repo_root:
+                    return False
 
                 # Ensure clean target cache directory
                 if self.cache_dir.exists():
@@ -21607,9 +21777,15 @@ class SyncManager:
                 if remote_templates.exists():
                     shutil.copytree(remote_templates, self.cache_templates_path)
 
+            self.is_offline = False
             logger.info("Successfully fetched and cached remote components")
             return True
+        except (requests.exceptions.RequestException, OSError) as e:
+            self.is_offline = True
+            logger.info(f"Remote fetch skipped/failed (offline or timeout): {e}")
+            return False
         except Exception as e:
+            self.is_offline = True
             logger.error(f"Error fetching remote components: {e}", exc_info=True)
             return False
 
@@ -21735,9 +21911,21 @@ class SyncManager:
 
         all_comps = local_comps.union(remote_comps)
         status_dict = {}
+        component_timestamps = {}
+        remote_updates_available = 0
 
         for comp_id in all_comps:
-            status_dict[comp_id] = self.compare_component(comp_id)
+            comp_status = self.compare_component(comp_id)
+            status_dict[comp_id] = comp_status
+            if comp_status in ("modified", "remote_only"):
+                remote_updates_available += 1
+
+            local_meta = local_data.get("components", {}).get(comp_id, {})
+            component_timestamps[comp_id] = {
+                "last_updated": local_meta.get("last_updated"),
+                "last_tested": local_meta.get("last_tested"),
+                "test_status": local_meta.get("test_status", "untested"),
+            }
 
         global_out_of_sync = False
         if remote_fetched:
@@ -21759,9 +21947,51 @@ class SyncManager:
 
         return {
             "remote_fetched": remote_fetched,
+            "is_offline": self.is_offline,
             "components": status_dict,
+            "component_timestamps": component_timestamps,
+            "remote_updates_available": remote_updates_available,
             "global_metadata_out_of_sync": global_out_of_sync,
         }
+
+    def mark_component_tested(
+        self, component_id: str, test_status: str = "stable"
+    ) -> bool:
+        """Updates last_tested timestamp and test_status for a component."""
+        data = self._load_json(self.local_metadata_path)
+        comp = data.get("components", {}).get(component_id)
+        if not comp:
+            return False
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        comp["last_tested"] = now_iso
+        comp["test_status"] = test_status
+
+        try:
+            with open(self.local_metadata_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update last_tested for {component_id}: {e}")
+            return False
+
+    def update_component_timestamp(self, component_id: str) -> bool:
+        """Updates last_updated timestamp for a component."""
+        data = self._load_json(self.local_metadata_path)
+        comp = data.get("components", {}).get(component_id)
+        if not comp:
+            return False
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+        comp["last_updated"] = now_iso
+
+        try:
+            with open(self.local_metadata_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=4)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to update last_updated for {component_id}: {e}")
+            return False
 
     def sync_component(self, component_id: str) -> bool:
         """
@@ -22983,34 +23213,45 @@ class AIGenerator:
         custom_instructions: Optional[str] = None,
         existing_groups: Optional[list[str]] = None,
     ) -> dict:
-        """Analyzes a GitHub repository and returns structured component configuration.
+        """Analyzes a Git repository and returns structured component configuration.
 
         Uses the multi-provider AIGeneratorEngine.
         """
         # Clean and validate the repository URL
-        parsed_url = urllib.parse.urlparse(repo_url)
-        if not parsed_url.netloc or "github.com" not in parsed_url.netloc:
-            raise ValueError("A valid GitHub repository URL is required.")
+        parsed_url = urllib.parse.urlparse(repo_url.strip())
+        if not parsed_url.scheme or not parsed_url.netloc:
+            raise ValueError("A valid Git repository URL is required.")
 
-        path_parts = [p for p in parsed_url.path.split("/") if p]
-        if len(path_parts) < 2:
+        raw_path = parsed_url.path.strip("/")
+        if raw_path.endswith(".git"):
+            raw_path = raw_path[:-4]
+
+        path_parts = [p for p in raw_path.split("/") if p]
+        if not path_parts:
             raise ValueError(
-                "Invalid repository URL format. Must contain owner and repository name."
+                "Invalid repository URL format. "
+                "Must contain at least a repository name."
             )
 
-        owner = path_parts[0]
-        repo_name = path_parts[1].replace(".git", "")
+        repo_name = path_parts[-1]
+        owner = path_parts[0] if len(path_parts) > 1 else ""
+        repo_path = "/".join(path_parts)
         component_id = repo_name.lower()
 
         # Fetch README and compose files from the repository
-        readme_content = self._fetch_github_file(owner, repo_name, "README.md")
-        compose_content = self._fetch_github_file(
-            owner, repo_name, "docker-compose.yml"
+        readme_content = self._fetch_repo_file(
+            parsed_url.netloc, repo_path, ["README.md", "readme.md", "README"]
         )
-        if not compose_content:
-            compose_content = self._fetch_github_file(
-                owner, repo_name, "docker-compose.yaml"
-            )
+        compose_content = self._fetch_repo_file(
+            parsed_url.netloc,
+            repo_path,
+            [
+                "docker-compose.yml",
+                "docker-compose.yaml",
+                "compose.yml",
+                "compose.yaml",
+            ],
+        )
 
         # Compile System Prompt and instructions
         from utils.resource_utils import resource_path
@@ -23041,9 +23282,8 @@ class AIGenerator:
             else:
                 system_prompt += f"{rule_num}. {rule}\n"
 
-        user_prompt = (
-            f"Analyze the repository: {owner}/{repo_name} (URL: {repo_url}).\n"
-        )
+        repo_display = f"{owner}/{repo_name}" if owner else repo_name
+        user_prompt = f"Analyze the repository: {repo_display} (URL: {repo_url}).\n"
         if readme_content:
             user_prompt += (
                 f"\n--- START OF REPOSITORY README.MD ---\n"
@@ -23052,9 +23292,9 @@ class AIGenerator:
             )
         if compose_content:
             user_prompt += (
-                f"\n--- START OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+                f"\n--- START OF REPOSITORY DOCKER COMPOSE CONFIGURATION ---\n"
                 f"{compose_content[:5000]}"
-                f"\n--- END OF REPOSITORY DOCKER-COMPOSE.YML ---\n"
+                f"\n--- END OF REPOSITORY DOCKER COMPOSE CONFIGURATION ---\n"
             )
         if custom_instructions:
             user_prompt += f"Custom User Instructions: {custom_instructions}\n"
@@ -23236,20 +23476,66 @@ class AIGenerator:
                         f"Failed to communicate with AI API: {type(e).__name__} - {e}"
                     ) from e
 
-    def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
-        """Tries to fetch a file from the repository's main or master branch."""
-        for branch in ["main", "master"]:
-            url = (
-                f"https://raw.githubusercontent.com/{owner}/{repo}/"
-                f"{branch}/{filename}"
-            )
-            try:
-                response = requests.get(url, timeout=5)
-                if response.status_code == 200:
-                    return response.text
-            except Exception:  # nosec B110
-                pass
+    def _get_raw_file_urls(
+        self, netloc: str, repo_path: str, filename: str
+    ) -> list[str]:
+        """Builds a list of potential raw file URLs across supported Git platforms."""
+        urls: list[str] = []
+        branches = ["main", "master"]
+        parts = [p for p in repo_path.split("/") if p]
+        owner = parts[0] if parts else ""
+        repo = parts[-1] if len(parts) > 1 else ""
+
+        host = netloc.lower()
+
+        if "github.com" in host and owner and repo:
+            for branch in branches:
+                urls.append(
+                    f"https://raw.githubusercontent.com/{owner}/{repo}/"
+                    f"{branch}/{filename}"
+                )
+        elif "gitlab" in host:
+            for branch in branches:
+                urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
+        elif "bitbucket.org" in host:
+            for branch in branches:
+                urls.append(
+                    f"https://bitbucket.org/{repo_path}/raw/{branch}/{filename}"
+                )
+        elif "codeberg.org" in host or "gitea" in host or "forgejo" in host:
+            for branch in branches:
+                urls.append(
+                    f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"
+                )
+        else:
+            # Generic / self-hosted: try Gitea/Forgejo, GitLab, and direct raw
+            for branch in branches:
+                urls.append(
+                    f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"
+                )
+                urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
+                urls.append(f"https://{netloc}/{repo_path}/raw/{branch}/{filename}")
+
+        return urls
+
+    def _fetch_repo_file(
+        self, netloc: str, repo_path: str, filenames: list[str]
+    ) -> Optional[str]:
+        """Tries to fetch content for candidate filenames across multiple patterns."""
+        for filename in filenames:
+            urls = self._get_raw_file_urls(netloc, repo_path, filename)
+            for url in urls:
+                try:
+                    response = requests.get(url, timeout=5)
+                    if response.status_code == 200 and response.text:
+                        return response.text
+                except Exception:  # nosec B110
+                    pass
         return None
+
+    def _fetch_github_file(self, owner: str, repo: str, filename: str) -> Optional[str]:
+        """Tries to fetch a file from a GitHub repository's main or master branch."""
+        return self._fetch_repo_file("github.com", f"{owner}/{repo}", [filename])
 
     def _check_docker_image_exists(self, image_name: str) -> bool:
         """Verifies if a given docker image exists on its registry."""

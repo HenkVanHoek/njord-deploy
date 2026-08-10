@@ -193,7 +193,8 @@
             ],
             "test_status": "beta",
             "traefik_internal_port": 80,
-            "ui_port_variable": "ADGUARDHOME_WEB_PORT"
+            "ui_port_variable": "ADGUARDHOME_WEB_PORT",
+            "project_url": "https://adguard.com/en/adguard-home/overview.html"
         },
         "adminer": {
             "component_version": "latest",
@@ -252,7 +253,8 @@
                 "server",
                 "audio"
             ],
-            "ui_port_variable": "AUDIOBOOKSHELF_PORT"
+            "ui_port_variable": "AUDIOBOOKSHELF_PORT",
+            "project_url": "https://www.audiobookshelf.org/"
         },
         "caddy": {
             "component_version": "latest",
@@ -341,7 +343,8 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "JITSI_HTTPS_PORT"
+            "ui_port_variable": "JITSI_HTTPS_PORT",
+            "project_url": "https://jitsi.org/"
         },
         "filebrowser": {
             "component_version": "latest",
@@ -366,7 +369,8 @@
                 "file-manager"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "FILEBROWSER_WEB_PORT"
+            "ui_port_variable": "FILEBROWSER_WEB_PORT",
+            "project_url": "https://filebrowser.org/"
         },
         "frigate": {
             "component_version": "stable",
@@ -442,7 +446,8 @@
                 "security"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": null
+            "ui_port_variable": null,
+            "project_url": "https://github.com/qdm12/gluetun"
         },
         "grafana": {
             "component_version": "11.1.3",
@@ -498,7 +503,8 @@
                     "label": "Grafana Admin Password",
                     "type": "password"
                 }
-            ]
+            ],
+            "project_url": "https://grafana.com/"
         },
         "heimdall": {
             "component_version": "latest",
@@ -598,7 +604,8 @@
                 "monitoring"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "HOMEPAGE_WEB_PORT"
+            "ui_port_variable": "HOMEPAGE_WEB_PORT",
+            "project_url": "https://gethomepage.dev/"
         },
         "homer": {
             "component_version": "latest",
@@ -667,7 +674,8 @@
                 "storage_type": "persistent"
             },
             "tags": [],
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "project_url": "https://github.com/HenkVanHoek/lora-letterbox-notifier"
         },
         "microbin": {
             "conflicts_with": [],
@@ -697,7 +705,8 @@
                 "privacy"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "MICROBIN_PORT"
+            "ui_port_variable": "MICROBIN_PORT",
+            "project_url": "https://microbin.eu/"
         },
         "n8n": {
             "component_version": "latest",
@@ -711,7 +720,8 @@
             "image_name": "docker.n8n.io/n8nio/n8n",
             "name": "n8n",
             "protocol": "http",
-            "ui_port_variable": "N8N_WEB_PORT"
+            "ui_port_variable": "N8N_WEB_PORT",
+            "project_url": "https://n8n.io/"
         },
         "nextcloud": {
             "component_version": "latest",
@@ -739,7 +749,8 @@
                 "productivity",
                 "office"
             ],
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "project_url": "https://nextcloud.com/"
         },
         "nextcloud-db": {
             "conflicts_with": [],
@@ -903,7 +914,8 @@
             "tags": [
                 "self-hosted"
             ],
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "project_url": "https://octoprint.org/"
         },
         "open-webui": {
             "component_version": "main",
@@ -927,7 +939,8 @@
                 "Chatbot"
             ],
             "traefik_internal_port": 8080,
-            "ui_port_variable": "OPEN_WEBUI_PORT"
+            "ui_port_variable": "OPEN_WEBUI_PORT",
+            "project_url": "https://openwebui.com/"
         },
         "organizr": {
             "component_version": "latest",
@@ -1085,7 +1098,8 @@
                     "label": "Component Version",
                     "type": "string"
                 }
-            ]
+            ],
+            "project_url": "https://fluffychat.im/"
         },
         "portainer": {
             "component_version": "lts",
@@ -1166,7 +1180,8 @@
                     "label": "cAdvisor Web Port",
                     "type": "port"
                 }
-            ]
+            ],
+            "project_url": "https://prometheus.io/"
         },
         "prosody": {
             "conflicts_with": [],
@@ -1187,7 +1202,8 @@
             "tags": [
                 "self-hosted"
             ],
-            "traefik_internal_port": 80
+            "traefik_internal_port": 80,
+            "project_url": "https://prosody.im/"
         },
         "prowlarr": {
             "component_version": "latest",
@@ -1211,7 +1227,8 @@
                 "arr"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "PROWLARR_WEB_PORT"
+            "ui_port_variable": "PROWLARR_WEB_PORT",
+            "project_url": "https://prowlarr.com/"
         },
         "qbittorrent": {
             "component_version": "latest",
@@ -1343,7 +1360,8 @@
                 "automation",
                 "ui"
             ],
-            "ui_port_variable": "SEMAPHORE_PORT"
+            "ui_port_variable": "SEMAPHORE_PORT",
+            "project_url": "https://semaphoreui.com/"
         },
         "sonarr": {
             "component_version": "latest",
@@ -1397,7 +1415,8 @@
                 "document",
                 "productivity"
             ],
-            "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
+            "ui_port_variable": "STIRLING_PDF_HTTP_PORT",
+            "project_url": "https://stirlingpdf.com/"
         },
         "traefik": {
             "component_version": "latest",
@@ -1496,7 +1515,8 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "UPTIME_KUMA_WEB_PORT"
+            "ui_port_variable": "UPTIME_KUMA_WEB_PORT",
+            "project_url": "https://uptime.kuma.pet/"
         },
         "vaultwarden": {
             "component_version": "latest",
@@ -1550,7 +1570,8 @@
                 "Text-to-Speech",
                 "Voice Cloning"
             ],
-            "ui_port_variable": "VOICEBOX_WEB_PORT"
+            "ui_port_variable": "VOICEBOX_WEB_PORT",
+            "project_url": "https://github.com/HenkVanHoek/njord-deploy"
         },
         "web-notepad": {
             "component_version": "latest",

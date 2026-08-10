@@ -34,9 +34,15 @@ class TestAIGenerator(unittest.TestCase):
         mock_generate.assert_called_once()
 
     def test_invalid_url_raises_value_error(self):
-        """Tests that invalid GitHub URLs cause a ValueError."""
+        """Tests that invalid Git URLs cause a ValueError."""
         with self.assertRaises(ValueError):
-            self.generator.generate_component_data("https://invalid.com/repo")
+            self.generator.generate_component_data("")
+
+        with self.assertRaises(ValueError):
+            self.generator.generate_component_data("not_a_valid_url")
+
+        with self.assertRaises(ValueError):
+            self.generator.generate_component_data("https:///no-host")
 
         with self.assertRaises(ValueError):
             self.generator.generate_component_data("https://github.com/")
@@ -354,3 +360,134 @@ class TestAIGenerator(unittest.TestCase):
         self.assertEqual(result["id"], "caddy")
         self.assertEqual(result["variables"], [])
         self.assertEqual(mock_generate.call_count, 2)
+
+    def test_get_raw_file_urls_across_platforms(self):
+        """Test building raw URLs for GitHub, GitLab, Codeberg, Bitbucket, etc."""
+        # 1. GitHub
+        gh_urls = self.generator._get_raw_file_urls(
+            "github.com", "owner/repo", "README.md"
+        )
+        self.assertIn(
+            "https://raw.githubusercontent.com/owner/repo/main/README.md", gh_urls
+        )
+        self.assertIn(
+            "https://raw.githubusercontent.com/owner/repo/master/README.md", gh_urls
+        )
+
+        # 2. GitLab (with nested namespaces)
+        gl_urls = self.generator._get_raw_file_urls(
+            "gitlab.com", "group/subgroup/project", "docker-compose.yml"
+        )
+        self.assertIn(
+            "https://gitlab.com/group/subgroup/project/-/raw/main/docker-compose.yml",
+            gl_urls,
+        )
+        self.assertIn(
+            "https://gitlab.com/group/subgroup/project/-/raw/master/docker-compose.yml",
+            gl_urls,
+        )
+
+        # 3. Codeberg / Gitea / Forgejo
+        cb_urls = self.generator._get_raw_file_urls(
+            "codeberg.org", "forgejo/forgejo", "README.md"
+        )
+        self.assertIn(
+            "https://codeberg.org/forgejo/forgejo/raw/branch/main/README.md", cb_urls
+        )
+        self.assertIn(
+            "https://codeberg.org/forgejo/forgejo/raw/branch/master/README.md", cb_urls
+        )
+
+        # 4. Bitbucket
+        bb_urls = self.generator._get_raw_file_urls(
+            "bitbucket.org", "workspace/repo", "compose.yaml"
+        )
+        self.assertIn(
+            "https://bitbucket.org/workspace/repo/raw/main/compose.yaml", bb_urls
+        )
+
+        # 5. Self-hosted generic Git instance
+        sh_urls = self.generator._get_raw_file_urls(
+            "git.example.com", "team/app", "README.md"
+        )
+        self.assertTrue(
+            any(
+                "https://git.example.com/team/app/raw/branch/main/README.md" in u
+                for u in sh_urls
+            )
+        )
+        self.assertTrue(
+            any(
+                "https://git.example.com/team/app/-/raw/main/README.md" in u
+                for u in sh_urls
+            )
+        )
+
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_gitlab_success(self, mock_generate):
+        """Tests successful generation for GitLab repository with nested namespace."""
+        mock_generate.return_value = (
+            '{"metadata": {"name": "My Service", "image_name": '
+            '"myservice", "description": "gitlab service", '
+            '"group": "tools", "has_ui": false, '
+            '"has_configuration": false, "docker_service_name": "myservice", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": []}'
+        )
+
+        repo_url = "https://gitlab.com/my-org/backend/service.git"
+        result = self.generator.generate_component_data(repo_url)
+
+        self.assertEqual(result["id"], "service")
+        self.assertEqual(result["metadata"]["name"], "My Service")
+        mock_generate.assert_called_once()
+
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_codeberg_success(self, mock_generate):
+        """Tests successful generation for Codeberg/Forgejo repository."""
+        mock_generate.return_value = (
+            '{"metadata": {"name": "Forgejo", "image_name": '
+            '"forgejo", "description": "git forge", '
+            '"group": "development", "has_ui": false, '
+            '"has_configuration": true, "docker_service_name": "forgejo", '
+            '"component_version": "1.0"}, "docker_compose": '
+            '"services:", "variables": []}'
+        )
+
+        repo_url = "https://codeberg.org/forgejo/forgejo"
+        result = self.generator.generate_component_data(repo_url)
+
+        self.assertEqual(result["id"], "forgejo")
+        self.assertEqual(result["metadata"]["name"], "Forgejo")
+        mock_generate.assert_called_once()
+
+    @patch("requests.get")
+    def test_fetch_repo_file_and_github_wrapper(self, mock_get):
+        """Test _fetch_repo_file and backwards-compatible _fetch_github_file."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = "# Hello World"
+        mock_get.return_value = mock_response
+
+        # Test _fetch_repo_file
+        content = self.generator._fetch_repo_file(
+            "github.com", "owner/repo", ["README.md"]
+        )
+        self.assertEqual(content, "# Hello World")
+
+        # Test _fetch_github_file wrapper
+        content_wrapper = self.generator._fetch_github_file(
+            "owner", "repo", "README.md"
+        )
+        self.assertEqual(content_wrapper, "# Hello World")
+
+        # Test failure fallback
+        mock_404 = MagicMock()
+        mock_404.status_code = 404
+        mock_404.text = ""
+        mock_get.return_value = mock_404
+
+        content_none = self.generator._fetch_repo_file(
+            "github.com", "owner/repo", ["nonexistent.txt"]
+        )
+        self.assertIsNone(content_none)

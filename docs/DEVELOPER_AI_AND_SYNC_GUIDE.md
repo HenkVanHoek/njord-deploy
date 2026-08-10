@@ -34,9 +34,18 @@ The sync manager, defined in [sync_manager.py](file:///home/hvhoek/PycharmProjec
 
 ---
 
-## 2. AI-Assisted Component Generator (Multi-Provider Support)
+## 2. AI-Assisted Component Generator (Multi-Provider & Multi-Forge Git Support)
 
-The component editor includes an AI assistant that automatically bootstraps new components using a GitHub repository URL.
+The component editor includes an AI assistant that automatically bootstraps new components from any Git repository URL across all major hosting platforms and self-hosted instances.
+
+### Supported Git Hosting Platforms & Repositories
+
+The generator supports direct URL ingestion from:
+- **GitHub**: `https://github.com/owner/repository`
+- **GitLab**: `https://gitlab.com/group/subgroup/project` (supports arbitrarily nested group hierarchies and namespaces)
+- **Gitea / Forgejo / Codeberg**: `https://codeberg.org/owner/repository` or any community instance
+- **Bitbucket**: `https://bitbucket.org/workspace/repository`
+- **Self-Hosted Git Instances**: Any self-hosted Git server (e.g. `https://git.yourdomain.com/owner/project`)
 
 ### Supported AI Providers & Configuration
 
@@ -58,26 +67,12 @@ The AI generator supports multiple AI providers with per-provider API key storag
 
 1. Start the Editor App.
 2. Click the "Create with AI" button in the sidebar.
-3. Input the GitHub repository URL (such as "https://github.com/caddyserver/caddy") and add optional custom instructions.
+3. Input any public Git repository URL (e.g. `https://github.com/caddyserver/caddy`, `https://gitlab.com/...`, or `https://codeberg.org/...`) and add optional custom instructions.
 4. Click "Generate Component".
-   * **Context Enrichment:** The backend automatically attempts to fetch public files (e.g. `README.md` and `docker-compose.yml`/`docker-compose.yaml`) from the GitHub repository to include as rich context in the API request.
-   * **Docker Hub & GHCR Verification:** The generator queries the public
-     Docker Hub Registry API to verify that the generated image name exists.
-     If the check fails, the generator automatically queries the GitHub
-     Container Registry (GHCR) as a fallback. If the image is found on
-     GHCR, it automatically corrects the image name in the metadata and
-     Docker Compose template (prefixing it with `ghcr.io/`), preventing
-     false validation warnings and deployment errors.
-   * **Validation & Self-Correction:** The generator automatically performs
-     structure, variable consistency, and syntax validation checks. If any
-     validation warnings or YAML syntax parsing errors (such as mismatched
-     quotes or bad indentation) are detected, the backend executes an automatic
-     self-correction loop (up to 3 attempts), feeding the warnings and errors
-     back to the Gemini model to automatically refine the configuration.
-   * **Timeout & Error Resilience:** If the Gemini API times out or returns
-     an upstream error (HTTP 502/504), the editor intercepts this and displays
-     a detailed explanation inside the modal, providing direct "Retry" and
-     "Cancel" buttons to easily try again.
+   * **Automatic Context Enrichment:** The backend automatically attempts to fetch public documentation and compose files across standard variations (`README.md`, `readme.md`, `README`, `docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml`) across `main` and `master` branches from the repository to supply rich context in the prompt.
+   * **Docker Hub & Registry Verification:** The generator queries public OCI registries (Docker Hub, GHCR, Quay) to verify that the generated image name exists. If the image is hosted on GHCR or custom registries, it automatically verifies and corrects the image name in metadata and compose templates.
+   * **Validation & Self-Correction:** The generator automatically performs structure, variable consistency, and syntax validation checks. If any validation warnings or YAML syntax parsing errors (such as mismatched quotes or bad indentation) are detected, the backend executes an automatic self-correction loop (up to 3 attempts), feeding the warnings and errors back to the AI model to refine the configuration.
+   * **Timeout & Error Resilience:** If the AI API times out or returns an upstream error, the editor intercepts this and displays a detailed explanation inside the modal with "Retry" and "Cancel" buttons.
 5. The API returns a structured JSON payload containing metadata, user variables, and a Docker Compose template.
 6. Review the preview of the generated files. If there are validation or image name warnings, they are displayed in the warning alert banner.
 7. Click "Accept and Create" to save the bootstrapped files directly to the local project filesystem.

@@ -81,6 +81,51 @@ def create_app(test_config=None):
             logging.error(f"Failed to get sync status: {e}", exc_info=True)
             abort(500, "Internal error getting sync status")
 
+    @app.route("/api/sync/check-updates", methods=["GET", "POST"])
+    def sync_check_updates():
+        try:
+            sync_manager.fetch_from_remote(timeout=3)
+            status_data = sync_manager.get_sync_status()
+            from utils.resource_utils import get_last_seed_status
+
+            status_data["initial_seed_info"] = get_last_seed_status()
+            return jsonify(status_data), 200
+        except Exception as e:
+            logging.error(f"Failed to check updates: {e}", exc_info=True)
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "is_offline": True,
+                        "message": str(e),
+                    }
+                ),
+                200,
+            )
+
+    @app.route("/api/components/<comp_id>/mark-tested", methods=["POST"])
+    def mark_component_tested_route(comp_id):
+        try:
+            data = request.get_json(silent=True) or {}
+            test_status = data.get("test_status", "stable")
+            component_manager.mark_component_tested(comp_id, test_status=test_status)
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "message": f"Component '{comp_id}' marked as tested",
+                    }
+                ),
+                200,
+            )
+        except KeyError:
+            abort(404, f"Component '{comp_id}' not found")
+        except Exception as e:
+            logging.error(
+                f"Failed to mark component {comp_id} as tested: {e}", exc_info=True
+            )
+            abort(500, f"Internal error marking component {comp_id} as tested")
+
     @app.route("/api/sync/fetch", methods=["POST"])
     def sync_fetch():
         try:
@@ -408,7 +453,8 @@ def create_app(test_config=None):
 
     @app.route("/api/components", methods=["GET"])
     def list_components():
-        all_comps = component_manager.get_all_components()
+        include_vars = request.args.get("include_variables", "false").lower() == "true"
+        all_comps = component_manager.get_all_components(include_variables=include_vars)
         # Return mapped by ID dict for loadComponents frontend utility
         return jsonify({comp["id"]: comp for comp in all_comps}), 200
 
@@ -774,7 +820,7 @@ def create_app(test_config=None):
         model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
-            abort(400, "A valid GitHub repository URL is required")
+            abort(400, "A valid Git repository URL is required")
 
         if isinstance(api_key, str):
             api_key = api_key.strip()
@@ -819,7 +865,7 @@ def create_app(test_config=None):
             if "API key missing for provider" in err_msg:
                 msg = err_msg
             elif "repository URL is required" in err_msg:
-                msg = "A valid GitHub repository URL is required"
+                msg = "A valid Git repository URL is required"
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
