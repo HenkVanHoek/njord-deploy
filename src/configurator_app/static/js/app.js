@@ -1768,9 +1768,7 @@
                     <div id="deployment-status-subtitle-container">
                         <p class="text-muted">Your configuration files are ready.</p>
                     </div>
-                    <div class="card card-body bg-light text-start my-3">
-                        <pre><code id="output-path-display">${escapeHTML(result.output_path)}</code></pre>
-                    </div>
+                    <span id="output-path-display" class="d-none">${escapeHTML(result.output_path)}</span>
                     <div id="final-actions-container">
                          <div class="sticky-action-bar" id="deployment-actions">
                             <button id="deploy-button" class="btn btn-primary">
@@ -1950,7 +1948,7 @@
                             <div class="card">
                                 <div class="card-body bg-dark text-white rounded" style="font-family: monospace; font-size: 0.9em; max-height: 400px; overflow-y: auto;">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted small">Path: ${escapeHTML(outputPath)}/${escapeHTML(fileName)}</span>
+                                        <span class="text-muted small">File: ${escapeHTML(fileName)}</span>
                                         <button class="btn btn-sm btn-outline-light btn-copy-config" data-target-id="code-${safeId}">
                                             <i class="fa-solid fa-copy me-1"></i>Copy
                                         </button>

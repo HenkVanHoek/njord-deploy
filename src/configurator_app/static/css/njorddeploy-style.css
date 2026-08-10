@@ -524,3 +524,67 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
 .nav-link.disabled {
     color: var(--text-muted-color) !important;
 }
+
+/* Glassmorphic Modal & Health Report Styling */
+.modal-content {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: 16px !important;
+    color: var(--bs-body-color) !important;
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--glass-border) !important;
+}
+
+.modal-title {
+    color: var(--bs-heading-color) !important;
+}
+
+/* Close button adaptation for dark glass theme */
+html[data-theme="dark"] .btn-close,
+html[data-theme="futuristic-dark"] .btn-close,
+html:not([data-theme="light"]) .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Modal Inner Cards */
+.modal .card {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--bs-body-color) !important;
+}
+
+html[data-theme="light"] .modal .card {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #212529 !important;
+}
+
+/* Glassmorphic Alert Banners */
+.alert-success {
+    background-color: rgba(0, 230, 118, 0.15) !important;
+    border: 1px solid rgba(0, 230, 118, 0.3) !important;
+    color: #00e676 !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 171, 0, 0.15) !important;
+    border: 1px solid rgba(255, 171, 0, 0.3) !important;
+    color: #ffab00 !important;
+}
+
+.alert-danger {
+    background-color: rgba(255, 23, 68, 0.15) !important;
+    border: 1px solid rgba(255, 23, 68, 0.3) !important;
+    color: #ff1744 !important;
+}
+
+.alert-info {
+    background-color: rgba(0, 176, 255, 0.15) !important;
+    border: 1px solid rgba(0, 176, 255, 0.3) !important;
+    color: #00b0ff !important;
+}

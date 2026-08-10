@@ -152,6 +152,10 @@ class AIGenerator:
 
                 data["id"] = component_id
 
+                metadata = data.setdefault("metadata", {})
+                if data.get("variables") or data.get("config_templates"):
+                    metadata["has_configuration"] = True
+
                 # Run security and validation checks
                 warnings = self._run_security_checks(data)
 

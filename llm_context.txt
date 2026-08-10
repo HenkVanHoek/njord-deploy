@@ -8689,6 +8689,70 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
     color: var(--text-muted-color) !important;
 }
 
+/* Glassmorphic Modal & Health Report Styling */
+.modal-content {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: 16px !important;
+    color: var(--bs-body-color) !important;
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--glass-border) !important;
+}
+
+.modal-title {
+    color: var(--bs-heading-color) !important;
+}
+
+/* Close button adaptation for dark glass theme */
+html[data-theme="dark"] .btn-close,
+html[data-theme="futuristic-dark"] .btn-close,
+html:not([data-theme="light"]) .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Modal Inner Cards */
+.modal .card {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--bs-body-color) !important;
+}
+
+html[data-theme="light"] .modal .card {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #212529 !important;
+}
+
+/* Glassmorphic Alert Banners */
+.alert-success {
+    background-color: rgba(0, 230, 118, 0.15) !important;
+    border: 1px solid rgba(0, 230, 118, 0.3) !important;
+    color: #00e676 !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 171, 0, 0.15) !important;
+    border: 1px solid rgba(255, 171, 0, 0.3) !important;
+    color: #ffab00 !important;
+}
+
+.alert-danger {
+    background-color: rgba(255, 23, 68, 0.15) !important;
+    border: 1px solid rgba(255, 23, 68, 0.3) !important;
+    color: #ff1744 !important;
+}
+
+.alert-info {
+    background-color: rgba(0, 176, 255, 0.15) !important;
+    border: 1px solid rgba(0, 176, 255, 0.3) !important;
+    color: #00b0ff !important;
+}
+
 --- FILE: src/configurator_app/static/js/accessibility.js ---
 (function () {
     // 1. Immediate initialization to prevent theme flicker
@@ -10514,9 +10578,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                     <div id="deployment-status-subtitle-container">
                         <p class="text-muted">Your configuration files are ready.</p>
                     </div>
-                    <div class="card card-body bg-light text-start my-3">
-                        <pre><code id="output-path-display">${escapeHTML(result.output_path)}</code></pre>
-                    </div>
+                    <span id="output-path-display" class="d-none">${escapeHTML(result.output_path)}</span>
                     <div id="final-actions-container">
                          <div class="sticky-action-bar" id="deployment-actions">
                             <button id="deploy-button" class="btn btn-primary">
@@ -10696,7 +10758,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                             <div class="card">
                                 <div class="card-body bg-dark text-white rounded" style="font-family: monospace; font-size: 0.9em; max-height: 400px; overflow-y: auto;">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="text-muted small">Path: ${escapeHTML(outputPath)}/${escapeHTML(fileName)}</span>
+                                        <span class="text-muted small">File: ${escapeHTML(fileName)}</span>
                                         <button class="btn btn-sm btn-outline-light btn-copy-config" data-target-id="code-${safeId}">
                                             <i class="fa-solid fa-copy me-1"></i>Copy
                                         </button>
@@ -12356,17 +12418,17 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                     </div>
                 </div>
 
-                <div class="card bg-light border-0 mb-3">
+                <div class="card border-0 mb-3">
                     <div class="card-body">
-                        <h6 class="fw-bold text-secondary mb-2"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Summary</h6>
-                        <p class="mb-0 text-dark" id="evalSummaryText">Loading log analysis...</p>
+                        <h6 class="fw-bold text-primary mb-2"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Summary</h6>
+                        <p class="mb-0" id="evalSummaryText">Loading log analysis...</p>
                     </div>
                 </div>
 
                 <div class="card border-warning mb-3 d-none" id="evalActionCard">
                     <div class="card-body">
-                        <h6 class="fw-bold text-warning-emphasis mb-2"><i class="fa-solid fa-wrench me-2"></i>Recommended Action</h6>
-                        <p class="mb-2 small text-dark" id="evalActionText"></p>
+                        <h6 class="fw-bold text-warning mb-2"><i class="fa-solid fa-wrench me-2"></i>Recommended Action</h6>
+                        <p class="mb-2 small" id="evalActionText"></p>
                         <div id="evalDocLinkContainer" class="mt-2 d-none">
                             <a id="evalDocLink" href="#" target="_blank" class="btn btn-sm btn-outline-warning">
                                 <i class="fa-solid fa-book-bookmark me-1"></i> View User Guide
@@ -12378,7 +12440,7 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
                 <div class="card border-danger mb-3 d-none" id="evalBugCard">
                     <div class="card-body">
                         <h6 class="fw-bold text-danger mb-2"><i class="fa-solid fa-bug me-2"></i>Software / Package Issue Identified</h6>
-                        <p class="mb-2 small text-dark" id="evalBugText">A template or system execution issue was detected.</p>
+                        <p class="mb-2 small" id="evalBugText">A template or system execution issue was detected.</p>
                         <div class="d-flex gap-2 flex-wrap">
                             <a id="evalSearchGithubLink" href="#" target="_blank" class="btn btn-sm btn-outline-secondary">
                                 <i class="fa-brands fa-github me-1"></i> Search Existing Issues
@@ -14762,6 +14824,70 @@ html[data-theme="high-contrast-light"] .btn-primary:disabled {
     color: var(--text-muted-color) !important;
 }
 
+/* Glassmorphic Modal & Health Report Styling */
+.modal-content {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid var(--glass-border) !important;
+    box-shadow: var(--glass-shadow) !important;
+    border-radius: 16px !important;
+    color: var(--bs-body-color) !important;
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--glass-border) !important;
+}
+
+.modal-title {
+    color: var(--bs-heading-color) !important;
+}
+
+/* Close button adaptation for dark glass theme */
+html[data-theme="dark"] .btn-close,
+html[data-theme="futuristic-dark"] .btn-close,
+html:not([data-theme="light"]) .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+/* Modal Inner Cards */
+.modal .card {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--bs-body-color) !important;
+}
+
+html[data-theme="light"] .modal .card {
+    background: rgba(0, 0, 0, 0.02) !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    color: #212529 !important;
+}
+
+/* Glassmorphic Alert Banners */
+.alert-success {
+    background-color: rgba(0, 230, 118, 0.15) !important;
+    border: 1px solid rgba(0, 230, 118, 0.3) !important;
+    color: #00e676 !important;
+}
+
+.alert-warning {
+    background-color: rgba(255, 171, 0, 0.15) !important;
+    border: 1px solid rgba(255, 171, 0, 0.3) !important;
+    color: #ffab00 !important;
+}
+
+.alert-danger {
+    background-color: rgba(255, 23, 68, 0.15) !important;
+    border: 1px solid rgba(255, 23, 68, 0.3) !important;
+    color: #ff1744 !important;
+}
+
+.alert-info {
+    background-color: rgba(0, 176, 255, 0.15) !important;
+    border: 1px solid rgba(0, 176, 255, 0.3) !important;
+    color: #00b0ff !important;
+}
+
 --- FILE: src/editor_app/static/editor.v2.js ---
 // src/editor_app/static/editor.v2.js
 
@@ -16363,8 +16489,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            const sortedGroups = Array.from(groupsMap.values()).sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+            );
+            sortedGroups.forEach(g => {
+                g.components.sort((a, b) =>
+                    (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' })
+                );
+            });
+
             componentData = {
-                groups: Array.from(groupsMap.values()),
+                groups: sortedGroups,
                 packages: Object.fromEntries(packagesMap)
             };
 
@@ -16765,7 +16900,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         {
                             element: document.getElementById("create-new-ai-btn"),
                             title: "Bootstrap with AI",
-                            intro: "Click here to generate a component automatically using Google Gemini AI! Just provide a GitHub repository URL.",
+                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a GitHub repository URL.",
                             position: "bottom"
                         },
                         {
@@ -18303,7 +18438,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NjordDeploy Component Editor</title>
-    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -18676,7 +18811,17 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <div class="card-body">
                                 <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> AI Component Bootstrap</h5>
                                 <p class="card-text small text-muted">
-                                    Generate new components automatically via Google Gemini. Click "Create with AI" at the top of the sidebar, enter a GitHub repository URL with optional custom instructions, and Gemini will bootstrap the configuration templates, variables, and metadata.
+                                    Generate new components automatically from any GitHub repository. Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <h5 class="card-title" style="color: #a855f7;"><i class="bi bi-cpu-fill me-2"></i> Multi-Provider &amp; Local LLMs</h5>
+                                <p class="card-text small text-muted">
+                                    Freedom of AI choice: run <strong>Ollama Local</strong> (e.g., RTX 3060) for 100% offline privacy, <strong>HostYourAI / Loes (EU)</strong> for privacy-compliant European cloud, or cloud providers like <strong>Google Gemini</strong>, <strong>OpenAI</strong>, and <strong>Custom Endpoints</strong>.
                                 </p>
                             </div>
                         </div>
@@ -22957,6 +23102,10 @@ class AIGenerator:
                 data["config_templates"] = configs_dict
 
                 data["id"] = component_id
+
+                metadata = data.setdefault("metadata", {})
+                if data.get("variables") or data.get("config_templates"):
+                    metadata["has_configuration"] = True
 
                 # Run security and validation checks
                 warnings = self._run_security_checks(data)

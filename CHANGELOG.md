@@ -47,6 +47,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Git Sync & Write Permission Diagnostics**: Fixed Git write access permission check in `SyncManager` (`check_write_access_details()`) to return detailed diagnostic error messages to the frontend UI when permission checks fail or dry-run fails.
 - **Component Directory Name Normalization**: Enhanced template folder lookup (`_resolve_component_dir()`) in `SyncManager` to handle hyphenated component IDs (e.g. `adguard-home` vs `adguardhome`), resolving sync errors when local template folders use normalized naming conventions.
 - **Component Template Directory Standardization**: Renamed local template directory `component_templates/adguardhome/` to `component_templates/adguard-home/` to strictly align with component metadata naming.
+- **AdGuard Home Component Cleanup & User Cache Sync**: Removed obsolete `adguardhome` duplicate component ID and template folder, standardizing strictly on `adguard-home` across project metadata and user data directories.
+- **Editor Group & Component Alphabetical Sorting**: Added explicit locale-sensitive alphabetical sorting (`a.name.localeCompare(b.name)`) for service groups and components within groups in `editor.v2.js` to ensure consistent and predictable UI tab rendering.
 
 ## [0.6.0] - 2025-10-12
 

@@ -1598,8 +1598,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
 
+            const sortedGroups = Array.from(groupsMap.values()).sort((a, b) =>
+                a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+            );
+            sortedGroups.forEach(g => {
+                g.components.sort((a, b) =>
+                    (a.name || a.id).localeCompare(b.name || b.id, undefined, { sensitivity: 'base' })
+                );
+            });
+
             componentData = {
-                groups: Array.from(groupsMap.values()),
+                groups: sortedGroups,
                 packages: Object.fromEntries(packagesMap)
             };
 
@@ -2000,7 +2009,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         {
                             element: document.getElementById("create-new-ai-btn"),
                             title: "Bootstrap with AI",
-                            intro: "Click here to generate a component automatically using Google Gemini AI! Just provide a GitHub repository URL.",
+                            intro: "Click here to generate a component automatically using AI (Ollama, Gemini, OpenAI, HostYourAI)! Just provide a GitHub repository URL.",
                             position: "bottom"
                         },
                         {
