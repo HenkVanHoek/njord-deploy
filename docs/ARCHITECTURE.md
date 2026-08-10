@@ -203,11 +203,11 @@ Behavior
 - **Principle**: The **git commit --amend** command is the standard procedure for adding corrections to a logical change that has not yet been pushed.
 - **Rationale**: This ensures the final commit is atomic and avoids cluttering the history with "fix-up" commits. This is only safe for local commits.
 
-## 6. AI-Assisted Component Generation
+## 6. AI-Assisted Component Generation & Multi-Provider Architecture
 
-- **Principle**: The system integrates an AI generation flow that translates repository structures directly into NjordDeploy components.
-- **Backend Architecture**: The AIGenerator class makes direct HTTP POST requests to the Gemini Beta REST API model (gemini-2.5-flash) using structured JSON output.
-- **Context Enrichment**: Before invoking the Gemini API, the backend crawls the public repository to download source files (like `README.md` and `docker-compose.yml`) which are attached to the prompt context.
-- **Image Name Verification**: The backend verifies the generated Docker image name using the public Docker Hub Registry API. Any failures (HTTP 404) are flagged as UI warnings to prevent deployment errors.
-- **Security and API Keys**: The user provides a Gemini API key. If not provided, it falls back to the GEMINI_API_KEY environment variable loaded via python-dotenv.
-- **Developer Guide**: For detailed instructions on the Gemini AI generator, the components repository synchronization, and the local Ollama LLM setup, see the [Developer AI and Sync Guide](DEVELOPER_AI_AND_SYNC_GUIDE.md).
+- **Principle**: The system integrates an AI-assisted component generation and bootstrap engine that translates public or self-hosted Git repository structures into validated NjordDeploy components (metadata, `docker-compose.template.yml`, and `variables.json`).
+- **Multi-Provider Architecture (`AIProviderManager` & `AIGenerator`)**: The backend abstracts LLM integrations through `AIProviderManager` (`src/utils/ai_provider_manager.py`), supporting local offline models (such as Ollama via OpenAI-compatible endpoints) and cloud APIs (Google Gemini, OpenAI, HostYourAI EU). The `AIGenerator` (`src/utils/ai_generator.py`) communicates with the active provider using standard OpenAI-compatible REST endpoints with structured JSON schemas and automated self-correction loops.
+- **Universal Git Context Enrichment**: Before invoking the active LLM, the backend crawls the target Git repository across popular forges (GitHub, GitLab including nested groups/subgroups, Gitea, Forgejo, Codeberg, Bitbucket, and self-hosted instances) and multiple branches (`main`, `master`) to extract documentation (`README.md`, `readme.md`, `README`) and compose definitions (`docker-compose.yml`, `docker-compose.yaml`, `compose.yml`, `compose.yaml`), injecting them as contextual prompt data.
+- **Registry & Image Verification**: The backend validates generated Docker image names against public registries (Docker Hub Registry API, GitHub Container Registry / GHCR, Quay) and inspects repository existence. Any resolution failures (e.g., HTTP 404) or missing tags are flagged as validation warnings in the UI to prevent runtime deployment failures.
+- **Security & Credential Management**: API keys and custom endpoint URLs are managed securely per provider via the Editor UI, OS keyring, or environment variables (`GEMINI_API_KEY`, `OPENAI_API_KEY`, `HOSTYOURAI_API_KEY`, etc.) loaded via `python-dotenv`. Local offline providers (like Ollama) operate without API key requirements.
+- **Developer Guide**: For detailed instructions on configuring multi-provider AI engines (Ollama, Gemini, OpenAI, HostYourAI), universal Git repository imports, and template synchronisation, see the [Developer AI and Sync Guide](DEVELOPER_AI_AND_SYNC_GUIDE.md).
