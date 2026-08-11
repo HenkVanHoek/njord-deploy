@@ -27,6 +27,12 @@ This phase focused on creating a rock-solid, feature-rich, and user-friendly ins
 
 With a stable foundation, this phase will focus on expanding the ecosystem, improving the developer experience, and providing more options for advanced users.
 
+*   **[✅] Container Engine Abstraction (Docker & Rootless Podman)**:
+    *   **Why?**: To make NjordDeploy engine-agnostic, supporting standard Docker as well as security-hardened rootless Podman environments.
+    *   **Implementation**: Introduced `ContainerEngine` class mapping CLI/Compose commands dynamically, with automated target OS provisioning (kernel low-port binding `net.ipv4.ip_unprivileged_port_start=53`, systemd user session lingering via `loginctl`, subuid/subgid mapping), parameterized Ansible playbook execution, and live UI switching.
+*   **[✅] Dynamic Components Repository & Air-Gapped Mode**:
+    *   **Why?**: To allow custom component repositories (private GitLab/Forgejo/Gitea) and air-gapped offline installations.
+    *   **Implementation**: Fully dynamic `SyncManager` supporting `COMPONENTS_REPO_URL`, `COMPONENTS_REPO_BRANCH`, `COMPONENTS_REPO_TOKEN`, with live URL validation endpoint (`/api/validate-repo`) and offline local-only fallback mode.
 *   **[In Progress] Component Configuration Tools**: Develop modular, post-installation tools for key services. The core ONVIF camera discovery and configuration tool for Frigate (`frigate_camera_config_tool.py`) has been completed, with dashboard integration being the next step.
 *   **[Planned] Integrated Backup & Restore**: Develop a user-friendly, Flask-based tool to back up and restore all persistent service data. This is a critical feature for data security and user peace of mind.
     *   **Implementation**: This will be a new, optional management tool built with Flask. It will provide a simple web UI to automatically detect and back up all persistent Docker volumes. The tool will feature **smart, configurable defaults**, allowing users to easily exclude large data volumes (like Frigate video recordings) to ensure fast and efficient backups of critical configuration data.

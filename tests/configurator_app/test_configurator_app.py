@@ -298,16 +298,14 @@ class ConfiguratorAppTestCase(unittest.TestCase):
 
         mock_ssh = mock_ssh_class.return_value
         mock_ssh.connect.return_value = (True, "")
-        mock_ssh.execute_command.side_effect = [
-            (100, "E: Could not get lock /var/lib/dpkg/lock-frontend"),
-            (0, "success"),
-            (0, "success"),
-            (0, "success"),
-            (0, "success"),
-            (0, "success"),
-            (0, "success"),
-            (0, "success"),
-        ]
+
+        def mock_exec(cmd, *args, **kwargs):
+            if not getattr(mock_exec, "locked_once", False) and "apt-get" in cmd:
+                mock_exec.locked_once = True
+                return (100, "E: Could not get lock /var/lib/dpkg/lock-frontend")
+            return (0, "success")
+
+        mock_ssh.execute_command.side_effect = mock_exec
         mock_key = MagicMock()
         mock_key.get_name.return_value = "ssh-rsa"
         mock_key.get_base64.return_value = "AAAA..."

@@ -108,6 +108,15 @@ class DeploymentManager:
                     else:
                         mapped_restart.append(c_id)
 
+                # Determine active container engine
+                from utils.container_engine import get_configured_engine
+
+                active_engine = (
+                    global_vars.get("CONTAINER_ENGINE")
+                    or device.get("container_engine")
+                    or get_configured_engine()
+                )
+
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
@@ -116,7 +125,12 @@ class DeploymentManager:
                     "components_to_restart": mapped_restart,
                     "selected_components_data": selected_components_data,
                     "global_vars": global_vars,
+                    "container_engine": active_engine,
                 }
+
+                self.tasks[task_id]["logs"].append(
+                    f"INFO: Using container engine: {active_engine.upper()}"
+                )
 
                 app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
                 key_file = app_data_dir / "id_ed25519_njorddeploy"

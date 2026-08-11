@@ -83,14 +83,13 @@ filename = "pyproject.toml"
 search = 'version = "{current_version}"'
 replace = 'version = "{new_version}"'
 
-[tool.bumpversion.parts.release]
-values = ["Alpha", "Beta", "prod"]
-optional_value = "prod"
-
 [[tool.mypy.overrides]]
 module = [
     "utils.resource_utils",
+    "utils.container_engine",
     "managers.ssh_manager",
+    "managers.sync_manager",
+    "managers.deployment_evaluator",
     "onvif.*",
     "appdirs",
     "managers.component_manager",

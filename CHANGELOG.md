@@ -7,6 +7,17 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Container Engine Abstraction Layer (Docker & Rootless Podman)**:
+  - Created `ContainerEngine` class ([`src/utils/container_engine.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/container_engine.py)) mapping CLI and Compose operations transparently across Docker and Podman.
+  - Implemented automated host OS rootless Podman provisioning: low-port kernel binding (`net.ipv4.ip_unprivileged_port_start=53`), systemd session lingering (`loginctl enable-linger`), and subuid/subgid mapping.
+  - Parameterized Ansible deployment playbook ([`ansible/playbook.yml`](file:///home/hvhoek/PycharmProjects/njord-deploy/ansible/playbook.yml)) and DeploymentManager to dynamically inject `container_engine`.
+  - Added real-time topbar status badge and dropdown engine switcher in the Configurator app.
+  - Published comprehensive architectural specification in [`docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md).
+- **Dynamic Components Repository & Air-Gapped Offline Mode**:
+  - Enhanced `SyncManager` ([`src/managers/sync_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/sync_manager.py)) to support dynamic `COMPONENTS_REPO_URL`, `COMPONENTS_REPO_BRANCH`, and `COMPONENTS_REPO_TOKEN` for custom GitHub, GitLab, and Forgejo repositories.
+  - Added full offline / air-gapped support (`COMPONENTS_REPO_URL="none"` or `"local"`) preventing unnecessary network polling.
+  - Added `/api/validate-repo` validation endpoint for live pre-save repository connectivity tests.
+  - Added interactive First-Run Onboarding Modal and Settings cards in the Configurator app.
 - **Comprehensive Project FAQ & Q&A Documentation**:
   - Created [`docs/FAQ.md`](docs/FAQ.md) structured along the 6 stages of the user lifecycle (Concept & Comparison, Hardware Requirements, Networking & Security, Operations & Backups, Troubleshooting, and Developer/Architecture).
   - Added coverage for custom local AI models (Open WebUI & Ollama), GitLab container customization & backups, and updated Linux OS support matrices (Debian 11/12/13, Ubuntu 22.04/24.04/26.04 LTS).

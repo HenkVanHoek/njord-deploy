@@ -230,7 +230,7 @@ def test_fetch_from_remote(temp_dirs, monkeypatch):
     mock_zip_content = zip_buffer.getvalue()
 
     # 2. Mock requests.get to return this mock ZIP
-    def mock_get(url, timeout=30):
+    def mock_get(url, *args, **kwargs):
         return MockResponse(mock_zip_content, 200)
 
     import requests  # type: ignore
@@ -363,3 +363,52 @@ def test_mark_component_tested_and_timestamp(temp_dirs):
     assert "component_timestamps" in status
     assert "test-comp" in status["component_timestamps"]
     assert status["component_timestamps"]["test-comp"]["test_status"] == "stable"
+
+
+def test_repo_config_and_urls(monkeypatch):
+    monkeypatch.delenv("COMPONENTS_REPO_URL", raising=False)
+    monkeypatch.delenv("PI_SELFHOSTING_COMPONENTS_REPO", raising=False)
+    config = SyncManager.get_repo_config()
+    assert config["url"] == "HenkVanHoek/njord-deploy-components"
+    assert config["is_enabled"] is True
+    assert SyncManager.is_remote_sync_enabled() is True
+
+    ssh_url, https_url = SyncManager.get_repo_urls()
+    assert "git@github.com:HenkVanHoek/njord-deploy-components.git" in ssh_url
+    assert "https://github.com/HenkVanHoek/njord-deploy-components.git" in https_url
+
+    # Disabled / local mode
+    monkeypatch.setenv("COMPONENTS_REPO_URL", "none")
+    assert SyncManager.is_remote_sync_enabled() is False
+
+    monkeypatch.setenv("COMPONENTS_REPO_URL", "local")
+    assert SyncManager.is_remote_sync_enabled() is False
+
+    # Custom GitLab URL
+    monkeypatch.setenv(
+        "COMPONENTS_REPO_URL", "https://gitlab.example.com/org/custom-repo"
+    )
+    ssh_u, https_u = SyncManager.get_repo_urls()
+    assert https_u == "https://gitlab.example.com/org/custom-repo.git"
+
+
+def test_validate_remote_repo_local():
+    valid, msg = SyncManager.validate_remote_repo("none")
+    assert valid is True
+    assert "Local-only" in msg
+
+    valid, msg = SyncManager.validate_remote_repo("local")
+    assert valid is True
+
+
+def test_validate_remote_repo_mock(monkeypatch):
+    import requests
+
+    class MockHead:
+        def __init__(self, status_code):
+            self.status_code = status_code
+
+    monkeypatch.setattr(requests, "head", lambda *args, **kwargs: MockHead(200))
+    valid, msg = SyncManager.validate_remote_repo("HenkVanHoek/njord-deploy-components")
+    assert valid is True
+    assert "reachable" in msg

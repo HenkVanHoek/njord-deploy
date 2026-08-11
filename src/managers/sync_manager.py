@@ -8,6 +8,7 @@ import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Optional
 
 import requests  # type: ignore
 from appdirs import user_data_dir
@@ -32,21 +33,147 @@ class SyncManager:
         self.git_repo_dir = app_data_dir / "remote_components_git"
         self.is_offline = False
 
+    @staticmethod
+    def get_repo_config() -> dict[str, Any]:
+        """Returns the active components repository configuration."""
+        repo = (
+            os.environ.get("COMPONENTS_REPO_URL")
+            or os.environ.get("PI_SELFHOSTING_COMPONENTS_REPO")
+            or "HenkVanHoek/njord-deploy-components"
+        ).strip()
+        branch = (
+            os.environ.get("COMPONENTS_REPO_BRANCH")
+            or os.environ.get("PI_SELFHOSTING_COMPONENTS_BRANCH")
+            or "main"
+        ).strip()
+        token = os.environ.get("COMPONENTS_REPO_TOKEN", "").strip()
+
+        is_disabled = repo.lower() in ("none", "local", "offline", "")
+        return {
+            "url": repo,
+            "branch": branch,
+            "token": token,
+            "is_enabled": not is_disabled,
+        }
+
+    @classmethod
+    def is_remote_sync_enabled(cls) -> bool:
+        """Returns True if remote components sync is active."""
+        config = cls.get_repo_config()
+        return bool(config.get("is_enabled", True))
+
+    @classmethod
+    def get_repo_urls(cls) -> tuple[str, str]:
+        """Returns (ssh_url, https_url) for the configured repository."""
+        config = cls.get_repo_config()
+        repo = str(config.get("url", "HenkVanHoek/njord-deploy-components"))
+
+        if repo.startswith("git@") or repo.startswith("ssh://"):
+            return repo, repo
+        if repo.startswith("https://") or repo.startswith("http://"):
+            https_url = repo if repo.endswith(".git") else f"{repo}.git"
+            return repo, https_url
+
+        # Default GitHub slug owner/repo
+        ssh_url = f"git@github.com:{repo}.git"
+        https_url = f"https://github.com/{repo}.git"
+        return ssh_url, https_url
+
+    @classmethod
+    def validate_remote_repo(
+        cls,
+        url: str,
+        branch: str = "main",
+        token: Optional[str] = None,
+        timeout: int = 4,
+    ) -> tuple[bool, str]:
+        """
+        Validates whether a remote repository or archive URL is reachable.
+        """
+        cleaned = url.strip()
+        if cleaned.lower() in ("none", "local", "offline", ""):
+            return True, "Local-only mode configured (remote sync disabled)"
+
+        # Construct candidate download URL
+        if cleaned.startswith("http://") or cleaned.startswith("https://"):
+            if cleaned.endswith(".zip"):
+                download_url = cleaned
+            elif "gitlab." in cleaned:
+                base = cleaned.rstrip(".git")
+                download_url = f"{base}/-/archive/{branch}/components-{branch}.zip"
+            else:
+                download_url = (
+                    f"{cleaned.rstrip('.git')}/archive/refs/heads/{branch}.zip"
+                )
+        else:
+            download_url = (
+                f"https://github.com/{cleaned}/archive/refs/heads/{branch}.zip"
+            )
+
+        headers: dict[str, str] = {}
+        if token:
+            headers["Authorization"] = f"token {token}"
+
+        try:
+            res = requests.head(
+                download_url,
+                headers=headers,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+            if res.status_code in (200, 302, 301):
+                return True, f"Repository archive reachable at {download_url}"
+            # Some servers block HEAD, try GET with range or timeout
+            res_get = requests.get(
+                download_url,
+                headers={**headers, "Range": "bytes=0-10"},
+                timeout=timeout,
+                stream=True,
+            )
+            if res_get.status_code in (200, 206, 302, 301):
+                return True, f"Repository archive reachable at {download_url}"
+            return (
+                False,
+                f"Repository check returned status {res_get.status_code} "
+                f"for {download_url}",
+            )
+        except Exception as e:
+            return False, f"Connection failed to {download_url}: {str(e)}"
+
     def fetch_from_remote(self, timeout: int = 3) -> bool:
         """
-        Downloads the latest ZIP from GitHub and extracts it to the cache directory.
+        Downloads the latest ZIP from repository and extracts it to the cache directory.
         Returns True if successful, False if network is offline or request failed.
         """
-        repo = os.environ.get(
-            "PI_SELFHOSTING_COMPONENTS_REPO",
-            "HenkVanHoek/njord-deploy-components",
-        )
-        branch = os.environ.get("PI_SELFHOSTING_COMPONENTS_BRANCH", "main")
-        url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
+        config = self.get_repo_config()
+        if not config.get("is_enabled"):
+            logger.info("Remote sync is disabled by configuration (local-only mode).")
+            self.is_offline = False
+            return False
+
+        repo = str(config.get("url"))
+        branch = str(config.get("branch"))
+        token = str(config.get("token", ""))
+
+        if repo.startswith("http://") or repo.startswith("https://"):
+            if repo.endswith(".zip"):
+                url = repo
+            elif "gitlab." in repo:
+                base = repo.rstrip(".git")
+                url = f"{base}/-/archive/{branch}/components-{branch}.zip"
+            else:
+                url = f"{repo.rstrip('.git')}/archive/refs/heads/{branch}.zip"
+        else:
+            url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
+
+        headers = {"Authorization": f"token {token}"} if token else None
 
         try:
             logger.info(f"Fetching remote components from {url} (timeout={timeout}s)")
-            response = requests.get(url, timeout=timeout)
+            if headers:
+                response = requests.get(url, headers=headers, timeout=timeout)
+            else:
+                response = requests.get(url, timeout=timeout)
             if response.status_code != 200:
                 logger.warning(
                     f"Failed to download repository ZIP from {url}. "
@@ -419,7 +546,7 @@ class SyncManager:
             last_err = str(e)
 
         # Try HTTPS push dry run
-        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
+        ssh_url, https_url = self.get_repo_urls()
         try:
             res = subprocess.run(  # nosec B603 B607
                 ["git", "push", "--dry-run", https_url],
@@ -458,8 +585,7 @@ class SyncManager:
     def _prepare_git_repo(self) -> str:
         """Clones or updates the local git cache for components repo."""
         self.git_repo_dir.parent.mkdir(parents=True, exist_ok=True)
-        ssh_url = "git@github.com:HenkVanHoek/njord-deploy-components.git"
-        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
+        ssh_url, https_url = self.get_repo_urls()
 
         if self.git_repo_dir.exists() and (self.git_repo_dir / ".git").exists():
             import subprocess  # nosec B404

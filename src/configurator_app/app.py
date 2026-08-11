@@ -273,7 +273,16 @@ def create_app(test_config=None):
 
     @flask_app.route("/", methods=["GET"])
     def index():
-        return render_template("index.html")
+        from managers.sync_manager import SyncManager
+        from utils.container_engine import get_configured_engine
+
+        engine = get_configured_engine()
+        repo_config = SyncManager.get_repo_config()
+        return render_template(
+            "index.html",
+            container_engine=engine,
+            repo_config=repo_config,
+        )
 
     @flask_app.route("/help", methods=["GET"])
     def help_page():
@@ -411,6 +420,118 @@ def create_app(test_config=None):
 
         else:
             return jsonify({"error": "Invalid update mode"}), 400
+
+    @flask_app.route("/api/engine-status", methods=["GET"])
+    def get_engine_status():
+        """Returns the active container engine and repository configuration."""
+        from managers.sync_manager import SyncManager
+        from utils.container_engine import ContainerEngine
+
+        engine = ContainerEngine()
+        repo_config = SyncManager.get_repo_config()
+        return jsonify(
+            {
+                "engine": engine.engine,
+                "is_docker": engine.is_docker,
+                "is_podman": engine.is_podman,
+                "supported_engines": ["docker", "podman"],
+                "repo_url": repo_config.get("url"),
+                "repo_branch": repo_config.get("branch"),
+                "is_remote_sync_enabled": repo_config.get("is_enabled"),
+            }
+        )
+
+    @flask_app.route("/api/engine-switch", methods=["POST"])
+    def switch_engine():
+        """Switches the active container engine dynamically and persists to .env."""
+        data = request.get_json(force=True) or {}
+        new_engine = data.get("engine", "").strip().lower()
+        if new_engine not in ("docker", "podman"):
+            return (
+                jsonify(
+                    {"error": "Invalid container engine. Must be 'docker' or 'podman'."}
+                ),
+                400,
+            )
+
+        os.environ["CONTAINER_ENGINE"] = new_engine
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        try:
+            current_content = ""
+            if env_path.exists():
+                with open(env_path, "r", encoding="utf-8") as f:
+                    current_content = f.read()
+
+            lines = current_content.splitlines()
+            updated = False
+            new_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith("CONTAINER_ENGINE="):
+                    new_lines.append(f'CONTAINER_ENGINE="{new_engine}"')
+                    updated = True
+                else:
+                    new_lines.append(line)
+            if not updated:
+                new_lines.append(f'CONTAINER_ENGINE="{new_engine}"')
+
+            with open(env_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(new_lines) + "\n")
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "engine": new_engine,
+                        "message": (
+                            f"Container engine successfully switched to "
+                            f"{new_engine.upper()}."
+                        ),
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            return (
+                jsonify({"error": f"Failed to persist engine setting: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/validate-repo", methods=["POST"])
+    def validate_repository():
+        """Validates connectivity to a candidate components repository URL."""
+        from managers.sync_manager import SyncManager
+
+        data = request.get_json(force=True) or {}
+        repo_url = str(data.get("url", "")).strip()
+        branch = str(data.get("branch", "main")).strip()
+        token = str(data.get("token", "")).strip()
+
+        if not repo_url:
+            return (
+                jsonify({"valid": False, "message": "Repository URL cannot be empty."}),
+                400,
+            )
+
+        is_valid, msg = SyncManager.validate_remote_repo(
+            repo_url, branch, token or None
+        )
+        return jsonify({"valid": is_valid, "message": msg}), (200 if is_valid else 400)
+
+    @flask_app.route("/api/first-run-status", methods=["GET"])
+    def first_run_status():
+        """Returns whether first-run onboarding is pending."""
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        is_first_run = not env_path.exists()
+        if env_path.exists():
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if "CONTAINER_ENGINE=" in content or "COMPONENTS_REPO_URL=" in content:
+                    is_first_run = False
+            except Exception as e:
+                logging.debug(f"Could not read .env: {e}")
+        return jsonify({"first_run": is_first_run})
 
     @flask_app.route("/nmap-status", methods=["GET"])
     def nmap_status():
@@ -976,14 +1097,10 @@ def create_app(test_config=None):
                     500,
                 )
 
-            install_commands = [
-                "apt-get update",
-                "apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                "sh get-docker.sh",
-                "systemctl enable --now docker",
-                "docker network create njorddeploy_net",
-            ]
+            from utils.container_engine import ContainerEngine
+
+            engine = ContainerEngine()
+            install_commands = engine.get_provisioning_commands(username="root")
 
             for cmd in install_commands:
                 max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
@@ -1334,21 +1451,10 @@ def create_app(test_config=None):
                     500,
                 )
 
-            cmd_prefix = "" if username == "root" else "sudo "
-            install_commands = [
-                f"{cmd_prefix}apt-get update",
-                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                f"{cmd_prefix}sh get-docker.sh",
-                f"{cmd_prefix}systemctl enable --now docker",
-            ]
+            from utils.container_engine import ContainerEngine
 
-            if username != "root":
-                install_commands.append(f"sudo usermod -aG docker {username}")
-
-            install_commands.append(
-                f"{cmd_prefix}docker network create njorddeploy_net"
-            )
+            engine = ContainerEngine()
+            install_commands = engine.get_provisioning_commands(username=username)
 
             for cmd in install_commands:
                 max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
@@ -2173,18 +2279,24 @@ def create_app(test_config=None):
             if not connected:
                 return jsonify({"error": f"Failed to connect to host: {msg}"}), 400
 
-            # Check if user is in docker group (can run docker commands without sudo)
-            exit_code_group, _ = ssh.execute_command(
-                "docker ps", lambda x: None, check_exit_code=False
-            )
-            if exit_code_group == 0:
-                cmd = f"docker logs --tail 200 {container_name}"
-            else:
-                quoted_password = shlex.quote(password)
-                cmd = (
-                    f"echo {quoted_password} | "
-                    f"sudo -S docker logs --tail 200 {container_name}"
+            # Determine command using ContainerEngine
+            from utils.container_engine import ContainerEngine
+
+            engine = ContainerEngine()
+            if engine.is_docker:
+                exit_code_group, _ = ssh.execute_command(
+                    "docker ps", lambda x: None, check_exit_code=False
                 )
+                if exit_code_group == 0:
+                    cmd = f"docker logs --tail 200 {container_name}"
+                else:
+                    quoted_password = shlex.quote(password)
+                    cmd = (
+                        f"echo {quoted_password} | "
+                        f"sudo -S docker logs --tail 200 {container_name}"
+                    )
+            else:
+                cmd = f"podman logs --tail 200 {container_name}"
 
             log_lines = []
 

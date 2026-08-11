@@ -99,6 +99,56 @@
                 <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
                     <form id="settings-form" class="row g-4">
 
+                        <!-- Section: Container Engine & Runtime -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-boxes-stacked me-2"></i> Container Engine &amp; Runtime</h5>
+                                    <p class="text-muted small mb-3">Select the underlying container execution engine for service orchestration on target devices.</p>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="CONTAINER_ENGINE" class="form-label small fw-bold">Active Engine</label>
+                                            <select class="form-select" id="CONTAINER_ENGINE">
+                                                <option value="docker" {% if env_vars.get('CONTAINER_ENGINE', 'docker') == 'docker' %}selected{% endif %}>Docker CE (Daemon / Standard)</option>
+                                                <option value="podman" {% if env_vars.get('CONTAINER_ENGINE') == 'podman' %}selected{% endif %}>Podman (Rootless / Daemonless)</option>
+                                            </select>
+                                            <div class="form-text small mt-1">Podman uses rootless user sessions, automatic linger, and kernel unprivileged ports (&ge; 53).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Components Repository & Sync -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-code-branch me-2"></i> Components Repository &amp; Sync</h5>
+                                    <p class="text-muted small mb-3">Configure the remote repository or disable sync for local/air-gapped environments.</p>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="COMPONENTS_REPO_URL" class="form-label small fw-bold">Repository Source</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="COMPONENTS_REPO_URL" value="{{ env_vars.get('COMPONENTS_REPO_URL', env_vars.get('PI_SELFHOSTING_COMPONENTS_REPO', 'HenkVanHoek/njord-deploy-components')) }}" placeholder="HenkVanHoek/njord-deploy-components or 'none'">
+                                                <button class="btn btn-outline-secondary" type="button" id="test-repo-btn" title="Validate Repo URL">
+                                                    <i class="fa-solid fa-plug me-1"></i> Test
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Use GitHub slug, GitLab/Forgejo URL, or <code>none</code> for local-only offline mode.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="COMPONENTS_REPO_BRANCH" class="form-label small fw-bold">Branch</label>
+                                            <input type="text" class="form-control" id="COMPONENTS_REPO_BRANCH" value="{{ env_vars.get('COMPONENTS_REPO_BRANCH', env_vars.get('PI_SELFHOSTING_COMPONENTS_BRANCH', 'main')) }}" placeholder="main">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="COMPONENTS_REPO_TOKEN" class="form-label small fw-bold">Auth Token (Optional)</label>
+                                            <input type="password" class="form-control" id="COMPONENTS_REPO_TOKEN" value="{{ env_vars.get('COMPONENTS_REPO_TOKEN', '') }}" placeholder="Token for private repo">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Section: Proxmox VE Integration -->
                         <div class="col-12">
                             <div class="card settings-card bg-light border-0">
@@ -280,6 +330,44 @@
             }, 5000);
         };
 
+        // Handle Test Repo Connection
+        const testRepoBtn = document.getElementById("test-repo-btn");
+        if (testRepoBtn) {
+            testRepoBtn.addEventListener("click", async () => {
+                const url = document.getElementById("COMPONENTS_REPO_URL")?.value.trim() || "";
+                const branch = document.getElementById("COMPONENTS_REPO_BRANCH")?.value.trim() || "main";
+                const token = document.getElementById("COMPONENTS_REPO_TOKEN")?.value.trim() || "";
+
+                if (!url) {
+                    showAlert("Please specify a repository source to test.", "warning");
+                    return;
+                }
+
+                testRepoBtn.disabled = true;
+                const orig = testRepoBtn.innerHTML;
+                testRepoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+                try {
+                    const res = await fetch("/api/validate-repo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url, branch, token })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.valid) {
+                        showAlert(`✓ ${data.message}`, "success");
+                    } else {
+                        showAlert(`✗ ${data.message || "Validation failed."}`, "danger");
+                    }
+                } catch (e) {
+                    showAlert(`Error validating repo: ${e.message}`, "danger");
+                } finally {
+                    testRepoBtn.disabled = false;
+                    testRepoBtn.innerHTML = orig;
+                }
+            });
+        }
+
         // Handle Save Form Settings
         saveFormBtn.addEventListener("click", async () => {
             saveFormBtn.disabled = true;
@@ -287,9 +375,9 @@
             saveFormBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
 
             const payload = {};
-            const inputs = document.querySelectorAll("#settings-form input");
+            const inputs = document.querySelectorAll("#settings-form input, #settings-form select");
             inputs.forEach(input => {
-                if (input.value.trim()) {
+                if (input.value && input.value.trim()) {
                     payload[input.id] = input.value.trim();
                 }
             });

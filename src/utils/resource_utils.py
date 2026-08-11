@@ -67,7 +67,7 @@ def seed_user_components_if_needed() -> dict[str, str]:
         }
         return _LAST_SEED_STATUS
 
-    # Attempt to fetch latest packages from remote GitHub repo
+    # Attempt to fetch latest packages from remote repo
     # noinspection PyBroadException
     try:
         from managers.sync_manager import SyncManager
@@ -77,12 +77,14 @@ def seed_user_components_if_needed() -> dict[str, str]:
             local_metadata_path=user_metadata,
             local_templates_path=user_templates,
         )
-        if sync.fetch_from_remote() and sync.sync_all():
+        if not sync.is_remote_sync_enabled():
+            logger.info("Remote sync is disabled. Seeding local built-in components.")
+        elif sync.fetch_from_remote() and sync.sync_all():
             _LAST_SEED_STATUS = {
                 "status": "downloaded",
                 "message": (
                     "De nieuwste componentpakketten en templates zijn "
-                    "automatisch gedownload van GitHub."
+                    "automatisch gedownload van de repository."
                 ),
             }
             return _LAST_SEED_STATUS

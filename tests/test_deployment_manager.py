@@ -166,6 +166,31 @@ class TestDeploymentManager(unittest.TestCase):
         )
         self.assertIn("no such service", err["details"])
 
+    def test_start_deployment_passes_container_engine(self):
+        """Verify that container_engine is passed to Ansible runner extravars."""
+        from unittest.mock import patch
+
+        mock_runner = MagicMock()
+        mock_runner.events = []
+        mock_runner.status = "successful"
+        mock_runner.stdout = None
+
+        output_path = "/tmp/deploy"
+        devices = [{"ip": "100.121.216.150", "container_engine": "podman"}]
+
+        with patch(
+            "src.managers.deployment_manager.ansible_runner.run",
+            return_value=mock_runner,
+        ) as mock_run:
+            self.deploy_mgr.start_deployment(
+                self.test_task_id, self.tasks_dict, output_path, devices
+            )
+
+            # Check that extravars passed to runner contains container_engine
+            call_kwargs = mock_run.call_args[1]
+            self.assertIn("extravars", call_kwargs)
+            self.assertEqual(call_kwargs["extravars"]["container_engine"], "podman")
+
 
 if __name__ == "__main__":
     unittest.main()

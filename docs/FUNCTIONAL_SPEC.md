@@ -495,7 +495,32 @@ repeatable, isolated environment.
 
 **Acceptance Criteria:**
 
--   **Given** the "Select Existing Proxmox Target" scan method is selected,
--   **When** the user clicks "Load/Refresh Targets", the configurator queries the Proxmox host using `/api/proxmox/list-targets` and displays a dropdown list of all active/stopped VMs and containers.
 -   **Then** if the user selects a target that is currently stopped, the backend automatically starts it using `/api/proxmox/start-target` and waits until it retrieves a valid IP address.
 -   **And** if the target is already running, the backend retrieves its IP address using `/api/proxmox/get-target-ip` and proceeds directly to the deployment step.
+
+---
+
+### Epic 3: Platform Flexibility - Container Engines & Dynamic Repositories
+
+#### Story: Container Engine Selection (Docker vs Rootless Podman)
+
+> As an end-user (Alex) or enterprise administrator, I want to choose whether services are deployed using standard Docker or rootless Podman, so that I can adhere to strict security policies and unprivileged container standards.
+
+**Acceptance Criteria:**
+- **Given** the Configurator app is open,
+- **When** the user selects Docker or Podman from the topbar dropdown or onboarding wizard,
+- **Then** the backend persists the setting (`CONTAINER_ENGINE="docker"` or `"podman"`) in `.env` and session memory.
+- **And** all host provisioning commands dynamically adapt (for Podman: unprivileged port start=53, user session lingering, subuid/subgid mapping).
+- **And** all Ansible deployment tasks dynamically execute using the selected engine (`docker compose` or `podman compose`).
+
+---
+
+#### Story: Dynamic Components Repository & Air-Gapped Mode
+
+> As a developer or air-gapped environment administrator, I want to specify a custom components repository URL or run in offline mode, so that I can use proprietary component catalogs without network dependencies.
+
+**Acceptance Criteria:**
+- **Given** the user navigates to Settings or the Onboarding wizard,
+- **When** the user inputs a custom repository URL (GitHub, GitLab, Forgejo) and branch/token,
+- **Then** the user can click "Test Connection" (`/api/validate-repo`) to verify connectivity.
+- **And** if set to `"none"` or `"local"`, remote synchronization is cleanly disabled, and local pre-packaged templates are used without network delays.

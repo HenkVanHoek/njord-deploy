@@ -85,6 +85,21 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="engineDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Container Engine & Source">
+                        <span id="topbar-engine-badge" class="badge {% if container_engine == 'podman' %}bg-warning text-dark{% else %}bg-primary text-white{% endif %} d-flex align-items-center me-1">
+                            <i id="topbar-engine-icon" class="{% if container_engine == 'podman' %}fa-solid fa-feather-pointed{% else %}fa-brands fa-docker{% endif %} me-1"></i>
+                            <span id="topbar-engine-name">{{ 'Podman' if container_engine == 'podman' else 'Docker' }}</span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="engineDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
+                        <li><h6 class="dropdown-header">Active Container Engine</h6></li>
+                        <li><button class="dropdown-item d-flex align-items-center btn-switch-engine" data-engine="docker"><i class="fa-brands fa-docker text-primary me-2"></i> Docker (Standard)</button></li>
+                        <li><button class="dropdown-item d-flex align-items-center btn-switch-engine" data-engine="podman"><i class="fa-solid fa-feather-pointed text-warning me-2"></i> Podman (Rootless)</button></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--glass-border);"></li>
+                        <li><button class="dropdown-item d-flex align-items-center" id="btn-open-onboarding-modal"><i class="fa-solid fa-sliders me-2"></i> Engine &amp; Repo Setup...</button></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-palette me-1"></i> Theme
                     </a>
@@ -360,6 +375,86 @@
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Engine & Repository Quick Onboarding / Setup Modal -->
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(16px); border: 1px solid var(--glass-border, #e2e8f0);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary" id="onboardingModalLabel">
+                    <i class="fa-solid fa-rocket me-2"></i> Engine &amp; Components Setup
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Configure your container orchestration engine and component template repository source.</p>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-uppercase">1. Container Engine</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 p-3 engine-choice-card border cursor-pointer active" id="card-choice-docker" style="cursor: pointer;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="onboardEngine" id="engine-radio-docker" value="docker" checked>
+                                    <label class="form-check-label fw-bold" for="engine-radio-docker">
+                                        <i class="fa-brands fa-docker text-primary me-1"></i> Docker CE (Standard)
+                                    </label>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">Standard Docker daemon. Requires sudo or docker group permissions.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 p-3 engine-choice-card border cursor-pointer" id="card-choice-podman" style="cursor: pointer;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="onboardEngine" id="engine-radio-podman" value="podman">
+                                    <label class="form-check-label fw-bold" for="engine-radio-podman">
+                                        <i class="fa-solid fa-feather-pointed text-warning me-1"></i> Podman (Rootless)
+                                    </label>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">Daemonless rootless execution. Configures kernel unprivileged ports (&ge; 53) &amp; user lingering.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">2. Components Repository Source</label>
+                    <div class="mb-2">
+                        <select class="form-select" id="onboard-repo-preset">
+                            <option value="default">Default Official Repository (GitHub - HenkVanHoek/njord-deploy-components)</option>
+                            <option value="custom">Custom Remote Git / GitLab / Forgejo Repository</option>
+                            <option value="local">Local / Air-Gapped Mode (No remote sync)</option>
+                        </select>
+                    </div>
+                    <div id="onboard-custom-repo-group" class="d-none mt-3 p-3 bg-light rounded border">
+                        <label for="onboard-custom-url" class="form-label small fw-bold">Custom Git or Archive URL</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="onboard-custom-url" placeholder="https://gitlab.example.com/org/components.git">
+                            <button class="btn btn-outline-secondary" type="button" id="onboard-validate-btn"><i class="fa-solid fa-plug me-1"></i> Test</button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="onboard-custom-branch" class="form-label small">Branch</label>
+                                <input type="text" class="form-control form-control-sm" id="onboard-custom-branch" value="main">
+                            </div>
+                            <div class="col-6">
+                                <label for="onboard-custom-token" class="form-label small">Auth Token (Optional)</label>
+                                <input type="password" class="form-control form-control-sm" id="onboard-custom-token" placeholder="Optional token">
+                            </div>
+                        </div>
+                        <div id="onboard-validation-feedback" class="small mt-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary px-4" id="onboard-save-btn">
+                    <i class="fa-solid fa-check me-1"></i> Apply Configuration
+                </button>
             </div>
         </div>
     </div>

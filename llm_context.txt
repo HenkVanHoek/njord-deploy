@@ -44,6 +44,8 @@ if __name__ == "__main__":
   become: true
   vars:
     ansible_become_timeout: 60
+    # Container engine: 'docker' (default) or 'podman'
+    container_engine: "{{ engine | default(container_engine | default('docker')) | lower }}"
     # Destination path on the target for all configuration
     project_config_dir: "/opt/njorddeploy"
     # Map kernel architecture to Debian package architecture
@@ -76,7 +78,7 @@ if __name__ == "__main__":
       loop: "{{ ansible_mounts }}"
       when: item.mount == '/'
 
-# --- DOCKER ENGINE PROVISIONING (WITHOUT PIP OR Python LIBRARIES) ---
+    # --- WAIT FOR SYSTEM LOCKS ---
     - name: Wait for cloud-init and background apt/dpkg locks to clear
       ansible.builtin.shell: |
         if command -v cloud-init >/dev/null 2>&1; then
@@ -87,6 +89,7 @@ if __name__ == "__main__":
         done
       changed_when: false
 
+    # --- DOCKER ENGINE PROVISIONING ---
     - name: Ensure prerequisites for Docker repository are installed
       ansible.builtin.apt:
         name:
@@ -95,24 +98,28 @@ if __name__ == "__main__":
         state: present
         update_cache: yes
         lock_timeout: 600
+      when: container_engine == 'docker'
 
     - name: Ensure directory for Docker archive keyring exists
       ansible.builtin.file:
         path: /etc/apt/keyrings
         state: directory
         mode: "0755"
+      when: container_engine == 'docker'
 
     - name: Download Docker official GPG key
       ansible.builtin.get_url:
         url: "https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }}/gpg"
         dest: /etc/apt/keyrings/docker.asc
         mode: "0644"
+      when: container_engine == 'docker'
 
     - name: Add Docker repository to Apt sources
       ansible.builtin.apt_repository:
         repo: "deb [arch={{ debian_architecture_map[ansible_architecture] | default(ansible_architecture) }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }} {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
+      when: container_engine == 'docker'
 
     - name: Ensure Docker CE and Compose plugin are installed
       ansible.builtin.apt:
@@ -124,12 +131,50 @@ if __name__ == "__main__":
         state: present
         update_cache: yes
         lock_timeout: 600
+      when: container_engine == 'docker'
 
     - name: Ensure SSH user is in docker group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
+      when: container_engine == 'docker'
+
+    # --- PODMAN ROOTLESS PROVISIONING ---
+    - name: Ensure Podman and Compose packages are installed
+      ansible.builtin.apt:
+        name:
+          - podman
+          - podman-compose
+          - slirp4netns
+          - uidmap
+          - dbus-user-session
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: yes
+        lock_timeout: 600
+      when: container_engine == 'podman'
+
+    - name: Configure unprivileged port start for rootless Podman (DNS 53 and HTTP 80/443)
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/99-podman-ports.conf
+        content: "net.ipv4.ip_unprivileged_port_start=53\n"
+        mode: "0644"
+      when: container_engine == 'podman'
+
+    - name: Apply sysctl configuration for Podman
+      ansible.builtin.command:
+        cmd: "sysctl --system"
+      changed_when: false
+      when: container_engine == 'podman'
+
+    - name: Enable user lingering for rootless Podman session persistence
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ ansible_user }}"
+      changed_when: false
+      failed_when: false
+      when: container_engine == 'podman'
 
     # --- DIRECTORY & FILE DEPLOYMENT ---
     - name: Ensure project directory exists
@@ -151,33 +196,40 @@ if __name__ == "__main__":
 
     - name: Perform Clean Install (Stop containers and remove volumes for selected components)
       ansible.builtin.command:
-        cmd: "docker compose rm -f -s -v {{ item }}"
+        cmd: "{{ container_engine }} compose rm -f -s -v {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_clean | default([]) }}"
       when: components_to_clean is defined and components_to_clean | length > 0
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
 
-    # --- CLI-BASED DOCKER OPERATIONS (NO PYTHON REQUIRED) ---
-    - name: Ensure NjordDeploy Docker network exists
+    # --- CLI-BASED CONTAINER OPERATIONS ---
+    - name: Ensure NjordDeploy network exists
       ansible.builtin.command:
-        cmd: "docker network create njorddeploy_net"
+        cmd: "{{ container_engine }} network create njorddeploy_net"
       register: network_create
       failed_when:
         - network_create.rc != 0
         - "'already exists' not in network_create.stderr"
       changed_when: "network_create.rc == 0"
 
-    - name: Pull latest service images
+    - name: Pull latest service images (Docker)
       ansible.builtin.command:
         cmd: "docker compose pull --ignore-buildable"
         chdir: "{{ project_config_dir }}"
-      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      when: container_engine == 'docker'
       changed_when: "true"
 
-    - name: Deploy services with Docker Compose
+    - name: Pull latest service images (Podman)
       ansible.builtin.command:
-        cmd: "docker compose up -d"
+        cmd: "podman compose pull"
+        chdir: "{{ project_config_dir }}"
+      when: container_engine == 'podman'
+      changed_when: "true"
+
+    - name: Deploy services with Compose
+      ansible.builtin.command:
+        cmd: "{{ container_engine }} compose up -d"
         chdir: "{{ project_config_dir }}"
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
@@ -188,8 +240,8 @@ if __name__ == "__main__":
           JITSI_MEET_USER=$(grep "^JITSI_MEET_USER=" {{ project_config_dir }}/.env | cut -d= -f2-)
           JITSI_MEET_PASSWORD=$(grep "^JITSI_MEET_PASSWORD=" {{ project_config_dir }}/.env | cut -d= -f2-)
           if [ -n "$JITSI_MEET_USER" ] && [ -n "$JITSI_MEET_PASSWORD" ]; then
-            if docker ps | grep -q njorddeploy-jitsi-prosody; then
-              docker exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
+            if {{ container_engine }} ps | grep -q njorddeploy-jitsi-prosody; then
+              {{ container_engine }} exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
             fi
           fi
         fi
@@ -197,10 +249,9 @@ if __name__ == "__main__":
       changed_when: "'created' in jitsi_register_out.stdout"
       failed_when: false
 
-
     - name: Restart specifically requested components
       ansible.builtin.command:
-        cmd: "docker compose restart {{ item }}"
+        cmd: "{{ container_engine }} compose restart {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_restart | default([]) }}"
       when: components_to_restart is defined and components_to_restart | length > 0
@@ -209,14 +260,14 @@ if __name__ == "__main__":
 
     - name: Fetch Portainer container status
       ansible.builtin.command:
-        cmd: "docker ps -a --filter name=njorddeploy-portainer --format '{{ '{{' }} .Names {{ '}}' }}'"
+        cmd: "{{ container_engine }} ps -a --filter name=njorddeploy-portainer --format '{{ '{{' }} .Names {{ '}}' }}'"
       register: portainer_status
       changed_when: "false"
       failed_when: false
 
     - name: Extract Portainer setup token from logs
       ansible.builtin.command:
-        cmd: "docker logs njorddeploy-portainer"
+        cmd: "{{ container_engine }} logs njorddeploy-portainer"
       register: portainer_logs
       until: "'setup_token' in (portainer_logs.stdout + '\n' + portainer_logs.stderr)"
       retries: 10
@@ -5717,7 +5768,16 @@ def create_app(test_config=None):
 
     @flask_app.route("/", methods=["GET"])
     def index():
-        return render_template("index.html")
+        from managers.sync_manager import SyncManager
+        from utils.container_engine import get_configured_engine
+
+        engine = get_configured_engine()
+        repo_config = SyncManager.get_repo_config()
+        return render_template(
+            "index.html",
+            container_engine=engine,
+            repo_config=repo_config,
+        )
 
     @flask_app.route("/help", methods=["GET"])
     def help_page():
@@ -5855,6 +5915,118 @@ def create_app(test_config=None):
 
         else:
             return jsonify({"error": "Invalid update mode"}), 400
+
+    @flask_app.route("/api/engine-status", methods=["GET"])
+    def get_engine_status():
+        """Returns the active container engine and repository configuration."""
+        from managers.sync_manager import SyncManager
+        from utils.container_engine import ContainerEngine
+
+        engine = ContainerEngine()
+        repo_config = SyncManager.get_repo_config()
+        return jsonify(
+            {
+                "engine": engine.engine,
+                "is_docker": engine.is_docker,
+                "is_podman": engine.is_podman,
+                "supported_engines": ["docker", "podman"],
+                "repo_url": repo_config.get("url"),
+                "repo_branch": repo_config.get("branch"),
+                "is_remote_sync_enabled": repo_config.get("is_enabled"),
+            }
+        )
+
+    @flask_app.route("/api/engine-switch", methods=["POST"])
+    def switch_engine():
+        """Switches the active container engine dynamically and persists to .env."""
+        data = request.get_json(force=True) or {}
+        new_engine = data.get("engine", "").strip().lower()
+        if new_engine not in ("docker", "podman"):
+            return (
+                jsonify(
+                    {"error": "Invalid container engine. Must be 'docker' or 'podman'."}
+                ),
+                400,
+            )
+
+        os.environ["CONTAINER_ENGINE"] = new_engine
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        try:
+            current_content = ""
+            if env_path.exists():
+                with open(env_path, "r", encoding="utf-8") as f:
+                    current_content = f.read()
+
+            lines = current_content.splitlines()
+            updated = False
+            new_lines = []
+            for line in lines:
+                stripped = line.strip()
+                if stripped.startswith("CONTAINER_ENGINE="):
+                    new_lines.append(f'CONTAINER_ENGINE="{new_engine}"')
+                    updated = True
+                else:
+                    new_lines.append(line)
+            if not updated:
+                new_lines.append(f'CONTAINER_ENGINE="{new_engine}"')
+
+            with open(env_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(new_lines) + "\n")
+
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "engine": new_engine,
+                        "message": (
+                            f"Container engine successfully switched to "
+                            f"{new_engine.upper()}."
+                        ),
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            return (
+                jsonify({"error": f"Failed to persist engine setting: {str(e)}"}),
+                500,
+            )
+
+    @flask_app.route("/api/validate-repo", methods=["POST"])
+    def validate_repository():
+        """Validates connectivity to a candidate components repository URL."""
+        from managers.sync_manager import SyncManager
+
+        data = request.get_json(force=True) or {}
+        repo_url = str(data.get("url", "")).strip()
+        branch = str(data.get("branch", "main")).strip()
+        token = str(data.get("token", "")).strip()
+
+        if not repo_url:
+            return (
+                jsonify({"valid": False, "message": "Repository URL cannot be empty."}),
+                400,
+            )
+
+        is_valid, msg = SyncManager.validate_remote_repo(
+            repo_url, branch, token or None
+        )
+        return jsonify({"valid": is_valid, "message": msg}), (200 if is_valid else 400)
+
+    @flask_app.route("/api/first-run-status", methods=["GET"])
+    def first_run_status():
+        """Returns whether first-run onboarding is pending."""
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        is_first_run = not env_path.exists()
+        if env_path.exists():
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                if "CONTAINER_ENGINE=" in content or "COMPONENTS_REPO_URL=" in content:
+                    is_first_run = False
+            except Exception as e:
+                logging.debug(f"Could not read .env: {e}")
+        return jsonify({"first_run": is_first_run})
 
     @flask_app.route("/nmap-status", methods=["GET"])
     def nmap_status():
@@ -6420,14 +6592,10 @@ def create_app(test_config=None):
                     500,
                 )
 
-            install_commands = [
-                "apt-get update",
-                "apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                "sh get-docker.sh",
-                "systemctl enable --now docker",
-                "docker network create njorddeploy_net",
-            ]
+            from utils.container_engine import ContainerEngine
+
+            engine = ContainerEngine()
+            install_commands = engine.get_provisioning_commands(username="root")
 
             for cmd in install_commands:
                 max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
@@ -6778,21 +6946,10 @@ def create_app(test_config=None):
                     500,
                 )
 
-            cmd_prefix = "" if username == "root" else "sudo "
-            install_commands = [
-                f"{cmd_prefix}apt-get update",
-                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                f"{cmd_prefix}sh get-docker.sh",
-                f"{cmd_prefix}systemctl enable --now docker",
-            ]
+            from utils.container_engine import ContainerEngine
 
-            if username != "root":
-                install_commands.append(f"sudo usermod -aG docker {username}")
-
-            install_commands.append(
-                f"{cmd_prefix}docker network create njorddeploy_net"
-            )
+            engine = ContainerEngine()
+            install_commands = engine.get_provisioning_commands(username=username)
 
             for cmd in install_commands:
                 max_retries = 12 if ("apt-get" in cmd or "get-docker.sh" in cmd) else 1
@@ -7617,18 +7774,24 @@ def create_app(test_config=None):
             if not connected:
                 return jsonify({"error": f"Failed to connect to host: {msg}"}), 400
 
-            # Check if user is in docker group (can run docker commands without sudo)
-            exit_code_group, _ = ssh.execute_command(
-                "docker ps", lambda x: None, check_exit_code=False
-            )
-            if exit_code_group == 0:
-                cmd = f"docker logs --tail 200 {container_name}"
-            else:
-                quoted_password = shlex.quote(password)
-                cmd = (
-                    f"echo {quoted_password} | "
-                    f"sudo -S docker logs --tail 200 {container_name}"
+            # Determine command using ContainerEngine
+            from utils.container_engine import ContainerEngine
+
+            engine = ContainerEngine()
+            if engine.is_docker:
+                exit_code_group, _ = ssh.execute_command(
+                    "docker ps", lambda x: None, check_exit_code=False
                 )
+                if exit_code_group == 0:
+                    cmd = f"docker logs --tail 200 {container_name}"
+                else:
+                    quoted_password = shlex.quote(password)
+                    cmd = (
+                        f"echo {quoted_password} | "
+                        f"sudo -S docker logs --tail 200 {container_name}"
+                    )
+            else:
+                cmd = f"podman logs --tail 200 {container_name}"
 
             log_lines = []
 
@@ -11962,8 +12125,258 @@ html[data-theme="light"] .modal .card {
         }
     }
 
+    /**
+     * Initializes the topbar Container Engine status badge, engine switcher dropdown,
+     * and First-Run / Onboarding Setup Modal.
+     */
+    function initEngineAndRepoManagement() {
+        const topbarBadge = document.getElementById('topbar-engine-badge');
+        const topbarName = document.getElementById('topbar-engine-name');
+        const topbarIcon = document.getElementById('topbar-engine-icon');
+        const openOnboardBtn = document.getElementById('btn-open-onboarding-modal');
+        const onboardModalEl = document.getElementById('onboardingModal');
+
+        async function refreshEngineStatus() {
+            try {
+                const res = await fetch('/api/engine-status');
+                if (!res.ok) return;
+                const data = await res.json();
+                const isPodman = data.engine === 'podman';
+
+                if (topbarName) topbarName.textContent = isPodman ? 'Podman' : 'Docker';
+                if (topbarIcon) {
+                    topbarIcon.className = isPodman
+                        ? 'fa-solid fa-feather-pointed me-1'
+                        : 'fa-brands fa-docker me-1';
+                }
+                if (topbarBadge) {
+                    topbarBadge.className = isPodman
+                        ? 'badge bg-warning text-dark d-flex align-items-center me-1'
+                        : 'badge bg-primary text-white d-flex align-items-center me-1';
+                }
+            } catch (e) {
+                console.warn('Could not refresh engine status:', e);
+            }
+        }
+
+        // Engine switcher buttons
+        document.querySelectorAll('.btn-switch-engine').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const target = e.currentTarget;
+                // @ts-ignore
+                const engine = target.getAttribute('data-engine');
+                if (!engine) return;
+                try {
+                    const res = await fetch('/api/engine-switch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ engine })
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        await refreshEngineStatus();
+                    } else {
+                        alert(result.error || 'Failed to switch engine.');
+                    }
+                } catch (err) {
+                    alert('Error switching container engine: ' + err.message);
+                }
+            });
+        });
+
+        // Setup / Onboarding Modal
+        if (openOnboardBtn && onboardModalEl) {
+            openOnboardBtn.addEventListener('click', () => {
+                // @ts-ignore
+                const modal = bootstrap.Modal.getOrCreateInstance(onboardModalEl);
+                modal.show();
+            });
+        }
+
+        // First-run automatic trigger
+        async function checkFirstRun() {
+            try {
+                const res = await fetch('/api/first-run-status');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.first_run && onboardModalEl) {
+                    // @ts-ignore
+                    const modal = bootstrap.Modal.getOrCreateInstance(onboardModalEl);
+                    modal.show();
+                }
+            } catch (e) {
+                console.warn('First run check failed:', e);
+            }
+        }
+
+        // Card choices styling
+        const radioDocker = document.getElementById('engine-radio-docker');
+        const radioPodman = document.getElementById('engine-radio-podman');
+        const cardDocker = document.getElementById('card-choice-docker');
+        const cardPodman = document.getElementById('card-choice-podman');
+
+        function updateEngineCardSelection() {
+            // @ts-ignore
+            if (radioDocker && radioDocker.checked) {
+                if (cardDocker) { cardDocker.classList.add('border-primary', 'bg-light'); }
+                if (cardPodman) { cardPodman.classList.remove('border-primary', 'bg-light'); }
+            } else if (radioPodman && radioPodman.checked) {
+                if (cardPodman) { cardPodman.classList.add('border-primary', 'bg-light'); }
+                if (cardDocker) { cardDocker.classList.remove('border-primary', 'bg-light'); }
+            }
+        }
+
+        if (cardDocker && radioDocker) {
+            cardDocker.addEventListener('click', () => {
+                // @ts-ignore
+                radioDocker.checked = true;
+                updateEngineCardSelection();
+            });
+        }
+        if (cardPodman && radioPodman) {
+            cardPodman.addEventListener('click', () => {
+                // @ts-ignore
+                radioPodman.checked = true;
+                updateEngineCardSelection();
+            });
+        }
+
+        // Onboarding preset change
+        const repoPreset = document.getElementById('onboard-repo-preset');
+        const customRepoGroup = document.getElementById('onboard-custom-repo-group');
+        if (repoPreset && customRepoGroup) {
+            repoPreset.addEventListener('change', () => {
+                // @ts-ignore
+                if (repoPreset.value === 'custom') {
+                    customRepoGroup.classList.remove('d-none');
+                } else {
+                    customRepoGroup.classList.add('d-none');
+                }
+            });
+        }
+
+        // Onboard Validate Repo button
+        const validateBtn = document.getElementById('onboard-validate-btn');
+        const feedbackEl = document.getElementById('onboard-validation-feedback');
+        if (validateBtn && feedbackEl) {
+            validateBtn.addEventListener('click', async () => {
+                const urlEl = document.getElementById('onboard-custom-url');
+                const branchEl = document.getElementById('onboard-custom-branch');
+                const tokenEl = document.getElementById('onboard-custom-token');
+                // @ts-ignore
+                const url = urlEl ? urlEl.value.trim() : '';
+                // @ts-ignore
+                const branch = branchEl ? branchEl.value.trim() : 'main';
+                // @ts-ignore
+                const token = tokenEl ? tokenEl.value.trim() : '';
+
+                if (!url) {
+                    feedbackEl.className = 'small mt-2 text-warning';
+                    feedbackEl.textContent = 'Please enter a repository URL.';
+                    return;
+                }
+
+                validateBtn.disabled = true;
+                feedbackEl.className = 'small mt-2 text-info';
+                feedbackEl.textContent = 'Testing connection...';
+
+                try {
+                    const res = await fetch('/api/validate-repo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, branch, token })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.valid) {
+                        feedbackEl.className = 'small mt-2 text-success';
+                        feedbackEl.textContent = '✓ ' + data.message;
+                    } else {
+                        feedbackEl.className = 'small mt-2 text-danger';
+                        feedbackEl.textContent = '✗ ' + (data.message || 'Validation failed.');
+                    }
+                } catch (err) {
+                    feedbackEl.className = 'small mt-2 text-danger';
+                    feedbackEl.textContent = 'Error: ' + err.message;
+                } finally {
+                    validateBtn.disabled = false;
+                }
+            });
+        }
+
+        // Onboard Save button
+        const saveOnboardBtn = document.getElementById('onboard-save-btn');
+        if (saveOnboardBtn) {
+            saveOnboardBtn.addEventListener('click', async () => {
+                // @ts-ignore
+                const chosenEngine = (radioPodman && radioPodman.checked) ? 'podman' : 'docker';
+                // @ts-ignore
+                const preset = repoPreset ? repoPreset.value : 'default';
+                let repoUrl = 'HenkVanHoek/njord-deploy-components';
+                let repoBranch = 'main';
+                let repoToken = '';
+
+                if (preset === 'local') {
+                    repoUrl = 'none';
+                } else if (preset === 'custom') {
+                    const urlEl = document.getElementById('onboard-custom-url');
+                    const branchEl = document.getElementById('onboard-custom-branch');
+                    const tokenEl = document.getElementById('onboard-custom-token');
+                    // @ts-ignore
+                    repoUrl = urlEl ? urlEl.value.trim() : '';
+                    // @ts-ignore
+                    repoBranch = branchEl ? branchEl.value.trim() : 'main';
+                    // @ts-ignore
+                    repoToken = tokenEl ? tokenEl.value.trim() : '';
+                }
+
+                saveOnboardBtn.disabled = true;
+                const origHtml = saveOnboardBtn.innerHTML;
+                saveOnboardBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+                try {
+                    await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            mode: 'form',
+                            settings: {
+                                CONTAINER_ENGINE: chosenEngine,
+                                COMPONENTS_REPO_URL: repoUrl,
+                                COMPONENTS_REPO_BRANCH: repoBranch,
+                                COMPONENTS_REPO_TOKEN: repoToken,
+                            }
+                        })
+                    });
+
+                    await fetch('/api/engine-switch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ engine: chosenEngine })
+                    });
+
+                    await refreshEngineStatus();
+
+                    if (onboardModalEl) {
+                        // @ts-ignore
+                        const modal = bootstrap.Modal.getInstance(onboardModalEl);
+                        if (modal) modal.hide();
+                    }
+                } catch (err) {
+                    alert('Failed to save settings: ' + err.message);
+                } finally {
+                    saveOnboardBtn.disabled = false;
+                    saveOnboardBtn.innerHTML = origHtml;
+                }
+            });
+        }
+
+        refreshEngineStatus();
+        checkFirstRun();
+    }
+
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();
+    initEngineAndRepoManagement();
 })();
 
 --- FILE: src/configurator_app/templates/__init__.py ---
@@ -12193,6 +12606,21 @@ html[data-theme="light"] .modal .card {
         <!-- Right-aligned clean utility links -->
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="engineDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Container Engine & Source">
+                        <span id="topbar-engine-badge" class="badge {% if container_engine == 'podman' %}bg-warning text-dark{% else %}bg-primary text-white{% endif %} d-flex align-items-center me-1">
+                            <i id="topbar-engine-icon" class="{% if container_engine == 'podman' %}fa-solid fa-feather-pointed{% else %}fa-brands fa-docker{% endif %} me-1"></i>
+                            <span id="topbar-engine-name">{{ 'Podman' if container_engine == 'podman' else 'Docker' }}</span>
+                        </span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="engineDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
+                        <li><h6 class="dropdown-header">Active Container Engine</h6></li>
+                        <li><button class="dropdown-item d-flex align-items-center btn-switch-engine" data-engine="docker"><i class="fa-brands fa-docker text-primary me-2"></i> Docker (Standard)</button></li>
+                        <li><button class="dropdown-item d-flex align-items-center btn-switch-engine" data-engine="podman"><i class="fa-solid fa-feather-pointed text-warning me-2"></i> Podman (Rootless)</button></li>
+                        <li><hr class="dropdown-divider" style="border-color: var(--glass-border);"></li>
+                        <li><button class="dropdown-item d-flex align-items-center" id="btn-open-onboarding-modal"><i class="fa-solid fa-sliders me-2"></i> Engine &amp; Repo Setup...</button></li>
+                    </ul>
+                </li>
                 <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="fa-solid fa-palette me-1"></i> Theme
@@ -12469,6 +12897,86 @@ html[data-theme="light"] .modal .card {
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Engine & Repository Quick Onboarding / Setup Modal -->
+<div class="modal fade" id="onboardingModal" tabindex="-1" aria-labelledby="onboardingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(16px); border: 1px solid var(--glass-border, #e2e8f0);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary" id="onboardingModalLabel">
+                    <i class="fa-solid fa-rocket me-2"></i> Engine &amp; Components Setup
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-4">Configure your container orchestration engine and component template repository source.</p>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-uppercase">1. Container Engine</label>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card h-100 p-3 engine-choice-card border cursor-pointer active" id="card-choice-docker" style="cursor: pointer;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="onboardEngine" id="engine-radio-docker" value="docker" checked>
+                                    <label class="form-check-label fw-bold" for="engine-radio-docker">
+                                        <i class="fa-brands fa-docker text-primary me-1"></i> Docker CE (Standard)
+                                    </label>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">Standard Docker daemon. Requires sudo or docker group permissions.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card h-100 p-3 engine-choice-card border cursor-pointer" id="card-choice-podman" style="cursor: pointer;">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="onboardEngine" id="engine-radio-podman" value="podman">
+                                    <label class="form-check-label fw-bold" for="engine-radio-podman">
+                                        <i class="fa-solid fa-feather-pointed text-warning me-1"></i> Podman (Rootless)
+                                    </label>
+                                </div>
+                                <p class="text-muted small mt-2 mb-0">Daemonless rootless execution. Configures kernel unprivileged ports (&ge; 53) &amp; user lingering.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-uppercase">2. Components Repository Source</label>
+                    <div class="mb-2">
+                        <select class="form-select" id="onboard-repo-preset">
+                            <option value="default">Default Official Repository (GitHub - HenkVanHoek/njord-deploy-components)</option>
+                            <option value="custom">Custom Remote Git / GitLab / Forgejo Repository</option>
+                            <option value="local">Local / Air-Gapped Mode (No remote sync)</option>
+                        </select>
+                    </div>
+                    <div id="onboard-custom-repo-group" class="d-none mt-3 p-3 bg-light rounded border">
+                        <label for="onboard-custom-url" class="form-label small fw-bold">Custom Git or Archive URL</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" id="onboard-custom-url" placeholder="https://gitlab.example.com/org/components.git">
+                            <button class="btn btn-outline-secondary" type="button" id="onboard-validate-btn"><i class="fa-solid fa-plug me-1"></i> Test</button>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label for="onboard-custom-branch" class="form-label small">Branch</label>
+                                <input type="text" class="form-control form-control-sm" id="onboard-custom-branch" value="main">
+                            </div>
+                            <div class="col-6">
+                                <label for="onboard-custom-token" class="form-label small">Auth Token (Optional)</label>
+                                <input type="password" class="form-control form-control-sm" id="onboard-custom-token" placeholder="Optional token">
+                            </div>
+                        </div>
+                        <div id="onboard-validation-feedback" class="small mt-2"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary px-4" id="onboard-save-btn">
+                    <i class="fa-solid fa-check me-1"></i> Apply Configuration
+                </button>
             </div>
         </div>
     </div>
@@ -12926,6 +13434,56 @@ html[data-theme="light"] .modal .card {
                 <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
                     <form id="settings-form" class="row g-4">
 
+                        <!-- Section: Container Engine & Runtime -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-boxes-stacked me-2"></i> Container Engine &amp; Runtime</h5>
+                                    <p class="text-muted small mb-3">Select the underlying container execution engine for service orchestration on target devices.</p>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="CONTAINER_ENGINE" class="form-label small fw-bold">Active Engine</label>
+                                            <select class="form-select" id="CONTAINER_ENGINE">
+                                                <option value="docker" {% if env_vars.get('CONTAINER_ENGINE', 'docker') == 'docker' %}selected{% endif %}>Docker CE (Daemon / Standard)</option>
+                                                <option value="podman" {% if env_vars.get('CONTAINER_ENGINE') == 'podman' %}selected{% endif %}>Podman (Rootless / Daemonless)</option>
+                                            </select>
+                                            <div class="form-text small mt-1">Podman uses rootless user sessions, automatic linger, and kernel unprivileged ports (&ge; 53).</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section: Components Repository & Sync -->
+                        <div class="col-md-6">
+                            <div class="card settings-card h-100 bg-light border-0">
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-code-branch me-2"></i> Components Repository &amp; Sync</h5>
+                                    <p class="text-muted small mb-3">Configure the remote repository or disable sync for local/air-gapped environments.</p>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label for="COMPONENTS_REPO_URL" class="form-label small fw-bold">Repository Source</label>
+                                            <div class="input-group">
+                                                <input type="text" class="form-control" id="COMPONENTS_REPO_URL" value="{{ env_vars.get('COMPONENTS_REPO_URL', env_vars.get('PI_SELFHOSTING_COMPONENTS_REPO', 'HenkVanHoek/njord-deploy-components')) }}" placeholder="HenkVanHoek/njord-deploy-components or 'none'">
+                                                <button class="btn btn-outline-secondary" type="button" id="test-repo-btn" title="Validate Repo URL">
+                                                    <i class="fa-solid fa-plug me-1"></i> Test
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Use GitHub slug, GitLab/Forgejo URL, or <code>none</code> for local-only offline mode.</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="COMPONENTS_REPO_BRANCH" class="form-label small fw-bold">Branch</label>
+                                            <input type="text" class="form-control" id="COMPONENTS_REPO_BRANCH" value="{{ env_vars.get('COMPONENTS_REPO_BRANCH', env_vars.get('PI_SELFHOSTING_COMPONENTS_BRANCH', 'main')) }}" placeholder="main">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="COMPONENTS_REPO_TOKEN" class="form-label small fw-bold">Auth Token (Optional)</label>
+                                            <input type="password" class="form-control" id="COMPONENTS_REPO_TOKEN" value="{{ env_vars.get('COMPONENTS_REPO_TOKEN', '') }}" placeholder="Token for private repo">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Section: Proxmox VE Integration -->
                         <div class="col-12">
                             <div class="card settings-card bg-light border-0">
@@ -13107,6 +13665,44 @@ html[data-theme="light"] .modal .card {
             }, 5000);
         };
 
+        // Handle Test Repo Connection
+        const testRepoBtn = document.getElementById("test-repo-btn");
+        if (testRepoBtn) {
+            testRepoBtn.addEventListener("click", async () => {
+                const url = document.getElementById("COMPONENTS_REPO_URL")?.value.trim() || "";
+                const branch = document.getElementById("COMPONENTS_REPO_BRANCH")?.value.trim() || "main";
+                const token = document.getElementById("COMPONENTS_REPO_TOKEN")?.value.trim() || "";
+
+                if (!url) {
+                    showAlert("Please specify a repository source to test.", "warning");
+                    return;
+                }
+
+                testRepoBtn.disabled = true;
+                const orig = testRepoBtn.innerHTML;
+                testRepoBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+                try {
+                    const res = await fetch("/api/validate-repo", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ url, branch, token })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.valid) {
+                        showAlert(`✓ ${data.message}`, "success");
+                    } else {
+                        showAlert(`✗ ${data.message || "Validation failed."}`, "danger");
+                    }
+                } catch (e) {
+                    showAlert(`Error validating repo: ${e.message}`, "danger");
+                } finally {
+                    testRepoBtn.disabled = false;
+                    testRepoBtn.innerHTML = orig;
+                }
+            });
+        }
+
         // Handle Save Form Settings
         saveFormBtn.addEventListener("click", async () => {
             saveFormBtn.disabled = true;
@@ -13114,9 +13710,9 @@ html[data-theme="light"] .modal .card {
             saveFormBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Saving...';
 
             const payload = {};
-            const inputs = document.querySelectorAll("#settings-form input");
+            const inputs = document.querySelectorAll("#settings-form input, #settings-form select");
             inputs.forEach(input => {
-                if (input.value.trim()) {
+                if (input.value && input.value.trim()) {
                     payload[input.id] = input.value.trim();
                 }
             });
@@ -20984,6 +21580,15 @@ class DeploymentManager:
                     else:
                         mapped_restart.append(c_id)
 
+                # Determine active container engine
+                from utils.container_engine import get_configured_engine
+
+                active_engine = (
+                    global_vars.get("CONTAINER_ENGINE")
+                    or device.get("container_engine")
+                    or get_configured_engine()
+                )
+
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
@@ -20992,7 +21597,12 @@ class DeploymentManager:
                     "components_to_restart": mapped_restart,
                     "selected_components_data": selected_components_data,
                     "global_vars": global_vars,
+                    "container_engine": active_engine,
                 }
+
+                self.tasks[task_id]["logs"].append(
+                    f"INFO: Using container engine: {active_engine.upper()}"
+                )
 
                 app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
                 key_file = app_data_dir / "id_ed25519_njorddeploy"
@@ -21699,6 +22309,7 @@ import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, Optional
 
 import requests  # type: ignore
 from appdirs import user_data_dir
@@ -21723,21 +22334,147 @@ class SyncManager:
         self.git_repo_dir = app_data_dir / "remote_components_git"
         self.is_offline = False
 
+    @staticmethod
+    def get_repo_config() -> dict[str, Any]:
+        """Returns the active components repository configuration."""
+        repo = (
+            os.environ.get("COMPONENTS_REPO_URL")
+            or os.environ.get("PI_SELFHOSTING_COMPONENTS_REPO")
+            or "HenkVanHoek/njord-deploy-components"
+        ).strip()
+        branch = (
+            os.environ.get("COMPONENTS_REPO_BRANCH")
+            or os.environ.get("PI_SELFHOSTING_COMPONENTS_BRANCH")
+            or "main"
+        ).strip()
+        token = os.environ.get("COMPONENTS_REPO_TOKEN", "").strip()
+
+        is_disabled = repo.lower() in ("none", "local", "offline", "")
+        return {
+            "url": repo,
+            "branch": branch,
+            "token": token,
+            "is_enabled": not is_disabled,
+        }
+
+    @classmethod
+    def is_remote_sync_enabled(cls) -> bool:
+        """Returns True if remote components sync is active."""
+        config = cls.get_repo_config()
+        return bool(config.get("is_enabled", True))
+
+    @classmethod
+    def get_repo_urls(cls) -> tuple[str, str]:
+        """Returns (ssh_url, https_url) for the configured repository."""
+        config = cls.get_repo_config()
+        repo = str(config.get("url", "HenkVanHoek/njord-deploy-components"))
+
+        if repo.startswith("git@") or repo.startswith("ssh://"):
+            return repo, repo
+        if repo.startswith("https://") or repo.startswith("http://"):
+            https_url = repo if repo.endswith(".git") else f"{repo}.git"
+            return repo, https_url
+
+        # Default GitHub slug owner/repo
+        ssh_url = f"git@github.com:{repo}.git"
+        https_url = f"https://github.com/{repo}.git"
+        return ssh_url, https_url
+
+    @classmethod
+    def validate_remote_repo(
+        cls,
+        url: str,
+        branch: str = "main",
+        token: Optional[str] = None,
+        timeout: int = 4,
+    ) -> tuple[bool, str]:
+        """
+        Validates whether a remote repository or archive URL is reachable.
+        """
+        cleaned = url.strip()
+        if cleaned.lower() in ("none", "local", "offline", ""):
+            return True, "Local-only mode configured (remote sync disabled)"
+
+        # Construct candidate download URL
+        if cleaned.startswith("http://") or cleaned.startswith("https://"):
+            if cleaned.endswith(".zip"):
+                download_url = cleaned
+            elif "gitlab." in cleaned:
+                base = cleaned.rstrip(".git")
+                download_url = f"{base}/-/archive/{branch}/components-{branch}.zip"
+            else:
+                download_url = (
+                    f"{cleaned.rstrip('.git')}/archive/refs/heads/{branch}.zip"
+                )
+        else:
+            download_url = (
+                f"https://github.com/{cleaned}/archive/refs/heads/{branch}.zip"
+            )
+
+        headers: dict[str, str] = {}
+        if token:
+            headers["Authorization"] = f"token {token}"
+
+        try:
+            res = requests.head(
+                download_url,
+                headers=headers,
+                timeout=timeout,
+                allow_redirects=True,
+            )
+            if res.status_code in (200, 302, 301):
+                return True, f"Repository archive reachable at {download_url}"
+            # Some servers block HEAD, try GET with range or timeout
+            res_get = requests.get(
+                download_url,
+                headers={**headers, "Range": "bytes=0-10"},
+                timeout=timeout,
+                stream=True,
+            )
+            if res_get.status_code in (200, 206, 302, 301):
+                return True, f"Repository archive reachable at {download_url}"
+            return (
+                False,
+                f"Repository check returned status {res_get.status_code} "
+                f"for {download_url}",
+            )
+        except Exception as e:
+            return False, f"Connection failed to {download_url}: {str(e)}"
+
     def fetch_from_remote(self, timeout: int = 3) -> bool:
         """
-        Downloads the latest ZIP from GitHub and extracts it to the cache directory.
+        Downloads the latest ZIP from repository and extracts it to the cache directory.
         Returns True if successful, False if network is offline or request failed.
         """
-        repo = os.environ.get(
-            "PI_SELFHOSTING_COMPONENTS_REPO",
-            "HenkVanHoek/njord-deploy-components",
-        )
-        branch = os.environ.get("PI_SELFHOSTING_COMPONENTS_BRANCH", "main")
-        url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
+        config = self.get_repo_config()
+        if not config.get("is_enabled"):
+            logger.info("Remote sync is disabled by configuration (local-only mode).")
+            self.is_offline = False
+            return False
+
+        repo = str(config.get("url"))
+        branch = str(config.get("branch"))
+        token = str(config.get("token", ""))
+
+        if repo.startswith("http://") or repo.startswith("https://"):
+            if repo.endswith(".zip"):
+                url = repo
+            elif "gitlab." in repo:
+                base = repo.rstrip(".git")
+                url = f"{base}/-/archive/{branch}/components-{branch}.zip"
+            else:
+                url = f"{repo.rstrip('.git')}/archive/refs/heads/{branch}.zip"
+        else:
+            url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
+
+        headers = {"Authorization": f"token {token}"} if token else None
 
         try:
             logger.info(f"Fetching remote components from {url} (timeout={timeout}s)")
-            response = requests.get(url, timeout=timeout)
+            if headers:
+                response = requests.get(url, headers=headers, timeout=timeout)
+            else:
+                response = requests.get(url, timeout=timeout)
             if response.status_code != 200:
                 logger.warning(
                     f"Failed to download repository ZIP from {url}. "
@@ -22110,7 +22847,7 @@ class SyncManager:
             last_err = str(e)
 
         # Try HTTPS push dry run
-        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
+        ssh_url, https_url = self.get_repo_urls()
         try:
             res = subprocess.run(  # nosec B603 B607
                 ["git", "push", "--dry-run", https_url],
@@ -22149,8 +22886,7 @@ class SyncManager:
     def _prepare_git_repo(self) -> str:
         """Clones or updates the local git cache for components repo."""
         self.git_repo_dir.parent.mkdir(parents=True, exist_ok=True)
-        ssh_url = "git@github.com:HenkVanHoek/njord-deploy-components.git"
-        https_url = "https://github.com/HenkVanHoek/njord-deploy-components.git"
+        ssh_url, https_url = self.get_repo_urls()
 
         if self.git_repo_dir.exists() and (self.git_repo_dir / ".git").exists():
             import subprocess  # nosec B404
@@ -24123,6 +24859,179 @@ def generate_basic_auth_hash(username: str, password: str) -> str:
 
 # END OF INTEGRATOR FIX
 
+--- FILE: src/utils/container_engine.py ---
+# src/utils/container_engine.py
+import logging
+import os
+from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
+
+SUPPORTED_ENGINES = ["docker", "podman"]
+DEFAULT_ENGINE = "docker"
+
+
+def get_configured_engine() -> str:
+    """
+    Returns the configured container engine ('docker' or 'podman').
+    Defaults to 'docker' if unset or unrecognized.
+    """
+    engine = os.environ.get("CONTAINER_ENGINE", DEFAULT_ENGINE).strip().lower()
+    if engine not in SUPPORTED_ENGINES:
+        logger.warning(
+            f"Unsupported CONTAINER_ENGINE '{engine}'. "
+            f"Falling back to '{DEFAULT_ENGINE}'."
+        )
+        return DEFAULT_ENGINE
+    return engine
+
+
+class ContainerEngine:
+    """
+    Engine-agnostic helper class providing CLI commands and provisioning routines
+    for Docker and Podman (rootless).
+    """
+
+    def __init__(self, engine_name: Optional[str] = None):
+        self.engine = (
+            engine_name.strip().lower() if engine_name else get_configured_engine()
+        )
+        if self.engine not in SUPPORTED_ENGINES:
+            self.engine = DEFAULT_ENGINE
+
+    @property
+    def is_podman(self) -> bool:
+        return self.engine == "podman"
+
+    @property
+    def is_docker(self) -> bool:
+        return self.engine == "docker"
+
+    @property
+    def cli(self) -> str:
+        """Returns the primary CLI binary name ('docker' or 'podman')."""
+        return self.engine
+
+    @property
+    def compose_cli(self) -> str:
+        """Returns the Compose command invocation."""
+        return f"{self.engine} compose"
+
+    def get_network_create_cmd(self, network_name: str = "njorddeploy_net") -> str:
+        """Returns command to create the default network."""
+        return f"{self.engine} network create {network_name}"
+
+    def get_ps_cmd(
+        self, all_containers: bool = False, format_str: Optional[str] = None
+    ) -> str:
+        """Returns command to list containers."""
+        cmd = f"{self.engine} ps"
+        if all_containers:
+            cmd += " -a"
+        if format_str:
+            cmd += f" --format {format_str}"
+        return cmd
+
+    def get_logs_cmd(
+        self, container_name: str, tail: int = 200, sudo: bool = False
+    ) -> str:
+        """Returns command to fetch container logs."""
+        prefix = "sudo -S " if (sudo and self.is_docker) else ""
+        return f"{prefix}{self.engine} logs --tail {tail} {container_name}"
+
+    def get_compose_up_cmd(self, detach: bool = True) -> str:
+        """Returns compose up command."""
+        flag = " -d" if detach else ""
+        return f"{self.engine} compose up{flag}"
+
+    def get_compose_down_cmd(self, remove_volumes: bool = False) -> str:
+        """Returns compose down command."""
+        flag = " -v" if remove_volumes else ""
+        return f"{self.engine} compose down{flag}"
+
+    def get_compose_pull_cmd(self) -> str:
+        """Returns compose pull command."""
+        if self.is_docker:
+            return "docker compose pull --ignore-buildable"
+        return "podman compose pull"
+
+    def get_compose_clean_cmd(self, service_name: str) -> str:
+        """Returns compose rm / clean command for a specific service."""
+        return f"{self.engine} compose rm -f -s -v {service_name}"
+
+    def get_compose_restart_cmd(self, service_name: str) -> str:
+        """Returns compose restart command for a specific service."""
+        return f"{self.engine} compose restart {service_name}"
+
+    def get_exec_cmd(self, container_name: str, command: str) -> str:
+        """Returns container exec command."""
+        return f"{self.engine} exec {container_name} {command}"
+
+    def get_provisioning_commands(
+        self, username: str = "root", unprivileged_port_start: int = 53
+    ) -> List[str]:
+        """
+        Returns the sequence of provisioning shell commands for setting up
+        the engine on Debian / Ubuntu / Raspberry Pi OS hosts.
+        """
+        is_root = username == "root"
+        cmd_prefix = "" if is_root else "sudo "
+
+        if self.is_docker:
+            commands = [
+                f"{cmd_prefix}apt-get update",
+                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
+                "curl -fsSL https://get.docker.com -o get-docker.sh",
+                f"{cmd_prefix}sh get-docker.sh",
+                f"{cmd_prefix}systemctl enable --now docker",
+            ]
+            if not is_root:
+                commands.append(f"sudo usermod -aG docker {username}")
+            commands.append(f"{cmd_prefix}docker network create njorddeploy_net")
+            return commands
+
+        # Podman rootless provisioning
+        commands = [
+            f"{cmd_prefix}apt-get update",
+            (
+                f"{cmd_prefix}apt-get install -y podman podman-compose "
+                "slirp4netns uidmap dbus-user-session curl ca-certificates"
+            ),
+            # Configure kernel unprivileged port start (for port 53 DNS, 80/443 web)
+            (
+                f"{cmd_prefix}sh -c 'echo "
+                f"\"net.ipv4.ip_unprivileged_port_start={unprivileged_port_start}\" "
+                "> /etc/sysctl.d/99-podman-ports.conf'"
+            ),
+            f"{cmd_prefix}sysctl --system",
+        ]
+
+        if not is_root:
+            # Enable systemd linger for rootless user session persistence
+            commands.append(f"{cmd_prefix}loginctl enable-linger {username}")
+            # Ensure subuid / subgid exist for rootless namespace mapping
+            commands.append(
+                f"{cmd_prefix}sh -c 'grep -q \"^{username}:\" /etc/subuid || "
+                f"usermod --add-subuids 100000-165535 {username}'"
+            )
+            commands.append(
+                f"{cmd_prefix}sh -c 'grep -q \"^{username}:\" /etc/subgid || "
+                f"usermod --add-subgids 100000-165535 {username}'"
+            )
+
+        commands.append(f"{cmd_prefix}podman network create njorddeploy_net")
+        return commands
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Returns dictionary representation of engine status/config."""
+        return {
+            "engine": self.engine,
+            "cli": self.cli,
+            "compose_cli": self.compose_cli,
+            "is_docker": self.is_docker,
+            "is_podman": self.is_podman,
+        }
+
 --- FILE: src/utils/dashy_updater.py ---
 # src/utils/dashy_updater.py
 import json
@@ -24860,7 +25769,7 @@ def seed_user_components_if_needed() -> dict[str, str]:
         }
         return _LAST_SEED_STATUS
 
-    # Attempt to fetch latest packages from remote GitHub repo
+    # Attempt to fetch latest packages from remote repo
     # noinspection PyBroadException
     try:
         from managers.sync_manager import SyncManager
@@ -24870,12 +25779,14 @@ def seed_user_components_if_needed() -> dict[str, str]:
             local_metadata_path=user_metadata,
             local_templates_path=user_templates,
         )
-        if sync.fetch_from_remote() and sync.sync_all():
+        if not sync.is_remote_sync_enabled():
+            logger.info("Remote sync is disabled. Seeding local built-in components.")
+        elif sync.fetch_from_remote() and sync.sync_all():
             _LAST_SEED_STATUS = {
                 "status": "downloaded",
                 "message": (
                     "De nieuwste componentpakketten en templates zijn "
-                    "automatisch gedownload van GitHub."
+                    "automatisch gedownload van de repository."
                 ),
             }
             return _LAST_SEED_STATUS

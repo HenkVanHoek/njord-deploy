@@ -4,6 +4,8 @@
   become: true
   vars:
     ansible_become_timeout: 60
+    # Container engine: 'docker' (default) or 'podman'
+    container_engine: "{{ engine | default(container_engine | default('docker')) | lower }}"
     # Destination path on the target for all configuration
     project_config_dir: "/opt/njorddeploy"
     # Map kernel architecture to Debian package architecture
@@ -36,7 +38,7 @@
       loop: "{{ ansible_mounts }}"
       when: item.mount == '/'
 
-# --- DOCKER ENGINE PROVISIONING (WITHOUT PIP OR Python LIBRARIES) ---
+    # --- WAIT FOR SYSTEM LOCKS ---
     - name: Wait for cloud-init and background apt/dpkg locks to clear
       ansible.builtin.shell: |
         if command -v cloud-init >/dev/null 2>&1; then
@@ -47,6 +49,7 @@
         done
       changed_when: false
 
+    # --- DOCKER ENGINE PROVISIONING ---
     - name: Ensure prerequisites for Docker repository are installed
       ansible.builtin.apt:
         name:
@@ -55,24 +58,28 @@
         state: present
         update_cache: yes
         lock_timeout: 600
+      when: container_engine == 'docker'
 
     - name: Ensure directory for Docker archive keyring exists
       ansible.builtin.file:
         path: /etc/apt/keyrings
         state: directory
         mode: "0755"
+      when: container_engine == 'docker'
 
     - name: Download Docker official GPG key
       ansible.builtin.get_url:
         url: "https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }}/gpg"
         dest: /etc/apt/keyrings/docker.asc
         mode: "0644"
+      when: container_engine == 'docker'
 
     - name: Add Docker repository to Apt sources
       ansible.builtin.apt_repository:
         repo: "deb [arch={{ debian_architecture_map[ansible_architecture] | default(ansible_architecture) }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }} {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
+      when: container_engine == 'docker'
 
     - name: Ensure Docker CE and Compose plugin are installed
       ansible.builtin.apt:
@@ -84,12 +91,50 @@
         state: present
         update_cache: yes
         lock_timeout: 600
+      when: container_engine == 'docker'
 
     - name: Ensure SSH user is in docker group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
+      when: container_engine == 'docker'
+
+    # --- PODMAN ROOTLESS PROVISIONING ---
+    - name: Ensure Podman and Compose packages are installed
+      ansible.builtin.apt:
+        name:
+          - podman
+          - podman-compose
+          - slirp4netns
+          - uidmap
+          - dbus-user-session
+          - curl
+          - ca-certificates
+        state: present
+        update_cache: yes
+        lock_timeout: 600
+      when: container_engine == 'podman'
+
+    - name: Configure unprivileged port start for rootless Podman (DNS 53 and HTTP 80/443)
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/99-podman-ports.conf
+        content: "net.ipv4.ip_unprivileged_port_start=53\n"
+        mode: "0644"
+      when: container_engine == 'podman'
+
+    - name: Apply sysctl configuration for Podman
+      ansible.builtin.command:
+        cmd: "sysctl --system"
+      changed_when: false
+      when: container_engine == 'podman'
+
+    - name: Enable user lingering for rootless Podman session persistence
+      ansible.builtin.command:
+        cmd: "loginctl enable-linger {{ ansible_user }}"
+      changed_when: false
+      failed_when: false
+      when: container_engine == 'podman'
 
     # --- DIRECTORY & FILE DEPLOYMENT ---
     - name: Ensure project directory exists
@@ -111,33 +156,40 @@
 
     - name: Perform Clean Install (Stop containers and remove volumes for selected components)
       ansible.builtin.command:
-        cmd: "docker compose rm -f -s -v {{ item }}"
+        cmd: "{{ container_engine }} compose rm -f -s -v {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_clean | default([]) }}"
       when: components_to_clean is defined and components_to_clean | length > 0
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
 
-    # --- CLI-BASED DOCKER OPERATIONS (NO PYTHON REQUIRED) ---
-    - name: Ensure NjordDeploy Docker network exists
+    # --- CLI-BASED CONTAINER OPERATIONS ---
+    - name: Ensure NjordDeploy network exists
       ansible.builtin.command:
-        cmd: "docker network create njorddeploy_net"
+        cmd: "{{ container_engine }} network create njorddeploy_net"
       register: network_create
       failed_when:
         - network_create.rc != 0
         - "'already exists' not in network_create.stderr"
       changed_when: "network_create.rc == 0"
 
-    - name: Pull latest service images
+    - name: Pull latest service images (Docker)
       ansible.builtin.command:
         cmd: "docker compose pull --ignore-buildable"
         chdir: "{{ project_config_dir }}"
-      # Mitigation: String "true" aligns types to prevent suspicious type mismatch
+      when: container_engine == 'docker'
       changed_when: "true"
 
-    - name: Deploy services with Docker Compose
+    - name: Pull latest service images (Podman)
       ansible.builtin.command:
-        cmd: "docker compose up -d"
+        cmd: "podman compose pull"
+        chdir: "{{ project_config_dir }}"
+      when: container_engine == 'podman'
+      changed_when: "true"
+
+    - name: Deploy services with Compose
+      ansible.builtin.command:
+        cmd: "{{ container_engine }} compose up -d"
         chdir: "{{ project_config_dir }}"
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
@@ -148,8 +200,8 @@
           JITSI_MEET_USER=$(grep "^JITSI_MEET_USER=" {{ project_config_dir }}/.env | cut -d= -f2-)
           JITSI_MEET_PASSWORD=$(grep "^JITSI_MEET_PASSWORD=" {{ project_config_dir }}/.env | cut -d= -f2-)
           if [ -n "$JITSI_MEET_USER" ] && [ -n "$JITSI_MEET_PASSWORD" ]; then
-            if docker ps | grep -q njorddeploy-jitsi-prosody; then
-              docker exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
+            if {{ container_engine }} ps | grep -q njorddeploy-jitsi-prosody; then
+              {{ container_engine }} exec njorddeploy-jitsi-prosody prosodyctl --config /config/prosody.cfg.lua register $JITSI_MEET_USER meet.jitsi $JITSI_MEET_PASSWORD 2>&1 | grep -E "created|exists"
             fi
           fi
         fi
@@ -157,10 +209,9 @@
       changed_when: "'created' in jitsi_register_out.stdout"
       failed_when: false
 
-
     - name: Restart specifically requested components
       ansible.builtin.command:
-        cmd: "docker compose restart {{ item }}"
+        cmd: "{{ container_engine }} compose restart {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_restart | default([]) }}"
       when: components_to_restart is defined and components_to_restart | length > 0
@@ -169,14 +220,14 @@
 
     - name: Fetch Portainer container status
       ansible.builtin.command:
-        cmd: "docker ps -a --filter name=njorddeploy-portainer --format '{{ '{{' }} .Names {{ '}}' }}'"
+        cmd: "{{ container_engine }} ps -a --filter name=njorddeploy-portainer --format '{{ '{{' }} .Names {{ '}}' }}'"
       register: portainer_status
       changed_when: "false"
       failed_when: false
 
     - name: Extract Portainer setup token from logs
       ansible.builtin.command:
-        cmd: "docker logs njorddeploy-portainer"
+        cmd: "{{ container_engine }} logs njorddeploy-portainer"
       register: portainer_logs
       until: "'setup_token' in (portainer_logs.stdout + '\n' + portainer_logs.stderr)"
       retries: 10

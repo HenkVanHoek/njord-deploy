@@ -3137,6 +3137,256 @@
         }
     }
 
+    /**
+     * Initializes the topbar Container Engine status badge, engine switcher dropdown,
+     * and First-Run / Onboarding Setup Modal.
+     */
+    function initEngineAndRepoManagement() {
+        const topbarBadge = document.getElementById('topbar-engine-badge');
+        const topbarName = document.getElementById('topbar-engine-name');
+        const topbarIcon = document.getElementById('topbar-engine-icon');
+        const openOnboardBtn = document.getElementById('btn-open-onboarding-modal');
+        const onboardModalEl = document.getElementById('onboardingModal');
+
+        async function refreshEngineStatus() {
+            try {
+                const res = await fetch('/api/engine-status');
+                if (!res.ok) return;
+                const data = await res.json();
+                const isPodman = data.engine === 'podman';
+
+                if (topbarName) topbarName.textContent = isPodman ? 'Podman' : 'Docker';
+                if (topbarIcon) {
+                    topbarIcon.className = isPodman
+                        ? 'fa-solid fa-feather-pointed me-1'
+                        : 'fa-brands fa-docker me-1';
+                }
+                if (topbarBadge) {
+                    topbarBadge.className = isPodman
+                        ? 'badge bg-warning text-dark d-flex align-items-center me-1'
+                        : 'badge bg-primary text-white d-flex align-items-center me-1';
+                }
+            } catch (e) {
+                console.warn('Could not refresh engine status:', e);
+            }
+        }
+
+        // Engine switcher buttons
+        document.querySelectorAll('.btn-switch-engine').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const target = e.currentTarget;
+                // @ts-ignore
+                const engine = target.getAttribute('data-engine');
+                if (!engine) return;
+                try {
+                    const res = await fetch('/api/engine-switch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ engine })
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        await refreshEngineStatus();
+                    } else {
+                        alert(result.error || 'Failed to switch engine.');
+                    }
+                } catch (err) {
+                    alert('Error switching container engine: ' + err.message);
+                }
+            });
+        });
+
+        // Setup / Onboarding Modal
+        if (openOnboardBtn && onboardModalEl) {
+            openOnboardBtn.addEventListener('click', () => {
+                // @ts-ignore
+                const modal = bootstrap.Modal.getOrCreateInstance(onboardModalEl);
+                modal.show();
+            });
+        }
+
+        // First-run automatic trigger
+        async function checkFirstRun() {
+            try {
+                const res = await fetch('/api/first-run-status');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.first_run && onboardModalEl) {
+                    // @ts-ignore
+                    const modal = bootstrap.Modal.getOrCreateInstance(onboardModalEl);
+                    modal.show();
+                }
+            } catch (e) {
+                console.warn('First run check failed:', e);
+            }
+        }
+
+        // Card choices styling
+        const radioDocker = document.getElementById('engine-radio-docker');
+        const radioPodman = document.getElementById('engine-radio-podman');
+        const cardDocker = document.getElementById('card-choice-docker');
+        const cardPodman = document.getElementById('card-choice-podman');
+
+        function updateEngineCardSelection() {
+            // @ts-ignore
+            if (radioDocker && radioDocker.checked) {
+                if (cardDocker) { cardDocker.classList.add('border-primary', 'bg-light'); }
+                if (cardPodman) { cardPodman.classList.remove('border-primary', 'bg-light'); }
+            } else if (radioPodman && radioPodman.checked) {
+                if (cardPodman) { cardPodman.classList.add('border-primary', 'bg-light'); }
+                if (cardDocker) { cardDocker.classList.remove('border-primary', 'bg-light'); }
+            }
+        }
+
+        if (cardDocker && radioDocker) {
+            cardDocker.addEventListener('click', () => {
+                // @ts-ignore
+                radioDocker.checked = true;
+                updateEngineCardSelection();
+            });
+        }
+        if (cardPodman && radioPodman) {
+            cardPodman.addEventListener('click', () => {
+                // @ts-ignore
+                radioPodman.checked = true;
+                updateEngineCardSelection();
+            });
+        }
+
+        // Onboarding preset change
+        const repoPreset = document.getElementById('onboard-repo-preset');
+        const customRepoGroup = document.getElementById('onboard-custom-repo-group');
+        if (repoPreset && customRepoGroup) {
+            repoPreset.addEventListener('change', () => {
+                // @ts-ignore
+                if (repoPreset.value === 'custom') {
+                    customRepoGroup.classList.remove('d-none');
+                } else {
+                    customRepoGroup.classList.add('d-none');
+                }
+            });
+        }
+
+        // Onboard Validate Repo button
+        const validateBtn = document.getElementById('onboard-validate-btn');
+        const feedbackEl = document.getElementById('onboard-validation-feedback');
+        if (validateBtn && feedbackEl) {
+            validateBtn.addEventListener('click', async () => {
+                const urlEl = document.getElementById('onboard-custom-url');
+                const branchEl = document.getElementById('onboard-custom-branch');
+                const tokenEl = document.getElementById('onboard-custom-token');
+                // @ts-ignore
+                const url = urlEl ? urlEl.value.trim() : '';
+                // @ts-ignore
+                const branch = branchEl ? branchEl.value.trim() : 'main';
+                // @ts-ignore
+                const token = tokenEl ? tokenEl.value.trim() : '';
+
+                if (!url) {
+                    feedbackEl.className = 'small mt-2 text-warning';
+                    feedbackEl.textContent = 'Please enter a repository URL.';
+                    return;
+                }
+
+                validateBtn.disabled = true;
+                feedbackEl.className = 'small mt-2 text-info';
+                feedbackEl.textContent = 'Testing connection...';
+
+                try {
+                    const res = await fetch('/api/validate-repo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, branch, token })
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.valid) {
+                        feedbackEl.className = 'small mt-2 text-success';
+                        feedbackEl.textContent = '✓ ' + data.message;
+                    } else {
+                        feedbackEl.className = 'small mt-2 text-danger';
+                        feedbackEl.textContent = '✗ ' + (data.message || 'Validation failed.');
+                    }
+                } catch (err) {
+                    feedbackEl.className = 'small mt-2 text-danger';
+                    feedbackEl.textContent = 'Error: ' + err.message;
+                } finally {
+                    validateBtn.disabled = false;
+                }
+            });
+        }
+
+        // Onboard Save button
+        const saveOnboardBtn = document.getElementById('onboard-save-btn');
+        if (saveOnboardBtn) {
+            saveOnboardBtn.addEventListener('click', async () => {
+                // @ts-ignore
+                const chosenEngine = (radioPodman && radioPodman.checked) ? 'podman' : 'docker';
+                // @ts-ignore
+                const preset = repoPreset ? repoPreset.value : 'default';
+                let repoUrl = 'HenkVanHoek/njord-deploy-components';
+                let repoBranch = 'main';
+                let repoToken = '';
+
+                if (preset === 'local') {
+                    repoUrl = 'none';
+                } else if (preset === 'custom') {
+                    const urlEl = document.getElementById('onboard-custom-url');
+                    const branchEl = document.getElementById('onboard-custom-branch');
+                    const tokenEl = document.getElementById('onboard-custom-token');
+                    // @ts-ignore
+                    repoUrl = urlEl ? urlEl.value.trim() : '';
+                    // @ts-ignore
+                    repoBranch = branchEl ? branchEl.value.trim() : 'main';
+                    // @ts-ignore
+                    repoToken = tokenEl ? tokenEl.value.trim() : '';
+                }
+
+                saveOnboardBtn.disabled = true;
+                const origHtml = saveOnboardBtn.innerHTML;
+                saveOnboardBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i> Saving...';
+
+                try {
+                    await fetch('/api/settings', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            mode: 'form',
+                            settings: {
+                                CONTAINER_ENGINE: chosenEngine,
+                                COMPONENTS_REPO_URL: repoUrl,
+                                COMPONENTS_REPO_BRANCH: repoBranch,
+                                COMPONENTS_REPO_TOKEN: repoToken,
+                            }
+                        })
+                    });
+
+                    await fetch('/api/engine-switch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ engine: chosenEngine })
+                    });
+
+                    await refreshEngineStatus();
+
+                    if (onboardModalEl) {
+                        // @ts-ignore
+                        const modal = bootstrap.Modal.getInstance(onboardModalEl);
+                        if (modal) modal.hide();
+                    }
+                } catch (err) {
+                    alert('Failed to save settings: ' + err.message);
+                } finally {
+                    saveOnboardBtn.disabled = false;
+                    saveOnboardBtn.innerHTML = origHtml;
+                }
+            });
+        }
+
+        refreshEngineStatus();
+        checkFirstRun();
+    }
+
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();
+    initEngineAndRepoManagement();
 })();

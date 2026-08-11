@@ -8,13 +8,14 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
 - **Modular & Flexible**: Choose only the services you want from a curated list of popular applications (see the list of [Supported Services](docs/SUPPORTED_SERVICES.md)).
-- **Dockerized & Isolated**: Every service runs in its own Docker container, making the system clean, secure, and easy to manage.
+- **Dual Container Engine Support (Docker & Rootless Podman)**: Universal container engine abstraction supporting both standard Docker and rootless Podman environments with automated low-port kernel configuration and user lingering.
+- **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
 - **Component Editor**: A powerful web-based developer tool for creating, testing, and managing all components in the NjordDeploy ecosystem.
 - **AI-Assisted Component Generator**: Bootstrap new services in seconds from any public Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, or self-hosted Git instances**) using multi-provider AI (local Ollama, Google Gemini, OpenAI, or HostYourAI) with automatic context enrichment, validation checks, and self-correction.
 
 ## 🏛️ How It Works
 
-A user downloads a single installer package from GitHub Releases. The installer runs a local web-based "Configurator" for device discovery and component selection, which then generates the necessary Docker Compose files and streams the installation process directly into the browser for the user.
+A user downloads a single installer package from GitHub Releases. The installer runs a local web-based "Configurator" for device discovery, container engine selection (Docker vs Podman), and component selection, which then generates the necessary Compose files and streams the installation process directly into the browser for the user.
 
 ## 📋 System Requirements
 
@@ -28,11 +29,16 @@ A user downloads a single installer package from GitHub Releases. The installer 
 **On Your Target Server (e.g., Raspberry Pi):**
 - A Raspberry Pi 4 or newer is recommended.
 - Or, use a Debian-based server, such as the one provided by [pi-server-vm](https://github.com/HenkVanHoek/pi-server-vm).
-- Docker Engine and the Docker Compose plugin are required. The tool can
-  install or upgrade them automatically as described below.
+- Container runtime: **Docker Engine** (with Compose plugin) or **Podman (rootless)** (with `podman-compose`). The tool can install and configure either automatically.
 - SSH access must be enabled.
 
-## Docker management on the target device
+## Container Engine Management on Target Device
+
+NjordDeploy provides transparent support for **Docker** and **Podman (Rootless)**:
+- **Docker**: Installs official Docker Engine, enables systemd service, adds user to docker group, and provisions network.
+- **Podman (Rootless)**: Installs Podman and `podman-compose`, configures unprivileged port binding (`net.ipv4.ip_unprivileged_port_start=53` via `/etc/sysctl.d/99-podman-ports.conf`), enables systemd user session lingering (`loginctl enable-linger`), and sets up subuid/subgid mapping.
+
+For detailed architecture and `.env` parameters, see [`docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md`](docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md).
 
 - Compose Spec is used. Compose files do not include a version key.
 - Supported runtime: latest stable Docker Engine with the Docker Compose plugin.
