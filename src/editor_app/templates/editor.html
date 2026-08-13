@@ -27,19 +27,42 @@
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-right: 1px solid var(--glass-border) !important;
-            padding: 1rem;
-            width: 280px;
-            min-width: 200px;
+            padding: 1rem 0.5rem 1rem 0.85rem;
+            width: 300px;
+            min-width: 220px;
             max-width: 600px;
             display: flex;
             flex-direction: column;
-            overflow-y: hidden;
+            overflow: hidden;
         }
-        .sidebar-header { flex-shrink: 0; }
-        #component-list { overflow-y: auto; flex-grow: 1; }
+        .sidebar-header { flex-shrink: 0; padding-right: 0.35rem; }
+        #sidebar-controls { padding-right: 0.35rem; }
+        #component-list {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-grow: 1;
+            padding-right: 0.45rem;
+        }
+        #component-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        #component-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+        #component-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        #component-list::-webkit-scrollbar-thumb:hover {
+            background: #00b0ff;
+        }
         .content { flex-grow: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; }
         #feedback-alert { position: fixed; top: 70px; right: 20px; z-index: 1050; }
-        #editor-wrapper { border: 1px solid var(--glass-border); border-radius: 0.25rem; flex-grow: 1; position: relative; }
+        #editor-wrapper, #config-editor-wrapper { border: 1px solid var(--glass-border); border-radius: 0.25rem; flex-grow: 1; position: relative; }
+        #config-editor-wrapper .CodeMirror { height: 100%; min-height: 400px; }
+        .tab-content > .tab-pane:not(.active) { display: none !important; }
+        .tab-content > .tab-pane.active.flex-pane { display: flex !important; flex-direction: column; flex-grow: 1; }
         /*noinspection CssUnusedSymbol*/
         #editor-wrapper.drag-over { border: 2px dashed var(--brand-blue); background-color: rgba(0, 176, 255, 0.05); }
         .resizer {
@@ -48,10 +71,11 @@
             background-color: rgba(255, 255, 255, 0.05);
             cursor: col-resize;
             border-right: 1px solid var(--glass-border);
+            z-index: 10;
         }
         .resizer:hover { background-color: #0d6efd; }
         /*noinspection CssUnusedSymbol*/
-        .group-header-exclusive { background-color: #fdf8e3; border-left: 4px solid #f0ad4e; }
+        .group-header-exclusive { background-color: #fdf8e3; border-left: 4px solid #f0ad4e !important; }
         /*noinspection CssUnusedSymbol*/
         .nav-link.tab-dirty {
             background-color: #f8d7da !important;
@@ -90,12 +114,170 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
-        /* Specific styling for Package headers in the sidebar */
-        /*noinspection CssUnusedSymbol*/
+        /* Sidebar Group and Component Tree Styling */
+        .group-header {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.25) !important;
+            border-left: 4px solid #00b0ff !important;
+            border-radius: 0.375rem !important;
+            font-size: 0.85rem;
+            padding: 0.45rem 0.65rem !important;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            margin-bottom: 3px;
+        }
+        .group-header .group-title {
+            color: #38bdf8 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.015em;
+        }
+        .group-header:hover {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border-color: rgba(56, 189, 248, 0.5) !important;
+        }
+        .group-header:hover .group-title {
+            color: #7dd3fc !important;
+        }
+        .group-header.collapsed {
+            background: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-left: 4px solid rgba(148, 163, 184, 0.4) !important;
+        }
+        .group-header.collapsed .group-title {
+            color: #cbd5e1 !important;
+            font-weight: 600 !important;
+        }
+        .group-header.collapsed:hover {
+            background: rgba(30, 41, 59, 0.75) !important;
+            border-left-color: #00b0ff !important;
+        }
+        .group-header.collapsed:hover .group-title {
+            color: #38bdf8 !important;
+        }
+        .group-count-badge {
+            background-color: rgba(0, 176, 255, 0.15) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.3) !important;
+            font-weight: 600;
+        }
+        .group-header.collapsed .group-count-badge {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #94a3b8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
         .group-header[data-group-id^="pkg-"] {
-            background-color: #e7f1ff;
-            border-left: 4px solid #0d6efd;
-            color: #084298;
+            border-left: 4px solid #818cf8 !important;
+        }
+        .group-header[data-group-id^="pkg-"] .group-title {
+            color: #a5b4fc !important;
+        }
+
+        .component-list-wrapper {
+            margin-left: 1.1rem;
+            margin-top: 0.35rem;
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+            position: relative;
+        }
+        .component-list-item {
+            position: relative;
+            font-size: 0.84rem !important;
+            padding: 0.38rem 0.65rem !important;
+            border-radius: 0.375rem !important;
+            margin: 4px 0 !important;
+            border: 1px solid rgba(255, 255, 255, 0.04) !important;
+            color: #cbd5e1 !important;
+            background-color: rgba(15, 23, 42, 0.35) !important;
+            transition: all 0.15s ease-in-out;
+        }
+        /* Vertical tree connector line */
+        .component-list-item::before {
+            content: "";
+            position: absolute;
+            left: -0.75rem;
+            top: -6px;
+            bottom: -6px;
+            width: 2px;
+            background-color: #00b0ff;
+        }
+        /* First child connects to top */
+        .component-list-item:first-child::before {
+            top: -0.45rem;
+        }
+        /* Last child stops at vertical midpoint to create the L-shape corner */
+        .component-list-item:last-child::before {
+            bottom: 50%;
+        }
+        /* Horizontal tree branch connector */
+        .component-list-item::after {
+            content: "";
+            position: absolute;
+            left: -0.75rem;
+            top: 50%;
+            width: 0.7rem;
+            height: 2px;
+            background-color: #00b0ff;
+        }
+        .component-list-item:hover {
+            background-color: rgba(0, 176, 255, 0.15) !important;
+            color: #ffffff !important;
+            border-color: rgba(0, 176, 255, 0.3) !important;
+        }
+        .component-list-item.active {
+            background: linear-gradient(135deg, rgba(0, 176, 255, 0.35), rgba(0, 145, 234, 0.5)) !important;
+            border-left: 3px solid #00b0ff !important;
+            border-color: rgba(0, 176, 255, 0.5) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        /* Light mode overrides for sidebar */
+        [data-bs-theme="light"] .group-header {
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-left: 4px solid #0284c7 !important;
+        }
+        [data-bs-theme="light"] .group-header .group-title {
+            color: #0369a1 !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: 4px solid #94a3b8 !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed .group-title {
+            color: #475569 !important;
+        }
+        [data-bs-theme="light"] .group-count-badge {
+            background-color: #e0f2fe !important;
+            color: #0369a1 !important;
+            border: 1px solid #bae6fd !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed .group-count-badge {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        [data-bs-theme="light"] .component-list-item {
+            color: #334155 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        [data-bs-theme="light"] .component-list-item::before,
+        [data-bs-theme="light"] .component-list-item::after {
+            background-color: #0284c7;
+        }
+        [data-bs-theme="light"] .component-list-item:hover {
+            background-color: #e0f2fe !important;
+            color: #0369a1 !important;
+            border-color: #7dd3fc !important;
+        }
+        [data-bs-theme="light"] .component-list-item.active {
+            background: #bae6fd !important;
+            color: #0369a1 !important;
+            border-left: 3px solid #0284c7 !important;
+            border-color: #0284c7 !important;
         }
 
         /* Helper for empty sections */
@@ -117,18 +299,8 @@
             transform: rotate(-90deg);
         }
         .list-group-item {
-            background-color: transparent !important;
-            color: #cbd5e1 !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        }
-        .list-group-item:hover {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: #ffffff !important;
-        }
-        .list-group-item.active {
-            background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
-            color: #ffffff !important;
-            border-color: transparent !important;
+            background-color: transparent;
+            color: inherit;
         }
         .modal-content {
             background: var(--glass-bg) !important;
@@ -449,7 +621,8 @@
             <ul class="nav nav-tabs" id="editorTabs" role="tablist">
                 <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#metadata-pane">Core Metadata</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#variables-pane">User Variables</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#template-pane">Docker Compose Template Editor</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#template-pane" type="button" role="tab">Docker Compose Template Editor</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#configs-pane" id="configs-tab" type="button" role="tab">Configuration Files <span class="badge bg-secondary ms-1" id="configs-tab-count" style="pointer-events: none;">0</span></button></li>
             </ul>
             <div class="tab-content pt-3 d-flex flex-column flex-grow-1" id="editorTabsContent">
                 <div class="tab-pane fade show active" id="metadata-pane"></div>
@@ -466,7 +639,7 @@
                     <div id="variables-list" class="mt-3"></div>
                     <button class="btn btn-secondary mt-3" id="add-variable-btn"><i class="bi bi-plus-circle"></i> Add New Variable</button>
                 </div>
-                <div class="tab-pane fade d-flex flex-column flex-grow-1" id="template-pane">
+                <div class="tab-pane fade flex-pane" id="template-pane">
                     <div class="d-flex justify-content-end mb-2">
                         <button class="btn btn-sm btn-outline-success me-2" id="add-header-btn"><i class="bi bi-file-earmark-plus"></i> Add NjordDeploy Header</button>
                         <button class="btn btn-sm btn-outline-info me-2" id="validate-template-btn"><i class="bi bi-check-circle"></i> Validate Template</button>
@@ -476,6 +649,26 @@
                     <div id="editor-wrapper">
                         <label for="template-editor" class="visually-hidden">Docker Compose Template Editor</label>
                         <textarea id="template-editor"></textarea>
+                    </div>
+                </div>
+                <div class="tab-pane fade flex-pane" id="configs-pane">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="config-file-select" class="form-label mb-0 fw-bold small text-secondary">Active File:</label>
+                            <select class="form-select form-select-sm" id="config-file-select" style="min-width: 220px;"></select>
+                            <button class="btn btn-sm btn-outline-primary" id="btn-add-config-file" type="button" title="Add new config file"><i class="bi bi-plus-lg"></i> Add File</button>
+                            <button class="btn btn-sm btn-outline-danger" id="btn-delete-config-file" type="button" title="Delete current config file"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <div class="small text-muted">
+                            Mounted via <code id="config-mount-hint">{% raw %}{{ DATA_ROOT }}/...{% endraw %}</code>
+                        </div>
+                    </div>
+                    <div class="alert alert-info py-2 px-3 small mb-2 d-none" id="no-configs-msg">
+                        <i class="bi bi-info-circle me-1"></i> This component has no additional configuration template files defined. Click <strong>+ Add File</strong> to create one (e.g. <code>config.yaml</code> or <code>Caddyfile</code>).
+                    </div>
+                    <div class="flex-grow-1 position-relative d-flex flex-column" id="config-editor-wrapper">
+                        <label for="config-editor-textarea" class="visually-hidden">Configuration File Content</label>
+                        <textarea class="form-control font-monospace flex-grow-1" id="config-editor-textarea" style="resize: none; font-size: 0.9rem; min-height: 350px;" placeholder="Configuration file content..." spellcheck="false"></textarea>
                     </div>
                 </div>
             </div>
@@ -544,6 +737,12 @@
             <div class="modal-body">
                 <!-- Step 1: Input Form -->
                 <div id="ai-input-step">
+                    <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                        <i class="bi bi-info-circle-fill text-info flex-shrink-0"></i>
+                        <div>
+                            <strong>AI Assistant Notice:</strong> The generator drafts service templates based on repository analysis. Complex services (such as proxy gateways or multi-container stacks) may require custom startup flags or configuration templates.
+                        </div>
+                    </div>
                     <form id="ai-generator-form">
                         <div class="mb-3">
                             <label for="ai-repo-url" class="form-label">Git Repository URL</label>
@@ -640,7 +839,12 @@
 
                 <!-- Step 3: Preview and Review -->
                 <div id="ai-preview-step" class="d-none">
-                    <p class="text-secondary">Please review the AI-generated metadata and files before registering the component.</p>
+                    <div class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                        <i class="bi bi-shield-check text-primary flex-shrink-0"></i>
+                        <div>
+                            <strong>Developer Verification:</strong> AI generation provides a draft configuration. Please inspect the <em>Docker Compose</em>, <em>Variables</em>, and <em>Configs</em> tabs below to verify ports, volume paths, and environment settings before registering.
+                        </div>
+                    </div>
 
                     <!-- AI Validation Warnings -->
                     <div id="ai-warnings-container" class="alert alert-warning d-none mb-3">

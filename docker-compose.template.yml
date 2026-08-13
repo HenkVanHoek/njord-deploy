@@ -9,5 +9,5 @@ services:
   # Services will be dynamically added here by the installer.
 
 networks:
-  njorddeploy-network:
+  njorddeploy_net:
     driver: bridge

@@ -644,6 +644,19 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     rowAi.appendChild(colTags);
     metadataPane.appendChild(rowAi);
 
+    // AI Generation Instructions (if saved from AI generator)
+    if (details.ai_instructions) {
+        metadataPane.appendChild(renderMetadataField(
+            'textarea',
+            'comp-ai-instructions',
+            'AI Generation Instructions (Saved Prompt)',
+            details.ai_instructions,
+            false,
+            false,
+            2
+        ));
+    }
+
     // Resource Profile Row
     const rowResources = document.createElement('div');
     rowResources.className = 'row bg-light p-3 rounded mb-3 mx-0';

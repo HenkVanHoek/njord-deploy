@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "v1.13.2"
-# platform_notes: "Tested successfully on Proxmox VM (template 902)."
+# platform_notes: "Tested successfully on Proxmox LXC (podman)."
 # breaking_changes: none
 services:
   homepage:

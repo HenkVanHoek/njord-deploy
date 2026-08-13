@@ -116,6 +116,32 @@ def test_validate_component_configuration_with_jinja(tmp_path):
     manager.validate_component_configuration("my-service", unquoted_jinja_yaml, [])
 
 
+def test_validate_component_configuration_with_complex_database_url(tmp_path):
+    """Test validate_component_configuration with complex Jinja connection string."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    litellm_template = (
+        "services:\n"
+        "  litellm:\n"
+        "    container_name: njorddeploy-litellm\n"
+        "    image: ghcr.io/berriai/litellm:main-latest\n"
+        "    ports:\n"
+        '      - "{{ LITELLM_PORT }}:4000"\n'
+        "    environment:\n"
+        '      - DATABASE_URL="postgresql://{{ POSTGRES_USER }}:'
+        '{{ POSTGRES_PASSWORD }}@njorddeploy-litellm-db:5432/{{ POSTGRES_DB }}"\n'
+    )
+
+    # Should not raise ValueError/YAMLError
+    manager.validate_component_configuration("litellm", litellm_template, [])
+
+
 def test_validate_component_configuration_fails_with_nested_pull_policy(tmp_path):
     """Test that validation fails if pull_policy is nested inside build block."""
     meta_path = tmp_path / "metadata.json"
@@ -261,3 +287,41 @@ def test_render_open_webui_template_default_fallbacks(tmp_path):
     assert "open-webui" in compose_data["services"]
     assert "ollama" in compose_data["services"]
     assert compose_data["services"]["open-webui"]["ports"] == ["8080:8080"]
+
+
+def test_config_template_lifecycle(tmp_path):
+    """Tests saving, retrieving, and deleting configuration template files."""
+    meta_path = tmp_path / "metadata.json"
+    meta_path.write_text(
+        json.dumps({"components": {"litellm": {"name": "LiteLLM"}}}),
+        encoding="utf-8",
+    )
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    # 1. Save config template
+    saved = manager.save_component_config(
+        "litellm", "config.yaml", "model_list:\n  - model_name: claude\n"
+    )
+    assert saved is True
+
+    # 2. Get config templates
+    configs = manager.get_component_configs("litellm")
+    assert "config.yaml" in configs
+    assert "model_list:\n  - model_name: claude\n" in configs["config.yaml"]
+
+    # Verify metadata updated
+    meta = manager.get_component_details("litellm")
+    assert meta is not None
+    assert meta.get("config_templates", {}).get("config.yaml") == "litellm/config.yaml"
+
+    # 3. Delete config template
+    deleted = manager.delete_component_config("litellm", "config.yaml")
+    assert deleted is True
+
+    configs_after = manager.get_component_configs("litellm")
+    assert "config.yaml" not in configs_after

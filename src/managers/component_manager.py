@@ -175,9 +175,9 @@ class ComponentManager:
         import re
 
         try:
-            cleaned_yaml = re.sub(r"\{\{.*?}}", "JINJA_VAR", template_content)
-            cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
-            cleaned_yaml = re.sub(r"\{#.*?}", "JINJA_COMMENT", cleaned_yaml)
+            cleaned_yaml = re.sub(r"\{#.*?#\}", "", template_content, flags=re.DOTALL)
+            cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
+            cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
 
             data = yaml.safe_load(cleaned_yaml)
 
@@ -576,7 +576,7 @@ class ComponentManager:
 
         docker_compose_data: Dict[str, Any] = {
             "services": {},
-            "networks": {"njorddeploy-network": {"external": True}},
+            "networks": {"njorddeploy_net": {"external": True}},
             "volumes": {},
         }
 
@@ -692,3 +692,17 @@ class ComponentManager:
                     f.write(f"{key}={value}\n")
 
         logger.info("Artifact generation completed.")
+
+    def get_component_configs(self, component_id: str) -> Dict[str, str]:
+        """Returns all configuration templates for a component."""
+        return self.reader.get_component_configs(component_id)
+
+    def save_component_config(
+        self, component_id: str, filename: str, content: str
+    ) -> bool:
+        """Saves a configuration template file and registers in metadata."""
+        return self.writer.save_component_config(component_id, filename, content)
+
+    def delete_component_config(self, component_id: str, filename: str) -> bool:
+        """Deletes a configuration template file and unregisters from metadata."""
+        return self.writer.delete_component_config(component_id, filename)

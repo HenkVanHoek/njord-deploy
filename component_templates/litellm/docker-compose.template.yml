@@ -1,0 +1,69 @@
+# status: "tested"
+# last_tested_version: "main-stable"
+# platform_notes: "Tested successfully on Proxmox LXC (docker)."
+# breaking_changes: none
+services:
+  litellm:
+    container_name: njorddeploy-litellm
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ LITELLM_WEB_PORT }}:4000"
+    volumes:
+      - "{{ DATA_ROOT }}/litellm/config.yaml:/app/config.yaml:ro"
+    command:
+      - "--config=/app/config.yaml"
+    environment:
+      - "DATABASE_URL=postgresql://{{ LITELLM_DB_USER }}:{{ LITELLM_DB_PASSWORD }}@njorddeploy-litellm-db:5432/{{ LITELLM_DB_NAME }}"
+      - "STORE_MODEL_IN_DB={{ LITELLM_STORE_MODEL_IN_DB }}"
+      - "OPENAI_API_KEY={{ OPENAI_API_KEY }}"
+      - "ANTHROPIC_API_KEY={{ ANTHROPIC_API_KEY }}"
+      - "COHERE_API_KEY={{ COHERE_API_KEY }}"
+      - "AZURE_API_KEY={{ AZURE_API_KEY }}"
+      - "AZURE_API_BASE={{ AZURE_API_BASE }}"
+      - "AZURE_API_VERSION={{ AZURE_API_VERSION }}"
+      - "GEMINI_API_KEY={{ GEMINI_API_KEY }}"
+      - "HOSTYOURAI_API_KEY={{ HOSTYOURAI_API_KEY }}"
+      - "HOSTYOURAI_API_BASE={{ HOSTYOURAI_API_BASE }}"
+      - "AWS_ACCESS_KEY_ID={{ AWS_ACCESS_KEY_ID }}"
+      - "AWS_SECRET_ACCESS_KEY={{ AWS_SECRET_ACCESS_KEY }}"
+      - "AWS_REGION_NAME={{ AWS_REGION_NAME }}"
+    networks:
+      - njorddeploy_net
+    depends_on:
+      - njorddeploy-litellm-db
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.litellm.rule=Host(`{{ TRAEFIK_HOST }}`)"
+      - "traefik.http.routers.litellm.entrypoints=websecure"
+      - "traefik.http.routers.litellm.tls.certresolver=default"
+      - "traefik.http.services.litellm.loadbalancer.server.port=4000"
+    user: "0:0"
+
+  njorddeploy-litellm-db:
+    container_name: njorddeploy-litellm-db
+    image: postgres:16
+    restart: always
+    environment:
+      - "POSTGRES_DB={{ LITELLM_DB_NAME }}"
+      - "POSTGRES_USER={{ LITELLM_DB_USER }}"
+      - "POSTGRES_PASSWORD={{ LITELLM_DB_PASSWORD }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/litellm/postgres_data:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d {{ LITELLM_DB_NAME }} -U {{ LITELLM_DB_USER }}"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    user: "0:0"
+
+networks:
+  njorddeploy_net:
+    external: true

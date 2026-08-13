@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "latest"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# platform_notes: "Tested successfully on Proxmox LXC (docker)."
 # breaking_changes: none
 services:
   voicebox:

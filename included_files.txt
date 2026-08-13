@@ -1,4 +1,4 @@
-Tokens: 286392 | VRAM Status: CRITICAL
+Tokens: 314033 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -13,16 +13,21 @@ njorddeploy_installer.py
 playwright.config.js
 run_configurator.py
 run_editor.py
+run_proxmox_gui.py
 scripts/check_release_status.py
 scripts/check_secrets.py
 scripts/create_proxmox_lxc.py
 scripts/fetch_assets.py
 scripts/generate_services_doc.py
+scripts/proxmox_gui.py
 scripts/proxmox_package_test_runner.py
 scripts/proxmox_release_test_runner.py
 scripts/proxmox_test_runner.py
 scripts/run_batch_tests.py
 scripts/search_chat_history.py
+scripts/static/css/proxmox_gui.css
+scripts/static/js/proxmox_gui.js
+scripts/templates/proxmox_gui.html
 scripts/update_docs.py
 src/__init__.py
 src/configurator_app/__init__.py

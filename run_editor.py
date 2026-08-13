@@ -13,10 +13,16 @@ import socket
 import sys
 import threading
 import webbrowser
+from pathlib import Path
 
-from waitress import serve
+# Ensure local workspace src is at the head of sys.path
+_src_dir = str(Path(__file__).resolve().parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
-from src.editor_app.app import create_app
+from waitress import serve  # noqa: E402
+
+from editor_app.app import create_app  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NjordDeployEditor")

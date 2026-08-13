@@ -1,16 +1,16 @@
-# status: "untested"
-# last_tested_version: "none"
-# platform_notes: "None"
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested successfully on Proxmox VM (podman)."
 # breaking_changes: "None"
 services:
   web-notepad:
     container_name: njorddeploy-web-notepad
-    image: pajikos/minimalist-web-notepad:{{ component_version }}
+    image: "{{ image_name }}:{{ component_version }}"
     restart: unless-stopped
     ports:
       - "{{ WEB_NOTEPAD_WEB_PORT | default(8083) }}:80"
     volumes:
-      - "{{DATA_ROOT}}/web-notepad/storage:/var/www/html/_storage"
+      - "{{DATA_ROOT}}/web-notepad/data:/var/www/html/_tmp"
     # This simple image does not need PUID/PGID or extra_hosts
     networks:
       - njorddeploy_net

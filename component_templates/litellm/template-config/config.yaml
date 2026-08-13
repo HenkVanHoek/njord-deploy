@@ -1,0 +1,73 @@
+model_list:
+  # Example: OpenAI GPT-4o
+  - model_name: gpt-4o
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: os.environ/OPENAI_API_KEY
+
+  # Example: Anthropic Claude Sonnet
+  - model_name: claude-sonnet
+    litellm_params:
+      model: anthropic/claude-sonnet-4-20250514
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # Example: Cohere Command R+
+  - model_name: command-r-plus
+    litellm_params:
+      model: cohere/command-r-plus
+      api_key: os.environ/COHERE_API_KEY
+
+  # Example: Azure OpenAI GPT-4
+  - model_name: azure-gpt-4
+    litellm_params:
+      model: azure/gpt-4
+      api_key: os.environ/AZURE_API_KEY
+      api_base: os.environ/AZURE_API_BASE
+      api_version: os.environ/AZURE_API_VERSION
+
+  # Example: Google Gemini Pro
+  - model_name: gemini-pro
+    litellm_params:
+      model: gemini/gemini-pro
+      api_key: os.environ/GEMINI_API_KEY
+
+  # Example: AWS Bedrock Claude 3 Sonnet
+  - model_name: bedrock-claude-3-sonnet
+    litellm_params:
+      model: bedrock/claude-3-sonnet-20240229
+      aws_access_key_id: os.environ/AWS_ACCESS_KEY_ID
+      aws_secret_access_key: os.environ/AWS_SECRET_ACCESS_KEY
+      aws_region_name: os.environ/AWS_REGION_NAME
+
+  # Example: HostYourAI - Specific Model
+  - model_name: hostyourai-llama3
+    litellm_params:
+      model: openai/meta-llama/Meta-Llama-3.1-8B-Instruct
+      api_base: os.environ/HOSTYOURAI_API_BASE
+      api_key: os.environ/HOSTYOURAI_API_KEY
+
+  # Example: HostYourAI - Dynamic Wildcard Routing (hostyourai/<model_name>)
+  - model_name: hostyourai/*
+    litellm_params:
+      model: openai/*
+      api_base: os.environ/HOSTYOURAI_API_BASE
+      api_key: os.environ/HOSTYOURAI_API_KEY
+
+  # Example: Local Ollama (via internal Docker network)
+  - model_name: ollama-llama3
+    litellm_params:
+      model: ollama/llama3
+      api_base: "http://njorddeploy-open-webui:11434"
+
+litellm_settings:
+  # Set to True for more detailed logging
+  set_verbose: True
+  # Drop any extra parameters not supported by the target LLM
+  drop_params: True
+  # Optional: Set a master API key for the proxy itself
+  # master_key: "sk-njorddeploy_master_key_123"
+  # Optional: Enable an admin dashboard
+  # success_callback: ["langfuse"]
+  # failure_callback: ["langfuse"]
+  # Optional: Set a default model if not specified in the request
+  # default_model: gpt-4o

@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     let codeEditor = null;
+    let configCodeEditor = null;
+    let currentConfigs = {};
+    let activeConfigFile = null;
     let currentVariables = [];
     let internalRenderVariablesRows = null;
 
@@ -273,7 +276,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 : null,
             traefik_internal_port: portInput.disabled
                 ? null
-                : parseInt(portInput.value) || null
+                : parseInt(portInput.value) || null,
+            ai_instructions: document.getElementById('comp-ai-instructions')
+                ? (document.getElementById('comp-ai-instructions').value.trim() || null)
+                : null
         };
 
         if (payload.has_ui && !payload.ui_port_variable) {
@@ -305,6 +311,20 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'text/plain' },
             body: content
         });
+    };
+
+    const saveConfigs = async (componentId) => {
+        if (!dirtyTabs.has('configs-pane')) return;
+        if (configCodeEditor && activeConfigFile) {
+            currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+        }
+        for (const [filename, content] of Object.entries(currentConfigs)) {
+            await fetchText(`/api/components/${componentId}/configs/${encodeURIComponent(filename)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'text/plain' },
+                body: content
+            });
+        }
     };
 
     const runConflictGatekeeper = async (componentId) => {
@@ -339,7 +359,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await Promise.all([
                 saveMetadata(componentId),
                 saveVariables(componentId),
-                saveTemplate(componentId)
+                saveTemplate(componentId),
+                saveConfigs(componentId)
             ]);
             showAlert('All changes saved successfully!', 'success');
             clearAllDirtyState();
@@ -530,6 +551,211 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editorContent) editorContent.classList.remove('d-none');
         setTimeout(() => { if (codeEditor) codeEditor.setSize("100%", "100%"); }, 50);
         await loadTemplateContent(componentId);
+        await setupConfigsPane(componentId);
+    };
+
+    const setupConfigsPane = async (componentId) => {
+        const fileSelect = document.getElementById('config-file-select');
+        const tabCount = document.getElementById('configs-tab-count');
+        const noConfigsMsg = document.getElementById('no-configs-msg');
+        const editorWrapper = document.getElementById('config-editor-wrapper');
+        const addBtn = document.getElementById('btn-add-config-file');
+        const deleteBtn = document.getElementById('btn-delete-config-file');
+        const mountHint = document.getElementById('config-mount-hint');
+
+        if (!fileSelect) return;
+
+        fileSelect.innerHTML = '';
+        currentConfigs = {};
+        activeConfigFile = null;
+
+        try {
+            const data = await fetchJson(`/api/components/${componentId}/configs`);
+            currentConfigs = (data && data.configs) || {};
+        } catch (e) {
+            console.error('Error fetching component configs:', e);
+            currentConfigs = {};
+        }
+
+        const filenames = Object.keys(currentConfigs);
+        if (tabCount) tabCount.textContent = String(filenames.length);
+
+        if (filenames.length === 0) {
+            if (noConfigsMsg) noConfigsMsg.classList.remove('d-none');
+            if (editorWrapper) editorWrapper.classList.add('d-none');
+            if (deleteBtn) deleteBtn.disabled = true;
+            if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/...`;
+        } else {
+            if (noConfigsMsg) noConfigsMsg.classList.add('d-none');
+            if (editorWrapper) editorWrapper.classList.remove('d-none');
+            if (deleteBtn) deleteBtn.disabled = false;
+
+            filenames.forEach((fn, idx) => {
+                const opt = document.createElement('option');
+                opt.value = fn;
+                opt.textContent = fn;
+                if (idx === 0) opt.selected = true;
+                fileSelect.appendChild(opt);
+            });
+
+            activeConfigFile = filenames[0];
+            fileSelect.value = activeConfigFile;
+            if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${activeConfigFile}`;
+        }
+
+        if (!configCodeEditor) {
+            const currentAppTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            const isLightTheme = currentAppTheme === 'light' || currentAppTheme === 'high-contrast-light';
+            const selectedTheme = isLightTheme ? 'default' : 'material-darker';
+            const textarea = document.getElementById('config-editor-textarea');
+            if (textarea) {
+                configCodeEditor = CodeMirror.fromTextArea(textarea, {
+                    lineNumbers: true,
+                    mode: 'yaml',
+                    theme: selectedTheme,
+                    tabSize: 2
+                });
+            }
+        }
+
+        if (configCodeEditor) {
+            if (configCodeEditor.dirtyMarker) {
+                configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+            }
+            if (activeConfigFile && currentConfigs[activeConfigFile] !== undefined) {
+                configCodeEditor.setValue(currentConfigs[activeConfigFile]);
+                const ext = activeConfigFile.split('.').pop().toLowerCase();
+                const modeMap = {
+                    'yaml': 'yaml',
+                    'yml': 'yaml',
+                    'json': 'javascript',
+                    'xml': 'xml',
+                    'conf': 'yaml',
+                    'caddyfile': 'yaml',
+                    'sh': 'shell'
+                };
+                configCodeEditor.setOption('mode', modeMap[ext] || 'yaml');
+            } else {
+                configCodeEditor.setValue('');
+            }
+            const configDirtyMarker = () => {
+                if (activeConfigFile) {
+                    currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+                    markTabAsDirty('configs-pane');
+                }
+            };
+            configCodeEditor.on('change', configDirtyMarker);
+            configCodeEditor.dirtyMarker = configDirtyMarker;
+            setTimeout(() => {
+                if (configCodeEditor) {
+                    configCodeEditor.refresh();
+                    configCodeEditor.setSize("100%", "100%");
+                }
+            }, 50);
+        }
+
+        const configsTabBtn = document.getElementById('configs-tab');
+        if (configsTabBtn && !configsTabBtn.dataset.listenerAttached) {
+            configsTabBtn.dataset.listenerAttached = 'true';
+            configsTabBtn.addEventListener('shown.bs.tab', () => {
+                if (configCodeEditor) {
+                    configCodeEditor.refresh();
+                    configCodeEditor.setSize("100%", "100%");
+                }
+            });
+        }
+
+        fileSelect.onchange = () => {
+            if (configCodeEditor && activeConfigFile) {
+                currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+            }
+            const newFile = fileSelect.value;
+            if (newFile && currentConfigs[newFile] !== undefined) {
+                activeConfigFile = newFile;
+                if (configCodeEditor) {
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+                    }
+                    configCodeEditor.setValue(currentConfigs[newFile]);
+                    const ext = newFile.split('.').pop().toLowerCase();
+                    const modeMap = {
+                        'yaml': 'yaml',
+                        'yml': 'yaml',
+                        'json': 'javascript',
+                        'xml': 'xml',
+                        'conf': 'yaml',
+                        'caddyfile': 'yaml',
+                        'sh': 'shell'
+                    };
+                    configCodeEditor.setOption('mode', modeMap[ext] || 'yaml');
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.on('change', configCodeEditor.dirtyMarker);
+                    }
+                    setTimeout(() => {
+                        if (configCodeEditor) {
+                            configCodeEditor.refresh();
+                            configCodeEditor.setSize("100%", "100%");
+                        }
+                    }, 50);
+                }
+                if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${newFile}`;
+            }
+        };
+
+        if (addBtn) {
+            addBtn.onclick = () => {
+                const name = prompt('Enter configuration file name (e.g., config.yaml, Caddyfile, settings.json):');
+                if (!name || !name.trim()) return;
+                const cleanName = name.trim();
+                if (currentConfigs[cleanName] !== undefined) {
+                    showAlert(`File '${cleanName}' already exists.`, 'warning');
+                    return;
+                }
+                currentConfigs[cleanName] = `# Configuration file for ${componentId}\n`;
+                const opt = document.createElement('option');
+                opt.value = cleanName;
+                opt.textContent = cleanName;
+                opt.selected = true;
+                fileSelect.appendChild(opt);
+                fileSelect.value = cleanName;
+                activeConfigFile = cleanName;
+                if (noConfigsMsg) noConfigsMsg.classList.add('d-none');
+                if (editorWrapper) editorWrapper.classList.remove('d-none');
+                if (deleteBtn) deleteBtn.disabled = false;
+                if (configCodeEditor) {
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+                    }
+                    configCodeEditor.setValue(currentConfigs[cleanName]);
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.on('change', configCodeEditor.dirtyMarker);
+                    }
+                    setTimeout(() => { if (configCodeEditor) configCodeEditor.setSize("100%", "100%"); }, 50);
+                }
+                if (tabCount) tabCount.textContent = String(Object.keys(currentConfigs).length);
+                if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${cleanName}`;
+                markTabAsDirty('configs-pane');
+            };
+        }
+
+        if (deleteBtn) {
+            deleteBtn.onclick = async () => {
+                if (!activeConfigFile) return;
+                if (!confirm(`Are you sure you want to delete '${activeConfigFile}'?`)) return;
+                try {
+                    await fetchJson(`/api/components/${componentId}/configs/${encodeURIComponent(activeConfigFile)}`, {
+                        method: 'DELETE'
+                    });
+                    delete currentConfigs[activeConfigFile];
+                    showAlert(`Configuration file '${activeConfigFile}' deleted.`, 'success');
+                    await setupConfigsPane(componentId);
+                    markTabAsDirty('configs-pane');
+                } catch (err) {
+                    console.error('Failed to delete config file:', err);
+                    showAlert('Error deleting configuration file: ' + err.message, 'danger');
+                }
+            };
+        }
     };
 
     const loadTemplateContent = async (componentId) => {
@@ -705,9 +931,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (themeSelector) {
                 themeSelector.value = themeName;
             }
+            const isLight = themeName === 'light' || themeName === 'high-contrast-light';
             if (codeEditor) {
-                const isLight = themeName === 'light' || themeName === 'high-contrast-light';
                 codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+            }
+            if (configCodeEditor) {
+                configCodeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
             }
         };
 
@@ -1720,8 +1949,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const link = document.createElement('a');
                 link.href = '#';
                 link.className =
-                    'list-group-item list-group-item-action component-list-item';
-                link.textContent = component.name || component.id;
+                    'list-group-item list-group-item-action component-list-item d-flex align-items-center';
+
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-hdd-network me-2 text-info opacity-75';
+                icon.style.fontSize = '0.75rem';
+                link.appendChild(icon);
+
+                const span = document.createElement('span');
+                span.className = 'text-truncate';
+                span.textContent = component.name || component.id;
+                link.appendChild(span);
+
                 link.dataset.componentId = component.id;
                 link.addEventListener('click', async (e) => {
                     e.preventDefault();
@@ -1807,22 +2046,34 @@ document.addEventListener('DOMContentLoaded', () => {
         header.classList.add('collapsed');
 
         const leftDiv = document.createElement('div');
-        leftDiv.className = 'd-flex align-items-center';
+        leftDiv.className = 'd-flex align-items-center text-truncate';
 
         const dragHandle = document.createElement('i');
-        dragHandle.className = 'fa-solid fa-grip-vertical group-drag-handle me-2 text-muted';
+        dragHandle.className = 'fa-solid fa-grip-vertical group-drag-handle me-2 text-muted opacity-75';
         dragHandle.style.cursor = 'grab';
         leftDiv.appendChild(dragHandle);
 
-        const strongEl = document.createElement('strong');
+        const strongEl = document.createElement('span');
+        strongEl.className = 'group-title text-truncate';
         strongEl.textContent = name;
         leftDiv.appendChild(strongEl);
 
         header.appendChild(leftDiv);
 
+        const rightDiv = document.createElement('div');
+        rightDiv.className = 'd-flex align-items-center flex-shrink-0 ms-2';
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'badge group-count-badge rounded-pill me-1 px-2';
+        countBadge.style.fontSize = '0.7rem';
+        countBadge.textContent = components.length;
+        rightDiv.appendChild(countBadge);
+
         const iconEl = document.createElement('i');
-        iconEl.className = 'bi bi-chevron-down ms-2';
-        header.appendChild(iconEl);
+        iconEl.className = 'bi bi-chevron-down';
+        rightDiv.appendChild(iconEl);
+
+        header.appendChild(rightDiv);
 
         if (isExclusive) header.classList.add('group-header-exclusive');
 

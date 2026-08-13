@@ -511,7 +511,7 @@ repeatable, isolated environment.
 - **When** the user selects Docker or Podman from the topbar dropdown or onboarding wizard,
 - **Then** the backend persists the setting (`CONTAINER_ENGINE="docker"` or `"podman"`) in `.env` and session memory.
 - **And** all host provisioning commands dynamically adapt (for Podman: unprivileged port start=53, user session lingering, subuid/subgid mapping).
-- **And** all Ansible deployment tasks dynamically execute using the selected engine (`docker compose` or `podman compose`).
+- **And** all Ansible deployment tasks dynamically execute using the selected engine (`docker compose` or `podman-compose`).
 
 ---
 

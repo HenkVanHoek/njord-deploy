@@ -491,3 +491,41 @@ class TestAIGenerator(unittest.TestCase):
             "github.com", "owner/repo", ["nonexistent.txt"]
         )
         self.assertIsNone(content_none)
+
+    def test_run_security_checks_with_complex_jinja_urls(self):
+        """Test that URLs with multiple Jinja variables parse cleanly without errors."""
+        test_data = {
+            "metadata": {
+                "name": "LiteLLM",
+                "image_name": "ghcr.io/berriai/litellm",
+                "has_ui": True,
+                "ui_port_variable": "LITELLM_PORT",
+            },
+            "docker_compose": (
+                "services:\n"
+                "  litellm:\n"
+                "    image: ghcr.io/berriai/litellm:main-latest\n"
+                "    ports:\n"
+                '      - "{{ LITELLM_PORT }}:4000"\n'
+                "    environment:\n"
+                '      - DATABASE_URL="postgresql://{{ POSTGRES_USER }}:'
+                "{{ POSTGRES_PASSWORD }}@njorddeploy-litellm-db:5432/"
+                '{{ POSTGRES_DB }}"\n'
+                '      - STORE_MODEL_IN_DB="True"\n'
+            ),
+            "variables": [
+                {"id": "LITELLM_PORT", "type": "port", "default": "4000"},
+                {"id": "POSTGRES_USER", "type": "text", "default": "litellm_user"},
+                {
+                    "id": "POSTGRES_PASSWORD",
+                    "type": "password",
+                    "default": "very_secure_db_pass_123",
+                },
+                {"id": "POSTGRES_DB", "type": "text", "default": "litellm_db"},
+            ],
+        }
+
+        warnings = self.generator._run_security_checks(test_data)
+        # Should have zero parsing warnings
+        parse_warnings = [w for w in warnings if "Failed to parse Docker Compose" in w]
+        self.assertEqual(parse_warnings, [])

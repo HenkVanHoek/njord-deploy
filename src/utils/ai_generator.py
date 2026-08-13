@@ -163,6 +163,8 @@ class AIGenerator:
                 data["id"] = component_id
 
                 metadata = data.setdefault("metadata", {})
+                if custom_instructions:
+                    metadata["ai_instructions"] = custom_instructions.strip()
                 if data.get("variables") or data.get("config_templates"):
                     metadata["has_configuration"] = True
 
@@ -438,13 +440,10 @@ class AIGenerator:
                 import yaml
 
                 cleaned_yaml = re.sub(
-                    r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
-                    '"JINJA_VAR"',
-                    docker_compose_str,
+                    r"\{#.*?#\}", "", docker_compose_str, flags=re.DOTALL
                 )
+                cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
                 cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
-                cleaned_yaml = re.sub(r"\{%.*?%\}", "JINJA_BLOCK", cleaned_yaml)
-                cleaned_yaml = re.sub(r"\{#.*?#\}", "JINJA_COMMENT", cleaned_yaml)
 
                 compose_dict = yaml.safe_load(cleaned_yaml) or {}
 

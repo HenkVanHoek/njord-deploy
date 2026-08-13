@@ -13,6 +13,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 from managers.ssh_manager import SSHManager  # noqa: E402
+from utils.container_engine import ContainerEngine  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402
 
 logging.basicConfig(
@@ -185,6 +186,13 @@ def main():
         help="Root password for LXC",
     )
     parser.add_argument(
+        "--engine",
+        type=str,
+        choices=["docker", "podman"],
+        default=os.getenv("CONTAINER_ENGINE", "docker"),
+        help="Container engine to install: 'docker' or 'podman' (default: docker)",
+    )
+    parser.add_argument(
         "--hostname",
         type=str,
         default="",
@@ -333,15 +341,9 @@ def main():
         logger.error(f"Failed to connect to container via SSH: {conn_msg}")
         sys.exit(1)
 
-    # Execution commands to install Docker and setup external network
-    install_commands = [
-        "apt-get update",
-        "apt-get install -y curl ca-certificates gnupg",
-        "curl -fsSL https://get.docker.com -o get-docker.sh",
-        "sh get-docker.sh",
-        "systemctl enable --now docker",
-        "docker network create njorddeploy_net",
-    ]
+    # Execution commands to install container engine and setup default network
+    engine_helper = ContainerEngine(args.engine)
+    install_commands = engine_helper.get_provisioning_commands(username="root")
 
     for cmd in install_commands:
         logger.info(f"Executing: {cmd}")
@@ -355,8 +357,11 @@ def main():
     logger.info(f"  Container ID:  {vmid}")
     logger.info(f"  IP Address:    {ip_address}")
     logger.info(f"  Root Password: {args.password}")
+    logger.info(f"  Engine:        {args.engine.upper()}")
     logger.info("  SSH Port:      22")
-    logger.info("Docker is installed and 'njorddeploy_net' network is ready.")
+    logger.info(
+        f"{args.engine.upper()} is installed and 'njorddeploy_net' network is ready."
+    )
     logger.info("=" * 60)
 
 

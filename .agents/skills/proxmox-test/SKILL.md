@@ -31,24 +31,35 @@ PROXMOX_VM_CORES="2"
 
 ## 2. Running Tests
 
-### A. Test all components (full integration test run):
+### A. Interactive Web UI (with live wildcard search & log streamer):
 ```bash
-python scripts/proxmox_test_runner.py
+python run_proxmox_gui.py
+# or: python scripts/proxmox_gui.py
 ```
 
-### B. Test specific components:
+### B. 4-Way Cross-Validation Matrix Test (LXC + VM × Docker + Podman):
 ```bash
-python scripts/proxmox_test_runner.py --components adguard-home,pi-hole
+python scripts/proxmox_test_runner.py --components web-notepad --mode both --engine both
 ```
 
-### C. Exclude certain components:
+### C. Test all components (single environment):
+```bash
+python scripts/proxmox_test_runner.py --mode lxc --engine docker
+```
+
+### D. Test specific components with Podman or Docker:
+```bash
+python scripts/proxmox_test_runner.py --components adguard-home,pi-hole --engine podman --mode lxc
+```
+
+### E. Exclude certain components:
 ```bash
 python scripts/proxmox_test_runner.py --exclude homeassistant,frigate
 ```
 
-### D. Specify a different template or Proxmox node via CLI:
+### F. Specify a different template or Proxmox node via CLI:
 ```bash
-python scripts/proxmox_test_runner.py --template-id 901 --node pve-node2
+python scripts/proxmox_test_runner.py --template-id 901 --node pve-node2 --engine podman
 ```
 
 ## 3. Reporting & Results

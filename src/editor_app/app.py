@@ -40,22 +40,38 @@ def create_app(test_config=None):
     else:
         app = Flask(__name__)
 
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.jinja_env.auto_reload = True
+
     # Crucial for testing: apply the test_config
     if test_config:
         app.config.update(test_config)
+        templates_path_obj = Path(
+            test_config.get("TEMPLATES_PATH", "component_templates")
+        )
+        meta_file_path = Path(
+            test_config.get("METADATA_FILE_PATH", "config/components_metadata.json")
+        )
+    elif (
+        not getattr(sys, "frozen", False)
+        and (project_root / "config" / "components_metadata.json").exists()
+    ):
+        meta_file_path = project_root / "config" / "components_metadata.json"
+        templates_path_obj = project_root / "component_templates"
+    else:
+        from utils.resource_utils import seed_user_components_if_needed
+
+        seed_user_components_if_needed()
+        meta_file_path, templates_path_obj = get_components_paths()
+
+    meta_file = str(meta_file_path)
+    temp_path = str(templates_path_obj)
 
     def save_api_key_to_env(key: str, provider: str = "gemini"):
         """Saves the API key to the local .env file based on the provider."""
         from utils.ai_provider_manager import save_api_key_to_env_file
 
         save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
-
-    from utils.resource_utils import seed_user_components_if_needed
-
-    seed_user_components_if_needed()
-    meta_file_path, temp_path_obj = get_components_paths()
-    meta_file = str(meta_file_path)
-    temp_path = str(temp_path_obj)
 
     # Initialize the unified ComponentManager
     component_manager = ComponentManager(
@@ -66,7 +82,7 @@ def create_app(test_config=None):
 
     sync_manager = SyncManager(
         local_metadata_path=meta_file_path,
-        local_templates_path=temp_path_obj,
+        local_templates_path=templates_path_obj,
     )
 
     @app.route("/api/sync/status", methods=["GET"])
@@ -548,6 +564,46 @@ def create_app(test_config=None):
             logging.error(f"Failed to save template for {comp_id}: {e}", exc_info=True)
             abort(500, "Internal error saving component template")
 
+    @app.route("/api/components/<comp_id>/configs", methods=["GET"])
+    def get_component_configs(comp_id):
+        try:
+            configs = component_manager.get_component_configs(comp_id)
+            return jsonify({"configs": configs}), 200
+        except Exception as e:
+            logging.error(f"Failed to read configs for {comp_id}: {e}", exc_info=True)
+            abort(500, "Internal error reading component configs")
+
+    @app.route("/api/components/<comp_id>/configs/<path:filename>", methods=["PUT"])
+    def save_component_config(comp_id, filename):
+        try:
+            content = request.get_data(as_text=True)
+            success = component_manager.save_component_config(
+                comp_id, filename, content
+            )
+            if success:
+                return jsonify({"status": "saved"}), 200
+            abort(500, "Failed to save configuration template")
+        except Exception as e:
+            logging.error(
+                f"Failed to save config {filename} for {comp_id}: {e}",
+                exc_info=True,
+            )
+            abort(500, "Internal error saving component config")
+
+    @app.route("/api/components/<comp_id>/configs/<path:filename>", methods=["DELETE"])
+    def delete_component_config(comp_id, filename):
+        try:
+            success = component_manager.delete_component_config(comp_id, filename)
+            if success:
+                return jsonify({"status": "deleted"}), 200
+            abort(500, "Failed to delete configuration template")
+        except Exception as e:
+            logging.error(
+                f"Failed to delete config {filename} for {comp_id}: {e}",
+                exc_info=True,
+            )
+            abort(500, "Internal error deleting component config")
+
     @app.route("/api/components/<comp_id>/validate", methods=["POST"])
     def validate_component(comp_id):
         data = request.get_json() or {}
@@ -954,13 +1010,10 @@ def create_app(test_config=None):
                     import yaml
 
                     cleaned_yaml = re.sub(
-                        r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
-                        '"JINJA_VAR"',
-                        docker_compose,
+                        r"\{#.*?#\}", "", docker_compose, flags=re.DOTALL
                     )
+                    cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
                     cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{#.*?#}", "JINJA_COMMENT", cleaned_yaml)
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:
@@ -976,21 +1029,18 @@ def create_app(test_config=None):
             # 1. Create component folder and skeleton
             component_manager.create_component(component_id, name)
 
-            # 2. Update master metadata JSON
-            component_manager.update_component_metadata(component_id, metadata)
-
-            # 3. Update compose template content
+            # 2. Update compose template content
             if isinstance(docker_compose, str) and docker_compose:
                 component_manager.update_component_template_content(
                     component_id, docker_compose
                 )
 
-            # 4. Update variables JSON
+            # 3. Update variables JSON
             component_manager.update_component_variables(
                 component_id, {"variables": variables}
             )
 
-            # 5. Write other config files to template-config folder
+            # 4. Write other config files to template-config folder
             if config_templates:
                 templates_root_path = component_manager.templates_path.resolve()
                 config_dir = templates_root_path / safe_component_id / "template-config"
@@ -999,6 +1049,7 @@ def create_app(test_config=None):
                     abort(400, "Path traversal attempt detected")
 
                 config_dir.mkdir(parents=True, exist_ok=True)
+                metadata.setdefault("config_templates", {})
                 for template_name, content in config_templates.items():
                     safe_name = secure_filename(os.path.basename(template_name))
                     if not re.match(r"^[a-zA-Z0-9._-]+$", safe_name):
@@ -1012,6 +1063,13 @@ def create_app(test_config=None):
 
                     with open(requested_path, "w", encoding="utf-8") as f:
                         f.write(content)
+                    metadata["config_templates"][
+                        safe_name
+                    ] = f"{component_id}/{safe_name}"
+                metadata["has_configuration"] = True
+
+            # 5. Update master metadata JSON
+            component_manager.update_component_metadata(component_id, metadata)
 
             # 6. Update components_order in _njorddeploy
             meta_data = component_manager.load_metadata()

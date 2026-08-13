@@ -1,4 +1,14 @@
-# src/utils/ai_provider_manager.py
+"""AI Provider Manager for NjordDeploy.
+
+Manages registration, configuration resolution, and persistence of AI providers
+(Ollama, Google Gemini, HostYourAI, OpenAI, Custom Endpoints).
+
+Architecture Note on Google Gemini:
+Google Gemini is integrated via its official OpenAI-compatible endpoint
+(`https://generativelanguage.googleapis.com/v1beta/openai/`). This allows
+AIGeneratorEngine to use a single unified OpenAI client across all local
+and cloud providers without fragmented SDK dependencies (e.g. google-genai).
+"""
 
 import json
 import logging
@@ -23,6 +33,7 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "name": "Google Gemini",
         "env_var": "GEMINI_API_KEY",
         "requires_api_key": True,
+        # Uses Google's official OpenAI-compatible Chat Completions endpoint
         "default_base_url": (
             "https://generativelanguage.googleapis.com/v1beta/openai/"
         ),

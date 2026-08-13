@@ -218,3 +218,67 @@ class ComponentWriter:
             return self._save_json(self.metadata_file, full_meta)
         except (json.JSONDecodeError, IOError):
             return False
+
+    def save_component_config(
+        self, component_id: str, filename: str, content: str
+    ) -> bool:
+        """Saves a configuration template file and registers it in metadata."""
+        config_dir = self.templates_path / component_id / "template-config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        file_path = config_dir / filename
+        try:
+            file_path.write_text(content, encoding="utf-8")
+        except IOError as e:
+            logger.error(f"Could not write config {file_path}: {e}")
+            return False
+
+        # Update metadata config_templates map
+        try:
+            if self.metadata_file.exists():
+                with open(self.metadata_file, "r", encoding="utf-8") as f:
+                    full_meta = json.load(f)
+            else:
+                full_meta = {"components": {}}
+            comp_meta = full_meta.setdefault("components", {}).setdefault(
+                component_id, {}
+            )
+            config_templates = comp_meta.setdefault("config_templates", {})
+            if isinstance(config_templates, dict):
+                config_templates[filename] = f"{component_id}/{filename}"
+            comp_meta["has_configuration"] = True
+            return self._save_json(self.metadata_file, full_meta)
+        except Exception as e:
+            logger.error(
+                f"Failed to update metadata for config template {filename}: {e}"
+            )
+            return False
+
+    def delete_component_config(self, component_id: str, filename: str) -> bool:
+        """Deletes a configuration template file and unregisters it from metadata."""
+        file_path = self.templates_path / component_id / "template-config" / filename
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except IOError as e:
+                logger.error(f"Could not delete config {file_path}: {e}")
+
+        # Remove from metadata
+        try:
+            if self.metadata_file.exists():
+                with open(self.metadata_file, "r", encoding="utf-8") as f:
+                    full_meta = json.load(f)
+            else:
+                return True
+            comp_meta = full_meta.get("components", {}).get(component_id, {})
+            config_templates = comp_meta.get("config_templates")
+            if isinstance(config_templates, dict) and filename in config_templates:
+                del config_templates[filename]
+                if not config_templates and not comp_meta.get("variables"):
+                    comp_meta["has_configuration"] = False
+                return self._save_json(self.metadata_file, full_meta)
+            return True
+        except Exception as e:
+            logger.error(
+                f"Failed to remove config template {filename} from metadata: {e}"
+            )
+            return False

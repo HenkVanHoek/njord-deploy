@@ -7,6 +7,11 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Proxmox Test Runner Interactive Web GUI & 4-Way Cross-Validation Matrix**:
+  - Built interactive developer GUI ([`run_proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_proxmox_gui.py) / [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py)) with live Server-Sent Events (SSE) streaming terminal, wildcard component search, filter chips, selection drawer, and persistent test history.
+  - Implemented 4-way cross-validation test matrix support (`--mode both --engine both`) executing across all environment combinations (LXC + Docker, LXC + Podman, VM + Docker, VM + Podman) with unified 10-column reporting.
+  - Added ANSI escape code translation in the web terminal converting CLI color sequences to styled HTML elements matching status indicators.
+  - Fixed namespace container health detection and rootless `/etc/containers/containers.conf` cgroupfs configuration.
 - **Container Engine Abstraction Layer (Docker & Rootless Podman)**:
   - Created `ContainerEngine` class ([`src/utils/container_engine.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/container_engine.py)) mapping CLI and Compose operations transparently across Docker and Podman.
   - Implemented automated host OS rootless Podman provisioning: low-port kernel binding (`net.ipv4.ip_unprivileged_port_start=53`), systemd session lingering (`loginctl enable-linger`), and subuid/subgid mapping.

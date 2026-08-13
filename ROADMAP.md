@@ -30,6 +30,9 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
 *   **[✅] Container Engine Abstraction (Docker & Rootless Podman)**:
     *   **Why?**: To make NjordDeploy engine-agnostic, supporting standard Docker as well as security-hardened rootless Podman environments.
     *   **Implementation**: Introduced `ContainerEngine` class mapping CLI/Compose commands dynamically, with automated target OS provisioning (kernel low-port binding `net.ipv4.ip_unprivileged_port_start=53`, systemd user session lingering via `loginctl`, subuid/subgid mapping), parameterized Ansible playbook execution, and live UI switching.
+*   **[✅] Proxmox Automated Testing Suite & Interactive Web GUI**:
+    *   **Why?**: To provide automated, rapid end-to-end integration testing and validation of NjordDeploy components in clean virtualized environments without requiring manual Raspberry Pi flashing.
+    *   **Implementation**: Built an interactive developer GUI (`run_proxmox_gui.py`) with real-time SSE log streaming, wildcard search, and 4-way cross-validation matrix testing across all target environments (LXC/VM × Docker/Podman).
 *   **[✅] Dynamic Components Repository & Air-Gapped Mode**:
     *   **Why?**: To allow custom component repositories (private GitLab/Forgejo/Gitea) and air-gapped offline installations.
     *   **Implementation**: Fully dynamic `SyncManager` supporting `COMPONENTS_REPO_URL`, `COMPONENTS_REPO_BRANCH`, `COMPONENTS_REPO_TOKEN`, with live URL validation endpoint (`/api/validate-repo`) and offline local-only fallback mode.

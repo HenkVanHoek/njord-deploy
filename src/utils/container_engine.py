@@ -53,7 +53,9 @@ class ContainerEngine:
     @property
     def compose_cli(self) -> str:
         """Returns the Compose command invocation."""
-        return f"{self.engine} compose"
+        if self.is_podman:
+            return "podman-compose"
+        return "docker compose"
 
     def get_network_create_cmd(self, network_name: str = "njorddeploy_net") -> str:
         """Returns command to create the default network."""
@@ -80,26 +82,26 @@ class ContainerEngine:
     def get_compose_up_cmd(self, detach: bool = True) -> str:
         """Returns compose up command."""
         flag = " -d" if detach else ""
-        return f"{self.engine} compose up{flag}"
+        return f"{self.compose_cli} up{flag}"
 
     def get_compose_down_cmd(self, remove_volumes: bool = False) -> str:
         """Returns compose down command."""
         flag = " -v" if remove_volumes else ""
-        return f"{self.engine} compose down{flag}"
+        return f"{self.compose_cli} down{flag}"
 
     def get_compose_pull_cmd(self) -> str:
         """Returns compose pull command."""
         if self.is_docker:
             return "docker compose pull --ignore-buildable"
-        return "podman compose pull"
+        return f"{self.compose_cli} pull"
 
     def get_compose_clean_cmd(self, service_name: str) -> str:
         """Returns compose rm / clean command for a specific service."""
-        return f"{self.engine} compose rm -f -s -v {service_name}"
+        return f"{self.compose_cli} rm -f -s -v {service_name}"
 
     def get_compose_restart_cmd(self, service_name: str) -> str:
         """Returns compose restart command for a specific service."""
-        return f"{self.engine} compose restart {service_name}"
+        return f"{self.compose_cli} restart {service_name}"
 
     def get_exec_cmd(self, container_name: str, command: str) -> str:
         """Returns container exec command."""
@@ -135,13 +137,29 @@ class ContainerEngine:
                 f"{cmd_prefix}apt-get install -y podman podman-compose "
                 "slirp4netns uidmap dbus-user-session curl ca-certificates"
             ),
+            # Configure unqualified search registries
+            f"{cmd_prefix}mkdir -p /etc/containers/registries.conf.d",
+            (
+                f"{cmd_prefix}sh -c 'echo "
+                '"unqualified-search-registries = '
+                '[\\"docker.io\\", \\"quay.io\\", \\"ghcr.io\\"]" '
+                "> /etc/containers/registries.conf.d/00-default-registries.conf'"
+            ),
+            # Configure cgroup manager and events logger for rootless
+            (
+                f"{cmd_prefix}sh -c 'printf \""
+                "[engine]\\n"
+                'cgroup_manager = \\"cgroupfs\\"\\n'
+                'events_logger = \\"file\\"\\n'
+                "\" > /etc/containers/containers.conf'"
+            ),
             # Configure kernel unprivileged port start (for port 53 DNS, 80/443 web)
             (
                 f"{cmd_prefix}sh -c 'echo "
                 f'"net.ipv4.ip_unprivileged_port_start={unprivileged_port_start}" '
                 "> /etc/sysctl.d/99-podman-ports.conf'"
             ),
-            f"{cmd_prefix}sysctl --system",
+            f"{cmd_prefix}sysctl -p /etc/sysctl.d/99-podman-ports.conf",
         ]
 
         if not is_root:

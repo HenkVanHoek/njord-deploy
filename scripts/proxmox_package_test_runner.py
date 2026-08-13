@@ -121,17 +121,43 @@ def verify_package_health(
         def append_log(msg: str):
             log_lines.append(msg)
 
+        # Determine container CLI binary (podman or docker)
+        cli_detect_cmd = (
+            "if command -v podman >/dev/null 2>&1; then echo 'podman'; "
+            "else echo 'docker'; fi"
+        )
+        _, cli_out = ssh_mgr.execute_command(
+            cli_detect_cmd,
+            lambda x: None,
+            check_exit_code=False,
+        )
+        cont_cli = (cli_out or "").strip() or "docker"
+
         # List containers running in the compose project
-        cmd_docker_ps = (
-            "docker ps -a --filter "
+        cmd_cont_ps = (
+            f"{cont_cli} ps -a --filter "
             "label=com.docker.compose.project=njorddeploy "
             "--format '{{.Names}} ({{.Status}})'"
         )
         cmd_exit, output = ssh_mgr.execute_command(
-            cmd_docker_ps,
+            cmd_cont_ps,
             lambda x: None,
             check_exit_code=False,
         )
+
+        if cmd_exit != 0 or not output or not output.strip():
+            # Fallback without label filter if not tagged by compose
+            fallback_ps = (
+                f"{cont_cli} ps -a --format '{{{{.Names}}}} ({{{{.Status}}}})'"
+            )
+            fallback_exit, fallback_out = ssh_mgr.execute_command(
+                fallback_ps,
+                lambda x: None,
+                check_exit_code=False,
+            )
+            if fallback_exit == 0 and fallback_out:
+                output = fallback_out
+                cmd_exit = 0
 
         running_containers = []
         if cmd_exit == 0 and output:
@@ -171,7 +197,7 @@ def verify_package_health(
                 if matched_container:
                     err_logs: List[str] = []
                     ssh_mgr.execute_command(
-                        f"docker logs {matched_container} --tail 100",
+                        f"{cont_cli} logs {matched_container} --tail 100",
                         lambda x: err_logs.append(x),
                         check_exit_code=False,
                     )
@@ -181,10 +207,10 @@ def verify_package_health(
                         )
                 overall_success = False
             else:
-                # Check docker logs for tracebacks or fatal errors
+                # Check container logs for tracebacks or fatal errors
                 comp_logs: List[str] = []
                 ssh_mgr.execute_command(
-                    f"docker logs {matched_container} --tail 100",
+                    f"{cont_cli} logs {matched_container} --tail 100",
                     lambda x: comp_logs.append(x),
                     check_exit_code=False,
                 )
@@ -194,7 +220,7 @@ def verify_package_health(
 
                 # Inspect container config to get the actual version
                 cmd_inspect = (
-                    f"docker inspect {matched_container} "
+                    f"{cont_cli} inspect {matched_container} "
                     "--format '{{{{json .Config}}}}'"
                 )
                 inspect_exit, inspect_out = ssh_mgr.execute_command(

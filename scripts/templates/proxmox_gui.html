@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NjordDeploy — Proxmox Test Suite</title>
+  <link rel="stylesheet" href="/static/css/proxmox_gui.css?v={{ cache_bust }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚢</text></svg>">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <span class="logo-icon">🚢</span>
+        <div class="logo-text">
+          <h1>NjordDeploy Proxmox Test Suite</h1>
+          <span>Automated Component Integration & Provisioning Runner</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <span id="app-status-badge" class="status-badge status-idle">IDLE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Configuration Options Card -->
+    <section class="config-card">
+      <h2 class="card-title">⚙️ Test Configuration</h2>
+      <div class="config-grid">
+
+        <!-- Mode Selection -->
+        <div class="config-item">
+          <label>Target Mode</label>
+          <div class="segmented-control">
+            <button type="button" id="mode-lxc-btn" class="segmented-btn active">
+              ⚡ LXC
+            </button>
+            <button type="button" id="mode-vm-btn" class="segmented-btn">
+              🖥️ VM
+            </button>
+            <button type="button" id="mode-both-btn" class="segmented-btn">
+              🔄 Beide (Matrix)
+            </button>
+          </div>
+        </div>
+
+        <!-- Container Engine Selection -->
+        <div class="config-item">
+          <label>Container Engine</label>
+          <div class="segmented-control">
+            <button type="button" id="engine-docker-btn" class="segmented-btn active">
+              🐳 Docker
+            </button>
+            <button type="button" id="engine-podman-btn" class="segmented-btn">
+              🦭 Podman
+            </button>
+            <button type="button" id="engine-both-btn" class="segmented-btn">
+              🔄 Beide (Matrix)
+            </button>
+          </div>
+        </div>
+
+        <!-- Proxmox Node -->
+        <div class="config-item">
+          <label for="node-input">Proxmox Node</label>
+          <input type="text" id="node-input" class="text-input" placeholder="pve" value="pve" />
+        </div>
+
+        <!-- Template ID (for VM mode) -->
+        <div class="config-item" id="template-id-wrapper" style="opacity: 0.5;">
+          <label for="template-id-input">VM Template ID</label>
+          <input type="text" id="template-id-input" class="text-input" placeholder="902" value="902" disabled />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Component Selector Panel -->
+    <section class="selector-panel">
+      <h2 class="card-title">📦 Component Selection</h2>
+
+      <!-- Search & Category Filters -->
+      <div class="search-toolbar">
+        <div class="search-box-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Search services (e.g. adguard, dns*, *vault*, pi*)..."
+            autocomplete="off"
+          />
+          <button type="button" id="search-clear-btn" class="search-clear-btn" title="Clear search">✕</button>
+        </div>
+
+        <div class="filter-pills">
+          <button type="button" class="filter-pill active" data-filter="all">All Services</button>
+          <button type="button" class="filter-pill" data-filter="untested">Untested Only</button>
+          <button type="button" class="filter-pill" data-filter="tested">Tested Only</button>
+          <button type="button" class="filter-pill" data-filter="ui">🌐 Web UI Only</button>
+        </div>
+      </div>
+
+      <!-- Action & Batch Selection Bar -->
+      <div class="action-bar">
+        <div class="selection-info">
+          <span>Selection:</span>
+          <span id="selection-count-badge" class="selection-count-badge">0 of 0 selected</span>
+        </div>
+        <div class="batch-buttons">
+          <button type="button" id="select-all-filtered-btn" class="btn-secondary">Select All Filtered</button>
+          <button type="button" id="deselect-all-filtered-btn" class="btn-secondary">Deselect Filtered</button>
+          <button type="button" id="clear-selection-btn" class="btn-secondary">Clear All</button>
+        </div>
+      </div>
+
+      <!-- Component Cards Grid -->
+      <div id="components-grid" class="components-grid">
+        <!-- Rendered dynamically by proxmox_gui.js -->
+      </div>
+
+      <!-- Execution Panel -->
+      <div class="run-panel">
+        <button type="button" id="start-run-btn" class="btn-primary" disabled>
+          <span>🚀</span>
+          <span id="start-run-text">Start Test Run</span>
+        </button>
+
+        <button type="button" id="stop-run-btn" class="btn-danger" style="display: none;">
+          <span>🛑</span>
+          <span>Stop Execution</span>
+        </button>
+
+        <button type="button" id="view-report-btn" class="btn-secondary">
+          <span>📄</span>
+          <span>View Latest Markdown Report</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Live Terminal Log Streamer -->
+    <section class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <span class="terminal-dot dot-red"></span>
+          <span class="terminal-dot dot-yellow"></span>
+          <span class="terminal-dot dot-green"></span>
+          <span>Live Runner Console</span>
+        </div>
+        <div class="terminal-actions">
+          <button type="button" id="clear-terminal-btn" class="terminal-btn">Clear</button>
+          <button type="button" id="copy-terminal-btn" class="terminal-btn">Copy Logs</button>
+        </div>
+      </div>
+      <div id="terminal-body" class="terminal-body">Ready to start test run. Select components and click 'Start Test Run'.</div>
+    </section>
+
+    <!-- Results Table Card -->
+    <section class="config-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">📊 Test History & Results</h2>
+        <button type="button" id="clear-history-btn" class="btn-secondary" title="Clear all test history">
+          <span>🗑️</span>
+          <span>Clear History</span>
+        </button>
+      </div>
+      <div class="results-table-wrapper">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Date / Time</th>
+              <th>Component</th>
+              <th>Target</th>
+              <th>Engine</th>
+              <th>VM ID</th>
+              <th>IP Address</th>
+              <th>Deployment</th>
+              <th>Containers</th>
+              <th>HTTP UI</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body">
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                No test history recorded yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Clear History Confirmation Modal -->
+  <div id="clear-confirm-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>⚠️ Clear Test History</h3>
+        <button type="button" id="close-clear-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to clear the entire test execution history?</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+          This will wipe all historical results from <code>tests/proxmox_results.json</code>. This action cannot be undone.
+        </p>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" id="cancel-clear-btn" class="btn-secondary">Cancel</button>
+          <button type="button" id="confirm-clear-btn" class="btn-danger">Yes, Clear History</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Viewer Modal -->
+  <div id="report-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📄 Latest Proxmox Test Report (PROXMOX_TESTS.md)</h3>
+        <button type="button" id="close-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <pre id="report-content">Loading report...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    NjordDeploy Automated Infrastructure & Component Test Runner &copy; 2026
+  </footer>
+
+  <script src="/static/js/proxmox_gui.js?v={{ cache_bust }}"></script>
+</body>
+</html>

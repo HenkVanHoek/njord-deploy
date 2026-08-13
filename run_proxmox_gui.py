@@ -1,10 +1,9 @@
-# run_configurator.py
-
+# run_proxmox_gui.py
 """
-Production entrypoint for running the NjordDeploy Configurator application.
+Entrypoint for launching the NjordDeploy Proxmox Test Suite Web UI.
 
-Launches the Flask configurator application using the Waitress WSGI server
-on port 5001 (or CONFIGURATOR_PORT environment variable).
+Launches the Flask testing GUI on port 5050 (or PROXMOX_GUI_PORT environment
+variable) using Waitress and opens the default browser automatically.
 """
 
 import logging
@@ -22,10 +21,13 @@ if _src_dir not in sys.path:
 
 from waitress import serve  # noqa: E402
 
-from configurator_app.app import create_app  # noqa: E402
+from scripts.proxmox_gui import create_app  # noqa: E402
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("NjordDeployConfigurator")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("NjordDeployProxmoxGUI")
 
 
 def is_port_in_use(host: str, port: int) -> bool:
@@ -45,16 +47,16 @@ def open_browser(url: str):
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
-    host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
+    port = int(os.environ.get("PROXMOX_GUI_PORT", 5050))
+    host = os.environ.get("PROXMOX_GUI_HOST", "0.0.0.0")  # nosec B104
 
     url_host = "localhost" if host == "0.0.0.0" else host  # nosec B104
     url = f"http://{url_host}:{port}"
 
     if is_port_in_use(host, port):
         logger.info(
-            f"NjordDeploy Configurator is already running on {url}. "
-            f"Opening existing instance in browser..."
+            f"NjordDeploy Proxmox Test GUI is already running on {url}. "
+            "Opening existing instance in browser..."
         )
         if not os.environ.get("NO_BROWSER"):
             open_browser(url)
@@ -62,7 +64,7 @@ if __name__ == "__main__":
 
     app = create_app()
 
-    logger.info(f"Starting NjordDeploy Configurator via Waitress WSGI server on {url}")
+    logger.info(f"Starting NjordDeploy Proxmox Test GUI via Waitress WSGI on {url}")
 
     if not os.environ.get("NO_BROWSER"):
         threading.Timer(1.2, open_browser, args=[url]).start()
@@ -76,7 +78,7 @@ if __name__ == "__main__":
         ):
             logger.info(
                 f"Port {port} is already in use. "
-                f"Opening existing instance in browser..."
+                "Opening existing instance in browser..."
             )
             if not os.environ.get("NO_BROWSER"):
                 open_browser(url)

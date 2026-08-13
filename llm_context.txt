@@ -46,6 +46,8 @@ if __name__ == "__main__":
     ansible_become_timeout: 60
     # Container engine: 'docker' (default) or 'podman'
     container_engine: "{{ engine | default(container_engine | default('docker')) | lower }}"
+    # Compose command: 'docker compose' for Docker, 'podman-compose' for Podman
+    compose_cmd: "{{ 'podman-compose' if (engine | default(container_engine | default('docker')) | lower) == 'podman' else 'docker compose' }}"
     # Destination path on the target for all configuration
     project_config_dir: "/opt/njorddeploy"
     # Map kernel architecture to Debian package architecture
@@ -165,8 +167,9 @@ if __name__ == "__main__":
 
     - name: Apply sysctl configuration for Podman
       ansible.builtin.command:
-        cmd: "sysctl --system"
+        cmd: "sysctl -p /etc/sysctl.d/99-podman-ports.conf"
       changed_when: false
+      failed_when: false
       when: container_engine == 'podman'
 
     - name: Enable user lingering for rootless Podman session persistence
@@ -174,6 +177,23 @@ if __name__ == "__main__":
         cmd: "loginctl enable-linger {{ ansible_user }}"
       changed_when: false
       failed_when: false
+      when: container_engine == 'podman'
+
+    - name: Configure unqualified search registries for Podman
+      ansible.builtin.copy:
+        dest: /etc/containers/registries.conf.d/00-default-registries.conf
+        content: "unqualified-search-registries = [\"docker.io\", \"quay.io\", \"ghcr.io\"]\n"
+        mode: "0644"
+      when: container_engine == 'podman'
+
+    - name: Configure cgroup manager and events logger for rootless Podman
+      ansible.builtin.copy:
+        dest: /etc/containers/containers.conf
+        content: |
+          [engine]
+          cgroup_manager = "cgroupfs"
+          events_logger = "file"
+        mode: "0644"
       when: container_engine == 'podman'
 
     # --- DIRECTORY & FILE DEPLOYMENT ---
@@ -184,6 +204,14 @@ if __name__ == "__main__":
         owner: "{{ ansible_user }}"
         group: "{{ ansible_user }}"
         mode: "0755"
+
+    - name: Ensure data root directory exists with write permissions
+      ansible.builtin.file:
+        path: "{{ data_root | default('/opt/njorddeploy/data') }}"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0777"
 
     - name: Copy all deployment files to the target (including .env and config folders)
       ansible.builtin.copy:
@@ -196,7 +224,7 @@ if __name__ == "__main__":
 
     - name: Perform Clean Install (Stop containers and remove volumes for selected components)
       ansible.builtin.command:
-        cmd: "{{ container_engine }} compose rm -f -s -v {{ item }}"
+        cmd: "{{ compose_cmd }} rm -f -s -v {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_clean | default([]) }}"
       when: components_to_clean is defined and components_to_clean | length > 0
@@ -222,14 +250,27 @@ if __name__ == "__main__":
 
     - name: Pull latest service images (Podman)
       ansible.builtin.command:
-        cmd: "podman compose pull"
+        cmd: "podman-compose pull"
         chdir: "{{ project_config_dir }}"
       when: container_engine == 'podman'
       changed_when: "true"
 
+    - name: Ensure container volume mount host directories exist
+      ansible.builtin.shell: |
+        if [ -f "{{ project_config_dir }}/docker-compose.yml" ]; then
+          grep -E '^\s*-\s+/[^:]+:' "{{ project_config_dir }}/docker-compose.yml" | sed -E 's/^\s*-\s+([^:]+):.*/\1/' | while read -r host_path; do
+            clean_path=$(echo "$host_path" | tr -d '"' | tr -d "'")
+            if [ -n "$clean_path" ]; then
+              mkdir -p "$clean_path"
+              chmod 777 "$clean_path"
+            fi
+          done
+        fi
+      changed_when: false
+
     - name: Deploy services with Compose
       ansible.builtin.command:
-        cmd: "{{ container_engine }} compose up -d"
+        cmd: "{{ compose_cmd }} up -d"
         chdir: "{{ project_config_dir }}"
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
@@ -251,7 +292,7 @@ if __name__ == "__main__":
 
     - name: Restart specifically requested components
       ansible.builtin.command:
-        cmd: "{{ container_engine }} compose restart {{ item }}"
+        cmd: "{{ compose_cmd }} restart {{ item }}"
         chdir: "{{ project_config_dir }}"
       loop: "{{ components_to_restart | default([]) }}"
       when: components_to_restart is defined and components_to_restart | length > 0
@@ -509,7 +550,7 @@ services:
   # Services will be dynamically added here by the installer.
 
 networks:
-  njorddeploy-network:
+  njorddeploy_net:
     driver: bridge
 
 --- FILE: exportToHTML/Migratieplan Hernoemen van PiSelfhosting naar SBCDeploy.md - Nextcloud.pdf.html ---
@@ -1113,10 +1154,16 @@ import socket
 import sys
 import threading
 import webbrowser
+from pathlib import Path
 
-from waitress import serve
+# Ensure local workspace src is at the head of sys.path
+_src_dir = str(Path(__file__).resolve().parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
-from src.configurator_app.app import create_app
+from waitress import serve  # noqa: E402
+
+from configurator_app.app import create_app  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NjordDeployConfigurator")
@@ -1193,10 +1240,16 @@ import socket
 import sys
 import threading
 import webbrowser
+from pathlib import Path
 
-from waitress import serve
+# Ensure local workspace src is at the head of sys.path
+_src_dir = str(Path(__file__).resolve().parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
 
-from src.editor_app.app import create_app
+from waitress import serve  # noqa: E402
+
+from editor_app.app import create_app  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("NjordDeployEditor")
@@ -1251,6 +1304,96 @@ if __name__ == "__main__":
             logger.info(
                 f"Port {port} is already in use. "
                 f"Opening existing instance in browser..."
+            )
+            if not os.environ.get("NO_BROWSER"):
+                open_browser(url)
+            sys.exit(0)
+        raise
+
+--- FILE: run_proxmox_gui.py ---
+# run_proxmox_gui.py
+"""
+Entrypoint for launching the NjordDeploy Proxmox Test Suite Web UI.
+
+Launches the Flask testing GUI on port 5050 (or PROXMOX_GUI_PORT environment
+variable) using Waitress and opens the default browser automatically.
+"""
+
+import logging
+import os
+import socket
+import sys
+import threading
+import webbrowser
+from pathlib import Path
+
+# Ensure local workspace src is at the head of sys.path
+_src_dir = str(Path(__file__).resolve().parent / "src")
+if _src_dir not in sys.path:
+    sys.path.insert(0, _src_dir)
+
+from waitress import serve  # noqa: E402
+
+from scripts.proxmox_gui import create_app  # noqa: E402
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("NjordDeployProxmoxGUI")
+
+
+def is_port_in_use(host: str, port: int) -> bool:
+    """Checks if the specified host and TCP port are already in use."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.settimeout(0.5)
+        check_host = "127.0.0.1" if host == "0.0.0.0" else host  # nosec B104
+        return s.connect_ex((check_host, port)) == 0
+
+
+def open_browser(url: str):
+    """Opens the default system browser to the specified URL."""
+    try:
+        webbrowser.open(url)
+    except Exception as e:
+        logger.warning(f"Could not open browser automatically: {e}")
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PROXMOX_GUI_PORT", 5050))
+    host = os.environ.get("PROXMOX_GUI_HOST", "0.0.0.0")  # nosec B104
+
+    url_host = "localhost" if host == "0.0.0.0" else host  # nosec B104
+    url = f"http://{url_host}:{port}"
+
+    if is_port_in_use(host, port):
+        logger.info(
+            f"NjordDeploy Proxmox Test GUI is already running on {url}. "
+            "Opening existing instance in browser..."
+        )
+        if not os.environ.get("NO_BROWSER"):
+            open_browser(url)
+        sys.exit(0)
+
+    app = create_app()
+
+    logger.info(
+        f"Starting NjordDeploy Proxmox Test GUI via Waitress WSGI on {url}"
+    )
+
+    if not os.environ.get("NO_BROWSER"):
+        threading.Timer(1.2, open_browser, args=[url]).start()
+
+    try:
+        serve(app, host=host, port=port, threads=6)
+    except OSError as err:
+        if "already in use" in str(err).lower() or getattr(err, "errno", None) in (
+            98,
+            10048,
+        ):
+            logger.info(
+                f"Port {port} is already in use. "
+                "Opening existing instance in browser..."
             )
             if not os.environ.get("NO_BROWSER"):
                 open_browser(url)
@@ -1594,6 +1737,7 @@ project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root / "src"))
 
 from managers.ssh_manager import SSHManager  # noqa: E402
+from utils.container_engine import ContainerEngine  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402
 
 logging.basicConfig(
@@ -1766,6 +1910,13 @@ def main():
         help="Root password for LXC",
     )
     parser.add_argument(
+        "--engine",
+        type=str,
+        choices=["docker", "podman"],
+        default=os.getenv("CONTAINER_ENGINE", "docker"),
+        help="Container engine to install: 'docker' or 'podman' (default: docker)",
+    )
+    parser.add_argument(
         "--hostname",
         type=str,
         default="",
@@ -1914,15 +2065,9 @@ def main():
         logger.error(f"Failed to connect to container via SSH: {conn_msg}")
         sys.exit(1)
 
-    # Execution commands to install Docker and setup external network
-    install_commands = [
-        "apt-get update",
-        "apt-get install -y curl ca-certificates gnupg",
-        "curl -fsSL https://get.docker.com -o get-docker.sh",
-        "sh get-docker.sh",
-        "systemctl enable --now docker",
-        "docker network create njorddeploy_net",
-    ]
+    # Execution commands to install container engine and setup default network
+    engine_helper = ContainerEngine(args.engine)
+    install_commands = engine_helper.get_provisioning_commands(username="root")
 
     for cmd in install_commands:
         logger.info(f"Executing: {cmd}")
@@ -1936,8 +2081,11 @@ def main():
     logger.info(f"  Container ID:  {vmid}")
     logger.info(f"  IP Address:    {ip_address}")
     logger.info(f"  Root Password: {args.password}")
+    logger.info(f"  Engine:        {args.engine.upper()}")
     logger.info("  SSH Port:      22")
-    logger.info("Docker is installed and 'njorddeploy_net' network is ready.")
+    logger.info(
+        f"{args.engine.upper()} is installed and 'njorddeploy_net' network is ready."
+    )
     logger.info("=" * 60)
 
 
@@ -2096,6 +2244,491 @@ def main():
 if __name__ == "__main__":
     main()
 
+--- FILE: scripts/proxmox_gui.py ---
+# scripts/proxmox_gui.py
+"""
+Interactive Web Application for configuring and running NjordDeploy component
+integration tests on Proxmox VE (supporting Docker & Podman).
+"""
+
+import json
+import logging
+import os
+import queue
+import subprocess  # nosec B404
+import sys
+import threading
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from dotenv import load_dotenv
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    render_template,
+    request,
+)
+
+# Ensure we can import from the 'src' root directory
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root / "src"))
+
+from managers.component_manager import ComponentManager  # noqa: E402
+from scripts.proxmox_test_runner import get_template_status  # noqa: E402
+from utils.container_engine import get_configured_engine  # noqa: E402
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+logger = logging.getLogger("proxmox_gui")
+
+
+class TestRunnerManager:
+    """Manages the background test runner subprocess and log streaming."""
+
+    __test__ = False
+
+    def __init__(self):
+        self.process: Optional[subprocess.Popen] = None
+        self.log_queue: queue.Queue = queue.Queue()
+        self.is_running: bool = False
+        self.current_component: Optional[str] = None
+        self.current_engine: str = "DOCKER"
+        self.current_mode: str = "LXC"
+        self.current_run_failures: int = 0
+        self.current_run_passed: int = 0
+        self.results_history: List[Dict[str, Any]] = []
+        self.lock = threading.Lock()
+
+    def start_test(
+        self,
+        components: List[str],
+        engine: str = "docker",
+        mode: str = "lxc",
+        node: str = "pve",
+        template_id: str = "902",
+    ) -> bool:
+        """Launches proxmox_test_runner.py in a managed background process."""
+        with self.lock:
+            if self.is_running:
+                logger.warning("Test runner is already executing.")
+                return False
+
+            self.is_running = True
+            self.results_history = []
+            self.current_run_failures = 0
+            self.current_run_passed = 0
+            self.current_engine = engine.upper()
+            self.current_mode = mode.upper()
+            # Clear log queue
+            while not self.log_queue.empty():
+                try:
+                    self.log_queue.get_nowait()
+                except queue.Empty:
+                    break
+
+        runner_script = project_root / "scripts" / "proxmox_test_runner.py"
+        cmd = [
+            sys.executable,
+            "-u",  # Unbuffered output
+            str(runner_script),
+            "--mode",
+            mode,
+            "--engine",
+            engine,
+            "--node",
+            node,
+        ]
+
+        if mode == "vm" and template_id:
+            cmd.extend(["--template-id", template_id])
+
+        if components:
+            cmd.extend(["--components", ",".join(components)])
+
+        logger.info(f"Launching test process: {' '.join(cmd)}")
+
+        def run_worker():
+            try:
+                # noinspection PyBroadException
+                env = os.environ.copy()
+                env["PYTHONUNBUFFERED"] = "1"
+                env["CONTAINER_ENGINE"] = engine
+
+                self.process = subprocess.Popen(  # nosec B603
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    env=env,
+                    cwd=str(project_root),
+                )
+
+                self.log_queue.put(
+                    {
+                        "type": "status",
+                        "status": "running",
+                        "engine": engine,
+                        "mode": mode,
+                    }
+                )
+
+                if self.process.stdout:
+                    for line in iter(self.process.stdout.readline, ""):
+                        if not line:
+                            break
+                        if "\r" in line:
+                            parts = [
+                                p.strip() for p in line.split("\r") if p.strip()
+                            ]
+                            clean_line = parts[-1] if parts else ""
+                        else:
+                            clean_line = line.rstrip("\r\n")
+
+                        if clean_line:
+                            self.log_queue.put(
+                                {"type": "log", "content": clean_line}
+                            )
+                            self._inspect_log_line(clean_line, engine)
+
+                self.process.wait()
+            except Exception as exc:
+                logger.error(f"Error running test process: {exc}")
+                self.log_queue.put({"type": "log", "content": f"ERROR: {exc}"})
+            finally:
+                exit_code = 0
+                if self.process:
+                    exit_code = self.process.returncode or 0
+
+                with self.lock:
+                    self.is_running = False
+                    self.process = None
+
+                failed_count = self.current_run_failures
+                if exit_code != 0 and failed_count == 0:
+                    failed_count = 1
+                passed_count = self.current_run_passed
+
+                self.log_queue.put(
+                    {
+                        "type": "status",
+                        "status": "completed",
+                        "failed_count": failed_count,
+                        "passed_count": passed_count,
+                    }
+                )
+
+        worker_thread = threading.Thread(target=run_worker, daemon=True)
+        worker_thread.start()
+        return True
+
+    def _inspect_log_line(self, line: str, engine: str):
+        """Analyzes stdout lines to emit structured events to the UI."""
+        now_ts = time.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Detect component start: "Testing component: <id> (Engine: <e>, Mode: <m>)"
+        if "Testing component:" in line:
+            parts = line.split("Testing component:", 1)
+            comp_part = parts[1].strip()
+            comp_id = comp_part.split()[0].strip("() ")
+            self.current_component = comp_id
+
+            current_engine = self.current_engine
+            current_mode = self.current_mode
+            if "Engine:" in line:
+                try:
+                    current_engine = (
+                        line.split("Engine:")[1]
+                        .split(",")[0]
+                        .split(")")[0]
+                        .strip()
+                        .upper()
+                    )
+                except Exception:
+                    pass
+            if "Mode:" in line:
+                try:
+                    current_mode = (
+                        line.split("Mode:")[1]
+                        .split(",")[0]
+                        .split(")")[0]
+                        .strip()
+                        .upper()
+                    )
+                except Exception:
+                    pass
+
+            self.current_engine = current_engine
+            self.current_mode = current_mode
+
+            self.log_queue.put(
+                {
+                    "type": "record",
+                    "record": {
+                        "timestamp": now_ts,
+                        "component_id": comp_id,
+                        "mode": current_mode,
+                        "engine": current_engine,
+                        "status": "running",
+                        "deployment": "In Progress",
+                        "running": True,
+                    },
+                }
+            )
+
+        # Detect component success: "✅ Component adguard-home verified successfully!"
+        elif "verified successfully!" in line and "Component" in line:
+            self.current_run_passed += 1
+            parts = line.split("Component", 1)
+            comp_id = parts[1].split()[0] if len(parts) > 1 else "unknown"
+            self.log_queue.put(
+                {
+                    "type": "record",
+                    "record": {
+                        "timestamp": now_ts,
+                        "component_id": comp_id,
+                        "mode": self.current_mode,
+                        "engine": self.current_engine,
+                        "status": "success",
+                        "deployment": "success",
+                        "running": True,
+                    },
+                }
+            )
+
+        # Detect failure: "❌ Component verification failed" / "❌ Error during test of"
+        elif (
+            "❌ Component verification failed" in line
+            or "❌ Error during test of" in line
+        ):
+            self.current_run_failures += 1
+            comp_id = self.current_component or "unknown"
+            self.log_queue.put(
+                {
+                    "type": "record",
+                    "record": {
+                        "timestamp": now_ts,
+                        "component_id": comp_id,
+                        "mode": self.current_mode,
+                        "engine": self.current_engine,
+                        "status": "failed",
+                        "deployment": "failed",
+                        "running": False,
+                    },
+                }
+            )
+
+    def stop_test(self) -> bool:
+        """Terminates active test runner subprocess."""
+        with self.lock:
+            if not self.is_running or not self.process:
+                return False
+            try:
+                self.process.terminate()
+                self.log_queue.put(
+                    {
+                        "type": "log",
+                        "content": "⚠️ Test execution terminated by user.",
+                    }
+                )
+                return True
+            except Exception as exc:
+                logger.error(f"Failed to terminate process: {exc}")
+                return False
+
+
+def create_app() -> Flask:
+    """Creates and configures the Flask application."""
+    load_dotenv(project_root / ".env")
+
+    templates_dir = project_root / "scripts" / "templates"
+    static_dir = project_root / "scripts" / "static"
+
+    app = Flask(
+        __name__,
+        template_folder=str(templates_dir),
+        static_folder=str(static_dir),
+    )
+
+    runner_mgr = TestRunnerManager()
+
+    @app.route("/")
+    def index():
+        resp = make_response(
+            render_template("proxmox_gui.html", cache_bust=int(time.time()))
+        )
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+        return resp
+
+    @app.route("/api/config", methods=["GET"])
+    def get_config():
+        """Returns Proxmox settings from .env."""
+        default_engine = get_configured_engine()
+        return jsonify(
+            {
+                "node": os.getenv("PROXMOX_NODE", "pve"),
+                "template_id": os.getenv("PROXMOX_TEMPLATE_ID", "902"),
+                "engine": default_engine,
+                "mode": "lxc",
+            }
+        )
+
+    @app.route("/api/components", methods=["GET"])
+    def get_components():
+        """Returns all components with template status and metadata."""
+        metadata_path = project_root / "config" / "components_metadata.json"
+        templates_path = project_root / "component_templates"
+
+        comp_mgr = ComponentManager(
+            metadata_file_path=str(metadata_path),
+            templates_path=str(templates_path),
+        )
+        components = comp_mgr.get_all_components()
+
+        enriched = []
+        for comp in components:
+            cid = comp.get("id", "")
+            if not cid:
+                continue
+
+            status = get_template_status(templates_path, cid)
+            enriched.append(
+                {
+                    "id": cid,
+                    "name": comp.get("name") or cid,
+                    "category": comp.get("category"),
+                    "description": comp.get("description", ""),
+                    "has_ui": bool(comp.get("has_ui", False)),
+                    "status": status,
+                    "version": comp.get("component_version", "latest"),
+                }
+            )
+
+        # Sort alphabetically by name
+        enriched.sort(key=lambda x: x["name"].lower())
+        return jsonify(enriched)
+
+    @app.route("/api/run", methods=["POST"])
+    def run_tests():
+        """Starts a test run with selected options."""
+        data = request.get_json() or {}
+        components = data.get("components", [])
+        engine = data.get("engine", "docker").lower()
+        mode = data.get("mode", "lxc").lower()
+        node = data.get("node", "pve")
+        template_id = data.get("template_id", "902")
+
+        if engine not in ["docker", "podman", "both", "all"]:
+            engine = "docker"
+        if mode not in ["lxc", "vm", "both", "all"]:
+            mode = "lxc"
+
+        success = runner_mgr.start_test(
+            components=components,
+            engine=engine,
+            mode=mode,
+            node=node,
+            template_id=template_id,
+        )
+        if success:
+            return jsonify({"success": True})
+        return jsonify(
+            {"success": False, "error": "A test run is already currently active."}
+        ), 409
+
+    @app.route("/api/stop", methods=["POST"])
+    def stop_tests():
+        """Stops active test run."""
+        stopped = runner_mgr.stop_test()
+        return jsonify({"success": stopped})
+
+    @app.route("/api/status", methods=["GET"])
+    def get_status():
+        """Returns current runner status."""
+        return jsonify(
+            {
+                "is_running": runner_mgr.is_running,
+                "current_component": runner_mgr.current_component,
+            }
+        )
+
+    @app.route("/api/stream", methods=["GET"])
+    def stream_logs():
+        """Server-Sent Events endpoint for real-time log output."""
+
+        def event_stream():
+            while True:
+                try:
+                    item = runner_mgr.log_queue.get(timeout=1.0)
+                    yield f"data: {json.dumps(item)}\n\n"
+                except queue.Empty:
+                    # Heartbeat comment to prevent client timeout
+                    yield ": heartbeat\n\n"
+
+        return Response(
+            event_stream(),
+            mimetype="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "X-Accel-Buffering": "no",
+            },
+        )
+
+    @app.route("/api/report", methods=["GET"])
+    def get_report():
+        """Reads latest markdown report."""
+        report_path = project_root / "docs" / "PROXMOX_TESTS.md"
+        if report_path.exists():
+            content = report_path.read_text(encoding="utf-8")
+            return jsonify({"report": content})
+        return jsonify({"report": ""})
+
+    @app.route("/api/results", methods=["GET"])
+    def get_results():
+        """Returns cumulative test results history."""
+        results_file = project_root / "tests" / "proxmox_results.json"
+        if results_file.exists():
+            try:
+                with open(results_file, "r", encoding="utf-8") as f:
+                    history_data = json.load(f)
+                    if isinstance(history_data, list):
+                        return jsonify(history_data)
+            except Exception as e:
+                logger.warning(f"Failed to read results file: {e}")
+        return jsonify([])
+
+    @app.route("/api/results/clear", methods=["POST"])
+    def clear_results():
+        """Clears test results history."""
+        results_file = project_root / "tests" / "proxmox_results.json"
+        try:
+            with open(results_file, "w", encoding="utf-8") as f:
+                json.dump([], f)
+                f.write("\n")
+            runner_mgr.results_history = []
+            return jsonify({"success": True})
+        except Exception as e:
+            logger.error(f"Failed to clear results file: {e}")
+            return jsonify({"success": False, "error": str(e)}), 500
+
+    return app
+
+
+if __name__ == "__main__":
+    app_instance = create_app()
+    port = int(os.environ.get("PROXMOX_GUI_PORT", 5050))
+    host = os.environ.get("PROXMOX_GUI_HOST", "0.0.0.0")  # nosec B104
+
+    print(f"Starting NjordDeploy Proxmox Test GUI on http://localhost:{port}")
+    app_instance.run(host=host, port=port, debug=False)
+
 --- FILE: scripts/proxmox_package_test_runner.py ---
 # scripts/proxmox_package_test_runner.py
 import argparse
@@ -2220,17 +2853,43 @@ def verify_package_health(
         def append_log(msg: str):
             log_lines.append(msg)
 
+        # Determine container CLI binary (podman or docker)
+        cli_detect_cmd = (
+            "if command -v podman >/dev/null 2>&1; then echo 'podman'; "
+            "else echo 'docker'; fi"
+        )
+        _, cli_out = ssh_mgr.execute_command(
+            cli_detect_cmd,
+            lambda x: None,
+            check_exit_code=False,
+        )
+        cont_cli = (cli_out or "").strip() or "docker"
+
         # List containers running in the compose project
-        cmd_docker_ps = (
-            "docker ps -a --filter "
+        cmd_cont_ps = (
+            f"{cont_cli} ps -a --filter "
             "label=com.docker.compose.project=njorddeploy "
             "--format '{{.Names}} ({{.Status}})'"
         )
         cmd_exit, output = ssh_mgr.execute_command(
-            cmd_docker_ps,
+            cmd_cont_ps,
             lambda x: None,
             check_exit_code=False,
         )
+
+        if cmd_exit != 0 or not output or not output.strip():
+            # Fallback without label filter if not tagged by compose
+            fallback_ps = (
+                f"{cont_cli} ps -a --format '{{{{.Names}}}} ({{{{.Status}}}})'"
+            )
+            fallback_exit, fallback_out = ssh_mgr.execute_command(
+                fallback_ps,
+                lambda x: None,
+                check_exit_code=False,
+            )
+            if fallback_exit == 0 and fallback_out:
+                output = fallback_out
+                cmd_exit = 0
 
         running_containers = []
         if cmd_exit == 0 and output:
@@ -2270,7 +2929,7 @@ def verify_package_health(
                 if matched_container:
                     err_logs: List[str] = []
                     ssh_mgr.execute_command(
-                        f"docker logs {matched_container} --tail 100",
+                        f"{cont_cli} logs {matched_container} --tail 100",
                         lambda x: err_logs.append(x),
                         check_exit_code=False,
                     )
@@ -2280,10 +2939,10 @@ def verify_package_health(
                         )
                 overall_success = False
             else:
-                # Check docker logs for tracebacks or fatal errors
+                # Check container logs for tracebacks or fatal errors
                 comp_logs: List[str] = []
                 ssh_mgr.execute_command(
-                    f"docker logs {matched_container} --tail 100",
+                    f"{cont_cli} logs {matched_container} --tail 100",
                     lambda x: comp_logs.append(x),
                     check_exit_code=False,
                 )
@@ -2293,7 +2952,7 @@ def verify_package_health(
 
                 # Inspect container config to get the actual version
                 cmd_inspect = (
-                    f"docker inspect {matched_container} "
+                    f"{cont_cli} inspect {matched_container} "
                     "--format '{{{{json .Config}}}}'"
                 )
                 inspect_exit, inspect_out = ssh_mgr.execute_command(
@@ -4070,6 +4729,7 @@ from managers.component_manager import ComponentManager  # noqa: E402
 from managers.deployment_manager import DeploymentManager  # noqa: E402
 from managers.setup_manager import SetupManager  # noqa: E402
 from managers.ssh_manager import SSHManager  # noqa: E402
+from utils.container_engine import ContainerEngine  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
 
 logging.basicConfig(
@@ -4131,6 +4791,7 @@ def verify_service_health(
     _component_id: str,
     component_details: Dict[str, Any],
     variables_list: List[Dict[str, Any]],
+    engine: str = "docker",
 ) -> Dict[str, Any]:
     """Runs SSH-based checks and optional HTTP requests to verify health."""
     results: Dict[str, Any] = {
@@ -4161,37 +4822,90 @@ def verify_service_health(
         def append_log(msg: str):
             log_lines.append(msg)
 
-        # List containers running in the compose project
-        cmd_docker_ps = (
-            "docker ps -a --filter "
-            "label=com.docker.compose.project=njorddeploy "
-            "--format '{{.Names}} ({{.Status}})'"
+        # Determine container CLI binary (podman or docker) based on engine parameter
+        # with fallback detection on target host
+        cli_detect_cmd = (
+            f"if [ '{engine}' = 'podman' ] && command -v podman >/dev/null 2>&1; "
+            "then echo 'podman'; "
+            f"elif [ '{engine}' = 'docker' ] && command -v docker >/dev/null 2>&1; "
+            "then echo 'docker'; "
+            "elif command -v podman >/dev/null 2>&1; then echo 'podman'; "
+            "else echo 'docker'; fi"
         )
-        cmd_exit, output = ssh_mgr.execute_command(
-            cmd_docker_ps,
+        _, cli_out = ssh_mgr.execute_command(
+            cli_detect_cmd,
+            lambda x: None,
+            check_exit_code=False,
+        )
+        cont_cli = (cli_out or "").strip() or engine
+
+        # List containers running on the host (checking user and root namespaces)
+        _, user_out = ssh_mgr.execute_command(
+            f"{cont_cli} ps -a --format '{{{{.Names}}}} ({{{{.Status}}}})'",
+            lambda x: None,
+            check_exit_code=False,
+        )
+        sudo_cmd = (
+            f"echo '{vm_pass}' | sudo -S {cont_cli} ps -a "
+            f"--format '{{{{.Names}}}} ({{{{.Status}}}})'"
+            if vm_user != "root"
+            else f"{cont_cli} ps -a --format '{{{{.Names}}}} ({{{{.Status}}}})'"
+        )
+        _, root_out = ssh_mgr.execute_command(
+            sudo_cmd,
             lambda x: None,
             check_exit_code=False,
         )
 
-        is_running = False
-        if cmd_exit == 0 and output:
-            is_running = any("Up" in line for line in output.splitlines())
-            results["running"] = is_running
-            if is_running:
-                results["details"] = f"Running containers:\n{output}"
-            else:
-                results["details"] = f"Containers found but none are running:\n{output}"
-        else:
-            results["details"] = f"No running containers found (exit code: {cmd_exit})."
+        def filter_clean_lines(raw: str) -> List[str]:
+            return [
+                ln.strip()
+                for ln in (raw or "").splitlines()
+                if ln.strip()
+                and not ln.startswith("WARN")
+                and not ln.startswith("INFO")
+                and not ln.startswith("DEBU")
+                and not ln.startswith("level=")
+                and not ln.startswith("time=")
+                and not ln.startswith("[sudo]")
+                and not ln.startswith("Password:")
+            ]
 
-        # Check docker logs for tracebacks or fatal errors
+        user_valid = filter_clean_lines(user_out)
+        root_valid = filter_clean_lines(root_out)
+
+        if any("Up" in line for line in user_valid) or (
+            user_valid and not root_valid
+        ):
+            output = user_out
+            valid_lines = user_valid
+            cli_prefix = ""
+        else:
+            output = root_out
+            valid_lines = root_valid
+            cli_prefix = (
+                f"echo '{vm_pass}' | sudo -S " if vm_user != "root" else ""
+            )
+
+        is_running = any("Up" in line for line in valid_lines)
+        results["running"] = is_running
+        if is_running:
+            results["details"] = f"Running containers:\n{output}"
+        elif valid_lines:
+            results["details"] = (
+                f"Containers found but none are running:\n{output}"
+            )
+        else:
+            results["details"] = "No running containers found on target host."
+
+        # Check container logs for tracebacks or fatal errors
         # Find matching container name
-        container_list = [line.split()[0] for line in output.splitlines() if line]
+        container_list = [line.split()[0] for line in valid_lines if line]
         matched_container = next(iter(container_list), None)
 
         if matched_container:
             ssh_mgr.execute_command(
-                f"docker logs {matched_container} --tail 100",
+                f"{cli_prefix}{cont_cli} logs {matched_container} --tail 100",
                 append_log,
                 check_exit_code=False,
             )
@@ -4200,13 +4914,31 @@ def verify_service_health(
                 results["logs_error"] = True
 
             if not is_running:
-                results["details"] += "\nLast 100 container logs:\n" + "\n".join(
-                    log_lines
+                results["details"] += (
+                    "\nLast 100 container logs:\n" + "\n".join(log_lines)
                 )
+
+        if not is_running:
+            # Run deep diagnostics on target host
+            diag_cmds = [
+                f"{cont_cli} ps -a",
+                "cat /opt/njorddeploy/docker-compose.yml 2>/dev/null",
+                f"cd /opt/njorddeploy 2>/dev/null && {cont_cli}-compose logs",
+                f"cd /opt/njorddeploy 2>/dev/null && {cont_cli}-compose ps",
+                f"{cont_cli} logs njorddeploy-web-notepad 2>&1",
+            ]
+            for dcmd in diag_cmds:
+                _, dout = ssh_mgr.execute_command(
+                    dcmd, lambda x: None, check_exit_code=False
+                )
+                if dout and dout.strip():
+                    results["details"] += f"\n--- Output of '{dcmd}' ---\n{dout}"
+                    logger.warning(f"Remote diagnostic '{dcmd}':\n{dout}")
 
             # Inspect container config to get the actual version
             cmd_inspect = (
-                f"docker inspect {matched_container} --format '{{{{json .Config}}}}'"
+                f"{cont_cli} inspect {matched_container} "
+                f"'--format' '{{{{json .Config}}}}'"
             )
             inspect_exit, inspect_out = ssh_mgr.execute_command(
                 cmd_inspect,
@@ -4547,8 +5279,422 @@ def send_signal_message(message: str) -> None:
         logger.error(f"Error sending Signal message: {e}")
 
 
+def run_environment_tests(
+    proxmox_client,
+    node: str,
+    mode: str,
+    engine: str,
+    template_id: int,
+    vm_user: str,
+    vm_pass: str,
+    target_components: List[Dict[str, Any]],
+    comp_mgr: ComponentManager,
+    setup_output_dir: Path,
+    ssh_public_key: str,
+) -> List[Dict[str, Any]]:
+    """Runs test cycle on a specific (mode, engine) environment."""
+    is_lxc = mode == "lxc"
+    env_results: List[Dict[str, Any]] = []
+
+    logger.info("==================================================")
+    logger.info(f"Target Environment: {mode.upper()} | Engine: {engine.upper()}")
+    logger.info(f"Testing {len(target_components)} components...")
+    logger.info("==================================================")
+
+    shared_lxc_vmid: int | None = None
+    shared_lxc_ip: str | None = None
+
+    if is_lxc:
+        logger.info(
+            f"LXC mode: provisioning a shared container for {engine.upper()} tests."
+        )
+        try:
+            shared_lxc_vmid = proxmox_client.get_next_vmid()
+            logger.info(
+                f"Creating shared LXC container {shared_lxc_vmid} on node '{node}'..."
+            )
+            ostemplate = find_suitable_lxc_template(proxmox_client, node)
+            logger.info(f"Using template: {ostemplate}")
+
+            net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
+            create_data = {
+                "vmid": shared_lxc_vmid,
+                "ostemplate": ostemplate,
+                "cores": 4,
+                "memory": 8192,
+                "swap": 512,
+                "rootfs": "local-lvm:40",
+                "net0": net_config,
+                "features": "nesting=1",
+                "unprivileged": 1,
+                "password": vm_pass,
+                "ssh-public-keys": ssh_public_key,
+                "start": 1,
+            }
+            create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+            upid = create_res.get("data")
+            if isinstance(upid, str):
+                wait_for_proxmox_task(proxmox_client, node, upid)
+
+            if shared_lxc_vmid is None:
+                raise RuntimeError("shared_lxc_vmid unexpectedly None")
+            shared_lxc_ip = wait_for_lxc_ip(proxmox_client, node, shared_lxc_vmid)
+            if shared_lxc_ip is None:
+                raise RuntimeError("shared_lxc_ip is None in LXC mode")
+            logger.info(f"Shared LXC container online at {shared_lxc_ip}.")
+            time.sleep(10)
+
+            # Install container engine once on the shared container
+            logger.info(f"Installing {engine.upper()} on shared LXC container...")
+            lxc_ssh = SSHManager(
+                hostname=shared_lxc_ip,
+                username="root",
+                password=vm_pass,
+                allow_auto_add=True,
+                load_system_keys=False,
+            )
+            connected = False
+            conn_msg = ""
+            for attempt in range(6):
+                connected, conn_msg = lxc_ssh.connect()
+                if connected:
+                    break
+                logger.info(
+                    f"SSH attempt {attempt + 1}/6 failed: {conn_msg}. Retrying in 5s..."
+                )
+                time.sleep(5)
+            if not connected:
+                raise RuntimeError(
+                    f"Failed to SSH into shared LXC container: {conn_msg}"
+                )
+
+            engine_helper = ContainerEngine(engine)
+            provision_cmds = engine_helper.get_provisioning_commands(username="root")
+            for cmd in provision_cmds:
+                lxc_ssh.execute_command(cmd, lambda msg: None)
+            lxc_ssh.close()
+            logger.info(f"{engine.upper()} installed on shared LXC container.")
+
+        except Exception as setup_err:
+            logger.error(f"Failed to provision shared LXC container: {setup_err}")
+            if shared_lxc_vmid:
+                try:
+                    stop_lxc(proxmox_client, node, shared_lxc_vmid)
+                    destroy_lxc(proxmox_client, node, shared_lxc_vmid)
+                except Exception:  # nosec B110
+                    pass
+            return env_results
+
+    try:
+        for comp in target_components:
+            comp_id = comp.get("id", "unknown")
+            logger.info("----------------------------------------")
+            logger.info(
+                f"Testing component: {comp_id} "
+                f"(Engine: {engine.upper()}, Mode: {mode.upper()})"
+            )
+            logger.info("----------------------------------------")
+
+            test_record = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "component_id": comp_id,
+                "mode": mode.upper(),
+                "engine": engine.upper(),
+                "status": "failed",
+                "vmid": shared_lxc_vmid if is_lxc else None,
+                "ip": shared_lxc_ip if is_lxc else None,
+                "deployment": "failed",
+                "running": False,
+                "http_ok": None,
+                "error_logs": False,
+                "error_message": "",
+            }
+
+            new_vmid: int | None = None
+            vm_ip: str | None = shared_lxc_ip if is_lxc else None
+
+            try:
+                if is_lxc:
+                    logger.info(
+                        f"Cleaning {engine.upper()} environment before testing "
+                        f"{comp_id}..."
+                    )
+                    if shared_lxc_ip is None:
+                        raise RuntimeError("shared_lxc_ip is None in LXC mode")
+                    cleanup_ssh = SSHManager(
+                        hostname=shared_lxc_ip,
+                        username="root",
+                        password=vm_pass,
+                        allow_auto_add=True,
+                        load_system_keys=False,
+                    )
+                    connected, conn_msg = cleanup_ssh.connect()
+                    if not connected:
+                        raise RuntimeError(
+                            f"Cannot connect to shared LXC for cleanup: {conn_msg}"
+                        )
+                    clean_cli = "podman" if engine == "podman" else "docker"
+                    for cmd in [
+                        f"{clean_cli} ps -q | xargs -r {clean_cli} stop "
+                        "2>/dev/null || true",
+                        f"{clean_cli} ps -aq | xargs -r {clean_cli} rm -f "
+                        "2>/dev/null || true",
+                        f"{clean_cli} system prune -af --volumes 2>/dev/null || true",
+                        (
+                            f"{clean_cli} network inspect njorddeploy_net "
+                            f">/dev/null 2>&1 || "
+                            f"{clean_cli} network create njorddeploy_net"
+                        ),
+                    ]:
+                        cleanup_ssh.execute_command(cmd, lambda msg: None)
+                    cleanup_ssh.close()
+                    logger.info(f"{engine.upper()} environment clean.")
+
+                else:
+                    # VM mode: clone fresh VM
+                    vmid_val = proxmox_client.get_next_vmid()
+                    if vmid_val is None:
+                        raise RuntimeError("Failed to allocate new VMID from Proxmox.")
+                    new_vmid = vmid_val
+                    test_record["vmid"] = new_vmid
+                    logger.info(
+                        f"Cloning master template VMID {template_id} to {new_vmid}..."
+                    )
+                    try:
+                        clone_res = proxmox_client.clone_vm(
+                            node=node,
+                            vmid=template_id,
+                            newid=new_vmid,
+                            name=f"pish-test-{comp_id}",
+                            full=False,
+                        )
+                        upid = clone_res.get("data")
+                        if isinstance(upid, str):
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+                    except Exception as clone_err:
+                        if "Linked clone feature is not supported" in str(clone_err):
+                            logger.warning(
+                                "Linked clone unsupported, full clone..."
+                            )
+                            clone_res = proxmox_client.clone_vm(
+                                node=node,
+                                vmid=template_id,
+                                newid=new_vmid,
+                                name=f"pish-test-{comp_id}",
+                                full=True,
+                            )
+                            upid = clone_res.get("data")
+                            if isinstance(upid, str):
+                                wait_for_proxmox_task(proxmox_client, node, upid)
+                        else:
+                            raise
+
+                    import urllib.parse
+                    proxmox_client.configure_vm(
+                        node=node,
+                        vmid=new_vmid,
+                        config_data={
+                            "ciuser": vm_user,
+                            "cipassword": vm_pass,
+                            "sshkeys": urllib.parse.quote(ssh_public_key),
+                            "ipconfig0": "ip=dhcp",
+                            "agent": "enabled=1",
+                            "ide2": "local-lvm:cloudinit",
+                            "net0": "virtio,bridge=vmbr0,firewall=0",
+                        },
+                    )
+                    proxmox_client.start_vm(node=node, vmid=new_vmid)
+                    vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
+                    if not vm_ip:
+                        raise TimeoutError(
+                            "Unable to retrieve cloned VM IP address."
+                        )
+                    test_record["vmid"] = new_vmid
+                    test_record["ip"] = vm_ip
+                    time.sleep(10)
+
+                # Generate deployment package locally
+                logger.info(f"Generating deployment configurations for {comp_id}...")
+                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
+                setup_mgr = SetupManager(
+                    component_manager=comp_mgr.reader, output_dir=comp_output_dir
+                )
+                setup_mgr.initialize_environment()
+
+                all_components_data = comp_mgr.get_all_components()
+                comp_map = {c.get("id"): c for c in all_components_data if c.get("id")}
+                dependencies = comp.get("depends_on", [])
+                all_selected_ids = [comp_id]
+                for dep_id in dependencies:
+                    if dep_id in comp_map and dep_id not in all_selected_ids:
+                        all_selected_ids.append(dep_id)
+
+                all_selected_data = [
+                    comp_map[cid] for cid in all_selected_ids if cid in comp_map
+                ]
+
+                user_vars = {}
+                for cid in all_selected_ids:
+                    variables_list = comp_mgr.reader.get_component_variables(cid)
+                    for var in variables_list:
+                        var_name = var.get("id") or var.get("name")
+                        if var_name:
+                            user_vars[var_name] = var.get("default")
+                user_vars["PISelfhosting_HOST_IP"] = vm_ip
+                user_vars["CONTAINER_ENGINE"] = engine
+
+                comp_mgr.generate_deployment_artifacts(
+                    selected_components_data=all_selected_data,
+                    global_vars=user_vars,
+                    output_path=comp_output_dir,
+                )
+
+                # Deploy via Ansible
+                logger.info(
+                    f"Executing Ansible deployment to {vm_ip} ({engine.upper()})..."
+                )
+                ssh_user = "root" if is_lxc else vm_user
+                deploy_mgr = DeploymentManager(component_manager=comp_mgr)
+                run_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                task_id = f"test-{comp_id}-{run_vmid}"
+                tasks_dict = {task_id: {"logs": [], "status": "pending"}}
+
+                deploy_mgr.start_deployment(
+                    task_id=task_id,
+                    tasks=tasks_dict,
+                    output_path=str(comp_output_dir),
+                    devices=[
+                        {
+                            "ip": vm_ip,
+                            "username": ssh_user,
+                            "password": vm_pass,
+                            "container_engine": engine,
+                        }
+                    ],
+                    selected_components_data=[comp],
+                    global_vars=user_vars,
+                )
+
+                task_outcome: Dict[str, Any] = tasks_dict.get(task_id, {})
+                if task_outcome.get("status") == "completed":
+                    test_record["deployment"] = "success"
+                    logger.info("Ansible deployment completed successfully.")
+                else:
+                    test_record["deployment"] = "failed"
+                    errors_list: List[Dict[str, Any]] = task_outcome.get("errors", [])
+                    first_error: Dict[str, Any] = next(iter(errors_list), {})
+                    err_details = first_error.get("details", "Ansible execution error")
+                    raise RuntimeError(f"Deployment failed: {err_details}")
+
+                # Health verification
+                logger.info("Running service health verification probe...")
+                target_variables = comp_mgr.reader.get_component_variables(comp_id)
+                health = verify_service_health(
+                    vm_ip=vm_ip,
+                    vm_user=ssh_user,
+                    vm_pass=vm_pass,
+                    _component_id=comp_id,
+                    component_details=comp,
+                    variables_list=target_variables,
+                    engine=engine,
+                )
+
+                test_record["running"] = health["running"]
+                test_record["http_ok"] = health["http_ok"]
+                test_record["error_logs"] = health["logs_error"]
+
+                is_success = health["running"] and (
+                    health["http_ok"] is True or health["http_ok"] is None
+                )
+
+                if is_success:
+                    test_record["status"] = "success"
+                    logger.info(f"✅ Component {comp_id} verified successfully!")
+                    detected_version = health.get("detected_version")
+                    version_to_record = (
+                        detected_version
+                        if (
+                            detected_version
+                            and detected_version.lower()
+                            not in ("none", "latest", "unknown")
+                        )
+                        else comp.get("component_version", "latest")
+                    )
+                    notes = f"Tested successfully on Proxmox {mode.upper()} ({engine})."
+                    update_template_status(
+                        templates_path=project_root / "component_templates",
+                        component_id=comp_id,
+                        tested_version=version_to_record,
+                        platform_notes=notes,
+                    )
+                    logger.info(
+                        f"Updated template status headers for {comp_id} to 'tested' "
+                        f"(version: {version_to_record}, notes: {notes})"
+                    )
+                else:
+                    test_record["status"] = "failed"
+                    test_record["error_message"] = health["details"]
+                    logger.error(
+                        f"❌ Component verification failed: {health['details']}"
+                    )
+
+            except Exception as ex:
+                logger.error(f"❌ Error during test of {comp_id}: {ex}")
+                test_record["status"] = "failed"
+                test_record["error_message"] = str(ex)
+            finally:
+                if not is_lxc and new_vmid:
+                    logger.info(f"Stopping and destroying VM {new_vmid}...")
+                    try:
+                        stop_res = proxmox_client.stop_vm(node, new_vmid)
+                        upid = stop_res.get("data")
+                        if isinstance(upid, str):
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+                        destroy_res = proxmox_client.destroy_vm(node, new_vmid)
+                        upid = destroy_res.get("data")
+                        if isinstance(upid, str):
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+                        logger.info(f"VM {new_vmid} destroyed.")
+                    except Exception as teardown_err:
+                        logger.error(
+                            f"Failed to destroy VM {new_vmid}: {teardown_err}"
+                        )
+
+                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
+                if folder_vmid:
+                    comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
+                    if comp_output_dir.exists():
+                        import shutil
+
+                        shutil.rmtree(comp_output_dir)
+
+            env_results.append(test_record)
+
+    finally:
+        if is_lxc and shared_lxc_vmid:
+            logger.info(f"Destroying shared LXC container {shared_lxc_vmid}...")
+            try:
+                stop_res = stop_lxc(proxmox_client, node, shared_lxc_vmid)
+                upid = stop_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(proxmox_client, node, upid)
+                destroy_res = destroy_lxc(proxmox_client, node, shared_lxc_vmid)
+                upid = destroy_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(proxmox_client, node, upid)
+                logger.info(f"Shared LXC container {shared_lxc_vmid} destroyed.")
+            except Exception as teardown_err:
+                logger.error(
+                    f"Failed to destroy shared LXC container "
+                    f"{shared_lxc_vmid}: {teardown_err}"
+                )
+
+    return env_results
+
+
 def run_proxmox_tests(cli_args) -> int:
-    """Orchestrates cloning, deploying, verifying, and tearing down VMs."""
+    """Orchestrates matrix environments, deploying, and generating reports."""
     load_dotenv()
     proxmox_client = setup_proxmox_client()
 
@@ -4606,11 +5752,7 @@ def run_proxmox_tests(cli_args) -> int:
         logger.info("No components matching criteria to test.")
         return 0
 
-    logger.info(f"Starting test run for {len(target_components)} components...")
-    results_summary = []
-    failed_count = 0
-
-    # Ensure a local SSH key is generated to copy to the VMs
+    # Ensure a local SSH key is generated to copy to the VMs/containers
     dummy_mgr = SSHManager(
         hostname="localhost", username="test", password="key"
     )  # nosec B106
@@ -4618,411 +5760,58 @@ def run_proxmox_tests(cli_args) -> int:
     ssh_key_obj = dummy_mgr._get_or_create_key()
     ssh_public_key = f"{ssh_key_obj.get_name()} {ssh_key_obj.get_base64()}"
 
-    is_lxc = getattr(cli_args, "mode", "vm") == "lxc"
+    # Determine execution matrix
+    engine_arg = (
+        getattr(cli_args, "engine", None)
+        or os.getenv("CONTAINER_ENGINE")
+        or "docker"
+    ).strip().lower()
+    engines = ["docker", "podman"] if engine_arg in ("both", "all") else [engine_arg]
+    if not engines or any(e not in ["docker", "podman"] for e in engines):
+        engines = ["docker"]
 
-    # --- LXC shared container setup (provisioned once, reused for all components) ---
-    shared_lxc_vmid: int | None = None
-    shared_lxc_ip: str | None = None
+    mode_arg = (getattr(cli_args, "mode", "lxc") or "lxc").strip().lower()
+    modes = ["lxc", "vm"] if mode_arg in ("both", "all") else [mode_arg]
+    if not modes or any(m not in ["lxc", "vm"] for m in modes):
+        modes = ["lxc"]
 
-    if is_lxc:
-        logger.info("LXC mode: provisioning a shared container for all components.")
-        try:
-            shared_lxc_vmid = proxmox_client.get_next_vmid()
+    matrix = [(m, e) for m in modes for e in engines]
+
+    logger.info("==================================================")
+    if len(matrix) > 1:
+        logger.info(f"STARTING MATRIX TEST RUN: {len(matrix)} ENVIRONMENTS")
+        for idx, (m, e) in enumerate(matrix, 1):
             logger.info(
-                f"Creating shared LXC container {shared_lxc_vmid} "
-                f"on node '{node}'..."
+                f"  [{idx}/{len(matrix)}] Target: {m.upper()} | Engine: {e.upper()}"
             )
-            ostemplate = find_suitable_lxc_template(proxmox_client, node)
-            logger.info(f"Using template: {ostemplate}")
+        logger.info(
+            f"Total test executions: {len(matrix) * len(target_components)}"
+        )
+    else:
+        m, e = matrix[0]
+        logger.info(f"STARTING TEST RUN: Mode={m.upper()} | Engine={e.upper()}")
+        logger.info(f"Total components to test: {len(target_components)}")
+    logger.info("==================================================")
 
-            net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
-            create_data = {
-                "vmid": shared_lxc_vmid,
-                "ostemplate": ostemplate,
-                "cores": 4,
-                "memory": 8192,
-                "swap": 512,
-                "rootfs": "local-lvm:40",
-                "net0": net_config,
-                "features": "nesting=1",
-                "unprivileged": 1,
-                "password": vm_pass,
-                "ssh-public-keys": ssh_public_key,
-                "start": 1,
-            }
-            create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
-            upid = create_res.get("data")
-            if isinstance(upid, str):
-                wait_for_proxmox_task(proxmox_client, node, upid)
+    results_summary: List[Dict[str, Any]] = []
 
-            if shared_lxc_vmid is None:
-                raise RuntimeError("shared_lxc_vmid unexpectedly None")
-            shared_lxc_ip = wait_for_lxc_ip(proxmox_client, node, shared_lxc_vmid)
-            if shared_lxc_ip is None:
-                raise RuntimeError("shared_lxc_ip is None in LXC mode")
-            logger.info(f"Shared LXC container online at {shared_lxc_ip}.")
-            time.sleep(10)
+    for mode_item, engine_item in matrix:
+        env_results = run_environment_tests(
+            proxmox_client=proxmox_client,
+            node=node,
+            mode=mode_item,
+            engine=engine_item,
+            template_id=template_id,
+            vm_user=vm_user,
+            vm_pass=vm_pass,
+            target_components=target_components,
+            comp_mgr=comp_mgr,
+            setup_output_dir=setup_output_dir,
+            ssh_public_key=ssh_public_key,
+        )
+        results_summary.extend(env_results)
 
-            # Install Docker once on the shared container
-            logger.info("Installing Docker on shared LXC container...")
-            if shared_lxc_ip is None:
-                raise RuntimeError("shared_lxc_ip unexpectedly None")
-            lxc_ssh = SSHManager(
-                hostname=shared_lxc_ip,
-                username="root",
-                password=vm_pass,
-                allow_auto_add=True,
-                load_system_keys=False,
-            )
-            connected = False
-            conn_msg = ""
-            for attempt in range(6):
-                connected, conn_msg = lxc_ssh.connect()
-                if connected:
-                    break
-                logger.info(
-                    f"SSH attempt {attempt + 1}/6 failed: {conn_msg}. "
-                    "Retrying in 5 seconds..."
-                )
-                time.sleep(5)
-            if not connected:
-                raise RuntimeError(
-                    f"Failed to SSH into shared LXC container: {conn_msg}"
-                )
-
-            for cmd in [
-                "apt-get update",
-                "apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                "sh get-docker.sh",
-                "systemctl enable --now docker",
-            ]:
-                lxc_ssh.execute_command(cmd, lambda msg: None)
-            lxc_ssh.close()
-            logger.info("Docker installed on shared LXC container.")
-
-        except Exception as setup_err:
-            logger.error(f"Failed to provision shared LXC container: {setup_err}")
-            # Cleanup if partially created
-            if shared_lxc_vmid:
-                # noinspection PyBroadException
-                try:
-                    stop_lxc(proxmox_client, node, shared_lxc_vmid)
-                    destroy_lxc(proxmox_client, node, shared_lxc_vmid)
-                except Exception:  # nosec B110
-                    pass
-            return 1
-
-    try:
-        for comp in target_components:
-            comp_id = comp.get("id", "unknown")
-            logger.info("----------------------------------------")
-            logger.info(f"Testing component: {comp_id}")
-            logger.info("----------------------------------------")
-
-            test_record = {
-                "component_id": comp_id,
-                "status": "failed",
-                "vmid": shared_lxc_vmid if is_lxc else None,
-                "ip": shared_lxc_ip if is_lxc else None,
-                "deployment": "failed",
-                "running": False,
-                "http_ok": None,
-                "error_logs": False,
-                "error_message": "",
-            }
-
-            new_vmid: int | None = None
-            vm_ip: str | None = shared_lxc_ip if is_lxc else None
-
-            try:
-                if is_lxc:
-                    # Clean Docker state between components so each test
-                    # starts from a fresh environment without leftover
-                    # containers, volumes, images, or networks.
-                    logger.info(
-                        f"Cleaning Docker environment before testing {comp_id}..."
-                    )
-                    if shared_lxc_ip is None:
-                        raise RuntimeError("shared_lxc_ip is None in LXC mode")
-                    cleanup_ssh = SSHManager(
-                        hostname=shared_lxc_ip,
-                        username="root",
-                        password=vm_pass,
-                        allow_auto_add=True,
-                        load_system_keys=False,
-                    )
-                    connected, conn_msg = cleanup_ssh.connect()
-                    if not connected:
-                        raise RuntimeError(
-                            f"Cannot connect to shared LXC for cleanup: {conn_msg}"
-                        )
-                    for cmd in [
-                        # Step 1: stop all running containers gracefully
-                        "docker ps -q | xargs -r docker stop 2>/dev/null || true",
-                        # Step 2: force-remove all containers (running or stopped)
-                        "docker ps -aq | xargs -r docker rm -f 2>/dev/null || true",
-                        # Step 3: prune all unused images, volumes and networks
-                        "docker system prune -af --volumes",
-                        # Step 4: recreate the shared bridge network
-                        (
-                            "docker network inspect njorddeploy_net >/dev/null 2>&1 "
-                            "|| docker network create njorddeploy_net"
-                        ),
-                    ]:
-                        cleanup_ssh.execute_command(cmd, lambda msg: None)
-                    cleanup_ssh.close()
-                    logger.info("Docker environment clean.")
-
-                else:
-                    # VM mode: clone a fresh VM per component (unchanged)
-                    vmid_val = proxmox_client.get_next_vmid()
-                    if vmid_val is None:
-                        raise RuntimeError("Failed to allocate new VMID from Proxmox.")
-                    new_vmid = vmid_val
-                    if new_vmid is None:
-                        raise RuntimeError("new_vmid unexpectedly None")
-                    test_record["vmid"] = new_vmid
-                    logger.info(
-                        f"Cloning master template VMID {template_id} "
-                        f"to {new_vmid}..."
-                    )
-                    try:
-                        clone_res = proxmox_client.clone_vm(
-                            node=node,
-                            vmid=template_id,
-                            newid=new_vmid,
-                            name=f"pish-test-{comp_id}",
-                            full=False,
-                        )
-                        upid = clone_res.get("data")
-                        if isinstance(upid, str):
-                            wait_for_proxmox_task(proxmox_client, node, upid)
-                    except Exception as clone_err:
-                        if "Linked clone feature is not supported" in str(clone_err):
-                            logger.warning(
-                                "Linked clone not supported, "
-                                "falling back to full clone..."
-                            )
-                            clone_res = proxmox_client.clone_vm(
-                                node=node,
-                                vmid=template_id,
-                                newid=new_vmid,
-                                name=f"pish-test-{comp_id}",
-                                full=True,
-                            )
-                            upid = clone_res.get("data")
-                            if isinstance(upid, str):
-                                wait_for_proxmox_task(proxmox_client, node, upid)
-                        else:
-                            raise
-
-                    import urllib.parse
-
-                    logger.info(f"Configuring Cloud-Init for VMID {new_vmid}...")
-                    proxmox_client.configure_vm(
-                        node=node,
-                        vmid=new_vmid,
-                        config_data={
-                            "ciuser": vm_user,
-                            "cipassword": vm_pass,
-                            "sshkeys": urllib.parse.quote(ssh_public_key),
-                            "ipconfig0": "ip=dhcp",
-                            "agent": "enabled=1",
-                            "ide2": "local-lvm:cloudinit",
-                            "net0": "virtio,bridge=vmbr0,firewall=0",
-                        },
-                    )
-                    logger.info(f"Starting VMID {new_vmid}...")
-                    proxmox_client.start_vm(node=node, vmid=new_vmid)
-
-                    vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
-                    if not vm_ip:
-                        raise TimeoutError(
-                            "Unable to retrieve IP address for cloned VM."
-                        )
-                    test_record["vmid"] = new_vmid
-                    test_record["ip"] = vm_ip
-                    time.sleep(10)
-
-                # 5. Build configuration package locally
-                logger.info(f"Generating deployment configurations for {comp_id}...")
-                # Use the VMID as a unique folder name; for LXC that is the
-                # shared container's VMID, which is stable across all iterations.
-                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
-                comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
-                setup_mgr = SetupManager(
-                    component_manager=comp_mgr.reader, output_dir=comp_output_dir
-                )
-                setup_mgr.initialize_environment()
-
-                all_components = comp_mgr.get_all_components()
-                comp_map = {c.get("id"): c for c in all_components if c.get("id")}
-                dependencies = comp.get("depends_on", [])
-                all_selected_ids = [comp_id]
-                for dep_id in dependencies:
-                    if dep_id in comp_map and dep_id not in all_selected_ids:
-                        all_selected_ids.append(dep_id)
-
-                all_selected_data = [
-                    comp_map[cid] for cid in all_selected_ids if cid in comp_map
-                ]
-
-                target_variables = comp_mgr.reader.get_component_variables(comp_id)
-                user_vars = {}
-                for cid in all_selected_ids:
-                    variables_list = comp_mgr.reader.get_component_variables(cid)
-                    for var in variables_list:
-                        var_name = var.get("id") or var.get("name")
-                        if var_name:
-                            user_vars[var_name] = var.get("default")
-
-                user_vars["PISelfhosting_HOST_IP"] = vm_ip
-
-                success, errors = setup_mgr.prepare_deployment_package(
-                    selected_components=all_selected_ids,
-                    user_variables=user_vars,
-                    managed_devices=[{"ip": vm_ip}],
-                )
-                if not success:
-                    errors_summary = ", ".join([err.get("summary") for err in errors])
-                    raise RuntimeError(
-                        f"Configuration packaging failed: {errors_summary}"
-                    )
-
-                comp_mgr.generate_deployment_artifacts(
-                    selected_components_data=all_selected_data,
-                    global_vars=user_vars,
-                    output_path=comp_output_dir,
-                )
-
-                # 6. Deploy via DeploymentManager (Ansible)
-                logger.info(f"Executing Ansible deployment to {vm_ip}...")
-                deploy_mgr = DeploymentManager(component_manager=comp_mgr)
-                run_vmid = shared_lxc_vmid if is_lxc else new_vmid
-                task_id = f"test-{comp_id}-{run_vmid}"
-                tasks_dict = {task_id: {"logs": [], "status": "pending"}}
-
-                deploy_mgr.start_deployment(
-                    task_id=task_id,
-                    tasks=tasks_dict,
-                    output_path=str(comp_output_dir),
-                    devices=[
-                        {
-                            "ip": vm_ip,
-                            "username": "root" if is_lxc else vm_user,
-                            "password": vm_pass,
-                        }
-                    ],
-                    selected_components_data=[comp],
-                    global_vars=user_vars,
-                )
-
-                task_outcome: Dict[str, Any] = tasks_dict.get(task_id, {})
-                if task_outcome.get("status") == "completed":
-                    test_record["deployment"] = "success"
-                    logger.info("Ansible deployment completed successfully.")
-                else:
-                    test_record["deployment"] = "failed"
-                    errors_list: List[Dict[str, Any]] = task_outcome.get("errors", [])
-                    first_error: Dict[str, Any] = next(iter(errors_list), {})
-                    err_details = first_error.get("details", "Ansible execution error")
-                    raise RuntimeError(f"Deployment failed: {err_details}")
-
-                # 7. Run Health Verification Probe
-                logger.info("Running service health verification probe...")
-                if vm_ip is None:
-                    raise RuntimeError("vm_ip unexpectedly None")
-                health = verify_service_health(
-                    vm_ip=vm_ip,
-                    vm_user="root" if is_lxc else vm_user,
-                    vm_pass=vm_pass,
-                    _component_id=comp_id,
-                    component_details=comp,
-                    variables_list=target_variables,
-                )
-
-                test_record["running"] = health["running"]
-                test_record["http_ok"] = health["http_ok"]
-                test_record["error_logs"] = health["logs_error"]
-
-                if health["running"] and (
-                    health["http_ok"] is None or health["http_ok"] is True
-                ):
-                    test_record["status"] = "success"
-                    logger.info(f"✅ Component {comp_id} verified successfully!")
-                    tested_ver = health.get("detected_version") or comp.get(
-                        "component_version", "latest"
-                    )
-                    if is_lxc:
-                        notes = "Tested successfully on Proxmox LXC."
-                    else:
-                        notes = (
-                            "Tested successfully on Proxmox VM "
-                            f"(template {template_id})."
-                        )
-                    update_template_status(templates_path, comp_id, tested_ver, notes)
-                else:
-                    test_record["status"] = "failed"
-                    test_record["error_message"] = health["details"]
-                    logger.error(
-                        "❌ Component verification failed: " f"{health['details']}"
-                    )
-                    failed_count += 1
-
-            except Exception as ex:
-                logger.error(f"❌ Error during test of {comp_id}: {ex}")
-                test_record["status"] = "failed"
-                test_record["error_message"] = str(ex)
-                failed_count += 1
-            finally:
-                # In VM mode: destroy the per-component clone after each test.
-                # In LXC mode: the shared container is destroyed after the loop.
-                if not is_lxc and new_vmid:
-                    logger.info(f"Stopping and destroying VM {new_vmid}...")
-                    try:
-                        stop_res = proxmox_client.stop_vm(node, new_vmid)
-                        upid = stop_res.get("data")
-                        if isinstance(upid, str):
-                            wait_for_proxmox_task(proxmox_client, node, upid)
-                        destroy_res = proxmox_client.destroy_vm(node, new_vmid)
-                        upid = destroy_res.get("data")
-                        if isinstance(upid, str):
-                            wait_for_proxmox_task(proxmox_client, node, upid)
-                        logger.info(f"VM {new_vmid} destroyed.")
-                    except Exception as teardown_err:
-                        logger.error(f"Failed to destroy VM {new_vmid}: {teardown_err}")
-
-                # Cleanup local output folder for this component
-                folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
-                if folder_vmid:
-                    comp_output_dir = setup_output_dir / str(folder_vmid) / comp_id
-                    if comp_output_dir.exists():
-                        import shutil
-
-                        shutil.rmtree(comp_output_dir)
-
-            results_summary.append(test_record)
-
-    finally:
-        # Destroy the shared LXC container after all components have been tested
-        if is_lxc and shared_lxc_vmid:
-            logger.info(f"Destroying shared LXC container {shared_lxc_vmid}...")
-            try:
-                stop_res = stop_lxc(proxmox_client, node, shared_lxc_vmid)
-                upid = stop_res.get("data")
-                if isinstance(upid, str):
-                    wait_for_proxmox_task(proxmox_client, node, upid)
-                destroy_res = destroy_lxc(proxmox_client, node, shared_lxc_vmid)
-                upid = destroy_res.get("data")
-                if isinstance(upid, str):
-                    wait_for_proxmox_task(proxmox_client, node, upid)
-                logger.info(f"Shared LXC container {shared_lxc_vmid} destroyed.")
-            except Exception as teardown_err:
-                logger.error(
-                    f"Failed to destroy shared LXC container "
-                    f"{shared_lxc_vmid}: {teardown_err}"
-                )
+    failed_count = sum(1 for r in results_summary if r.get("status") != "success")
 
     # Ensure output dirs exist
     docs_dir = project_root / "docs"
@@ -5030,12 +5819,23 @@ def run_proxmox_tests(cli_args) -> int:
     tests_dir = project_root / "tests"
     tests_dir.mkdir(exist_ok=True)
 
-    # Save JSON results
+    # Save cumulative JSON results history
     json_path = tests_dir / "proxmox_results.json"
+    history: List[Dict[str, Any]] = []
+    if json_path.exists():
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, list):
+                    history = loaded
+        except Exception as read_ex:
+            logger.warning(f"Could not load existing test results: {read_ex}")
+
+    history.extend(results_summary)
     with open(json_path, "w", encoding="utf-8") as f:
-        json.dump(results_summary, f, indent=4)
+        json.dump(history, f, indent=4)
         f.write("\n")
-    logger.info(f"Saved raw test results to: {json_path}")
+    logger.info(f"Saved test results history ({len(history)} entries) to: {json_path}")
 
     # Generate Markdown Report
     timestamp_fn = time.strftime("%Y%m%d_%H%M%S")
@@ -5047,7 +5847,7 @@ def run_proxmox_tests(cli_args) -> int:
             comp_str = "_".join(comp_list)
         title_suffix = cli_args.components
         report_filename = f"PROXMOX_TESTS_{comp_str}_{timestamp_fn}.md"
-    elif cli_args.untested_ui:
+    elif getattr(cli_args, "untested_ui", False):
         title_suffix = "untested_ui"
         report_filename = f"PROXMOX_TESTS_untested_ui_{timestamp_fn}.md"
     else:
@@ -5055,15 +5855,28 @@ def run_proxmox_tests(cli_args) -> int:
         report_filename = f"PROXMOX_TESTS_all_{timestamp_fn}.md"
 
     report_path = docs_dir / report_filename
-    write_markdown_report(report_path, results_summary, failed_count, title_suffix)
+    matrix_label = (
+        f"MATRIX ({len(matrix)} envs)"
+        if len(matrix) > 1
+        else f"{matrix[0][1].upper()} ({matrix[0][0].upper()})"
+    )
+    write_markdown_report(
+        report_path,
+        results_summary,
+        failed_count,
+        title_suffix,
+        engine=matrix_label,
+    )
     logger.info(f"Saved human-readable markdown report to: {report_path}")
 
     # Send Signal Notification
     overall_status = "✅ ALL SUCCESSFUL" if failed_count == 0 else "❌ FAILED"
     passed_count = len(results_summary) - failed_count
 
+    envs_desc = ", ".join(f"{m.upper()}+{e.upper()}" for m, e in matrix)
     signal_msg = (
         f"🚢 NjordDeploy Proxmox Test Report\n"
+        f"Environments: {envs_desc}\n"
         f"Status: {overall_status}\n"
         f"Total tested: {len(results_summary)}\n"
         f"Passed: {passed_count}\n"
@@ -5071,19 +5884,20 @@ def run_proxmox_tests(cli_args) -> int:
     )
     if failed_count > 0:
         failed_list = [
-            r["component_id"] for r in results_summary if r["status"] != "success"
+            f"{r['component_id']} ({r.get('mode', 'LXC')}/{r.get('engine', 'DOCKER')})"
+            for r in results_summary
+            if r["status"] != "success"
         ]
         signal_msg += f"\nFailed: {', '.join(failed_list)}"
 
     send_signal_message(signal_msg)
 
-    # Maintain copy at PROXMOX_TESTS.md for easy quick viewing
+    # Maintain copy at PROXMOX_TESTS.md
     latest_report_path = docs_dir / "PROXMOX_TESTS.md"
     try:
         if latest_report_path.exists():
             latest_report_path.unlink()
         import shutil
-
         shutil.copy2(report_path, latest_report_path)
     except Exception as sym_err:
         logger.warning(f"Could not copy latest report to PROXMOX_TESTS.md: {sym_err}")
@@ -5096,6 +5910,7 @@ def write_markdown_report(
     results: List[Dict[str, Any]],
     failed_count: int,
     title_suffix: str = "",
+    engine: str = "docker",
 ):
     """Writes a clean, formatted Markdown report of the test outcomes."""
     total_count = len(results)
@@ -5110,6 +5925,7 @@ def write_markdown_report(
         "",
         f"**Run Timestamp:** {timestamp}",
         (
+            f"**Execution Profile:** `{engine}` | "
             f"**Total Tested:** {total_count} | "
             f"**Passed:** {total_count - failed_count} | "
             f"**Failed:** {failed_count}"
@@ -5118,22 +5934,29 @@ def write_markdown_report(
         "## Results Table",
         "",
         (
-            "| Component ID | VM ID | IP Address | "
+            "| Date / Time | Component ID | Target | Engine | VM ID | IP Address | "
             "Deployment | Containers | HTTP | Status |"
         ),
-        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+        (
+            "| :--- | :--- | :--- | :--- | :--- | :--- | "
+            ":--- | :--- | :--- | :--- |"
+        ),
     ]
 
     for record in results:
         status_emoji = "✅ PASS" if record["status"] == "success" else "❌ FAIL"
+        rec_mode = record.get("mode", "LXC").upper()
+        rec_engine = record.get("engine", engine).upper()
+        rec_time = record.get("timestamp") or timestamp
         http_val = (
             "N/A"
             if record["http_ok"] is None
             else ("OK" if record["http_ok"] else "FAIL")
         )
         md_lines.append(
-            f"| `{record['component_id']}` | {record['vmid']} | "
-            f"{record['ip'] or 'N/A'} | {record['deployment']} | "
+            f"| {rec_time} | `{record['component_id']}` | `{rec_mode}` | "
+            f"`{rec_engine}` | {record['vmid']} | {record['ip'] or 'N/A'} | "
+            f"{record['deployment']} | "
             f"{'Running' if record['running'] else 'Stopped'} | "
             f"{http_val} | **{status_emoji}** |"
         )
@@ -5146,7 +5969,13 @@ def write_markdown_report(
     for record in results:
         if record["status"] != "success":
             has_failures = True
-            md_lines.append(f"### Component: `{record['component_id']}`")
+            rec_mode = record.get("mode", "LXC").upper()
+            rec_engine = record.get("engine", engine).upper()
+            md_lines.append(
+                f"### Component: `{record['component_id']}` ({rec_mode} + {rec_engine})"
+            )
+            md_lines.append(f"- **Target Mode:** `{rec_mode}`")
+            md_lines.append(f"- **Engine:** `{rec_engine}`")
             md_lines.append(f"- **VMID:** {record['vmid']}")
             md_lines.append(f"- **IP:** {record['ip'] or 'N/A'}")
             md_lines.append(f"- **Deployment Outcome:** {record['deployment']}")
@@ -5158,7 +5987,7 @@ def write_markdown_report(
 
     if not has_failures:
         md_lines.append(
-            "All components completed execution and " "verification successfully!"
+            "All components completed execution and verification successfully!"
         )
 
     with open(report_path, "w", encoding="utf-8") as f:
@@ -5189,9 +6018,19 @@ if __name__ == "__main__":
     parser.add_argument(
         "--mode",
         type=str,
-        choices=["vm", "lxc"],
-        default="vm",
-        help="Testing mode: 'vm' or 'lxc' (default: vm)",
+        choices=["vm", "lxc", "both", "all"],
+        default="lxc",
+        help="Testing mode: 'lxc', 'vm', or 'both'/'all' (default: lxc)",
+    )
+    parser.add_argument(
+        "--engine",
+        type=str,
+        choices=["docker", "podman", "both", "all"],
+        default=os.getenv("CONTAINER_ENGINE", "docker"),
+        help=(
+            "Container engine: 'docker', 'podman', or 'both'/'all' "
+            "(default: docker)"
+        ),
     )
     parser.add_argument(
         "--untested-ui",
@@ -5440,6 +6279,1865 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+--- FILE: scripts/static/css/proxmox_gui.css ---
+/* scripts/static/css/proxmox_gui.css */
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-card: #1e293b;
+  --bg-card-hover: #273549;
+  --bg-selected: rgba(59, 130, 246, 0.15);
+  --border-color: #334155;
+  --border-focus: #3b82f6;
+  --border-selected: #3b82f6;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-blue: #3b82f6;
+  --accent-blue-hover: #2563eb;
+  --accent-green: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-red: #ef4444;
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --terminal-bg: #090d16;
+  --terminal-text: #e2e8f0;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.app-header {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-icon {
+  font-size: 1.75rem;
+}
+
+.logo-text h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+
+.logo-text span {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-idle {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.status-running {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: var(--accent-blue);
+  border: 1px solid var(--accent-blue);
+  animation: pulse-border 2s infinite;
+}
+
+.status-completed {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: var(--accent-green);
+  border: 1px solid var(--accent-green);
+}
+
+.status-failed {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: var(--accent-red);
+  border: 1px solid var(--accent-red);
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--accent-blue); }
+  50% { border-color: rgba(59, 130, 246, 0.4); }
+}
+
+/* Layout Container */
+.main-container {
+  max-width: 1400px;
+  margin: 1.5rem auto;
+  padding: 0 1.5rem;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Config Grid */
+.config-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.config-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.config-item label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.segmented-control {
+  display: flex;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.25rem;
+  gap: 0.25rem;
+}
+
+.segmented-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.45rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.segmented-btn:hover:not(.active) {
+  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.segmented-btn.active {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.segmented-btn.active.engine-podman {
+  background-color: var(--accent-amber);
+  color: #000000;
+}
+
+.segmented-btn.active.engine-both,
+.segmented-btn.active.mode-both {
+  background-color: #8b5cf6;
+  color: #ffffff;
+}
+
+.text-input {
+  width: 100%;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.text-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Component Selector Panel */
+.selector-panel {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.search-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .search-toolbar {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.search-box-wrapper {
+  position: relative;
+  flex: 1;
+  max-width: 500px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 2.25rem 0.6rem 2.4rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.search-clear-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  display: none;
+}
+
+.search-clear-btn:hover {
+  color: var(--text-primary);
+}
+
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-pill {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filter-pill:hover {
+  color: var(--text-primary);
+  border-color: var(--text-muted);
+}
+
+.filter-pill.active {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-focus);
+}
+
+/* Action Controls Bar */
+.action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 1rem;
+}
+
+.selection-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.selection-count-badge {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.batch-buttons {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Components Grid */
+.components-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.components-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.components-grid::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+  border-radius: 4px;
+}
+
+.components-grid::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+.component-card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  user-select: none;
+}
+
+.component-card:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--text-muted);
+}
+
+.component-card.selected {
+  background-color: var(--bg-selected);
+  border-color: var(--border-selected);
+}
+
+.component-checkbox {
+  margin-top: 0.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--accent-blue);
+  cursor: pointer;
+}
+
+.component-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.component-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.component-id {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.component-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  align-items: center;
+}
+
+.tag {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.tag-tested {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tag-untested {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.tag-ui {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.tag-category {
+  background-color: rgba(100, 116, 139, 0.2);
+  color: var(--text-secondary);
+}
+
+/* Execute Button & Controls */
+.run-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-blue-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  background-color: var(--accent-red);
+  color: #ffffff;
+  border: none;
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.15s ease;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+/* Live Terminal Section */
+.terminal-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.terminal-header {
+  background-color: #182234;
+  padding: 0.6rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.terminal-title {
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.terminal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-red { background-color: #ef4444; }
+.dot-yellow { background-color: #f59e0b; }
+.dot-green { background-color: #10b981; }
+
+.terminal-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.terminal-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.terminal-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-tertiary);
+}
+
+.terminal-body {
+  background-color: var(--terminal-bg);
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--terminal-text);
+  max-height: 350px;
+  min-height: 160px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.45;
+}
+
+.terminal-line {
+  min-height: 1.2em;
+}
+
+.terminal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.terminal-body::-webkit-scrollbar-track {
+  background: var(--terminal-bg);
+}
+
+.terminal-body::-webkit-scrollbar-thumb {
+  background: #2d3748;
+  border-radius: 4px;
+}
+
+/* Results Table */
+.results-table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.results-table th {
+  background-color: var(--bg-primary);
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.results-table td {
+  padding: 0.6rem 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.results-table tr:last-child td {
+  border-bottom: none;
+}
+
+.results-table tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Report Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.modal-backdrop.open {
+  display: flex;
+}
+
+.modal-content {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  max-width: 900px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.modal-close-btn:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.modal-body pre {
+  background-color: var(--terminal-bg);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  margin: 0.75rem 0;
+}
+
+/* Footer */
+.app-footer {
+  background-color: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  padding: 0.75rem 1.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: auto;
+}
+
+--- FILE: scripts/static/js/proxmox_gui.js ---
+/**
+ * scripts/static/js/proxmox_gui.js
+ * Interactive frontend logic for NjordDeploy Proxmox Component Test GUI.
+ */
+
+(() => {
+  "use strict";
+
+  // Application State
+  const state = {
+    components: [],
+    selectedIds: new Set(),
+    activeFilter: "all", // 'all' | 'untested' | 'tested' | 'ui'
+    searchQuery: "",
+    mode: "lxc", // 'lxc' | 'vm' | 'both'
+    engine: "docker", // 'docker' | 'podman' | 'both'
+    isRunning: false,
+    eventSource: null,
+    results: [],
+  };
+
+  // DOM Elements
+  const elements = {
+    // Config elements
+    modeLxcBtn: document.getElementById("mode-lxc-btn"),
+    modeVmBtn: document.getElementById("mode-vm-btn"),
+    modeBothBtn: document.getElementById("mode-both-btn"),
+    engineDockerBtn: document.getElementById("engine-docker-btn"),
+    enginePodmanBtn: document.getElementById("engine-podman-btn"),
+    engineBothBtn: document.getElementById("engine-both-btn"),
+    nodeInput: document.getElementById("node-input"),
+    templateIdInput: document.getElementById("template-id-input"),
+    templateIdWrapper: document.getElementById("template-id-wrapper"),
+
+    // Filter & Search elements
+    searchInput: document.getElementById("search-input"),
+    searchClearBtn: document.getElementById("search-clear-btn"),
+    filterPills: document.querySelectorAll(".filter-pill"),
+    componentsGrid: document.getElementById("components-grid"),
+
+    // Selection toolbar
+    selectionCountBadge: document.getElementById("selection-count-badge"),
+    selectAllFilteredBtn: document.getElementById("select-all-filtered-btn"),
+    deselectAllFilteredBtn: document.getElementById("deselect-all-filtered-btn"),
+    clearSelectionBtn: document.getElementById("clear-selection-btn"),
+
+    // Runner controls
+    startRunBtn: document.getElementById("start-run-btn"),
+    stopRunBtn: document.getElementById("stop-run-btn"),
+    startRunText: document.getElementById("start-run-text"),
+    appStatusBadge: document.getElementById("app-status-badge"),
+
+    // Terminal elements
+    terminalBody: document.getElementById("terminal-body"),
+    clearTerminalBtn: document.getElementById("clear-terminal-btn"),
+    copyTerminalBtn: document.getElementById("copy-terminal-btn"),
+    viewReportBtn: document.getElementById("view-report-btn"),
+
+    // Results & History table
+    resultsTableBody: document.getElementById("results-table-body"),
+    clearHistoryBtn: document.getElementById("clear-history-btn"),
+
+    // Clear History Modal
+    clearConfirmModal: document.getElementById("clear-confirm-modal"),
+    closeClearModalBtn: document.getElementById("close-clear-modal-btn"),
+    cancelClearBtn: document.getElementById("cancel-clear-btn"),
+    confirmClearBtn: document.getElementById("confirm-clear-btn"),
+
+    // Report modal
+    reportModal: document.getElementById("report-modal"),
+    closeModalBtn: document.getElementById("close-modal-btn"),
+    reportContent: document.getElementById("report-content"),
+  };
+
+  /**
+   * Generates a formatted timestamp string (YYYY-MM-DD HH:MM:SS)
+   */
+  function getTimestamp() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const yyyy = now.getFullYear();
+    const mm = pad(now.getMonth() + 1);
+    const dd = pad(now.getDate());
+    const hh = pad(now.getHours());
+    const min = pad(now.getMinutes());
+    const ss = pad(now.getSeconds());
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+  }
+
+  /**
+   * Escape special regex characters in search query except '*' and '?'
+   */
+  function wildcardToRegex(pattern) {
+    if (!pattern) return null;
+    const escaped = pattern
+      .replace(/[-[\]{}()+.,\\^$|#\s]/g, "\\$&")
+      .replace(/\*/g, ".*")
+      .replace(/\?/g, ".");
+    return new RegExp(escaped, "i");
+  }
+
+  /**
+   * Evaluates whether a component matches the wildcard pattern and active filter
+   */
+  function matchesFilter(comp) {
+    // 1. Check active category/status filter
+    if (state.activeFilter === "untested" && comp.status === "tested") {
+      return false;
+    }
+    if (state.activeFilter === "tested" && comp.status !== "tested") {
+      return false;
+    }
+    if (state.activeFilter === "ui" && !comp.has_ui) {
+      return false;
+    }
+
+    // 2. Check search query (wildcard / substring)
+    const q = state.searchQuery.trim();
+    if (!q) return true;
+
+    const regex = wildcardToRegex(q);
+    if (!regex) return true;
+
+    const targetFields = [
+      comp.id || "",
+      comp.name || "",
+      comp.category || "",
+      comp.description || "",
+    ];
+
+    return targetFields.some((field) => regex.test(field));
+  }
+
+  /**
+   * Get list of currently visible components based on filter & search
+   */
+  function getFilteredComponents() {
+    return state.components.filter(matchesFilter);
+  }
+
+  /**
+   * Updates selection badge and start button state
+   */
+  function updateSelectionUI() {
+    const count = state.selectedIds.size;
+    const total = state.components.length;
+    elements.selectionCountBadge.textContent = `${count} of ${total} selected`;
+
+    if (count > 0) {
+      elements.startRunText.textContent = `Start Test Run (${count} ${
+        count === 1 ? "service" : "services"
+      })`;
+      elements.startRunBtn.disabled = state.isRunning;
+    } else {
+      elements.startRunText.textContent = "Start Test Run (Select services)";
+      elements.startRunBtn.disabled = true;
+    }
+  }
+
+  /**
+   * Renders component cards into the grid
+   */
+  function renderComponents() {
+    elements.componentsGrid.innerHTML = "";
+    const filtered = getFilteredComponents();
+
+    if (filtered.length === 0) {
+      const emptyMsg = document.createElement("div");
+      emptyMsg.style.gridColumn = "1 / -1";
+      emptyMsg.style.padding = "2rem";
+      emptyMsg.style.textAlign = "center";
+      emptyMsg.style.color = "var(--text-muted)";
+      emptyMsg.textContent = "No components match your search or filter criteria.";
+      elements.componentsGrid.appendChild(emptyMsg);
+      return;
+    }
+
+    filtered.forEach((comp) => {
+      const card = document.createElement("div");
+      const isSelected = state.selectedIds.has(comp.id);
+
+      card.className = `component-card ${isSelected ? "selected" : ""}`;
+      card.dataset.id = comp.id;
+
+      const isTested = comp.status === "tested";
+      const statusClass = isTested ? "tag-tested" : "tag-untested";
+      const statusText = isTested ? "Tested" : "Untested";
+
+      let tagsHtml = `
+        <span class="tag ${statusClass}">${statusText}</span>
+      `;
+
+      if (comp.has_ui) {
+        tagsHtml += '<span class="tag tag-ui">🌐 UI</span>';
+      }
+
+      if (comp.category) {
+        tagsHtml += `<span class="tag tag-category">${comp.category}</span>`;
+      }
+
+      card.innerHTML = `
+        <input type="checkbox" class="component-checkbox" ${
+          isSelected ? "checked" : ""
+        } />
+        <div class="component-info">
+          <div class="component-name">${comp.name || comp.id}</div>
+          <div class="component-id">${comp.id}</div>
+          <div class="component-tags">${tagsHtml}</div>
+        </div>
+      `;
+
+      // Event listener to toggle selection
+      const checkbox = card.querySelector(".component-checkbox");
+      card.addEventListener("click", (e) => {
+        if (e.target !== checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+        if (checkbox.checked) {
+          state.selectedIds.add(comp.id);
+          card.classList.add("selected");
+        } else {
+          state.selectedIds.delete(comp.id);
+          card.classList.remove("selected");
+        }
+        updateSelectionUI();
+      });
+
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          state.selectedIds.add(comp.id);
+          card.classList.add("selected");
+        } else {
+          state.selectedIds.delete(comp.id);
+          card.classList.remove("selected");
+        }
+        updateSelectionUI();
+      });
+
+      elements.componentsGrid.appendChild(card);
+    });
+  }
+
+  /**
+   * Set execution status in header
+   */
+  function setStatus(status, text) {
+    elements.appStatusBadge.className = `status-badge status-${status}`;
+    elements.appStatusBadge.textContent = text || status.toUpperCase();
+  }
+
+  /**
+   * Safely escapes HTML special characters
+   */
+  function escapeHtml(str) {
+    return str
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  /**
+   * Converts ANSI color escape codes to styled HTML spans
+   */
+  function ansiToHtml(str) {
+    const colorMap = {
+      "0;31": "var(--accent-red)",
+      "1;31": "var(--accent-red)",
+      "31": "var(--accent-red)",
+      "0;32": "var(--accent-green)",
+      "1;32": "var(--accent-green)",
+      "32": "var(--accent-green)",
+      "0;33": "var(--accent-amber)",
+      "1;33": "var(--accent-amber)",
+      "33": "var(--accent-amber)",
+      "0;34": "var(--accent-blue)",
+      "1;34": "var(--accent-blue)",
+      "34": "var(--accent-blue)",
+      "0;35": "var(--accent-purple)",
+      "1;35": "var(--accent-purple)",
+      "35": "var(--accent-purple)",
+      "0;36": "var(--accent-cyan)",
+      "1;36": "var(--accent-cyan)",
+      "36": "var(--accent-cyan)",
+      "0;37": "var(--text-secondary)",
+      "1;37": "#ffffff",
+      "37": "var(--text-secondary)",
+    };
+
+    const escaped = escapeHtml(str);
+    let result = escaped.replace(/\x1b\[([0-9;]+)m/g, (match, code) => {
+      if (code === "0" || code === "") {
+        return "</span>";
+      }
+      const color = colorMap[code];
+      if (color) {
+        return `<span style="color: ${color};">`;
+      }
+      return "";
+    });
+
+    // Strip any other unhandled ANSI escape sequences
+    result = result.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
+    return result;
+  }
+
+  /**
+   * Append a log line to the live terminal
+   */
+  function appendLog(line) {
+    const lineDiv = document.createElement("div");
+    lineDiv.className = "terminal-line";
+    lineDiv.innerHTML = ansiToHtml(line);
+    elements.terminalBody.appendChild(lineDiv);
+    elements.terminalBody.scrollTop = elements.terminalBody.scrollHeight;
+  }
+
+  /**
+   * Updates or inserts a record in the results table
+   */
+  function updateResultRecord(record, prepend = false) {
+    if (!record || !record.component_id) return;
+
+    // Remove empty placeholder row if present
+    const emptyRow = elements.resultsTableBody.querySelector("tr td[colspan]");
+    if (emptyRow) {
+      elements.resultsTableBody.innerHTML = "";
+    }
+
+    const recTime = record.timestamp || getTimestamp();
+    const recMode = (
+      record.mode || (state.mode === "both" ? "LXC" : state.mode)
+    ).toUpperCase();
+    const recEngine = (
+      record.engine || (state.engine === "both" ? "DOCKER" : state.engine)
+    ).toUpperCase();
+    const rowId = `result-row-${record.component_id}-${recMode}-${recEngine}-${recTime.replace(/[^a-zA-Z0-9]/g, "-")}`;
+    let row = document.getElementById(rowId);
+
+    if (!row) {
+      row = document.createElement("tr");
+      row.id = rowId;
+      if (prepend && elements.resultsTableBody.firstChild) {
+        elements.resultsTableBody.insertBefore(row, elements.resultsTableBody.firstChild);
+      } else {
+        elements.resultsTableBody.appendChild(row);
+      }
+    }
+
+    const isSuccess = record.status === "success";
+    const statusBadge = isSuccess
+      ? '<span class="tag tag-tested">✅ PASS</span>'
+      : record.status === "running"
+      ? '<span class="tag tag-ui">⏳ RUNNING</span>'
+      : record.status === "pending"
+      ? '<span class="tag tag-category">⚪ PENDING</span>'
+      : '<span class="tag tag-untested">❌ FAIL</span>';
+
+    const httpBadge =
+      record.http_ok === null || record.http_ok === undefined
+        ? "N/A"
+        : record.http_ok
+        ? '<span style="color: var(--accent-green); font-weight: 600;">OK</span>'
+        : '<span style="color: var(--accent-red); font-weight: 600;">FAIL</span>';
+
+    row.innerHTML = `
+      <td><small style="color: var(--text-muted); font-family: var(--font-mono);">${recTime}</small></td>
+      <td><strong>${record.component_id}</strong></td>
+      <td><span class="tag ${recMode === "LXC" ? "tag-category" : "tag-ui"}">${recMode}</span></td>
+      <td><code>${recEngine}</code></td>
+      <td>${record.vmid || "—"}</td>
+      <td><code>${record.ip || "—"}</code></td>
+      <td>${record.deployment || "—"}</td>
+      <td>${record.running ? "Running" : "Stopped"}</td>
+      <td>${httpBadge}</td>
+      <td>${statusBadge}</td>
+    `;
+  }
+
+  /**
+   * Loads cumulative test history from API
+   */
+  async function loadTestHistory() {
+    try {
+      const res = await fetch("/api/results");
+      if (res.ok) {
+        const historyData = await res.json();
+        if (Array.isArray(historyData) && historyData.length > 0) {
+          elements.resultsTableBody.innerHTML = "";
+          // Display in reverse chronological order (newest first)
+          const reversed = [...historyData].reverse();
+          reversed.forEach((rec) => updateResultRecord(rec, false));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load test history:", err);
+    }
+  }
+
+  /**
+   * Clears all test results history
+   */
+  async function clearTestHistory() {
+    try {
+      const res = await fetch("/api/results/clear", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        elements.resultsTableBody.innerHTML = `
+          <tr>
+            <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+              No test history recorded yet.
+            </td>
+          </tr>
+        `;
+        appendLog(`[${getTimestamp()}] [GUI] Test history cleared successfully.`);
+      }
+    } catch (err) {
+      console.error("Failed to clear test history:", err);
+    } finally {
+      elements.clearConfirmModal.classList.remove("open");
+    }
+  }
+
+  /**
+   * Parse log messages to update live test table
+   */
+  function handleStreamMessage(msgData) {
+    if (!msgData) return;
+
+    if (msgData.type === "log" && msgData.content) {
+      appendLog(msgData.content);
+    } else if (msgData.type === "record" && msgData.record) {
+      updateResultRecord(msgData.record);
+    } else if (msgData.type === "status") {
+      if (msgData.status === "completed") {
+        state.isRunning = false;
+        elements.startRunBtn.disabled = false;
+        elements.stopRunBtn.style.display = "none";
+        const failCount = msgData.failed_count || 0;
+        const passCount = msgData.passed_count || 0;
+        if (failCount === 0) {
+          setStatus("completed", `Run Finished: All Passed ✅ (${passCount} OK)`);
+        } else {
+          setStatus("failed", `Run Finished: ${failCount} Failed ❌ (${passCount} OK)`);
+        }
+        if (state.eventSource) {
+          state.eventSource.close();
+          state.eventSource = null;
+        }
+        // Refresh component cards to show updated tested status tags
+        fetchComponents();
+      }
+    }
+  }
+
+  /**
+   * Connects to the Server-Sent Events (SSE) log stream
+   */
+  function connectStream() {
+    if (state.eventSource) {
+      state.eventSource.close();
+    }
+
+    state.eventSource = new EventSource("/api/stream");
+
+    state.eventSource.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data);
+        handleStreamMessage(msg);
+      } catch (err) {
+        console.error("Error parsing stream event data:", err);
+      }
+    };
+
+    state.eventSource.onerror = () => {
+      // Reconnect automatically unless execution has finished
+      if (!state.isRunning && state.eventSource) {
+        state.eventSource.close();
+        state.eventSource = null;
+      }
+    };
+  }
+
+  /**
+   * Starts tests for selected components
+   */
+  async function startTests() {
+    if (state.selectedIds.size === 0) return;
+
+    state.isRunning = true;
+    elements.startRunBtn.disabled = true;
+    elements.stopRunBtn.style.display = "inline-flex";
+    setStatus("running", "Starting Test Run...");
+
+    const ts = getTimestamp();
+    const numModes = state.mode === "both" ? 2 : 1;
+    const numEngines = state.engine === "both" ? 2 : 1;
+    const totalRuns = state.selectedIds.size * numModes * numEngines;
+    const modeLabel =
+      state.mode === "both" ? "LXC + VM (Matrix)" : state.mode.toUpperCase();
+    const engineLabel =
+      state.engine === "both"
+        ? "DOCKER + PODMAN (Matrix)"
+        : state.engine.toUpperCase();
+
+    appendLog(
+      `\n======================================================================`
+    );
+    appendLog(
+      `[${ts}] [GUI] STARTING TEST RUN: ${state.selectedIds.size} SERVICES (${totalRuns} TOTAL EXECUTIONS)`
+    );
+    appendLog(`[${ts}] [GUI] Target: ${modeLabel} | Engine: ${engineLabel}`);
+    appendLog(
+      `======================================================================\n`
+    );
+
+    // Pre-populate results table with pending rows at top of table
+    state.selectedIds.forEach((cid) => {
+      updateResultRecord(
+        {
+          timestamp: ts,
+          component_id: cid,
+          mode: state.mode === "both" ? "LXC" : state.mode.toUpperCase(),
+          engine: state.engine === "both" ? "DOCKER" : state.engine.toUpperCase(),
+          status: "pending",
+          deployment: "Pending",
+          running: false,
+        },
+        true
+      );
+    });
+
+    try {
+      const payload = {
+        components: Array.from(state.selectedIds),
+        engine: state.engine,
+        mode: state.mode,
+        node: elements.nodeInput.value.trim() || "pve",
+        template_id: elements.templateIdInput.value.trim() || "902",
+      };
+
+      const response = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        appendLog(
+          `[ERROR] Failed to start test run: ${result.error || "Unknown error"}`
+        );
+        setStatus("failed", "Failed to Start");
+        state.isRunning = false;
+        elements.startRunBtn.disabled = false;
+        elements.stopRunBtn.style.display = "none";
+        return;
+      }
+
+      // Connect to SSE stream
+      connectStream();
+    } catch (err) {
+      appendLog(`[ERROR] Network error starting tests: ${err.message}`);
+      setStatus("failed", "Error");
+      state.isRunning = false;
+      elements.startRunBtn.disabled = false;
+      elements.stopRunBtn.style.display = "none";
+    }
+  }
+
+  /**
+   * Stops running tests
+   */
+  async function stopTests() {
+    if (!state.isRunning) return;
+    try {
+      appendLog(`[${getTimestamp()}] [GUI] Requesting test runner termination...`);
+      await fetch("/api/stop", { method: "POST" });
+    } catch (err) {
+      console.error("Failed to stop tests:", err);
+    }
+  }
+
+  /**
+   * Fetches latest markdown test report
+   */
+  async function loadReport() {
+    try {
+      elements.reportContent.textContent = "Loading report...";
+      elements.reportModal.classList.add("open");
+      const res = await fetch("/api/report");
+      const data = await res.json();
+      if (data.report) {
+        elements.reportContent.textContent = data.report;
+      } else {
+        elements.reportContent.textContent = "No report generated yet.";
+      }
+    } catch (err) {
+      elements.reportContent.textContent = `Error loading report: ${err.message}`;
+    }
+  }
+
+  /**
+   * Enforces exact table header column names and order
+   */
+  function ensureTableHeaders() {
+    const tableThead = document.querySelector(".results-table thead");
+    if (tableThead) {
+      tableThead.innerHTML = `
+        <tr>
+          <th>Date / Time</th>
+          <th>Component</th>
+          <th>Target</th>
+          <th>Engine</th>
+          <th>VM ID</th>
+          <th>IP Address</th>
+          <th>Deployment</th>
+          <th>Containers</th>
+          <th>HTTP UI</th>
+          <th>Status</th>
+        </tr>
+      `;
+    }
+  }
+
+  async function fetchComponents() {
+    const compRes = await fetch("/api/components");
+    if (compRes.ok) {
+      state.components = await compRes.json();
+      renderComponents();
+      updateSelectionUI();
+    }
+  }
+
+  /**
+   * Initializes application data from API
+   */
+  async function init() {
+    ensureTableHeaders();
+
+    try {
+      // 1. Fetch initial configuration
+      const configRes = await fetch("/api/config");
+      if (configRes.ok) {
+        const config = await configRes.json();
+        if (config.node) elements.nodeInput.value = config.node;
+        if (config.template_id) elements.templateIdInput.value = config.template_id;
+        if (config.engine) {
+          state.engine = config.engine.toLowerCase();
+          if (state.engine === "podman") {
+            elements.enginePodmanBtn.classList.add("active", "engine-podman");
+            elements.engineDockerBtn.classList.remove("active");
+          }
+        }
+      }
+
+      // 2. Fetch components
+      await fetchComponents();
+
+      // 3. Fetch cumulative test history
+      await loadTestHistory();
+    } catch (err) {
+      console.error("Initialization error:", err);
+    }
+
+    // Attach Event Listeners
+
+    // Search bar with live wildcard matching
+    elements.searchInput.addEventListener("input", (e) => {
+      state.searchQuery = e.target.value;
+      elements.searchClearBtn.style.display = state.searchQuery ? "block" : "none";
+      renderComponents();
+    });
+
+    elements.searchClearBtn.addEventListener("click", () => {
+      elements.searchInput.value = "";
+      state.searchQuery = "";
+      elements.searchClearBtn.style.display = "none";
+      renderComponents();
+      elements.searchInput.focus();
+    });
+
+    // Category / Status Filter pills
+    elements.filterPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        elements.filterPills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+        state.activeFilter = pill.dataset.filter;
+        renderComponents();
+      });
+    });
+
+    // Mode toggles
+    elements.modeLxcBtn.addEventListener("click", () => {
+      state.mode = "lxc";
+      elements.modeLxcBtn.classList.add("active");
+      elements.modeVmBtn.classList.remove("active");
+      if (elements.modeBothBtn) elements.modeBothBtn.classList.remove("active", "mode-both");
+      elements.templateIdWrapper.style.opacity = "0.5";
+      elements.templateIdInput.disabled = true;
+    });
+
+    elements.modeVmBtn.addEventListener("click", () => {
+      state.mode = "vm";
+      elements.modeVmBtn.classList.add("active");
+      elements.modeLxcBtn.classList.remove("active");
+      if (elements.modeBothBtn) elements.modeBothBtn.classList.remove("active", "mode-both");
+      elements.templateIdWrapper.style.opacity = "1";
+      elements.templateIdInput.disabled = false;
+    });
+
+    if (elements.modeBothBtn) {
+      elements.modeBothBtn.addEventListener("click", () => {
+        state.mode = "both";
+        elements.modeBothBtn.classList.add("active", "mode-both");
+        elements.modeLxcBtn.classList.remove("active");
+        elements.modeVmBtn.classList.remove("active");
+        elements.templateIdWrapper.style.opacity = "1";
+        elements.templateIdInput.disabled = false;
+      });
+    }
+
+    // Engine toggles
+    elements.engineDockerBtn.addEventListener("click", () => {
+      state.engine = "docker";
+      elements.engineDockerBtn.classList.add("active");
+      elements.enginePodmanBtn.classList.remove("active", "engine-podman");
+      if (elements.engineBothBtn) elements.engineBothBtn.classList.remove("active", "engine-both");
+    });
+
+    elements.enginePodmanBtn.addEventListener("click", () => {
+      state.engine = "podman";
+      elements.enginePodmanBtn.classList.add("active", "engine-podman");
+      elements.engineDockerBtn.classList.remove("active");
+      if (elements.engineBothBtn) elements.engineBothBtn.classList.remove("active", "engine-both");
+    });
+
+    if (elements.engineBothBtn) {
+      elements.engineBothBtn.addEventListener("click", () => {
+        state.engine = "both";
+        elements.engineBothBtn.classList.add("active", "engine-both");
+        elements.engineDockerBtn.classList.remove("active");
+        elements.enginePodmanBtn.classList.remove("active", "engine-podman");
+      });
+    }
+
+    // Batch selection buttons
+    elements.selectAllFilteredBtn.addEventListener("click", () => {
+      const filtered = getFilteredComponents();
+      filtered.forEach((c) => state.selectedIds.add(c.id));
+      renderComponents();
+      updateSelectionUI();
+    });
+
+    elements.deselectAllFilteredBtn.addEventListener("click", () => {
+      const filtered = getFilteredComponents();
+      filtered.forEach((c) => state.selectedIds.delete(c.id));
+      renderComponents();
+      updateSelectionUI();
+    });
+
+    elements.clearSelectionBtn.addEventListener("click", () => {
+      state.selectedIds.clear();
+      renderComponents();
+      updateSelectionUI();
+    });
+
+    // Runner triggers
+    elements.startRunBtn.addEventListener("click", startTests);
+    elements.stopRunBtn.addEventListener("click", stopTests);
+
+    // Terminal controls
+    elements.clearTerminalBtn.addEventListener("click", () => {
+      elements.terminalBody.textContent = "";
+    });
+
+    elements.copyTerminalBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(elements.terminalBody.textContent);
+      elements.copyTerminalBtn.textContent = "Copied!";
+      setTimeout(() => {
+        elements.copyTerminalBtn.textContent = "Copy Logs";
+      }, 1500);
+    });
+
+    // Clear History Modal controls
+    elements.clearHistoryBtn.addEventListener("click", () => {
+      elements.clearConfirmModal.classList.add("open");
+    });
+
+    elements.closeClearModalBtn.addEventListener("click", () => {
+      elements.clearConfirmModal.classList.remove("open");
+    });
+
+    elements.cancelClearBtn.addEventListener("click", () => {
+      elements.clearConfirmModal.classList.remove("open");
+    });
+
+    elements.confirmClearBtn.addEventListener("click", clearTestHistory);
+
+    elements.clearConfirmModal.addEventListener("click", (e) => {
+      if (e.target === elements.clearConfirmModal) {
+        elements.clearConfirmModal.classList.remove("open");
+      }
+    });
+
+    // Report modal
+    elements.viewReportBtn.addEventListener("click", loadReport);
+    elements.closeModalBtn.addEventListener("click", () => {
+      elements.reportModal.classList.remove("open");
+    });
+
+    elements.reportModal.addEventListener("click", (e) => {
+      if (e.target === elements.reportModal) {
+        elements.reportModal.classList.remove("open");
+      }
+    });
+  }
+
+  // Run on DOM ready
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
+--- FILE: scripts/templates/proxmox_gui.html ---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NjordDeploy — Proxmox Test Suite</title>
+  <link rel="stylesheet" href="/static/css/proxmox_gui.css?v={{ cache_bust }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚢</text></svg>">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <span class="logo-icon">🚢</span>
+        <div class="logo-text">
+          <h1>NjordDeploy Proxmox Test Suite</h1>
+          <span>Automated Component Integration & Provisioning Runner</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <span id="app-status-badge" class="status-badge status-idle">IDLE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-container">
+
+    <!-- Configuration Options Card -->
+    <section class="config-card">
+      <h2 class="card-title">⚙️ Test Configuration</h2>
+      <div class="config-grid">
+
+        <!-- Mode Selection -->
+        <div class="config-item">
+          <label>Target Mode</label>
+          <div class="segmented-control">
+            <button type="button" id="mode-lxc-btn" class="segmented-btn active">
+              ⚡ LXC
+            </button>
+            <button type="button" id="mode-vm-btn" class="segmented-btn">
+              🖥️ VM
+            </button>
+            <button type="button" id="mode-both-btn" class="segmented-btn">
+              🔄 Beide (Matrix)
+            </button>
+          </div>
+        </div>
+
+        <!-- Container Engine Selection -->
+        <div class="config-item">
+          <label>Container Engine</label>
+          <div class="segmented-control">
+            <button type="button" id="engine-docker-btn" class="segmented-btn active">
+              🐳 Docker
+            </button>
+            <button type="button" id="engine-podman-btn" class="segmented-btn">
+              🦭 Podman
+            </button>
+            <button type="button" id="engine-both-btn" class="segmented-btn">
+              🔄 Beide (Matrix)
+            </button>
+          </div>
+        </div>
+
+        <!-- Proxmox Node -->
+        <div class="config-item">
+          <label for="node-input">Proxmox Node</label>
+          <input type="text" id="node-input" class="text-input" placeholder="pve" value="pve" />
+        </div>
+
+        <!-- Template ID (for VM mode) -->
+        <div class="config-item" id="template-id-wrapper" style="opacity: 0.5;">
+          <label for="template-id-input">VM Template ID</label>
+          <input type="text" id="template-id-input" class="text-input" placeholder="902" value="902" disabled />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Component Selector Panel -->
+    <section class="selector-panel">
+      <h2 class="card-title">📦 Component Selection</h2>
+
+      <!-- Search & Category Filters -->
+      <div class="search-toolbar">
+        <div class="search-box-wrapper">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Search services (e.g. adguard, dns*, *vault*, pi*)..."
+            autocomplete="off"
+          />
+          <button type="button" id="search-clear-btn" class="search-clear-btn" title="Clear search">✕</button>
+        </div>
+
+        <div class="filter-pills">
+          <button type="button" class="filter-pill active" data-filter="all">All Services</button>
+          <button type="button" class="filter-pill" data-filter="untested">Untested Only</button>
+          <button type="button" class="filter-pill" data-filter="tested">Tested Only</button>
+          <button type="button" class="filter-pill" data-filter="ui">🌐 Web UI Only</button>
+        </div>
+      </div>
+
+      <!-- Action & Batch Selection Bar -->
+      <div class="action-bar">
+        <div class="selection-info">
+          <span>Selection:</span>
+          <span id="selection-count-badge" class="selection-count-badge">0 of 0 selected</span>
+        </div>
+        <div class="batch-buttons">
+          <button type="button" id="select-all-filtered-btn" class="btn-secondary">Select All Filtered</button>
+          <button type="button" id="deselect-all-filtered-btn" class="btn-secondary">Deselect Filtered</button>
+          <button type="button" id="clear-selection-btn" class="btn-secondary">Clear All</button>
+        </div>
+      </div>
+
+      <!-- Component Cards Grid -->
+      <div id="components-grid" class="components-grid">
+        <!-- Rendered dynamically by proxmox_gui.js -->
+      </div>
+
+      <!-- Execution Panel -->
+      <div class="run-panel">
+        <button type="button" id="start-run-btn" class="btn-primary" disabled>
+          <span>🚀</span>
+          <span id="start-run-text">Start Test Run</span>
+        </button>
+
+        <button type="button" id="stop-run-btn" class="btn-danger" style="display: none;">
+          <span>🛑</span>
+          <span>Stop Execution</span>
+        </button>
+
+        <button type="button" id="view-report-btn" class="btn-secondary">
+          <span>📄</span>
+          <span>View Latest Markdown Report</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Live Terminal Log Streamer -->
+    <section class="terminal-card">
+      <div class="terminal-header">
+        <div class="terminal-title">
+          <span class="terminal-dot dot-red"></span>
+          <span class="terminal-dot dot-yellow"></span>
+          <span class="terminal-dot dot-green"></span>
+          <span>Live Runner Console</span>
+        </div>
+        <div class="terminal-actions">
+          <button type="button" id="clear-terminal-btn" class="terminal-btn">Clear</button>
+          <button type="button" id="copy-terminal-btn" class="terminal-btn">Copy Logs</button>
+        </div>
+      </div>
+      <div id="terminal-body" class="terminal-body">Ready to start test run. Select components and click 'Start Test Run'.</div>
+    </section>
+
+    <!-- Results Table Card -->
+    <section class="config-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 class="card-title" style="margin-bottom: 0;">📊 Test History & Results</h2>
+        <button type="button" id="clear-history-btn" class="btn-secondary" title="Clear all test history">
+          <span>🗑️</span>
+          <span>Clear History</span>
+        </button>
+      </div>
+      <div class="results-table-wrapper">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Date / Time</th>
+              <th>Component</th>
+              <th>Target</th>
+              <th>Engine</th>
+              <th>VM ID</th>
+              <th>IP Address</th>
+              <th>Deployment</th>
+              <th>Containers</th>
+              <th>HTTP UI</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body">
+            <tr>
+              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                No test history recorded yet.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Clear History Confirmation Modal -->
+  <div id="clear-confirm-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>⚠️ Clear Test History</h3>
+        <button type="button" id="close-clear-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to clear the entire test execution history?</p>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">
+          This will wipe all historical results from <code>tests/proxmox_results.json</code>. This action cannot be undone.
+        </p>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.25rem;">
+          <button type="button" id="cancel-clear-btn" class="btn-secondary">Cancel</button>
+          <button type="button" id="confirm-clear-btn" class="btn-danger">Yes, Clear History</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Viewer Modal -->
+  <div id="report-modal" class="modal-backdrop">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>📄 Latest Proxmox Test Report (PROXMOX_TESTS.md)</h3>
+        <button type="button" id="close-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <pre id="report-content">Loading report...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    NjordDeploy Automated Infrastructure & Component Test Runner &copy; 2026
+  </footer>
+
+  <script src="/static/js/proxmox_gui.js?v={{ cache_bust }}"></script>
+</body>
+</html>
 
 --- FILE: scripts/update_docs.py ---
 # scripts/update_docs.py
@@ -13888,22 +16586,38 @@ def create_app(test_config=None):
     else:
         app = Flask(__name__)
 
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.jinja_env.auto_reload = True
+
     # Crucial for testing: apply the test_config
     if test_config:
         app.config.update(test_config)
+        templates_path_obj = Path(
+            test_config.get("TEMPLATES_PATH", "component_templates")
+        )
+        meta_file_path = Path(
+            test_config.get("METADATA_FILE_PATH", "config/components_metadata.json")
+        )
+    elif (
+        not getattr(sys, "frozen", False)
+        and (project_root / "config" / "components_metadata.json").exists()
+    ):
+        meta_file_path = project_root / "config" / "components_metadata.json"
+        templates_path_obj = project_root / "component_templates"
+    else:
+        from utils.resource_utils import seed_user_components_if_needed
+
+        seed_user_components_if_needed()
+        meta_file_path, templates_path_obj = get_components_paths()
+
+    meta_file = str(meta_file_path)
+    temp_path = str(templates_path_obj)
 
     def save_api_key_to_env(key: str, provider: str = "gemini"):
         """Saves the API key to the local .env file based on the provider."""
         from utils.ai_provider_manager import save_api_key_to_env_file
 
         save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
-
-    from utils.resource_utils import seed_user_components_if_needed
-
-    seed_user_components_if_needed()
-    meta_file_path, temp_path_obj = get_components_paths()
-    meta_file = str(meta_file_path)
-    temp_path = str(temp_path_obj)
 
     # Initialize the unified ComponentManager
     component_manager = ComponentManager(
@@ -13914,7 +16628,7 @@ def create_app(test_config=None):
 
     sync_manager = SyncManager(
         local_metadata_path=meta_file_path,
-        local_templates_path=temp_path_obj,
+        local_templates_path=templates_path_obj,
     )
 
     @app.route("/api/sync/status", methods=["GET"])
@@ -14396,6 +17110,46 @@ def create_app(test_config=None):
             logging.error(f"Failed to save template for {comp_id}: {e}", exc_info=True)
             abort(500, "Internal error saving component template")
 
+    @app.route("/api/components/<comp_id>/configs", methods=["GET"])
+    def get_component_configs(comp_id):
+        try:
+            configs = component_manager.get_component_configs(comp_id)
+            return jsonify({"configs": configs}), 200
+        except Exception as e:
+            logging.error(f"Failed to read configs for {comp_id}: {e}", exc_info=True)
+            abort(500, "Internal error reading component configs")
+
+    @app.route("/api/components/<comp_id>/configs/<path:filename>", methods=["PUT"])
+    def save_component_config(comp_id, filename):
+        try:
+            content = request.get_data(as_text=True)
+            success = component_manager.save_component_config(
+                comp_id, filename, content
+            )
+            if success:
+                return jsonify({"status": "saved"}), 200
+            abort(500, "Failed to save configuration template")
+        except Exception as e:
+            logging.error(
+                f"Failed to save config {filename} for {comp_id}: {e}",
+                exc_info=True,
+            )
+            abort(500, "Internal error saving component config")
+
+    @app.route("/api/components/<comp_id>/configs/<path:filename>", methods=["DELETE"])
+    def delete_component_config(comp_id, filename):
+        try:
+            success = component_manager.delete_component_config(comp_id, filename)
+            if success:
+                return jsonify({"status": "deleted"}), 200
+            abort(500, "Failed to delete configuration template")
+        except Exception as e:
+            logging.error(
+                f"Failed to delete config {filename} for {comp_id}: {e}",
+                exc_info=True,
+            )
+            abort(500, "Internal error deleting component config")
+
     @app.route("/api/components/<comp_id>/validate", methods=["POST"])
     def validate_component(comp_id):
         data = request.get_json() or {}
@@ -14802,13 +17556,10 @@ def create_app(test_config=None):
                     import yaml
 
                     cleaned_yaml = re.sub(
-                        r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
-                        '"JINJA_VAR"',
-                        docker_compose,
+                        r"\{#.*?#\}", "", docker_compose, flags=re.DOTALL
                     )
+                    cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
                     cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{#.*?#}", "JINJA_COMMENT", cleaned_yaml)
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:
@@ -14824,21 +17575,18 @@ def create_app(test_config=None):
             # 1. Create component folder and skeleton
             component_manager.create_component(component_id, name)
 
-            # 2. Update master metadata JSON
-            component_manager.update_component_metadata(component_id, metadata)
-
-            # 3. Update compose template content
+            # 2. Update compose template content
             if isinstance(docker_compose, str) and docker_compose:
                 component_manager.update_component_template_content(
                     component_id, docker_compose
                 )
 
-            # 4. Update variables JSON
+            # 3. Update variables JSON
             component_manager.update_component_variables(
                 component_id, {"variables": variables}
             )
 
-            # 5. Write other config files to template-config folder
+            # 4. Write other config files to template-config folder
             if config_templates:
                 templates_root_path = component_manager.templates_path.resolve()
                 config_dir = templates_root_path / safe_component_id / "template-config"
@@ -14847,6 +17595,7 @@ def create_app(test_config=None):
                     abort(400, "Path traversal attempt detected")
 
                 config_dir.mkdir(parents=True, exist_ok=True)
+                metadata.setdefault("config_templates", {})
                 for template_name, content in config_templates.items():
                     safe_name = secure_filename(os.path.basename(template_name))
                     if not re.match(r"^[a-zA-Z0-9._-]+$", safe_name):
@@ -14860,6 +17609,13 @@ def create_app(test_config=None):
 
                     with open(requested_path, "w", encoding="utf-8") as f:
                         f.write(content)
+                    metadata["config_templates"][
+                        safe_name
+                    ] = f"{component_id}/{safe_name}"
+                metadata["has_configuration"] = True
+
+            # 5. Update master metadata JSON
+            component_manager.update_component_metadata(component_id, metadata)
 
             # 6. Update components_order in _njorddeploy
             meta_data = component_manager.load_metadata()
@@ -15564,6 +18320,9 @@ document.addEventListener('DOMContentLoaded', () => {
     );
 
     let codeEditor = null;
+    let configCodeEditor = null;
+    let currentConfigs = {};
+    let activeConfigFile = null;
     let currentVariables = [];
     let internalRenderVariablesRows = null;
 
@@ -15821,7 +18580,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 : null,
             traefik_internal_port: portInput.disabled
                 ? null
-                : parseInt(portInput.value) || null
+                : parseInt(portInput.value) || null,
+            ai_instructions: document.getElementById('comp-ai-instructions')
+                ? (document.getElementById('comp-ai-instructions').value.trim() || null)
+                : null
         };
 
         if (payload.has_ui && !payload.ui_port_variable) {
@@ -15853,6 +18615,20 @@ document.addEventListener('DOMContentLoaded', () => {
             headers: { 'Content-Type': 'text/plain' },
             body: content
         });
+    };
+
+    const saveConfigs = async (componentId) => {
+        if (!dirtyTabs.has('configs-pane')) return;
+        if (configCodeEditor && activeConfigFile) {
+            currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+        }
+        for (const [filename, content] of Object.entries(currentConfigs)) {
+            await fetchText(`/api/components/${componentId}/configs/${encodeURIComponent(filename)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'text/plain' },
+                body: content
+            });
+        }
     };
 
     const runConflictGatekeeper = async (componentId) => {
@@ -15887,7 +18663,8 @@ document.addEventListener('DOMContentLoaded', () => {
             await Promise.all([
                 saveMetadata(componentId),
                 saveVariables(componentId),
-                saveTemplate(componentId)
+                saveTemplate(componentId),
+                saveConfigs(componentId)
             ]);
             showAlert('All changes saved successfully!', 'success');
             clearAllDirtyState();
@@ -16078,6 +18855,211 @@ document.addEventListener('DOMContentLoaded', () => {
         if (editorContent) editorContent.classList.remove('d-none');
         setTimeout(() => { if (codeEditor) codeEditor.setSize("100%", "100%"); }, 50);
         await loadTemplateContent(componentId);
+        await setupConfigsPane(componentId);
+    };
+
+    const setupConfigsPane = async (componentId) => {
+        const fileSelect = document.getElementById('config-file-select');
+        const tabCount = document.getElementById('configs-tab-count');
+        const noConfigsMsg = document.getElementById('no-configs-msg');
+        const editorWrapper = document.getElementById('config-editor-wrapper');
+        const addBtn = document.getElementById('btn-add-config-file');
+        const deleteBtn = document.getElementById('btn-delete-config-file');
+        const mountHint = document.getElementById('config-mount-hint');
+
+        if (!fileSelect) return;
+
+        fileSelect.innerHTML = '';
+        currentConfigs = {};
+        activeConfigFile = null;
+
+        try {
+            const data = await fetchJson(`/api/components/${componentId}/configs`);
+            currentConfigs = (data && data.configs) || {};
+        } catch (e) {
+            console.error('Error fetching component configs:', e);
+            currentConfigs = {};
+        }
+
+        const filenames = Object.keys(currentConfigs);
+        if (tabCount) tabCount.textContent = String(filenames.length);
+
+        if (filenames.length === 0) {
+            if (noConfigsMsg) noConfigsMsg.classList.remove('d-none');
+            if (editorWrapper) editorWrapper.classList.add('d-none');
+            if (deleteBtn) deleteBtn.disabled = true;
+            if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/...`;
+        } else {
+            if (noConfigsMsg) noConfigsMsg.classList.add('d-none');
+            if (editorWrapper) editorWrapper.classList.remove('d-none');
+            if (deleteBtn) deleteBtn.disabled = false;
+
+            filenames.forEach((fn, idx) => {
+                const opt = document.createElement('option');
+                opt.value = fn;
+                opt.textContent = fn;
+                if (idx === 0) opt.selected = true;
+                fileSelect.appendChild(opt);
+            });
+
+            activeConfigFile = filenames[0];
+            fileSelect.value = activeConfigFile;
+            if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${activeConfigFile}`;
+        }
+
+        if (!configCodeEditor) {
+            const currentAppTheme = document.documentElement.getAttribute('data-theme') || 'futuristic-dark';
+            const isLightTheme = currentAppTheme === 'light' || currentAppTheme === 'high-contrast-light';
+            const selectedTheme = isLightTheme ? 'default' : 'material-darker';
+            const textarea = document.getElementById('config-editor-textarea');
+            if (textarea) {
+                configCodeEditor = CodeMirror.fromTextArea(textarea, {
+                    lineNumbers: true,
+                    mode: 'yaml',
+                    theme: selectedTheme,
+                    tabSize: 2
+                });
+            }
+        }
+
+        if (configCodeEditor) {
+            if (configCodeEditor.dirtyMarker) {
+                configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+            }
+            if (activeConfigFile && currentConfigs[activeConfigFile] !== undefined) {
+                configCodeEditor.setValue(currentConfigs[activeConfigFile]);
+                const ext = activeConfigFile.split('.').pop().toLowerCase();
+                const modeMap = {
+                    'yaml': 'yaml',
+                    'yml': 'yaml',
+                    'json': 'javascript',
+                    'xml': 'xml',
+                    'conf': 'yaml',
+                    'caddyfile': 'yaml',
+                    'sh': 'shell'
+                };
+                configCodeEditor.setOption('mode', modeMap[ext] || 'yaml');
+            } else {
+                configCodeEditor.setValue('');
+            }
+            const configDirtyMarker = () => {
+                if (activeConfigFile) {
+                    currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+                    markTabAsDirty('configs-pane');
+                }
+            };
+            configCodeEditor.on('change', configDirtyMarker);
+            configCodeEditor.dirtyMarker = configDirtyMarker;
+            setTimeout(() => {
+                if (configCodeEditor) {
+                    configCodeEditor.refresh();
+                    configCodeEditor.setSize("100%", "100%");
+                }
+            }, 50);
+        }
+
+        const configsTabBtn = document.getElementById('configs-tab');
+        if (configsTabBtn && !configsTabBtn.dataset.listenerAttached) {
+            configsTabBtn.dataset.listenerAttached = 'true';
+            configsTabBtn.addEventListener('shown.bs.tab', () => {
+                if (configCodeEditor) {
+                    configCodeEditor.refresh();
+                    configCodeEditor.setSize("100%", "100%");
+                }
+            });
+        }
+
+        fileSelect.onchange = () => {
+            if (configCodeEditor && activeConfigFile) {
+                currentConfigs[activeConfigFile] = configCodeEditor.getValue();
+            }
+            const newFile = fileSelect.value;
+            if (newFile && currentConfigs[newFile] !== undefined) {
+                activeConfigFile = newFile;
+                if (configCodeEditor) {
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+                    }
+                    configCodeEditor.setValue(currentConfigs[newFile]);
+                    const ext = newFile.split('.').pop().toLowerCase();
+                    const modeMap = {
+                        'yaml': 'yaml',
+                        'yml': 'yaml',
+                        'json': 'javascript',
+                        'xml': 'xml',
+                        'conf': 'yaml',
+                        'caddyfile': 'yaml',
+                        'sh': 'shell'
+                    };
+                    configCodeEditor.setOption('mode', modeMap[ext] || 'yaml');
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.on('change', configCodeEditor.dirtyMarker);
+                    }
+                    setTimeout(() => {
+                        if (configCodeEditor) {
+                            configCodeEditor.refresh();
+                            configCodeEditor.setSize("100%", "100%");
+                        }
+                    }, 50);
+                }
+                if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${newFile}`;
+            }
+        };
+
+        if (addBtn) {
+            addBtn.onclick = () => {
+                const name = prompt('Enter configuration file name (e.g., config.yaml, Caddyfile, settings.json):');
+                if (!name || !name.trim()) return;
+                const cleanName = name.trim();
+                if (currentConfigs[cleanName] !== undefined) {
+                    showAlert(`File '${cleanName}' already exists.`, 'warning');
+                    return;
+                }
+                currentConfigs[cleanName] = `# Configuration file for ${componentId}\n`;
+                const opt = document.createElement('option');
+                opt.value = cleanName;
+                opt.textContent = cleanName;
+                opt.selected = true;
+                fileSelect.appendChild(opt);
+                fileSelect.value = cleanName;
+                activeConfigFile = cleanName;
+                if (noConfigsMsg) noConfigsMsg.classList.add('d-none');
+                if (editorWrapper) editorWrapper.classList.remove('d-none');
+                if (deleteBtn) deleteBtn.disabled = false;
+                if (configCodeEditor) {
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.off('change', configCodeEditor.dirtyMarker);
+                    }
+                    configCodeEditor.setValue(currentConfigs[cleanName]);
+                    if (configCodeEditor.dirtyMarker) {
+                        configCodeEditor.on('change', configCodeEditor.dirtyMarker);
+                    }
+                    setTimeout(() => { if (configCodeEditor) configCodeEditor.setSize("100%", "100%"); }, 50);
+                }
+                if (tabCount) tabCount.textContent = String(Object.keys(currentConfigs).length);
+                if (mountHint) mountHint.textContent = `{{ DATA_ROOT }}/${componentId}/${cleanName}`;
+                markTabAsDirty('configs-pane');
+            };
+        }
+
+        if (deleteBtn) {
+            deleteBtn.onclick = async () => {
+                if (!activeConfigFile) return;
+                if (!confirm(`Are you sure you want to delete '${activeConfigFile}'?`)) return;
+                try {
+                    await fetchJson(`/api/components/${componentId}/configs/${encodeURIComponent(activeConfigFile)}`, {
+                        method: 'DELETE'
+                    });
+                    delete currentConfigs[activeConfigFile];
+                    showAlert(`Configuration file '${activeConfigFile}' deleted.`, 'success');
+                    await setupConfigsPane(componentId);
+                    markTabAsDirty('configs-pane');
+                } catch (err) {
+                    console.error('Failed to delete config file:', err);
+                    showAlert('Error deleting configuration file: ' + err.message, 'danger');
+                }
+            };
+        }
     };
 
     const loadTemplateContent = async (componentId) => {
@@ -16253,9 +19235,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (themeSelector) {
                 themeSelector.value = themeName;
             }
+            const isLight = themeName === 'light' || themeName === 'high-contrast-light';
             if (codeEditor) {
-                const isLight = themeName === 'light' || themeName === 'high-contrast-light';
                 codeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
+            }
+            if (configCodeEditor) {
+                configCodeEditor.setOption('theme', isLight ? 'default' : 'material-darker');
             }
         };
 
@@ -17268,8 +20253,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const link = document.createElement('a');
                 link.href = '#';
                 link.className =
-                    'list-group-item list-group-item-action component-list-item';
-                link.textContent = component.name || component.id;
+                    'list-group-item list-group-item-action component-list-item d-flex align-items-center';
+
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-hdd-network me-2 text-info opacity-75';
+                icon.style.fontSize = '0.75rem';
+                link.appendChild(icon);
+
+                const span = document.createElement('span');
+                span.className = 'text-truncate';
+                span.textContent = component.name || component.id;
+                link.appendChild(span);
+
                 link.dataset.componentId = component.id;
                 link.addEventListener('click', async (e) => {
                     e.preventDefault();
@@ -17355,22 +20350,34 @@ document.addEventListener('DOMContentLoaded', () => {
         header.classList.add('collapsed');
 
         const leftDiv = document.createElement('div');
-        leftDiv.className = 'd-flex align-items-center';
+        leftDiv.className = 'd-flex align-items-center text-truncate';
 
         const dragHandle = document.createElement('i');
-        dragHandle.className = 'fa-solid fa-grip-vertical group-drag-handle me-2 text-muted';
+        dragHandle.className = 'fa-solid fa-grip-vertical group-drag-handle me-2 text-muted opacity-75';
         dragHandle.style.cursor = 'grab';
         leftDiv.appendChild(dragHandle);
 
-        const strongEl = document.createElement('strong');
+        const strongEl = document.createElement('span');
+        strongEl.className = 'group-title text-truncate';
         strongEl.textContent = name;
         leftDiv.appendChild(strongEl);
 
         header.appendChild(leftDiv);
 
+        const rightDiv = document.createElement('div');
+        rightDiv.className = 'd-flex align-items-center flex-shrink-0 ms-2';
+
+        const countBadge = document.createElement('span');
+        countBadge.className = 'badge group-count-badge rounded-pill me-1 px-2';
+        countBadge.style.fontSize = '0.7rem';
+        countBadge.textContent = components.length;
+        rightDiv.appendChild(countBadge);
+
         const iconEl = document.createElement('i');
-        iconEl.className = 'bi bi-chevron-down ms-2';
-        header.appendChild(iconEl);
+        iconEl.className = 'bi bi-chevron-down';
+        rightDiv.appendChild(iconEl);
+
+        header.appendChild(rightDiv);
 
         if (isExclusive) header.classList.add('group-header-exclusive');
 
@@ -19098,6 +22105,19 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     rowAi.appendChild(colTags);
     metadataPane.appendChild(rowAi);
 
+    // AI Generation Instructions (if saved from AI generator)
+    if (details.ai_instructions) {
+        metadataPane.appendChild(renderMetadataField(
+            'textarea',
+            'comp-ai-instructions',
+            'AI Generation Instructions (Saved Prompt)',
+            details.ai_instructions,
+            false,
+            false,
+            2
+        ));
+    }
+
     // Resource Profile Row
     const rowResources = document.createElement('div');
     rowResources.className = 'row bg-light p-3 rounded mb-3 mx-0';
@@ -19199,19 +22219,42 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             backdrop-filter: blur(16px) saturate(180%);
             -webkit-backdrop-filter: blur(16px) saturate(180%);
             border-right: 1px solid var(--glass-border) !important;
-            padding: 1rem;
-            width: 280px;
-            min-width: 200px;
+            padding: 1rem 0.5rem 1rem 0.85rem;
+            width: 300px;
+            min-width: 220px;
             max-width: 600px;
             display: flex;
             flex-direction: column;
-            overflow-y: hidden;
+            overflow: hidden;
         }
-        .sidebar-header { flex-shrink: 0; }
-        #component-list { overflow-y: auto; flex-grow: 1; }
+        .sidebar-header { flex-shrink: 0; padding-right: 0.35rem; }
+        #sidebar-controls { padding-right: 0.35rem; }
+        #component-list {
+            overflow-y: auto;
+            overflow-x: hidden;
+            flex-grow: 1;
+            padding-right: 0.45rem;
+        }
+        #component-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        #component-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 4px;
+        }
+        #component-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        #component-list::-webkit-scrollbar-thumb:hover {
+            background: #00b0ff;
+        }
         .content { flex-grow: 1; padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; }
         #feedback-alert { position: fixed; top: 70px; right: 20px; z-index: 1050; }
-        #editor-wrapper { border: 1px solid var(--glass-border); border-radius: 0.25rem; flex-grow: 1; position: relative; }
+        #editor-wrapper, #config-editor-wrapper { border: 1px solid var(--glass-border); border-radius: 0.25rem; flex-grow: 1; position: relative; }
+        #config-editor-wrapper .CodeMirror { height: 100%; min-height: 400px; }
+        .tab-content > .tab-pane:not(.active) { display: none !important; }
+        .tab-content > .tab-pane.active.flex-pane { display: flex !important; flex-direction: column; flex-grow: 1; }
         /*noinspection CssUnusedSymbol*/
         #editor-wrapper.drag-over { border: 2px dashed var(--brand-blue); background-color: rgba(0, 176, 255, 0.05); }
         .resizer {
@@ -19220,10 +22263,11 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             background-color: rgba(255, 255, 255, 0.05);
             cursor: col-resize;
             border-right: 1px solid var(--glass-border);
+            z-index: 10;
         }
         .resizer:hover { background-color: #0d6efd; }
         /*noinspection CssUnusedSymbol*/
-        .group-header-exclusive { background-color: #fdf8e3; border-left: 4px solid #f0ad4e; }
+        .group-header-exclusive { background-color: #fdf8e3; border-left: 4px solid #f0ad4e !important; }
         /*noinspection CssUnusedSymbol*/
         .nav-link.tab-dirty {
             background-color: #f8d7da !important;
@@ -19262,12 +22306,170 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
         }
 
-        /* Specific styling for Package headers in the sidebar */
-        /*noinspection CssUnusedSymbol*/
+        /* Sidebar Group and Component Tree Styling */
+        .group-header {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9)) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.25) !important;
+            border-left: 4px solid #00b0ff !important;
+            border-radius: 0.375rem !important;
+            font-size: 0.85rem;
+            padding: 0.45rem 0.65rem !important;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            margin-bottom: 3px;
+        }
+        .group-header .group-title {
+            color: #38bdf8 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.015em;
+        }
+        .group-header:hover {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border-color: rgba(56, 189, 248, 0.5) !important;
+        }
+        .group-header:hover .group-title {
+            color: #7dd3fc !important;
+        }
+        .group-header.collapsed {
+            background: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.06) !important;
+            border-left: 4px solid rgba(148, 163, 184, 0.4) !important;
+        }
+        .group-header.collapsed .group-title {
+            color: #cbd5e1 !important;
+            font-weight: 600 !important;
+        }
+        .group-header.collapsed:hover {
+            background: rgba(30, 41, 59, 0.75) !important;
+            border-left-color: #00b0ff !important;
+        }
+        .group-header.collapsed:hover .group-title {
+            color: #38bdf8 !important;
+        }
+        .group-count-badge {
+            background-color: rgba(0, 176, 255, 0.15) !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(56, 189, 248, 0.3) !important;
+            font-weight: 600;
+        }
+        .group-header.collapsed .group-count-badge {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+            color: #94a3b8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
         .group-header[data-group-id^="pkg-"] {
-            background-color: #e7f1ff;
-            border-left: 4px solid #0d6efd;
-            color: #084298;
+            border-left: 4px solid #818cf8 !important;
+        }
+        .group-header[data-group-id^="pkg-"] .group-title {
+            color: #a5b4fc !important;
+        }
+
+        .component-list-wrapper {
+            margin-left: 1.1rem;
+            margin-top: 0.35rem;
+            margin-bottom: 0.75rem;
+            padding-left: 0.75rem;
+            position: relative;
+        }
+        .component-list-item {
+            position: relative;
+            font-size: 0.84rem !important;
+            padding: 0.38rem 0.65rem !important;
+            border-radius: 0.375rem !important;
+            margin: 4px 0 !important;
+            border: 1px solid rgba(255, 255, 255, 0.04) !important;
+            color: #cbd5e1 !important;
+            background-color: rgba(15, 23, 42, 0.35) !important;
+            transition: all 0.15s ease-in-out;
+        }
+        /* Vertical tree connector line */
+        .component-list-item::before {
+            content: "";
+            position: absolute;
+            left: -0.75rem;
+            top: -6px;
+            bottom: -6px;
+            width: 2px;
+            background-color: #00b0ff;
+        }
+        /* First child connects to top */
+        .component-list-item:first-child::before {
+            top: -0.45rem;
+        }
+        /* Last child stops at vertical midpoint to create the L-shape corner */
+        .component-list-item:last-child::before {
+            bottom: 50%;
+        }
+        /* Horizontal tree branch connector */
+        .component-list-item::after {
+            content: "";
+            position: absolute;
+            left: -0.75rem;
+            top: 50%;
+            width: 0.7rem;
+            height: 2px;
+            background-color: #00b0ff;
+        }
+        .component-list-item:hover {
+            background-color: rgba(0, 176, 255, 0.15) !important;
+            color: #ffffff !important;
+            border-color: rgba(0, 176, 255, 0.3) !important;
+        }
+        .component-list-item.active {
+            background: linear-gradient(135deg, rgba(0, 176, 255, 0.35), rgba(0, 145, 234, 0.5)) !important;
+            border-left: 3px solid #00b0ff !important;
+            border-color: rgba(0, 176, 255, 0.5) !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+        }
+
+        /* Light mode overrides for sidebar */
+        [data-bs-theme="light"] .group-header {
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-left: 4px solid #0284c7 !important;
+        }
+        [data-bs-theme="light"] .group-header .group-title {
+            color: #0369a1 !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-left: 4px solid #94a3b8 !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed .group-title {
+            color: #475569 !important;
+        }
+        [data-bs-theme="light"] .group-count-badge {
+            background-color: #e0f2fe !important;
+            color: #0369a1 !important;
+            border: 1px solid #bae6fd !important;
+        }
+        [data-bs-theme="light"] .group-header.collapsed .group-count-badge {
+            background-color: #f1f5f9 !important;
+            color: #64748b !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        [data-bs-theme="light"] .component-list-item {
+            color: #334155 !important;
+            background-color: #ffffff !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        [data-bs-theme="light"] .component-list-item::before,
+        [data-bs-theme="light"] .component-list-item::after {
+            background-color: #0284c7;
+        }
+        [data-bs-theme="light"] .component-list-item:hover {
+            background-color: #e0f2fe !important;
+            color: #0369a1 !important;
+            border-color: #7dd3fc !important;
+        }
+        [data-bs-theme="light"] .component-list-item.active {
+            background: #bae6fd !important;
+            color: #0369a1 !important;
+            border-left: 3px solid #0284c7 !important;
+            border-color: #0284c7 !important;
         }
 
         /* Helper for empty sections */
@@ -19289,18 +22491,8 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             transform: rotate(-90deg);
         }
         .list-group-item {
-            background-color: transparent !important;
-            color: #cbd5e1 !important;
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        }
-        .list-group-item:hover {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: #ffffff !important;
-        }
-        .list-group-item.active {
-            background: linear-gradient(135deg, #00b0ff, #0091ea) !important;
-            color: #ffffff !important;
-            border-color: transparent !important;
+            background-color: transparent;
+            color: inherit;
         }
         .modal-content {
             background: var(--glass-bg) !important;
@@ -19621,7 +22813,8 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             <ul class="nav nav-tabs" id="editorTabs" role="tablist">
                 <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#metadata-pane">Core Metadata</button></li>
                 <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#variables-pane">User Variables</button></li>
-                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#template-pane">Docker Compose Template Editor</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#template-pane" type="button" role="tab">Docker Compose Template Editor</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#configs-pane" id="configs-tab" type="button" role="tab">Configuration Files <span class="badge bg-secondary ms-1" id="configs-tab-count" style="pointer-events: none;">0</span></button></li>
             </ul>
             <div class="tab-content pt-3 d-flex flex-column flex-grow-1" id="editorTabsContent">
                 <div class="tab-pane fade show active" id="metadata-pane"></div>
@@ -19638,7 +22831,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                     <div id="variables-list" class="mt-3"></div>
                     <button class="btn btn-secondary mt-3" id="add-variable-btn"><i class="bi bi-plus-circle"></i> Add New Variable</button>
                 </div>
-                <div class="tab-pane fade d-flex flex-column flex-grow-1" id="template-pane">
+                <div class="tab-pane fade flex-pane" id="template-pane">
                     <div class="d-flex justify-content-end mb-2">
                         <button class="btn btn-sm btn-outline-success me-2" id="add-header-btn"><i class="bi bi-file-earmark-plus"></i> Add NjordDeploy Header</button>
                         <button class="btn btn-sm btn-outline-info me-2" id="validate-template-btn"><i class="bi bi-check-circle"></i> Validate Template</button>
@@ -19648,6 +22841,26 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                     <div id="editor-wrapper">
                         <label for="template-editor" class="visually-hidden">Docker Compose Template Editor</label>
                         <textarea id="template-editor"></textarea>
+                    </div>
+                </div>
+                <div class="tab-pane fade flex-pane" id="configs-pane">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="config-file-select" class="form-label mb-0 fw-bold small text-secondary">Active File:</label>
+                            <select class="form-select form-select-sm" id="config-file-select" style="min-width: 220px;"></select>
+                            <button class="btn btn-sm btn-outline-primary" id="btn-add-config-file" type="button" title="Add new config file"><i class="bi bi-plus-lg"></i> Add File</button>
+                            <button class="btn btn-sm btn-outline-danger" id="btn-delete-config-file" type="button" title="Delete current config file"><i class="bi bi-trash"></i></button>
+                        </div>
+                        <div class="small text-muted">
+                            Mounted via <code id="config-mount-hint">{% raw %}{{ DATA_ROOT }}/...{% endraw %}</code>
+                        </div>
+                    </div>
+                    <div class="alert alert-info py-2 px-3 small mb-2 d-none" id="no-configs-msg">
+                        <i class="bi bi-info-circle me-1"></i> This component has no additional configuration template files defined. Click <strong>+ Add File</strong> to create one (e.g. <code>config.yaml</code> or <code>Caddyfile</code>).
+                    </div>
+                    <div class="flex-grow-1 position-relative d-flex flex-column" id="config-editor-wrapper">
+                        <label for="config-editor-textarea" class="visually-hidden">Configuration File Content</label>
+                        <textarea class="form-control font-monospace flex-grow-1" id="config-editor-textarea" style="resize: none; font-size: 0.9rem; min-height: 350px;" placeholder="Configuration file content..." spellcheck="false"></textarea>
                     </div>
                 </div>
             </div>
@@ -19716,6 +22929,12 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             <div class="modal-body">
                 <!-- Step 1: Input Form -->
                 <div id="ai-input-step">
+                    <div class="alert alert-info py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                        <i class="bi bi-info-circle-fill text-info flex-shrink-0"></i>
+                        <div>
+                            <strong>AI Assistant Notice:</strong> The generator drafts service templates based on repository analysis. Complex services (such as proxy gateways or multi-container stacks) may require custom startup flags or configuration templates.
+                        </div>
+                    </div>
                     <form id="ai-generator-form">
                         <div class="mb-3">
                             <label for="ai-repo-url" class="form-label">Git Repository URL</label>
@@ -19812,7 +23031,12 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
 
                 <!-- Step 3: Preview and Review -->
                 <div id="ai-preview-step" class="d-none">
-                    <p class="text-secondary">Please review the AI-generated metadata and files before registering the component.</p>
+                    <div class="alert alert-secondary py-2 px-3 mb-3 d-flex align-items-center gap-2 small">
+                        <i class="bi bi-shield-check text-primary flex-shrink-0"></i>
+                        <div>
+                            <strong>Developer Verification:</strong> AI generation provides a draft configuration. Please inspect the <em>Docker Compose</em>, <em>Variables</em>, and <em>Configs</em> tabs below to verify ports, volume paths, and environment settings before registering.
+                        </div>
+                    </div>
 
                     <!-- AI Validation Warnings -->
                     <div id="ai-warnings-container" class="alert alert-warning d-none mb-3">
@@ -20392,9 +23616,9 @@ class ComponentManager:
         import re
 
         try:
-            cleaned_yaml = re.sub(r"\{\{.*?}}", "JINJA_VAR", template_content)
-            cleaned_yaml = re.sub(r"\{%.*?%}", "JINJA_BLOCK", cleaned_yaml)
-            cleaned_yaml = re.sub(r"\{#.*?}", "JINJA_COMMENT", cleaned_yaml)
+            cleaned_yaml = re.sub(r"\{#.*?#\}", "", template_content, flags=re.DOTALL)
+            cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
+            cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
 
             data = yaml.safe_load(cleaned_yaml)
 
@@ -20793,7 +24017,7 @@ class ComponentManager:
 
         docker_compose_data: Dict[str, Any] = {
             "services": {},
-            "networks": {"njorddeploy-network": {"external": True}},
+            "networks": {"njorddeploy_net": {"external": True}},
             "volumes": {},
         }
 
@@ -20910,6 +24134,20 @@ class ComponentManager:
 
         logger.info("Artifact generation completed.")
 
+    def get_component_configs(self, component_id: str) -> Dict[str, str]:
+        """Returns all configuration templates for a component."""
+        return self.reader.get_component_configs(component_id)
+
+    def save_component_config(
+        self, component_id: str, filename: str, content: str
+    ) -> bool:
+        """Saves a configuration template file and registers in metadata."""
+        return self.writer.save_component_config(component_id, filename, content)
+
+    def delete_component_config(self, component_id: str, filename: str) -> bool:
+        """Deletes a configuration template file and unregisters from metadata."""
+        return self.writer.delete_component_config(component_id, filename)
+
 --- FILE: src/managers/component_reader.py ---
 # src/managers/component_reader.py
 
@@ -21024,6 +24262,19 @@ class ComponentReader:
     def get_all_packages(self) -> Dict[str, Any]:
         """Returns all defined packages from the master metadata."""
         return self.get_all_metadata().get("packages", {})
+
+    def get_component_configs(self, component_id: str) -> Dict[str, str]:
+        """Returns all config files in template-config (except variables.json)."""
+        config_dir = self.templates_path / component_id / "template-config"
+        configs = {}
+        if config_dir.exists() and config_dir.is_dir():
+            for file_path in sorted(config_dir.iterdir()):
+                if file_path.is_file() and file_path.name != "variables.json":
+                    try:
+                        configs[file_path.name] = file_path.read_text(encoding="utf-8")
+                    except IOError as e:
+                        logger.error(f"Could not read config {file_path}: {e}")
+        return configs
 
 --- FILE: src/managers/component_writer.py ---
 # src/managers/component_writer.py
@@ -21245,6 +24496,70 @@ class ComponentWriter:
             del full_meta["packages"][pkg_id]
             return self._save_json(self.metadata_file, full_meta)
         except (json.JSONDecodeError, IOError):
+            return False
+
+    def save_component_config(
+        self, component_id: str, filename: str, content: str
+    ) -> bool:
+        """Saves a configuration template file and registers it in metadata."""
+        config_dir = self.templates_path / component_id / "template-config"
+        config_dir.mkdir(parents=True, exist_ok=True)
+        file_path = config_dir / filename
+        try:
+            file_path.write_text(content, encoding="utf-8")
+        except IOError as e:
+            logger.error(f"Could not write config {file_path}: {e}")
+            return False
+
+        # Update metadata config_templates map
+        try:
+            if self.metadata_file.exists():
+                with open(self.metadata_file, "r", encoding="utf-8") as f:
+                    full_meta = json.load(f)
+            else:
+                full_meta = {"components": {}}
+            comp_meta = full_meta.setdefault("components", {}).setdefault(
+                component_id, {}
+            )
+            config_templates = comp_meta.setdefault("config_templates", {})
+            if isinstance(config_templates, dict):
+                config_templates[filename] = f"{component_id}/{filename}"
+            comp_meta["has_configuration"] = True
+            return self._save_json(self.metadata_file, full_meta)
+        except Exception as e:
+            logger.error(
+                f"Failed to update metadata for config template {filename}: {e}"
+            )
+            return False
+
+    def delete_component_config(self, component_id: str, filename: str) -> bool:
+        """Deletes a configuration template file and unregisters it from metadata."""
+        file_path = self.templates_path / component_id / "template-config" / filename
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except IOError as e:
+                logger.error(f"Could not delete config {file_path}: {e}")
+
+        # Remove from metadata
+        try:
+            if self.metadata_file.exists():
+                with open(self.metadata_file, "r", encoding="utf-8") as f:
+                    full_meta = json.load(f)
+            else:
+                return True
+            comp_meta = full_meta.get("components", {}).get(component_id, {})
+            config_templates = comp_meta.get("config_templates")
+            if isinstance(config_templates, dict) and filename in config_templates:
+                del config_templates[filename]
+                if not config_templates and not comp_meta.get("variables"):
+                    comp_meta["has_configuration"] = False
+                return self._save_json(self.metadata_file, full_meta)
+            return True
+        except Exception as e:
+            logger.error(
+                f"Failed to remove config template {filename} from metadata: {e}"
+            )
             return False
 
 --- FILE: src/managers/deployment_evaluator.py ---
@@ -24080,6 +27395,8 @@ class AIGenerator:
                 data["id"] = component_id
 
                 metadata = data.setdefault("metadata", {})
+                if custom_instructions:
+                    metadata["ai_instructions"] = custom_instructions.strip()
                 if data.get("variables") or data.get("config_templates"):
                     metadata["has_configuration"] = True
 
@@ -24355,13 +27672,10 @@ class AIGenerator:
                 import yaml
 
                 cleaned_yaml = re.sub(
-                    r'["\']?\{\{.*?\}\}["\']?:["\']?\{\{.*?\}\}["\']?',
-                    '"JINJA_VAR"',
-                    docker_compose_str,
+                    r"\{#.*?#\}", "", docker_compose_str, flags=re.DOTALL
                 )
+                cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
                 cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
-                cleaned_yaml = re.sub(r"\{%.*?%\}", "JINJA_BLOCK", cleaned_yaml)
-                cleaned_yaml = re.sub(r"\{#.*?#\}", "JINJA_COMMENT", cleaned_yaml)
 
                 compose_dict = yaml.safe_load(cleaned_yaml) or {}
 
@@ -24638,7 +27952,17 @@ class AIGeneratorEngine:
         return cfg
 
 --- FILE: src/utils/ai_provider_manager.py ---
-# src/utils/ai_provider_manager.py
+"""AI Provider Manager for NjordDeploy.
+
+Manages registration, configuration resolution, and persistence of AI providers
+(Ollama, Google Gemini, HostYourAI, OpenAI, Custom Endpoints).
+
+Architecture Note on Google Gemini:
+Google Gemini is integrated via its official OpenAI-compatible endpoint
+(`https://generativelanguage.googleapis.com/v1beta/openai/`). This allows
+AIGeneratorEngine to use a single unified OpenAI client across all local
+and cloud providers without fragmented SDK dependencies (e.g. google-genai).
+"""
 
 import json
 import logging
@@ -24663,6 +27987,7 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "name": "Google Gemini",
         "env_var": "GEMINI_API_KEY",
         "requires_api_key": True,
+        # Uses Google's official OpenAI-compatible Chat Completions endpoint
         "default_base_url": (
             "https://generativelanguage.googleapis.com/v1beta/openai/"
         ),
@@ -24915,7 +28240,9 @@ class ContainerEngine:
     @property
     def compose_cli(self) -> str:
         """Returns the Compose command invocation."""
-        return f"{self.engine} compose"
+        if self.is_podman:
+            return "podman-compose"
+        return "docker compose"
 
     def get_network_create_cmd(self, network_name: str = "njorddeploy_net") -> str:
         """Returns command to create the default network."""
@@ -24942,26 +28269,26 @@ class ContainerEngine:
     def get_compose_up_cmd(self, detach: bool = True) -> str:
         """Returns compose up command."""
         flag = " -d" if detach else ""
-        return f"{self.engine} compose up{flag}"
+        return f"{self.compose_cli} up{flag}"
 
     def get_compose_down_cmd(self, remove_volumes: bool = False) -> str:
         """Returns compose down command."""
         flag = " -v" if remove_volumes else ""
-        return f"{self.engine} compose down{flag}"
+        return f"{self.compose_cli} down{flag}"
 
     def get_compose_pull_cmd(self) -> str:
         """Returns compose pull command."""
         if self.is_docker:
             return "docker compose pull --ignore-buildable"
-        return "podman compose pull"
+        return f"{self.compose_cli} pull"
 
     def get_compose_clean_cmd(self, service_name: str) -> str:
         """Returns compose rm / clean command for a specific service."""
-        return f"{self.engine} compose rm -f -s -v {service_name}"
+        return f"{self.compose_cli} rm -f -s -v {service_name}"
 
     def get_compose_restart_cmd(self, service_name: str) -> str:
         """Returns compose restart command for a specific service."""
-        return f"{self.engine} compose restart {service_name}"
+        return f"{self.compose_cli} restart {service_name}"
 
     def get_exec_cmd(self, container_name: str, command: str) -> str:
         """Returns container exec command."""
@@ -24997,13 +28324,29 @@ class ContainerEngine:
                 f"{cmd_prefix}apt-get install -y podman podman-compose "
                 "slirp4netns uidmap dbus-user-session curl ca-certificates"
             ),
+            # Configure unqualified search registries
+            f"{cmd_prefix}mkdir -p /etc/containers/registries.conf.d",
+            (
+                f"{cmd_prefix}sh -c 'echo "
+                "\"unqualified-search-registries = "
+                "[\\\"docker.io\\\", \\\"quay.io\\\", \\\"ghcr.io\\\"]\" "
+                "> /etc/containers/registries.conf.d/00-default-registries.conf'"
+            ),
+            # Configure cgroup manager and events logger for rootless
+            (
+                f"{cmd_prefix}sh -c 'printf \""
+                "[engine]\\n"
+                "cgroup_manager = \\\"cgroupfs\\\"\\n"
+                "events_logger = \\\"file\\\"\\n"
+                "\" > /etc/containers/containers.conf'"
+            ),
             # Configure kernel unprivileged port start (for port 53 DNS, 80/443 web)
             (
                 f"{cmd_prefix}sh -c 'echo "
-                f"\"net.ipv4.ip_unprivileged_port_start={unprivileged_port_start}\" "
+                f'"net.ipv4.ip_unprivileged_port_start={unprivileged_port_start}" '
                 "> /etc/sysctl.d/99-podman-ports.conf'"
             ),
-            f"{cmd_prefix}sysctl --system",
+            f"{cmd_prefix}sysctl -p /etc/sysctl.d/99-podman-ports.conf",
         ]
 
         if not is_root:
@@ -25011,11 +28354,11 @@ class ContainerEngine:
             commands.append(f"{cmd_prefix}loginctl enable-linger {username}")
             # Ensure subuid / subgid exist for rootless namespace mapping
             commands.append(
-                f"{cmd_prefix}sh -c 'grep -q \"^{username}:\" /etc/subuid || "
+                f'{cmd_prefix}sh -c \'grep -q "^{username}:" /etc/subuid || '
                 f"usermod --add-subuids 100000-165535 {username}'"
             )
             commands.append(
-                f"{cmd_prefix}sh -c 'grep -q \"^{username}:\" /etc/subgid || "
+                f'{cmd_prefix}sh -c \'grep -q "^{username}:" /etc/subgid || '
                 f"usermod --add-subgids 100000-165535 {username}'"
             )
 

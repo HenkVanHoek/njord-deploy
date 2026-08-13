@@ -54,7 +54,7 @@ def test_container_engine_podman():
     assert engine.is_docker is False
     assert engine.is_podman is True
     assert engine.cli == "podman"
-    assert engine.compose_cli == "podman compose"
+    assert engine.compose_cli == "podman-compose"
     assert engine.get_network_create_cmd("test_net") == "podman network create test_net"
     assert engine.get_ps_cmd() == "podman ps"
     assert engine.get_ps_cmd(all_containers=True) == "podman ps -a"
@@ -64,11 +64,11 @@ def test_container_engine_podman():
         engine.get_logs_cmd("my-cont", tail=50, sudo=True)
         == "podman logs --tail 50 my-cont"
     )
-    assert engine.get_compose_up_cmd() == "podman compose up -d"
-    assert engine.get_compose_down_cmd(remove_volumes=True) == "podman compose down -v"
-    assert engine.get_compose_pull_cmd() == "podman compose pull"
-    assert engine.get_compose_clean_cmd("svc1") == "podman compose rm -f -s -v svc1"
-    assert engine.get_compose_restart_cmd("svc1") == "podman compose restart svc1"
+    assert engine.get_compose_up_cmd() == "podman-compose up -d"
+    assert engine.get_compose_down_cmd(remove_volumes=True) == "podman-compose down -v"
+    assert engine.get_compose_pull_cmd() == "podman-compose pull"
+    assert engine.get_compose_clean_cmd("svc1") == "podman-compose rm -f -s -v svc1"
+    assert engine.get_compose_restart_cmd("svc1") == "podman-compose restart svc1"
 
 
 def test_provisioning_commands_docker():

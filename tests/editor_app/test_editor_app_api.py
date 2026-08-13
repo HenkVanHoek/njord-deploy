@@ -183,8 +183,9 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 201)
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertEqual(res_data["status"], "created")
-        mock_create.assert_called_once_with("caddy", "Caddy")
-        mock_update_meta.assert_called_once_with("caddy", payload["metadata"])
+        expected_metadata = payload["metadata"].copy()
+        expected_metadata["config_templates"] = {"Caddyfile": "caddy/Caddyfile"}
+        mock_update_meta.assert_called_once_with("caddy", expected_metadata)
 
     @patch("managers.sync_manager.SyncManager.fetch_from_remote")
     @patch("managers.sync_manager.SyncManager.get_sync_status")
@@ -217,3 +218,39 @@ class TestEditorAppAPI(unittest.TestCase):
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertEqual(res_data["status"], "success")
         mock_mark.assert_called_once_with("pi-hole", test_status="stable")
+
+    @patch("managers.component_manager.ComponentManager.get_component_configs")
+    def test_get_component_configs_endpoint(self, mock_get_configs):
+        """Tests GET /api/components/<comp_id>/configs endpoint."""
+        mock_get_configs.return_value = {"config.yaml": "model_list: []\n"}
+        response = self.client.get("/api/components/litellm/configs")
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["configs"], {"config.yaml": "model_list: []\n"})
+        mock_get_configs.assert_called_once_with("litellm")
+
+    @patch("managers.component_manager.ComponentManager.save_component_config")
+    def test_save_component_config_endpoint(self, mock_save_config):
+        """Tests PUT /api/components/<comp_id>/configs/<filename> endpoint."""
+        mock_save_config.return_value = True
+        response = self.client.put(
+            "/api/components/litellm/configs/config.yaml",
+            data="model_list:\n  - model_name: gpt-4\n",
+            content_type="text/plain",
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "saved")
+        mock_save_config.assert_called_once_with(
+            "litellm", "config.yaml", "model_list:\n  - model_name: gpt-4\n"
+        )
+
+    @patch("managers.component_manager.ComponentManager.delete_component_config")
+    def test_delete_component_config_endpoint(self, mock_delete_config):
+        """Tests DELETE /api/components/<comp_id>/configs/<filename> endpoint."""
+        mock_delete_config.return_value = True
+        response = self.client.delete("/api/components/litellm/configs/config.yaml")
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "deleted")
+        mock_delete_config.assert_called_once_with("litellm", "config.yaml")

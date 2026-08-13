@@ -2,6 +2,13 @@
 
 This document is automatically generated from the project metadata. It lists the open-source software packages that can be deployed using NjordDeploy, along with links to their official repositories and homepages.
 
+## AI & LLM Services
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| LiteLLM AI Gateway | LiteLLM is an AI gateway and LLM proxy that unifies access to 100+ Large Language Models (OpenAI, Gemini, Anthropic, Ollama, Azure, Bedrock, HostYourAI) behind a single OpenAI-compatible API format. | [Link](https://github.com/BerriAI/litellm) |
+| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | [Link](https://openwebui.com/) |
+
 ## DNS Blocker
 
 | Service | Description | Project Homepage / Repository |
@@ -124,7 +131,6 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | [Link](https://n8n.io/) |
 | Nextcloud | A comprehensive self-hosted productivity and collaboration suite offering secure file storage, online document editing, calendar, and contacts synchronization. | [Link](https://nextcloud.com/) |
-| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | [Link](https://openwebui.com/) |
 | Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | [Link](https://stirlingpdf.com/) |
 | Voicebox | The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 

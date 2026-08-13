@@ -34,11 +34,11 @@ The engine abstraction is implemented in [`src/utils/container_engine.py`](file:
 | Operation | Docker Mode | Podman Mode (Rootless) |
 | :--- | :--- | :--- |
 | **CLI Binary** | `docker` | `podman` |
-| **Compose Command** | `docker compose` | `podman compose` |
-| **Pull Images** | `docker compose pull --ignore-buildable` | `podman compose pull` |
-| **Start Services** | `docker compose up -d` | `podman compose up -d` |
-| **Stop Services** | `docker compose down [-v]` | `podman compose down [-v]` |
-| **Remove Service** | `docker compose rm -f -s -v <service>` | `podman compose rm -f -s -v <service>` |
+| **Compose Command** | `docker compose` | `podman-compose` |
+| **Pull Images** | `docker compose pull --ignore-buildable` | `podman-compose pull` |
+| **Start Services** | `docker compose up -d` | `podman-compose up -d` |
+| **Stop Services** | `docker compose down [-v]` | `podman-compose down [-v]` |
+| **Remove Service** | `docker compose rm -f -s -v <service>` | `podman-compose rm -f -s -v <service>` |
 | **Container Exec** | `docker exec <container> <cmd>` | `podman exec <container> <cmd>` |
 | **Network Creation** | `docker network create njorddeploy_net` | `podman network create njorddeploy_net` |
 | **Log Streaming** | `docker logs --tail 200 <container>` | `podman logs --tail 200 <container>` |

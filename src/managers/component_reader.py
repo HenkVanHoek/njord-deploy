@@ -111,3 +111,16 @@ class ComponentReader:
     def get_all_packages(self) -> Dict[str, Any]:
         """Returns all defined packages from the master metadata."""
         return self.get_all_metadata().get("packages", {})
+
+    def get_component_configs(self, component_id: str) -> Dict[str, str]:
+        """Returns all config files in template-config (except variables.json)."""
+        config_dir = self.templates_path / component_id / "template-config"
+        configs = {}
+        if config_dir.exists() and config_dir.is_dir():
+            for file_path in sorted(config_dir.iterdir()):
+                if file_path.is_file() and file_path.name != "variables.json":
+                    try:
+                        configs[file_path.name] = file_path.read_text(encoding="utf-8")
+                    except IOError as e:
+                        logger.error(f"Could not read config {file_path}: {e}")
+        return configs

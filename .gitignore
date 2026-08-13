@@ -54,6 +54,8 @@ artifacts/
 tmp_proxmox_test/
 
 # Proxmox test run reports (dated)
+docs/PROXMOX_TESTS_*_*.md
+docs/PROXMOX_TESTS_*_*.pdf
 docs/PROXMOX_TESTS_*_*runs_*.md
 docs/PROXMOX_TESTS_*_*runs_*.pdf
 docs/PROXMOX_TESTS_test-playwright_*.md
