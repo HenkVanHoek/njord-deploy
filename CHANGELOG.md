@@ -6,9 +6,14 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
-## [0.5.22] - 2026-08-16
+## [0.5.23] - 2026-08-16
 
 ### Added
+- **Triple-Binary Release Packaging**:
+  - Configured PyInstaller (`NjordDeployProxmoxTest.spec`) and GitHub Release Pipeline (`.github/workflows/release.yml`) to build and bundle all three standalone executables in every release zip (`NjordDeploy-Linux.zip`, `NjordDeploy-macOS.zip`, `NjordDeploy-Windows.zip`):
+    - **`NjordDeployConfigurator`** (port `5001` via `run_configurator.py`)
+    - **`NjordDeployEditor`** (port `5000` via `run_editor.py`)
+    - **`NjordDeployProxmoxTest`** (port `5050` via `run_proxmox_gui.py`)
 - **AI-Powered Failure Diagnoser & Self-Healing DevOps Pipeline**:
   - Created `AIFailureDiagnoser` ([`src/utils/ai_failure_diagnoser.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_failure_diagnoser.py)) utilizing LLM intelligence (Gemini Flash, OpenAI, Ollama) to automatically analyze heterogeneous Proxmox test run failures across 4-way cross-validation matrices.
   - Automatically classifies errors into `TEMPLATE_CONFIG`, `CORE_PLATFORM_CODE`, `ENVIRONMENT_INFRA`, and `MATRIX_CONSTRAINT` categories and generates 1-click Jinja2 compose and metadata patches.

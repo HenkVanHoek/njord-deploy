@@ -1609,7 +1609,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-16T11:05:25.579862+00:00",
+            "last_updated": "2026-08-16T11:32:04.076247+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",

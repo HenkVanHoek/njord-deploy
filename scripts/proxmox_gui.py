@@ -19,8 +19,18 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, make_response, render_template, request
 
+
+def get_project_root() -> Path:
+    """Returns base project root, supporting PyInstaller frozen bundles."""
+    if getattr(sys, "frozen", False):
+        base_path_str: Optional[str] = getattr(sys, "_MEIPASS", None)
+        if base_path_str:
+            return Path(base_path_str)
+    return Path(__file__).resolve().parent.parent
+
+
 # Ensure we can import from project root and src directory
-project_root = Path(__file__).resolve().parent.parent
+project_root = get_project_root()
 sys.path.insert(0, str(project_root / "src"))
 sys.path.insert(0, str(project_root))
 
@@ -87,8 +97,9 @@ class TestRunnerManager:
                     break
 
         runner_script = project_root / "scripts" / "proxmox_test_runner.py"
+        python_bin = "python3" if getattr(sys, "frozen", False) else sys.executable
         cmd = [
-            sys.executable,
+            python_bin,
             "-u",  # Unbuffered output
             str(runner_script),
             "--mode",
@@ -360,7 +371,11 @@ def create_app() -> Flask:
     load_dotenv(project_root / ".env")
 
     templates_dir = project_root / "scripts" / "templates"
+    if not templates_dir.exists():
+        templates_dir = project_root / "templates"
     static_dir = project_root / "scripts" / "static"
+    if not static_dir.exists():
+        static_dir = project_root / "static"
 
     app = Flask(
         __name__,

@@ -2292,8 +2292,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, make_response, render_template, request
 
+def get_project_root() -> Path:
+    """Returns base project root, supporting PyInstaller frozen bundles."""
+    if getattr(sys, "frozen", False):
+        base_path_str: Optional[str] = getattr(sys, "_MEIPASS", None)
+        if base_path_str:
+            return Path(base_path_str)
+    return Path(__file__).resolve().parent.parent
+
+
 # Ensure we can import from project root and src directory
-project_root = Path(__file__).resolve().parent.parent
+project_root = get_project_root()
 sys.path.insert(0, str(project_root / "src"))
 sys.path.insert(0, str(project_root))
 
@@ -2360,8 +2369,9 @@ class TestRunnerManager:
                     break
 
         runner_script = project_root / "scripts" / "proxmox_test_runner.py"
+        python_bin = "python3" if getattr(sys, "frozen", False) else sys.executable
         cmd = [
-            sys.executable,
+            python_bin,
             "-u",  # Unbuffered output
             str(runner_script),
             "--mode",
@@ -2633,7 +2643,11 @@ def create_app() -> Flask:
     load_dotenv(project_root / ".env")
 
     templates_dir = project_root / "scripts" / "templates"
+    if not templates_dir.exists():
+        templates_dir = project_root / "templates"
     static_dir = project_root / "scripts" / "static"
+    if not static_dir.exists():
+        static_dir = project_root / "static"
 
     app = Flask(
         __name__,
@@ -29467,9 +29481,7 @@ class AIFailureDiagnoser:
                 engine = (r.get("engine") or "").upper()
                 key = f"{mode}/{engine}"
                 if key in matrix:
-                    matrix[key] = (
-                        "PASSED" if r.get("status") == "success" else "FAILED"
-                    )
+                    matrix[key] = "PASSED" if r.get("status") == "success" else "FAILED"
         return matrix
 
     @staticmethod
@@ -29512,8 +29524,8 @@ class AIFailureDiagnoser:
                 "when 'network_mode: host' is specified, causing Podman to reject "
                 "container creation with exit code 125. To fix this while keeping "
                 "host discovery for Docker, recommend using a Jinja2 conditional: "
-                "'{%- if CONTAINER_ENGINE == \"podman\" %} "
-                "ports: [\"<PORT>:<PORT>\"] networks: [njorddeploy_net] "
+                '\'{%- if CONTAINER_ENGINE == "podman" %} '
+                'ports: ["<PORT>:<PORT>"] networks: [njorddeploy_net] '
                 "{%- else %} network_mode: host {%- endif %}'."
             )
         elif "podman-compose" in combined_text and (
@@ -29664,7 +29676,7 @@ class AIFailureDiagnoser:
             "('docker'/'podman') and 'TARGET_MODE' ('lxc'/'vm'). "
             "Use Jinja2 conditionals when a service needs different networking "
             "or volume mappings between Docker and Podman (e.g. "
-            "'{%- if CONTAINER_ENGINE == \"podman\" %} ports: ... "
+            '\'{%- if CONTAINER_ENGINE == "podman" %} ports: ... '
             "{%- else %} network_mode: host {%- endif %}').\n\n"
             "CLASSIFY THE ROOT CAUSE TARGET:\n"
             "1. 'TEMPLATE_CONFIG': Service compose configuration "

@@ -75,9 +75,10 @@ Behavior during deployment
 ## 🚀 Quick Start Guide
 
 1. **Download the Release Zip**: Go to the [GitHub Releases page](https://github.com/HenkVanHoek/njord-deploy/releases) and download the release package for your operating system (`NjordDeploy-Linux.zip`, `NjordDeploy-macOS.zip`, or `NjordDeploy-Windows.zip`).
-2. **Unzip & Launch**: Unzip the package to a local folder. You will find two standalone executables:
+2. **Unzip & Launch**: Unzip the package to a local folder. You will find three standalone executables:
    - **`NjordDeployConfigurator`** (`.exe` on Windows): The end-user application for device discovery, service selection, and deployment (runs on `http://localhost:5001`).
    - **`NjordDeployEditor`** (`.exe` on Windows): The developer tool for creating and modifying component metadata (runs on `http://localhost:5000`).
+   - **`NjordDeployProxmoxTest`** (`.exe` on Windows): The developer testing suite for automated Proxmox VE component validation (runs on `http://localhost:5050`).
    - *Linux / macOS:* Make executable if needed (`chmod +x NjordDeployConfigurator`) and launch `./NjordDeployConfigurator`.
 3. **Configure**: Your default web browser will open automatically to `http://localhost:5001`. Follow the on-screen wizard to discover your device, select services, and customize your configuration.
 4. **Deploy**: Confirm your selections to generate Docker Compose files and deploy services to your target host with a live browser log.
