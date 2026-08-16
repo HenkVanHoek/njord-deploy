@@ -114,3 +114,22 @@ def test_evaluate_deployment_ai_fallback_on_error(mock_engine_cls):
     # Must fallback cleanly to rule-based evaluation without throwing
     assert res["status"] == "GREEN"
     assert "ok" in res["summary"].lower() or "success" in res["summary"].lower()
+
+
+def test_evaluate_deployment_user_abort_no_bug_report():
+    logs = "⚠️ Test session aborted by user. Terminating all test processes..."
+    res = evaluate_deployment(
+        component_name="nextcloud",
+        log_text=logs,
+        exit_code=130,
+        container_status={"running": False},
+        use_ai=True,
+    )
+
+    assert res["status"] == "YELLOW"
+    assert "cancelled" in res["summary"].lower() or "aborted" in res["summary"].lower()
+    assert res["github_keywords"] == ""
+    assert (
+        "no error report" in res["user_action"].lower()
+        or "no action" in res["user_action"].lower()
+    )

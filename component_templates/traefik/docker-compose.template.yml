@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v3.7.8"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "v3.7.10"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.7.10, 2026-08-16), podman (v3.7.10, 2026-08-16); Proxmox VM: docker (v3.7.10, 2026-08-16), podman (v3.7.10, 2026-08-16)."
 # breaking_changes: "None"
 # file: component_templates/traefik/docker-compose.template.yml
 services:

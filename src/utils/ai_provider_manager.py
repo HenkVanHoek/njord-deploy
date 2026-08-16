@@ -59,6 +59,15 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "default_model": "gpt-4o-mini",
         "models": [],
     },
+    "anthropic": {
+        "name": "Anthropic Claude",
+        "env_var": "ANTHROPIC_API_KEY",
+        "requires_api_key": True,
+        "default_base_url": "https://api.anthropic.com/v1",
+        "allow_custom_base_url": False,
+        "default_model": "claude-3-5-sonnet-20241022",
+        "models": [],
+    },
     "custom": {
         "name": "Custom Endpoint",
         "env_var": "CUSTOM_AI_API_KEY",
@@ -69,6 +78,51 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "models": [],
     },
 }
+
+
+def _parse_float_or_none(val: Optional[str]) -> Optional[float]:
+    """Safely parses a string value to float, returning None on failure."""
+    if not val:
+        return None
+    # noinspection PyBroadException
+    try:
+        return float(val.strip())
+    except (ValueError, TypeError) as ex:
+        logger.debug("Failed to parse float timeout value '%s': %s", val, ex)
+        return None
+
+
+def get_ai_timeout(provider: str, base_url: Optional[str] = None) -> float:
+    """Calculates timeout in seconds based on provider locality and env vars.
+
+    - Local providers (Ollama, localhost / 127.0.0.1):
+      Reads AI_LOCALHOST_TIMEOUT (default 120.0s), with fallback to
+      AI_TIMEOUT / AI_TIME_OUT.
+    - Cloud/remote providers (HostYourAI, OpenAI, Gemini, Anthropic, etc.):
+      Reads AI_TIMEOUT or AI_TIME_OUT (default 90.0s).
+    """
+    url_str = (base_url or "").lower()
+    is_local = provider == "ollama" or "localhost" in url_str or "127.0.0.1" in url_str
+
+    if is_local:
+        timeout = _parse_float_or_none(os.getenv("AI_LOCALHOST_TIMEOUT"))
+        if timeout is not None:
+            return timeout
+
+        fallback = _parse_float_or_none(
+            os.getenv("AI_TIMEOUT") or os.getenv("AI_TIME_OUT")
+        )
+        if fallback is not None:
+            return fallback
+        return 120.0
+
+    # Remote / cloud provider
+    remote_timeout = _parse_float_or_none(
+        os.getenv("AI_TIMEOUT") or os.getenv("AI_TIME_OUT")
+    )
+    if remote_timeout is not None:
+        return remote_timeout
+    return 90.0
 
 
 def get_providers_json_path() -> Path:

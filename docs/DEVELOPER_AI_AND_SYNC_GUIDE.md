@@ -55,13 +55,17 @@ The AI generator supports multiple AI providers with per-provider API key storag
   * *Architecture Note:* Google officially maintains this OpenAI-compatible layer alongside their native SDK (`google-genai` / Interactions API) to enable cross-provider interoperability. NjordDeploy deliberately routes Gemini through this endpoint so that a single unified client ([AIGeneratorEngine](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_generator_engine.py)) services Ollama, HostYourAI, OpenAI, and Gemini without fragmented SDK dependencies or separate code paths.
 - **HostYourAI / Loes (EU)**: Uses `HOSTYOURAI_API_KEY`. Default base URL is `https://api.hostyourai.eu/v1` (configurable via `HOSTYOURAI_BASE_URL` or UI). Default model: `mistral-7b-instruct`.
 - **OpenAI**: Uses `OPENAI_API_KEY`. Endpoint is fixed to `https://api.openai.com/v1`. Recommended model: `gpt-4o-mini`.
+- **Anthropic Claude**: Uses `ANTHROPIC_API_KEY`. Routed via Anthropic's Messages REST API (`https://api.anthropic.com/v1/messages`). Recommended model: `claude-3-5-sonnet-20241022`.
 - **Ollama (Local LLM)**: Uses local endpoint (default `http://localhost:11434/v1`, configurable via `OLLAMA_BASE_URL`). Recommended model: `qwen2.5-coder:14b-instruct-q4_K_M`.
 - **Custom Endpoint**: Uses `CUSTOM_AI_API_KEY` and configurable base URL (`CUSTOM_AI_BASE_URL`) for self-hosted OpenAI-compatible APIs (LM Studio, vLLM, LocalAI).
 
-### Key Management & Provider Switching
+### Key Management & Timeout Configuration
 
-- **Per-Provider Keys:** API keys are stored separately per provider in `.env` (`GEMINI_API_KEY`, `HOSTYOURAI_API_KEY`, `OPENAI_API_KEY`, `CUSTOM_AI_API_KEY`). Switching providers in the Editor App preserves stored keys without overwriting other providers.
+- **Per-Provider Keys:** API keys are stored separately per provider in `.env` (`GEMINI_API_KEY`, `HOSTYOURAI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CUSTOM_AI_API_KEY`). Switching providers in the Editor App preserves stored keys without overwriting other providers.
 - **Global Default Provider:** The `AI_PROVIDER` environment variable sets the global fallback provider.
+- **Configurable Timeouts:**
+  * `AI_LOCALHOST_TIMEOUT`: Timeout for local models running on Ollama or localhost (default: `120.0` seconds), allowing sufficient time for larger 14B parameter models during complex code generation.
+  * `AI_TIMEOUT` (or `AI_TIME_OUT`): Timeout for cloud providers (default: `90.0` seconds), preventing timeouts on cold models (e.g. on HostYourAI / Loes) or deep reasoning chains.
 - **Just-in-Time UI Saving:** In the "Import via AI" modal in the Editor App, entering an API key with "Save API key to local .env file" checked will automatically validate and save the key to `.env` upon successful component generation.
 
 ### How to Use

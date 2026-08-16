@@ -156,6 +156,21 @@
         mode: "0644"
       when: container_engine == 'podman'
 
+    - name: Enable and start Podman Docker-compatible API socket service
+      ansible.builtin.systemd:
+        name: podman.socket
+        enabled: yes
+        state: started
+      when: container_engine == 'podman'
+
+    - name: Create Docker socket symlink to Podman socket
+      ansible.builtin.file:
+        src: /run/podman/podman.sock
+        dest: /var/run/docker.sock
+        state: link
+        force: yes
+      when: container_engine == 'podman'
+
     # --- DIRECTORY & FILE DEPLOYMENT ---
     - name: Ensure project directory exists
       ansible.builtin.file:
@@ -193,13 +208,12 @@
 
     # --- CLI-BASED CONTAINER OPERATIONS ---
     - name: Ensure NjordDeploy network exists
-      ansible.builtin.command:
-        cmd: "{{ container_engine }} network create njorddeploy_net"
-      register: network_create
-      failed_when:
-        - network_create.rc != 0
-        - "'already exists' not in network_create.stderr"
-      changed_when: "network_create.rc == 0"
+      ansible.builtin.shell: |
+        {{ container_engine }} network create njorddeploy_net 2>/dev/null || true
+        if [ "{{ container_engine }}" = "podman" ] && [ -n "{{ ansible_user }}" ]; then
+          su - {{ ansible_user }} -c "podman network create njorddeploy_net 2>/dev/null || true"
+        fi
+      changed_when: false
 
     - name: Pull latest service images (Docker)
       ansible.builtin.command:
@@ -221,8 +235,12 @@
           grep -E '^\s*-\s+/[^:]+:' "{{ project_config_dir }}/docker-compose.yml" | sed -E 's/^\s*-\s+([^:]+):.*/\1/' | while read -r host_path; do
             clean_path=$(echo "$host_path" | tr -d '"' | tr -d "'")
             if [ -n "$clean_path" ]; then
-              mkdir -p "$clean_path"
-              chmod 777 "$clean_path"
+              if [ ! -e "$clean_path" ]; then
+                mkdir -p "$clean_path"
+                chmod 777 "$clean_path"
+              elif [ -d "$clean_path" ]; then
+                chmod 777 "$clean_path"
+              fi
             fi
           done
         fi

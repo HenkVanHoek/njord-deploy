@@ -8,8 +8,8 @@
             "type": "port"
         },
         {
-            "default": "localhost:3000",
-            "description": "Comma-separated list of allowed hostnames/IPs. Required for security. See Homepage documentation for details. Example: 'yourdomain.com,192.168.1.100:3000'.",
+            "default": "*",
+            "description": "Comma-separated list of allowed hostnames/IPs. Required for security. See Homepage documentation for details. Example: 'yourdomain.com,192.168.1.100:3000' or '*' for all.",
             "id": "HOMEPAGE_ALLOWED_HOSTS",
             "label": "Homepage Allowed Hosts",
             "type": "text"

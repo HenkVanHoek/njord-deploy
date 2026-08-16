@@ -325,3 +325,57 @@ def test_config_template_lifecycle(tmp_path):
 
     configs_after = manager.get_component_configs("litellm")
     assert "config.yaml" not in configs_after
+
+
+def test_component_supported_matrix(tmp_path):
+    """Test get_supported_matrix, is_mode_supported, and matrix update."""
+    meta_path = tmp_path / "metadata.json"
+    templates_dir = tmp_path / "templates"
+    templates_dir.mkdir()
+
+    meta_data = {
+        "components": {
+            "gluetun": {
+                "name": "Gluetun",
+                "supported_matrix": {
+                    "modes": ["vm"],
+                    "engines": ["docker"],
+                    "notes": "Requires /dev/net/tun device",
+                },
+            },
+            "adguard": {
+                "name": "AdGuard",
+            },
+        }
+    }
+    meta_path.write_text(json.dumps(meta_data), encoding="utf-8")
+
+    manager = ComponentManager(
+        templates_path=str(templates_dir), metadata_file_path=str(meta_path)
+    )
+
+    # 1. Check custom matrix on gluetun
+    assert manager.is_mode_supported("gluetun", "vm") is True
+    assert manager.is_mode_supported("gluetun", "lxc") is False
+    assert manager.is_engine_supported("gluetun", "docker") is True
+    assert manager.is_engine_supported("gluetun", "podman") is False
+
+    # 2. Check default matrix on adguard (all supported)
+    assert manager.is_mode_supported("adguard", "lxc") is True
+    assert manager.is_mode_supported("adguard", "vm") is True
+    assert manager.is_engine_supported("adguard", "docker") is True
+    assert manager.is_engine_supported("adguard", "podman") is True
+
+    # 3. Update matrix constraint on adguard
+    manager.update_component_matrix_constraint(
+        component_id="adguard",
+        modes=["lxc"],
+        engines=["podman"],
+        notes="Optimized for rootless LXC",
+    )
+    assert manager.is_mode_supported("adguard", "lxc") is True
+    assert manager.is_mode_supported("adguard", "vm") is False
+    assert manager.is_engine_supported("adguard", "docker") is False
+    assert manager.is_engine_supported("adguard", "podman") is True
+    matrix = manager.get_supported_matrix("adguard")
+    assert matrix["notes"] == "Optimized for rootless LXC"

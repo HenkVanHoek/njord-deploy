@@ -100,9 +100,11 @@
 
         <div class="filter-pills">
           <button type="button" class="filter-pill active" data-filter="all">All Services</button>
+          <button type="button" class="filter-pill" data-filter="testable">✅ Testable Only</button>
           <button type="button" class="filter-pill" data-filter="untested">Untested Only</button>
           <button type="button" class="filter-pill" data-filter="tested">Tested Only</button>
           <button type="button" class="filter-pill" data-filter="ui">🌐 Web UI Only</button>
+          <button type="button" class="filter-pill" data-filter="untestable">⚠️ Untestable</button>
         </div>
       </div>
 
@@ -114,6 +116,8 @@
         </div>
         <div class="batch-buttons">
           <button type="button" id="select-all-filtered-btn" class="btn-secondary">Select All Filtered</button>
+          <button type="button" id="select-all-testable-btn" class="btn-secondary">Select All Testable</button>
+          <button type="button" id="deselect-untestable-btn" class="btn-secondary">Deselect Untestable</button>
           <button type="button" id="deselect-all-filtered-btn" class="btn-secondary">Deselect Filtered</button>
           <button type="button" id="clear-selection-btn" class="btn-secondary">Clear All</button>
         </div>
@@ -162,32 +166,40 @@
 
     <!-- Results Table Card -->
     <section class="config-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
         <h2 class="card-title" style="margin-bottom: 0;">📊 Test History & Results</h2>
-        <button type="button" id="clear-history-btn" class="btn-secondary" title="Clear all test history">
-          <span>🗑️</span>
-          <span>Clear History</span>
-        </button>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button type="button" id="ai-batch-btn" class="btn-primary" style="background: linear-gradient(135deg, #4f46e5, #7c3aed); border-color: #6366f1;" title="Analyze all failed tests with Gemini AI to find systemic patterns">
+            <span>✨</span>
+            <span>AI Batch Diagnose</span>
+            <span id="ai-failures-badge" class="badge" style="background: rgba(255,255,255,0.25); margin-left: 0.25rem; font-size: 0.75rem; padding: 0.1rem 0.4rem; border-radius: 999px; display: none;">0</span>
+          </button>
+          <button type="button" id="clear-history-btn" class="btn-secondary" title="Clear all test history">
+            <span>🗑️</span>
+            <span>Clear History</span>
+          </button>
+        </div>
       </div>
       <div class="results-table-wrapper">
         <table class="results-table">
           <thead>
             <tr>
-              <th>Date / Time</th>
-              <th>Component</th>
-              <th>Target</th>
-              <th>Engine</th>
-              <th>VM ID</th>
-              <th>IP Address</th>
-              <th>Deployment</th>
-              <th>Containers</th>
-              <th>HTTP UI</th>
-              <th>Status</th>
+              <th data-sort="timestamp" class="sortable sort-desc">Date / Time <span class="sort-icon">▼</span></th>
+              <th data-sort="component_id" class="sortable">Component <span class="sort-icon">⇅</span></th>
+              <th data-sort="mode" class="sortable">Target <span class="sort-icon">⇅</span></th>
+              <th data-sort="engine" class="sortable">Engine <span class="sort-icon">⇅</span></th>
+              <th data-sort="vmid" class="sortable">VM ID <span class="sort-icon">⇅</span></th>
+              <th data-sort="ip" class="sortable">IP Address <span class="sort-icon">⇅</span></th>
+              <th data-sort="deployment" class="sortable">Deployment <span class="sort-icon">⇅</span></th>
+              <th data-sort="running" class="sortable">Containers <span class="sort-icon">⇅</span></th>
+              <th data-sort="http_ok" class="sortable">HTTP UI <span class="sort-icon">⇅</span></th>
+              <th data-sort="status" class="sortable">Status <span class="sort-icon">⇅</span></th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody id="results-table-body">
             <tr>
-              <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+              <td colspan="11" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
                 No test history recorded yet.
               </td>
             </tr>
@@ -214,6 +226,26 @@
           <button type="button" id="cancel-clear-btn" class="btn-secondary">Cancel</button>
           <button type="button" id="confirm-clear-btn" class="btn-danger">Yes, Clear History</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Diagnosis & Self-Healing Modal -->
+  <div id="ai-modal" class="modal-backdrop">
+    <div class="modal-content" style="max-width: 800px; max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.25rem;">✨</span>
+          <h3 id="ai-modal-title" style="margin: 0;">Gemini AI Failure Diagnosis</h3>
+        </div>
+        <button type="button" id="close-ai-modal-btn" class="modal-close-btn">&times;</button>
+      </div>
+      <div id="ai-modal-body" class="modal-body" style="overflow-y: auto; flex: 1;">
+        <!-- Populated dynamically -->
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <button type="button" id="ai-modal-close-btn" class="btn-secondary">Close</button>
+        <button type="button" id="ai-modal-apply-btn" class="btn-primary" style="display: none; background: var(--accent-green); border-color: var(--accent-green);">Apply Suggested Template Patch</button>
       </div>
     </div>
   </div>

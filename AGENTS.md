@@ -55,13 +55,17 @@ Principle: This section provides the static "mental map" of the NjordDeploy proj
 |   L-- njorddeploy-Configurator.desktop
 |-- pyproject.toml
 |-- README.md
+|-- ROADMAP.md
+|-- CHANGELOG.md
+|-- run_configurator.py
 |-- run_editor.py
+|-- run_proxmox_gui.py
 |-- scripts
 |   |-- fetch_assets.py
+|   |-- proxmox_gui.py
+|   |-- proxmox_test_runner.py
 |   L-- [other utility scripts...]
 |-- src
-|   |-- config_tools
-|   |   L-- config_manager.py
 |   |-- configurator_app
 |   |   |-- app.py
 |   |   |-- static
@@ -75,15 +79,16 @@ Principle: This section provides the static "mental map" of the NjordDeploy proj
 |   |   |-- app.py
 |   |   |-- static
 |   |   L-- templates
-|   |-- management_tools
 |   |-- managers
 |   |   |-- component_manager.py
+|   |   |-- deployment_evaluator.py
 |   |   |-- deployment_manager.py
 |   |   |-- setup_manager.py
-|   |   L-- ssh_manager.py
-|   |-- pi_scanner.py
+|   |   |-- ssh_manager.py
+|   |   L-- sync_manager.py
+|   |-- node_scanner.py
 |   L-- utils
-|       L-- [helper utilities...]
+|       L-- [helper utilities: ai_failure_diagnoser, container_engine, proxmox_client...]
 |-- tests
 |   |-- configurator_app
 |   |-- editor_app

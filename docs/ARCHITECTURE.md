@@ -132,12 +132,11 @@ Enforcement
 
 Behavior
 
-- **Fetch**: Downloads the latest ZIP archive from GitHub
-  (`/archive/refs/heads/<branch>.zip`) and extracts it into a local cache
-  directory (`~/.local/share/NjordDeploy/remote_components_cache`). The default
-  repository is `HenkVanHoek/njord-deploy-components`; it can be overridden via
-  the `PI_SELFHOSTING_COMPONENTS_REPO` and `PI_SELFHOSTING_COMPONENTS_BRANCH`
-  environment variables.
+- **Fetch**: Downloads the latest components archive from GitHub
+  (`/archive/refs/heads/<branch>.zip`) or uses `git pull` if the local Git clone
+  exists, extracting it into the local cache directory (`~/.local/share/NjordDeploy/remote_components_cache`).
+  The default repository is `HenkVanHoek/njord-deploy-components`; it can be overridden
+  via `PI_SELFHOSTING_COMPONENTS_REPO` and `PI_SELFHOSTING_COMPONENTS_BRANCH` (or `COMPONENTS_REPO_URL`).
 - **Diff**: Compares local `components_metadata.json` and
   `component_templates/` against the cached remote version. Reports each
   component as `synced`, `modified`, `remote_only`, or `local_only`.
@@ -145,7 +144,9 @@ Behavior
   specific component, or for all components in bulk.
 - **Push (Upload to Remote)**: Clones or updates a local Git working copy of the
   remote repository, commits changes, and pushes via SSH (preferred) or HTTPS
-  fallback. Write access is verified first via a dry-run push.
+  fallback. Write access is verified first via a dry-run push. Immediately after
+  a successful push, the local cache is updated directly from the pushed state,
+  preventing false-positive update badges caused by GitHub CDN archive latency.
 - **Validation gate**: Before a component template is accepted for upload, the
   `docker-compose.template.yml` file must contain the required header comments
   (`status`, `last_tested_version`, `platform_notes`, `breaking_changes`).
@@ -218,3 +219,49 @@ Behavior
 - **Container Engine Abstraction (`ContainerEngine`)**: Located in `src/utils/container_engine.py`, this class dynamically generates appropriate CLI syntax (`docker compose` vs `podman-compose`, pull, logs, exec) and manages automated host OS rootless provisioning (kernel parameter `net.ipv4.ip_unprivileged_port_start=53` via `/etc/sysctl.d/99-podman-ports.conf`, systemd user session lingering via `loginctl enable-linger`, and subuid/subgid mapping).
 - **Dynamic Components Repository (`SyncManager`)**: Supports fetching component templates dynamically from official GitHub, custom GitLab/Forgejo instances, or air-gapped offline storage (`COMPONENTS_REPO_URL="none"` or `"local"`), backed by live pre-save endpoint validation (`/api/validate-repo`).
 - **Detailed Specification**: See [CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md](CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md).
+
+## 8. Multi-Environment Compose Templating (Jinja2)
+
+- **Principle**: When services require differing configuration across deployment modes (LXC container vs QEMU VM) or container engines (Docker Engine vs Rootless Podman), templates SHALL utilize native Jinja2 conditionals rather than creating duplicate component definitions.
+- **Jinja2 Environment Context**: The `ComponentManager` guarantees the following environment variables during template rendering:
+  - `CONTAINER_ENGINE`: Target engine in lowercase (`'docker'` or `'podman'`).
+  - `TARGET_MODE`: Target deployment mode in lowercase (`'lxc'` or `'vm'`).
+  - `DATA_ROOT`: Base persistent directory (`/opt/njorddeploy/data`).
+  - `CONFIG_BASE_PATH`: Relative data base path (`../njorddeploy_data`).
+  - `component_version` and `image_name`.
+- **Pattern**:
+  ```jinja2
+  {%- if CONTAINER_ENGINE == 'podman' %}
+      ports:
+        - "{{ HA_WEB_PORT | default('8123') }}:8123"
+      networks:
+        - njorddeploy_net
+  {%- else %}
+      network_mode: host
+  {%- endif %}
+  ```
+- **Matrix Constraints vs Conditionals**: If a component fundamentally cannot execute on a given engine or mode (e.g. requires kernel `/dev/net/tun` not passed to unprivileged LXC, or raw Docker daemon socket `/var/run/docker.sock`), the constraint must be recorded in `config/components_metadata.json` under `supported_matrix` rather than silently failing during deployment.
+
+## 9. AI-Powered Failure Diagnosis and Cross-Matrix Analysis
+
+- **Principle**: Test runs in heterogeneous environments (LXC/VM × Docker/Podman) integrate an automated AI failure diagnoser (`src/utils/ai_failure_diagnoser.py`).
+- **Domain Specialization**: The diagnoser recognizes engine-specific signatures:
+  - Podman Compose network conflicts (`network_mode: host` colliding with project bridge networks).
+  - SubUID/SubGID user namespace restrictions under rootless mode.
+  - Missing Docker daemon socket bindings.
+  - Proxmox hypervisor / SSH drops (classified as `ENVIRONMENT_INFRA`).
+- **Output Categorization**: Automatically classifies failures into `TEMPLATE_CONFIG`, `CORE_PLATFORM_CODE`, `ENVIRONMENT_INFRA`, or `MATRIX_CONSTRAINT` and proposes actionable Jinja2 patches or matrix metadata updates.
+
+## 10. Unified Application Entrypoints & WSGI Execution Doctrine
+
+- **Principle**: All applications within the NjordDeploy ecosystem shall provide standardized, production-grade Python entrypoints powered by the Waitress WSGI server, standard port assignments, and uniform IDE run configurations.
+- **Standard Port Assignments**:
+  - **`editor_app`**: Port `5000` via [`run_editor.py`](../run_editor.py) (overridable via `EDITOR_PORT`).
+  - **`configurator_app`**: Port `5001` via [`run_configurator.py`](../run_configurator.py) (overridable via `CONFIGURATOR_PORT`).
+  - **`proxmox_gui`**: Port `5050` via [`run_proxmox_gui.py`](../run_proxmox_gui.py) (overridable via `PROXMOX_GUI_PORT`).
+- **Standard Execution Features**:
+  - Multi-threaded Waitress WSGI server (`threads=6`).
+  - Automatic TCP port availability checking before binding with graceful fallback if already running.
+  - Automatic browser launching upon startup (suppressible via `NO_BROWSER=1`).
+- **IDE Run Configurations (`.run/*.run.xml`)**:
+  - Standardized as direct `PythonConfigurationType` across PyCharm CE and Professional editions, eliminating legacy Flask plugin configuration conflicts.

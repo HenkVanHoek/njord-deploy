@@ -903,6 +903,28 @@
             iconClass = "fa-solid fa-database text-primary";
         }
 
+        let matrixBadgeHtml = "";
+        const supMatrix = component.supported_matrix;
+        if (supMatrix && typeof supMatrix === 'object') {
+            const engines = Array.isArray(supMatrix.engines) ? supMatrix.engines : ['docker', 'podman'];
+            const modes = Array.isArray(supMatrix.modes) ? supMatrix.modes : ['lxc', 'vm'];
+            const isDockerOnly = engines.length === 1 && engines[0] === 'docker';
+            const isPodmanOnly = engines.length === 1 && engines[0] === 'podman';
+            const isVmOnly = modes.length === 1 && modes[0] === 'vm';
+            const isLxcOnly = modes.length === 1 && modes[0] === 'lxc';
+
+            if (isDockerOnly) {
+                matrixBadgeHtml += `<span class="badge bg-primary-subtle text-primary border border-primary-subtle small me-1 mb-2"><i class="fa-brands fa-docker me-1"></i>Docker Only</span>`;
+            } else if (isPodmanOnly) {
+                matrixBadgeHtml += `<span class="badge bg-warning-subtle text-warning border border-warning-subtle small me-1 mb-2"><i class="fa-solid fa-feather-pointed me-1"></i>Podman Only</span>`;
+            }
+            if (isVmOnly) {
+                matrixBadgeHtml += `<span class="badge bg-info-subtle text-info border border-info-subtle small mb-2"><i class="fa-solid fa-server me-1"></i>VM Only</span>`;
+            } else if (isLxcOnly) {
+                matrixBadgeHtml += `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle small mb-2"><i class="fa-solid fa-box me-1"></i>LXC Only</span>`;
+            }
+        }
+
         const cardClass = isChecked ? "card h-100 component-card border-success" : "card h-100 component-card";
         const btnClass = isChecked ? "btn btn-success btn-select-software w-100" : "btn btn-outline-primary btn-select-software w-100";
         const btnText = isChecked ? '<i class="fa-solid fa-check me-2"></i>Selected' : 'Select';
@@ -915,6 +937,7 @@
                         <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
                             <i class="${iconClass} fa-2x"></i>
                         </div>
+                        ${matrixBadgeHtml ? `<div>${matrixBadgeHtml}</div>` : ''}
                         <h5 class="card-title fw-bold mb-2">${escapedName}</h5>
                         <p class="card-text small text-muted flex-grow-1">${escapedDesc}</p>
                         <input type="checkbox" class="form-check-input d-none" id="comp-${escapedId}" value="${escapedId}" ${checkedAttr}>

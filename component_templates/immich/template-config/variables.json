@@ -1,0 +1,148 @@
+{
+    "variables": [
+        {
+            "default": "2283",
+            "description": "The external port for accessing the Immich web interface.",
+            "id": "IMMICH_WEB_PORT",
+            "label": "Immich Web Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "dG9wU2VjcmV0S2V5Rm9ySW1taWNoQXBwQWJjMTIzNDU2Nzg5MA==",
+            "description": "A strong secret key for Immich. Keep this secure and do not change it after initial setup.",
+            "id": "IMMICH_SECRET_KEY",
+            "label": "Immich Secret Key",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "c2Vjb25kU2VjcmV0S2V5Rm9ySW1taWNoQXBwRGVmMTIzNDU2Nzg5MA==",
+            "description": "A strong JWT secret for Immich. Keep this secure and do not change it after initial setup.",
+            "id": "IMMICH_JWT_SECRET",
+            "label": "Immich JWT Secret",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "dGhpcmRTZWNyZXRLZXlGb3JJbW1pY2hBcHBHaGk1Njc4OTA1NDMyMQ==",
+            "description": "A strong API key for Immich. Keep this secure and do not change it after initial setup.",
+            "id": "IMMICH_API_KEY",
+            "label": "Immich API Key",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "immich-postgres",
+            "description": "Hostname for the PostgreSQL database service.",
+            "id": "DB_HOSTNAME",
+            "label": "PostgreSQL Hostname",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "postgres",
+            "description": "Username for the PostgreSQL database.",
+            "id": "DB_USERNAME",
+            "label": "PostgreSQL Username",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "ImmichDbPassword123",
+            "description": "Password for the PostgreSQL database user.",
+            "id": "DB_PASSWORD",
+            "label": "PostgreSQL Password",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "immich",
+            "description": "Name of the PostgreSQL database.",
+            "id": "DB_DATABASE",
+            "label": "PostgreSQL Database Name",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "5432",
+            "description": "Port for the PostgreSQL database service.",
+            "id": "DB_PORT",
+            "label": "PostgreSQL Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "immich-redis",
+            "description": "Hostname for the Redis service.",
+            "id": "REDIS_HOSTNAME",
+            "label": "Redis Hostname",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "6379",
+            "description": "Port for the Redis service.",
+            "id": "REDIS_PORT",
+            "label": "Redis Port",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "Etc/UTC",
+            "description": "Specify the timezone for the Immich services (e.g., 'America/New_York', 'Europe/London').",
+            "id": "TZ",
+            "label": "Timezone",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "info",
+            "description": "Set the logging level for Immich services (e.g., 'debug', 'info', 'warn', 'error').",
+            "id": "IMMICH_LOG_LEVEL",
+            "label": "Immich Log Level",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "true",
+            "description": "Set to 'true' to enable machine learning features (object detection, facial recognition). Set to 'false' to disable.",
+            "id": "IMMICH_MACHINE_LEARNING_ENABLED",
+            "label": "Enable Machine Learning",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "http://immich-machine-learning:3003",
+            "description": "Internal URL for the Immich machine learning service.",
+            "id": "IMMICH_MACHINE_LEARNING_URL",
+            "label": "Machine Learning Service URL",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "immich.henkenyvonne.com",
+            "description": "The hostname to use for Traefik routing to Immich's web UI. E.g., 'immich.yourdomain.com'.",
+            "id": "TRAEFIK_HOST",
+            "label": "Traefik Hostname",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

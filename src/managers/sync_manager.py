@@ -166,6 +166,30 @@ class SyncManager:
         else:
             url = f"https://github.com/{repo}/archive/refs/heads/{branch}.zip"
 
+        # Check if git cache exists and can be updated via git pull
+        if self.git_repo_dir.exists() and (self.git_repo_dir / ".git").exists():
+            import subprocess  # nosec B404
+
+            # noinspection PyBroadException
+            try:
+                res = subprocess.run(  # nosec B603 B607
+                    ["git", "pull"],
+                    cwd=str(self.git_repo_dir),
+                    capture_output=True,
+                    text=True,
+                    env={**os.environ, "GIT_TERMINAL_PROMPT": "0"},
+                    timeout=10,
+                )
+                if res.returncode == 0:
+                    self._update_cache_from_git_repo()
+                    self.is_offline = False
+                    logger.info("Successfully fetched components via git pull")
+                    return True
+            except Exception as e:
+                logger.info(
+                    f"Git pull in cache skipped/failed, falling back to ZIP: {e}"
+                )
+
         headers = {"Authorization": f"token {token}"} if token else None
 
         try:
@@ -770,6 +794,7 @@ class SyncManager:
         if push_res.returncode != 0:
             raise RuntimeError(f"Git push failed: {push_res.stderr}")
 
+        self._update_cache_for_component(component_id)
         return True
 
     def upload_all_components(self) -> bool:
@@ -815,6 +840,7 @@ class SyncManager:
         )
         if not status_res.stdout.strip():
             logger.info("No changes to commit for bulk upload")
+            self._update_cache_all()
             return True
 
         # 6. Git commit and push
@@ -839,4 +865,73 @@ class SyncManager:
         if push_res.returncode != 0:
             raise RuntimeError(f"Git push failed: {push_res.stderr}")
 
+        self._update_cache_all()
         return True
+
+    def _update_cache_for_component(self, component_id: str) -> None:
+        """Updates the remote cache for a single component after successful push."""
+        # Update metadata in cache
+        if self.cache_metadata_path.exists():
+            local_data = self._load_json(self.local_metadata_path)
+            cache_data = self._load_json(self.cache_metadata_path)
+            if "components" not in cache_data:
+                cache_data["components"] = {}
+            if component_id in local_data.get("components", {}):
+                cache_data["components"][component_id] = local_data["components"][
+                    component_id
+                ]
+                # noinspection PyBroadException
+                try:
+                    with open(self.cache_metadata_path, "w", encoding="utf-8") as f:
+                        json.dump(cache_data, f, indent=4)
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to update cache metadata for {component_id}: {e}"
+                    )
+
+        # Update templates in cache
+        src_dir = self._resolve_component_dir(component_id)
+        if not src_dir:
+            src_dir = self.local_templates_path / component_id
+        if src_dir.exists():
+            dest_dir = self.cache_templates_path / src_dir.name
+            # noinspection PyBroadException
+            try:
+                if dest_dir.exists():
+                    shutil.rmtree(dest_dir)
+                dest_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(src_dir, dest_dir)
+            except Exception as e:
+                logger.warning(
+                    f"Failed to update cache templates for {component_id}: {e}"
+                )
+
+    def _update_cache_all(self) -> None:
+        """Updates the entire remote cache after successful bulk push."""
+        # noinspection PyBroadException
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            if self.local_metadata_path.exists():
+                shutil.copy2(self.local_metadata_path, self.cache_metadata_path)
+            if self.local_templates_path.exists():
+                if self.cache_templates_path.exists():
+                    shutil.rmtree(self.cache_templates_path)
+                shutil.copytree(self.local_templates_path, self.cache_templates_path)
+        except Exception as e:
+            logger.warning(f"Failed to update full cache after bulk upload: {e}")
+
+    def _update_cache_from_git_repo(self) -> None:
+        """Updates the remote cache from the local git repository clone."""
+        # noinspection PyBroadException
+        try:
+            self.cache_dir.mkdir(parents=True, exist_ok=True)
+            git_meta = self.git_repo_dir / "components_metadata.json"
+            git_templates = self.git_repo_dir / "component_templates"
+            if git_meta.exists():
+                shutil.copy2(git_meta, self.cache_metadata_path)
+            if git_templates.exists():
+                if self.cache_templates_path.exists():
+                    shutil.rmtree(self.cache_templates_path)
+                shutil.copytree(git_templates, self.cache_templates_path)
+        except Exception as e:
+            logger.warning(f"Failed to update cache from git clone: {e}")

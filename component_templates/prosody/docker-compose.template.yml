@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "latest"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-08-15), podman (latest, 2026-08-15); Proxmox VM: docker (latest, 2026-08-15), podman (latest, 2026-08-15)."
 # breaking_changes: "None"
 services:
   prosody:
@@ -13,14 +13,20 @@ services:
       - "5222:5222"
       - "5269:5269"
     volumes:
-      - "{{ CONFIG_BASE_PATH }}/prosody/config:/etc/prosody"
-      - "{{ CONFIG_BASE_PATH }}/prosody/data:/var/lib/prosody"
+      - prosody_config:/etc/prosody
+      - prosody_data:/var/lib/prosody
     environment:
-      - DOMAIN={{ XMPP_DOMAIN | default('localhost') }}
-      - ADMIN_USER={{ XMPP_ADMIN_USER | default('admin') }}
-      - ADMIN_PASS="{{ XMPP_ADMIN_PASSWORD | default('adminpass') }}"
-      - MUC_PREFIX={{ XMPP_MUC_PREFIX | default('conference') }}
-      - UPLOAD_PREFIX={{ XMPP_UPLOAD_PREFIX | default('upload') }}
+      - DOMAIN={{ XMPP_DOMAIN | default('localhost', true) }}
+      - ADMIN_USER={{ XMPP_ADMIN_USER | default('admin', true) }}
+      - ADMIN_PASS="{{ XMPP_ADMIN_PASSWORD | default('adminpass', true) }}"
+      - MUC_PREFIX={{ XMPP_MUC_PREFIX | default('conference', true) }}
+      - UPLOAD_PREFIX={{ XMPP_UPLOAD_PREFIX | default('upload', true) }}
+
+volumes:
+  prosody_config:
+    name: njorddeploy-prosody-config
+  prosody_data:
+    name: njorddeploy-prosody-data
 
 networks:
   njorddeploy_net:

@@ -113,6 +113,13 @@ def wait_for_proxmox_task(
                 if exit_status == "OK":
                     logger.info("Proxmox task completed successfully.")
                     return
+                elif isinstance(exit_status, str) and exit_status.startswith(
+                    "WARNINGS"
+                ):
+                    logger.warning(
+                        f"Proxmox task completed with non-fatal warnings: {exit_status}"
+                    )
+                    return
                 else:
                     raise RuntimeError(
                         f"Proxmox task failed with status: {exit_status}"

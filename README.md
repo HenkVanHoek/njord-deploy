@@ -115,7 +115,15 @@ The following tree represents the current physical layout of the project:
 │   └── njorddeploy-Configurator.desktop
 ├── pyproject.toml
 ├── README.md
+├── ROADMAP.md
+├── CHANGELOG.md
+├── run_configurator.py
 ├── run_editor.py
+├── run_proxmox_gui.py
+├── scripts
+│   ├── proxmox_gui.py
+│   ├── proxmox_test_runner.py
+│   └── update_docs.py
 ├── src
 │   ├── configurator_app
 │   │   ├── app.py
@@ -125,31 +133,26 @@ The following tree represents the current physical layout of the project:
 │   │   ├── app.py
 │   │   ├── static (editor.v2.js, ui_render_utils.js)
 │   │   └── templates (editor.html)
-│   ├── management_tools
-│   │   ├── logic.py
-│   │   ├── routes.py
-│   │   └── templates (backup_ui.html)
 │   ├── managers
 │   │   ├── component_manager.py
+│   │   ├── deployment_evaluator.py
 │   │   ├── deployment_manager.py
 │   │   ├── setup_manager.py
-│   │   └── ssh_manager.py
-│   ├── config_tools
-│   │   └── config_manager.py
-│   ├── pi_scanner.py
+│   │   ├── ssh_manager.py
+│   │   └── sync_manager.py
+│   ├── node_scanner.py
 │   └── utils
+│       ├── ai_failure_diagnoser.py
+│       ├── ai_generator_engine.py
+│       ├── ai_provider_manager.py
 │       ├── auth_utils.py
-│       ├── dashy_updater.py
-│       ├── frigate_camera_config_tool.py
-│       ├── generation_logger.py
+│       ├── container_engine.py
+│       ├── proxmox_client.py
 │       └── resource_utils.py
 ├── tests
 │   ├── configurator_app
 │   ├── editor_app
-│   ├── test_component_manager.py
-│   ├── test_deployment_manager.py
-│   ├── test_pi_scanner.py
-│   └── test_setup_manager.py
+│   └── managers
 └── windows
     └── start.bat
 ```

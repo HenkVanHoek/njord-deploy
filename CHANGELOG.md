@@ -6,7 +6,16 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.22] - 2026-08-16
+
 ### Added
+- **AI-Powered Failure Diagnoser & Self-Healing DevOps Pipeline**:
+  - Created `AIFailureDiagnoser` ([`src/utils/ai_failure_diagnoser.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_failure_diagnoser.py)) utilizing LLM intelligence (Gemini Flash, OpenAI, Ollama) to automatically analyze heterogeneous Proxmox test run failures across 4-way cross-validation matrices.
+  - Automatically classifies errors into `TEMPLATE_CONFIG`, `CORE_PLATFORM_CODE`, `ENVIRONMENT_INFRA`, and `MATRIX_CONSTRAINT` categories and generates 1-click Jinja2 compose and metadata patches.
+  - Published comprehensive case study and documentation in [`docs/CASE_STUDY_SELF_HEALING_DEVOPS.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/CASE_STUDY_SELF_HEALING_DEVOPS.md), [`docs/FAILED_COMPONENTS.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/FAILED_COMPONENTS.md), and [`docs/PROXMOX_TESTS.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/PROXMOX_TESTS.md).
+- **Standardized PyCharm Run Configurations & WSGI Entrypoints**:
+  - Unified all three applications in `.run/` as direct `PythonConfigurationType` runners with dedicated ports: **`editor_app`** (port `5000` via [`run_editor.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_editor.py)), **`configurator_app`** (port `5001` via [`run_configurator.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_configurator.py)), and **`proxmox_gui`** (port `5050` via [`run_proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_proxmox_gui.py)).
+  - Ensured seamless out-of-the-box debugging and execution across both PyCharm Community and Professional editions.
 - **Proxmox Test Runner Interactive Web GUI & 4-Way Cross-Validation Matrix**:
   - Built interactive developer GUI ([`run_proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_proxmox_gui.py) / [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py)) with live Server-Sent Events (SSE) streaming terminal, wildcard component search, filter chips, selection drawer, and persistent test history.
   - Implemented 4-way cross-validation test matrix support (`--mode both --engine both`) executing across all environment combinations (LXC + Docker, LXC + Podman, VM + Docker, VM + Podman) with unified 10-column reporting.
@@ -66,6 +75,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Spacious Device Credentials Layout**: Refactored Step 2 discovered devices grid from cramped 6-column layout (`row-cols-xxl-6`) to maximum 3 spacious columns per row (`row-cols-1 row-cols-md-2 row-cols-xl-3 g-3`), providing full visibility for long hostnames, IP addresses, MACs, and credential text fields.
 
 ### Fixed
+- **Component Upload Sync Status Badge Race Condition**: Fixed false-positive "X Update(s)" badge in Editor App after pushing component changes to GitHub caused by GitHub CDN zipball caching delay. Synchronized local cache (`remote_components_cache`) immediately upon git push in `SyncManager` and optimized `fetch_from_remote()` to pull directly via git when a local clone exists.
 - **Actionable `nmap` Missing Error Handling**: Added explicit pre-scan executable check and `nmap.PortScannerError` handling in `NodeScanner`, returning clear package installation guidance (`sudo apt install nmap`) directly to the UI instead of generic error messages.
 - **Git Sync & Write Permission Diagnostics**: Fixed Git write access permission check in `SyncManager` (`check_write_access_details()`) to return detailed diagnostic error messages to the frontend UI when permission checks fail or dry-run fails.
 - **Component Directory Name Normalization**: Enhanced template folder lookup (`_resolve_component_dir()`) in `SyncManager` to handle hyphenated component IDs (e.g. `adguard-home` vs `adguardhome`), resolving sync errors when local template folders use normalized naming conventions.

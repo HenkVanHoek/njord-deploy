@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox VM (template 902)."
+# last_tested_version: "5.2.3_v2.0.14-ls471"
+# platform_notes: "Tested on Proxmox LXC: docker (5.2.3_v2.0.14-ls471, 2026-08-15), podman (5.2.3_v2.0.14-ls471, 2026-08-15); Proxmox VM: docker (5.2.3_v2.0.14-ls471, 2026-08-15), podman (5.2.3_v2.0.14-ls471, 2026-08-15)."
 # breaking_changes: "None"
 services:
   qbittorrent:

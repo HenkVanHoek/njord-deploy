@@ -4,19 +4,14 @@ This document tracks components that failed verification or could not be tested/
 
 ## Skipped / Untestable Components
 
-### `njorddeploy-service-maintenance`
-*   **Date**: 2026-07-15
-*   **Reason**: The component's docker-compose template (`component_templates/njorddeploy-service-maintenance/docker-compose.template.yml`) is completely empty and contains no service definitions or port mappings.
-*   **Action**: Skipped for further developer inspection.
-
-### `web-notepad`
-*   **Date**: 2026-07-15
-*   **Reason**: Both the metadata image (`dprandzioch/docker-http-notepad`) and the template image (`pajikos/minimalist-web-notepad`) are unavailable on the public Docker Hub registry, returning `pull access denied` (either deleted or made private).
-*   **Action**: Skipped. Needs a replacement public image.
+### `gluetun`
+*   **Date**: 2026-08-14
+*   **Reason**: The component requires access to the host kernel device `/dev/net/tun` for VPN tunneling. Standard unprivileged Proxmox LXC containers do not have this device node passed through by default, causing container startup to fail with `error gathering device information while adding custom device "/dev/net/tun": not a device node`.
+*   **Action**: Skipped for automated LXC runs. Requires privileged LXC or VM with `/dev/net/tun` passthrough.
 
 ### `zigbee2mqtt`
 *   **Date**: 2026-07-15
-*   **Reason**: The component requires a physical USB Zigbee coordinator (e.g., `/dev/ttyUSB0`) to start up. Spawning a fresh Proxmox LXC container without a USB device passed through causes the container startup to fail with "no such file or directory" for the custom device path.
+*   **Reason**: The component requires a physical USB Zigbee coordinator (e.g., `/dev/ttyUSB0`) to start up. Spawning a fresh Proxmox container without a physical USB device passed through causes the container startup to fail with "no such file or directory" for the custom device path.
 *   **Action**: Skipped. Fundamentally requires physical hardware setup.
 
 ### `lora-service` (LoRa Letterbox Notifier)
@@ -24,6 +19,12 @@ This document tracks components that failed verification or could not be tested/
 *   **Reason**: Incomplete placeholder component. It lacks required metadata (no image_name or component_version defined in metadata) and its template mounts configurations (`chirpstack.toml`, `mosquitto.conf`) that do not exist in the repository, making it impossible to deploy.
 *   **Action**: Skipped. Needs complete stack templates and configuration files.
 
-### `notify-push` (Nextcloud High-Performance Push)
-*   **Status**: Fixed (2026-07-20)
-*   **Fix**: Modified the docker-compose template to use a dynamic shell entrypoint that checks the host architecture (`x86_64`, `aarch64`, etc.) and verifies if the binary is present. If the binary is missing (e.g., during the initial Nextcloud setup), it enters a standby sleep loop instead of crashing. This allows `docker compose` to start successfully on clean-slate VMs/LXCs of any architecture, and self-heal once the app is enabled in Nextcloud.
+### `njorddeploy-service-maintenance`
+*   **Date**: 2026-07-15
+*   **Reason**: The component's docker-compose template (`component_templates/njorddeploy-service-maintenance/docker-compose.template.yml`) is completely empty and contains no service definitions or port mappings.
+*   **Action**: Skipped for further developer inspection.
+
+### `voicebox`
+*   **Date**: 2026-08-15
+*   **Reason**: Upstream repository (`https://github.com/jamiepine/voicebox.git#main`) Dockerfile build fails on line 66 trying to install `git+https://github.com/QwenLM/Qwen3-TTS.git` which is non-existent or moved.
+*   **Action**: Skipped until upstream repository fixes its Dockerfile or publishes prebuilt images.

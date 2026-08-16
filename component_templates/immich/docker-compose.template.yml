@@ -1,0 +1,68 @@
+# status: "tested"
+# last_tested_version: "v3.1.0"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.1.0, 2026-08-15), podman (v3.1.0, 2026-08-15); Proxmox VM: docker (v3.1.0, 2026-08-15), podman (v3.1.0, 2026-08-15)."
+# breaking_changes: none
+services:
+  immich-server:
+    container_name: njorddeploy-immich-server
+    image: ghcr.io/immich-app/immich-server:{{ component_version if (component_version and component_version != 'latest') else 'release' }}
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/immich/library:/data"
+      - "/etc/localtime:/etc/localtime:ro"
+    environment:
+      - "DB_HOSTNAME=immich-postgres"
+      - "DB_USERNAME={{ DB_USERNAME | default('postgres', true) }}"
+      - "DB_PASSWORD={{ DB_PASSWORD | default('postgres', true) }}"
+      - "DB_DATABASE_NAME={{ DB_DATABASE | default('immich', true) }}"
+      - "DB_PORT=5432"
+      - "REDIS_HOSTNAME=immich-redis"
+      - "REDIS_PORT=6379"
+      - "TZ={{ TZ | default('Europe/Amsterdam', true) }}"
+    ports:
+      - "{{ IMMICH_WEB_PORT | default('2283', true) }}:2283"
+    networks:
+      - njorddeploy_net
+    restart: always
+    depends_on:
+      - immich-postgres
+      - immich-redis
+
+  immich-machine-learning:
+    container_name: njorddeploy-immich-machine-learning
+    image: ghcr.io/immich-app/immich-machine-learning:{{ component_version if (component_version and component_version != 'latest') else 'release' }}
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/immich/model-cache:/cache"
+    environment:
+      - "TZ={{ TZ | default('Europe/Amsterdam', true) }}"
+    networks:
+      - njorddeploy_net
+    restart: always
+
+  immich-postgres:
+    container_name: njorddeploy-immich-postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+    environment:
+      - "POSTGRES_USER={{ DB_USERNAME | default('postgres', true) }}"
+      - "POSTGRES_PASSWORD={{ DB_PASSWORD | default('postgres', true) }}"
+      - "POSTGRES_DB={{ DB_DATABASE | default('immich', true) }}"
+      - "POSTGRES_INITDB_ARGS=--data-checksums"
+      - "PGDATA=/var/lib/postgresql/data"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/immich/database:/var/lib/postgresql/data"
+    shm_size: 128mb
+    networks:
+      - njorddeploy_net
+    restart: always
+
+  immich-redis:
+    container_name: njorddeploy-immich-redis
+    image: redis:6.2-alpine
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/immich/redis:/data"
+    networks:
+      - njorddeploy_net
+    restart: always
+
+networks:
+  njorddeploy_net:
+    external: true

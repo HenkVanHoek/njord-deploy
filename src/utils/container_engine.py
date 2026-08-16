@@ -160,6 +160,8 @@ class ContainerEngine:
                 "> /etc/sysctl.d/99-podman-ports.conf'"
             ),
             f"{cmd_prefix}sysctl -p /etc/sysctl.d/99-podman-ports.conf",
+            f"{cmd_prefix}systemctl enable --now podman.socket",
+            f"{cmd_prefix}ln -sf /run/podman/podman.sock /var/run/docker.sock",
         ]
 
         if not is_root:

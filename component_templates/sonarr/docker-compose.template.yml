@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'media-stack' on Proxmox VM (template 902)."
+# last_tested_version: "4.0.19.2979-ls321"
+# platform_notes: "Tested on Proxmox LXC: docker (4.0.19.2979-ls321, 2026-08-15), podman (4.0.19.2979-ls321, 2026-08-15); Proxmox VM: docker (4.0.19.2979-ls321, 2026-08-15), podman (4.0.19.2979-ls321, 2026-08-15)."
 # breaking_changes: "None"
 services:
   sonarr:

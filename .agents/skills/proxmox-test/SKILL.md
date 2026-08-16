@@ -83,3 +83,37 @@ If your storage pool (e.g., `local-lvm`) does not support snapshots/linked clone
 
 ### C. Master Template VMID
 On the `pve` node, the master template VMID defaults to `902` (`debian-clean-template`). If you want to use a different template, specify it using the `--template-id <id>` CLI option.
+
+## 5. Multi-Environment Compose Templating (Jinja2)
+
+When components behave differently across environments (e.g. Docker vs Podman, or LXC vs VM):
+
+* **Jinja2 Environment Variables**:
+  All compose templates are rendered with:
+  * `CONTAINER_ENGINE`: `'docker'` or `'podman'`
+  * `TARGET_MODE`: `'lxc'` or `'vm'`
+  * `DATA_ROOT`: `/opt/njorddeploy/data`
+  * `CONFIG_BASE_PATH`: `../njorddeploy_data`
+
+* **Conditional Networking & Permissions**:
+  Use Jinja2 conditionals in `docker-compose.template.yml` to support both engines without creating separate components:
+  ```jinja2
+  {%- if CONTAINER_ENGINE == 'podman' %}
+      ports:
+        - "{{ HA_WEB_PORT | default('8123') }}:8123"
+      networks:
+        - njorddeploy_net
+  {%- else %}
+      network_mode: host
+  {%- endif %}
+  ```
+
+* **Matrix Constraints**:
+  If a service fundamentally cannot run under a mode/engine (e.g. requires raw Docker socket `/var/run/docker.sock` not present in Podman, or requires `/dev/net/tun` not passed into LXC), restrict its `supported_matrix` in `config/components_metadata.json`:
+  ```json
+  "supported_matrix": {
+    "engines": ["docker"],
+    "modes": ["vm"],
+    "notes": "Requires VM mode and Docker daemon socket"
+  }
+  ```

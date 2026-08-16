@@ -47,6 +47,8 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     assert "id" in first_comp
     assert "name" in first_comp
     assert "status" in first_comp
+    assert "is_untestable" in first_comp
+    assert "untestable_reason" in first_comp
 
     # 4. Test report API
     res = client.get("/api/report")
@@ -119,3 +121,109 @@ def test_runner_manager_completion_counters():
 
     assert mgr.current_run_passed == 2
     assert mgr.current_run_failures == 0
+
+
+def test_ai_endpoints_mocked(tmp_path, monkeypatch):
+    class FakeRoot:
+        def __truediv__(self, other):
+            if other in ("tests", "docs", "component_templates"):
+                return tmp_path / other
+            return project_root / other
+
+    monkeypatch.setattr("scripts.proxmox_gui.project_root", FakeRoot())
+
+    comp_dir = tmp_path / "component_templates" / "traefik"
+    comp_dir.mkdir(parents=True, exist_ok=True)
+    (comp_dir / "docker-compose.template.yml").write_text(
+        "services:\n  traefik:\n    image: traefik:v3\n"
+    )
+
+    app = create_app()
+    app.config["TESTING"] = True
+    client = app.test_client()
+
+    # 1. AI status
+    res = client.get("/api/ai/status")
+    assert res.status_code == 200
+    assert "configured" in res.json
+
+    # 2. Single diagnose mocked
+    mock_diag = {
+        "component_id": "traefik",
+        "summary": "Missing flag",
+        "root_cause_analysis": "Port 8080 404",
+        "fix_description": "Add flag",
+        "suggested_template": (
+            "services:\n  traefik:\n    command: ['--api.insecure=true']\n"
+        ),
+        "diff": "+ command",
+    }
+
+    monkeypatch.setattr(
+        "utils.ai_failure_diagnoser.AIFailureDiagnoser.is_configured",
+        lambda self: True,
+    )
+    monkeypatch.setattr(
+        "utils.ai_failure_diagnoser.AIFailureDiagnoser.diagnose_single_failure",
+        lambda self, test_record, template_content, container_logs="", **kwargs: (
+            mock_diag
+        ),
+    )
+    monkeypatch.setattr(
+        "utils.ai_failure_diagnoser.AIFailureDiagnoser.diagnose_batch_failures",
+        lambda self, failed_records, templates_map=None: {
+            "total_analyzed": len(failed_records),
+            "systemic_summary": "Systemic batch pattern",
+            "clusters": [],
+        },
+    )
+
+    res_diag = client.post(
+        "/api/ai/diagnose",
+        json={"component_id": "traefik", "record": {"status": "failed"}},
+    )
+    assert res_diag.status_code == 200
+    assert res_diag.json["diagnosis"]["component_id"] == "traefik"
+
+    # 3. Batch diagnose mocked
+    res_batch = client.post(
+        "/api/ai/diagnose",
+        json={
+            "batch": True,
+            "records": [{"component_id": "traefik", "status": "failed"}],
+        },
+    )
+    assert res_batch.status_code == 200
+    assert res_batch.json["batch"] is True
+    assert res_batch.json["diagnosis"]["total_analyzed"] == 1
+
+    # 4. Apply patch
+    res_patch = client.post(
+        "/api/ai/apply-patch",
+        json={
+            "component_id": "traefik",
+            "template_content": (
+                "services:\n  traefik:\n    command: ['--api.insecure=true']\n"
+            ),
+        },
+    )
+    assert res_patch.status_code == 200
+    assert res_patch.json.get("success") is True
+
+    # 5. Apply matrix constraint
+    (tmp_path / "config").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config" / "components_metadata.json").write_text(
+        json.dumps({"components": {"traefik": {"name": "Traefik"}}}),
+        encoding="utf-8",
+    )
+    res_matrix = client.post(
+        "/api/ai/apply-matrix-constraint",
+        json={
+            "component_id": "traefik",
+            "modes": ["vm"],
+            "engines": ["docker"],
+            "notes": "Requires VM mode",
+        },
+    )
+    assert res_matrix.status_code == 200
+    assert res_matrix.json.get("success") is True

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "2026.7.2"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (2026.8.2, 2026-08-16), podman (2026.8.2, 2026-08-16); Proxmox VM: docker (2026.8.2, 2026-08-16), podman (stable, 2026-08-16)."
 # breaking_changes: "None"
 # templates/homeassistant/docker-compose.template.yml
 services:
@@ -10,8 +10,14 @@ services:
     restart: unless-stopped
     volumes:
       - homeassistant_config:/config
-      - /etc/localtime:/etc/localtime:ro
+{%- if CONTAINER_ENGINE == 'podman' %}
+    ports:
+      - "{{ HA_WEB_PORT | default('8123') }}:8123"
+    networks:
+      - njorddeploy_net
+{%- else %}
     network_mode: host # Home Assistant often requires host network mode for discovery
+{%- endif %}
 
 volumes:
   homeassistant_config:

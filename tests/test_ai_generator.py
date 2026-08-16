@@ -1,9 +1,11 @@
 # tests/test_ai_generator.py
 
+import os
 import unittest
 from unittest.mock import MagicMock, patch
 
 from utils.ai_generator import AIGenerator
+from utils.ai_generator_engine import AIGeneratorEngine
 
 
 class TestAIGenerator(unittest.TestCase):
@@ -529,3 +531,64 @@ class TestAIGenerator(unittest.TestCase):
         # Should have zero parsing warnings
         parse_warnings = [w for w in warnings if "Failed to parse Docker Compose" in w]
         self.assertEqual(parse_warnings, [])
+
+
+class TestAIGeneratorEngine(unittest.TestCase):
+    """Tests for the multi-provider AIGeneratorEngine."""
+
+    @patch("requests.post")
+    def test_generate_anthropic_success(self, mock_post):
+        """Test Anthropic generation using /v1/messages protocol."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "content": [{"type": "text", "text": '{"result": "anthropic_ok"}'}]
+        }
+        mock_post.return_value = mock_response
+
+        engine = AIGeneratorEngine(provider="anthropic", api_key="sk-ant-test")
+        res = engine.generate(
+            prompt="Hello Claude", system_context="You are an assistant"
+        )
+
+        self.assertEqual(res, '{"result": "anthropic_ok"}')
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        call_url, *_ = args
+        self.assertEqual(call_url, "https://api.anthropic.com/v1/messages")
+        self.assertEqual(kwargs["headers"]["x-api-key"], "sk-ant-test")
+        self.assertEqual(kwargs["json"]["system"], "You are an assistant")
+        self.assertEqual(
+            kwargs["json"]["messages"], [{"role": "user", "content": "Hello Claude"}]
+        )
+
+    @patch("utils.ai_generator_engine.OpenAI", None)
+    @patch("requests.post")
+    def test_generate_openai_compatible_requests_fallback(self, mock_post):
+        """Test OpenAI-compatible endpoint with requests fallback."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {
+            "choices": [{"message": {"content": '{"result": "openai_ok"}'}}]
+        }
+        mock_post.return_value = mock_response
+
+        engine = AIGeneratorEngine(provider="openai", api_key="sk-test-openai")
+        res = engine.generate(
+            prompt=[{"role": "user", "content": "Hi"}],
+            system_context="Sys context",
+        )
+
+        self.assertEqual(res, '{"result": "openai_ok"}')
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        call_url, *_ = args
+        self.assertEqual(call_url, "https://api.openai.com/v1/chat/completions")
+        self.assertEqual(kwargs["headers"]["Authorization"], "Bearer sk-test-openai")
+
+    def test_generate_missing_api_key_raises(self):
+        """Test that missing API key for cloud provider raises ValueError."""
+        with patch.dict(os.environ, {}, clear=True):
+            engine = AIGeneratorEngine(provider="anthropic", api_key=None)
+            with self.assertRaises(ValueError):
+                engine.generate(prompt="Hello")

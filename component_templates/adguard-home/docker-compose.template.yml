@@ -1,22 +1,22 @@
-# status: beta
-# last_tested_version: stable
-# platform_notes: none
+# status: "tested"
+# last_tested_version: "v0.107.78"
+# platform_notes: "Tested on Proxmox LXC: docker (v0.107.78, 2026-08-15), podman (v0.107.78, 2026-08-15); Proxmox VM: docker (v0.107.78, 2026-08-15), podman (v0.107.78, 2026-08-15)."
 # breaking_changes: none
 services:
   adguardhome:
     image: "{{ image_name }}:{{ component_version }}"
     container_name: njorddeploy-adguardhome
     ports:
-      - "{{ ADGUARDHOME_WEB_PORT }}:80/tcp"
-      - "{{ ADGUARDHOME_DNS_PORT_TCP }}:53/tcp"
-      - "{{ ADGUARDHOME_DNS_PORT_UDP }}:53/udp"
+      - "{{ ADGUARDHOME_WEB_PORT | default('80') }}:80/tcp"
+      - "3000:3000/tcp"
+      - "{{ ADGUARDHOME_DNS_PORT_TCP | default('53') }}:53/tcp"
+      - "{{ ADGUARDHOME_DNS_PORT_UDP | default('53') }}:53/udp"
     volumes:
       - "{{ CONFIG_BASE_PATH }}/adguardhome/work:/opt/adguardhome/work"
       - "{{ CONFIG_BASE_PATH }}/adguardhome/conf:/opt/adguardhome/conf"
     environment:
       - "TZ={{ TZ }}"
     restart: unless-stopped
-    user: "0:0"
     networks:
       - njorddeploy_net
 

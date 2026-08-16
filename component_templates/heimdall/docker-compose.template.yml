@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v2.8.1-ls356"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "v2.8.2-ls359"
+# platform_notes: "Tested on Proxmox LXC: docker (v2.8.2-ls359, 2026-08-15), podman (v2.8.2-ls359, 2026-08-15); Proxmox VM: docker (v2.8.2-ls359, 2026-08-15), podman (v2.8.2-ls359, 2026-08-15)."
 # breaking_changes: "None"
 services:
   heimdall:

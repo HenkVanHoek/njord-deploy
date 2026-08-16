@@ -640,11 +640,29 @@
                     <button class="btn btn-secondary mt-3" id="add-variable-btn"><i class="bi bi-plus-circle"></i> Add New Variable</button>
                 </div>
                 <div class="tab-pane fade flex-pane" id="template-pane">
-                    <div class="d-flex justify-content-end mb-2">
-                        <button class="btn btn-sm btn-outline-success me-2" id="add-header-btn"><i class="bi bi-file-earmark-plus"></i> Add NjordDeploy Header</button>
-                        <button class="btn btn-sm btn-outline-info me-2" id="validate-template-btn"><i class="bi bi-check-circle"></i> Validate Template</button>
-                        <button class="btn btn-sm btn-outline-secondary" id="import-template-btn"><i class="bi bi-upload"></i> Import from File</button>
-                        <input type="file" id="template-file-input" accept=".yml,.yaml,.txt" style="display: none;" aria-label="Import template file">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-1 flex-wrap">
+                            <span class="small text-secondary fw-bold me-1">Jinja Context:</span>
+                            <button class="badge bg-dark border border-secondary font-monospace jinja-var-badge text-light btn-xs p-1" type="button" data-var="CONTAINER_ENGINE" title="Insert {% raw %}{{ CONTAINER_ENGINE }}{% endraw %} ('docker' or 'podman')">CONTAINER_ENGINE</button>
+                            <button class="badge bg-dark border border-secondary font-monospace jinja-var-badge text-light btn-xs p-1" type="button" data-var="TARGET_MODE" title="Insert {% raw %}{{ TARGET_MODE }}{% endraw %} ('lxc' or 'vm')">TARGET_MODE</button>
+                            <button class="badge bg-dark border border-secondary font-monospace jinja-var-badge text-light btn-xs p-1" type="button" data-var="DATA_ROOT" title="Insert {% raw %}{{ DATA_ROOT }}{% endraw %}">DATA_ROOT</button>
+                            <button class="badge bg-dark border border-secondary font-monospace jinja-var-badge text-light btn-xs p-1" type="button" data-var="CONFIG_BASE_PATH" title="Insert {% raw %}{{ CONFIG_BASE_PATH }}{% endraw %}">CONFIG_BASE_PATH</button>
+                            <div class="dropdown d-inline-block ms-1">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle py-0 px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 0.78rem;">
+                                    <i class="bi bi-code-slash"></i> Conditionals
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-dark shadow-sm">
+                                    <li><a class="dropdown-item small" href="#" id="insert-podman-condition-btn"><strong>Podman Condition</strong> (<code>{% raw %}{% if CONTAINER_ENGINE == 'podman' %}{% endraw %}</code>)</a></li>
+                                    <li><a class="dropdown-item small" href="#" id="insert-lxc-condition-btn"><strong>LXC Mode Condition</strong> (<code>{% raw %}{% if TARGET_MODE == 'lxc' %}{% endraw %}</code>)</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-success me-2" id="add-header-btn"><i class="bi bi-file-earmark-plus"></i> Add NjordDeploy Header</button>
+                            <button class="btn btn-sm btn-outline-info me-2" id="validate-template-btn"><i class="bi bi-check-circle"></i> Validate Template</button>
+                            <button class="btn btn-sm btn-outline-secondary" id="import-template-btn"><i class="bi bi-upload"></i> Import from File</button>
+                            <input type="file" id="template-file-input" accept=".yml,.yaml,.txt" style="display: none;" aria-label="Import template file">
+                        </div>
                     </div>
                     <div id="editor-wrapper">
                         <label for="template-editor" class="visually-hidden">Docker Compose Template Editor</label>

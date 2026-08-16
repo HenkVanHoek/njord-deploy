@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "11.1.3"
-# platform_notes: "Tested successfully on Proxmox VM (template 902)."
+# platform_notes: "Tested on Proxmox LXC: docker (11.1.3, 2026-08-15), podman (11.1.3, 2026-08-15); Proxmox VM: docker (11.1.3, 2026-08-15), podman (11.1.3, 2026-08-15)."
 # breaking_changes: none
 services:
   grafana:

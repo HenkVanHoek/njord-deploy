@@ -22,28 +22,28 @@
             "type": "text"
         },
         {
-            "default": "{{ DATA_ROOT }}/audiobookshelf/audiobooks",
+            "default": "{{ CONFIG_BASE_PATH }}/audiobookshelf/audiobooks",
             "description": "Host path where your audiobook files are stored and accessible by Audiobookshelf.",
             "id": "AUDIOBOOKSHELF_AUDIOBOOKS_DIR",
             "label": "Audiobooks Library Path",
             "type": "text"
         },
         {
-            "default": "{{ DATA_ROOT }}/audiobookshelf/podcasts",
+            "default": "{{ CONFIG_BASE_PATH }}/audiobookshelf/podcasts",
             "description": "Host path where your podcast files are stored and accessible by Audiobookshelf.",
             "id": "AUDIOBOOKSHELF_PODCASTS_DIR",
             "label": "Podcasts Library Path",
             "type": "text"
         },
         {
-            "default": "{{ DATA_ROOT }}/audiobookshelf/metadata",
+            "default": "{{ CONFIG_BASE_PATH }}/audiobookshelf/metadata",
             "description": "Host path to store Audiobookshelf's metadata.",
             "id": "AUDIOBOOKSHELF_METADATA_DIR",
             "label": "Metadata Path",
             "type": "text"
         },
         {
-            "default": "{{ DATA_ROOT }}/audiobookshelf/config",
+            "default": "{{ CONFIG_BASE_PATH }}/audiobookshelf/config",
             "description": "Host path to store Audiobookshelf's configuration files.",
             "id": "AUDIOBOOKSHELF_CONFIG_DIR",
             "label": "Configuration Path",

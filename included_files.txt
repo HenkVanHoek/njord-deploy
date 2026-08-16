@@ -1,4 +1,4 @@
-Tokens: 314033 | VRAM Status: CRITICAL
+Tokens: 346419 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -14,6 +14,7 @@ playwright.config.js
 run_configurator.py
 run_editor.py
 run_proxmox_gui.py
+scripts/__init__.py
 scripts/check_release_status.py
 scripts/check_secrets.py
 scripts/create_proxmox_lxc.py
@@ -72,20 +73,19 @@ src/managers/sync_manager.py
 src/node_scanner.py
 src/setup.py
 src/utils/__init__.py
+src/utils/ai_failure_diagnoser.py
 src/utils/ai_generator.py
 src/utils/ai_generator_engine.py
 src/utils/ai_provider_manager.py
 src/utils/auth_utils.py
 src/utils/container_engine.py
 src/utils/dashy_updater.py
+src/utils/failed_components.py
 src/utils/frigate_camera_config_tool.py
 src/utils/generation_logger.py
 src/utils/manual_test_get_ip.py
 src/utils/proxmox_client.py
 src/utils/resource_utils.py
 src/utils/ssh_utils.py
+src/utils/template_header.py
 test_scanner.py
-tmp_proxmox_test/104/docker-compose.yml
-tmp_proxmox_test/104/qbittorrent/docker-compose.template.yml
-tmp_proxmox_test/106/conduit/docker-compose.template.yml
-tmp_proxmox_test/106/docker-compose.yml

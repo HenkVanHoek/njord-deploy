@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "main-stable"
-# platform_notes: "Tested successfully on Proxmox LXC (docker)."
+# platform_notes: "Tested on Proxmox LXC: docker (2023-07-01-preview, 2026-08-15), podman (16.15-1.pgdg13+2, 2026-08-15); Proxmox VM: docker (2023-07-01-preview, 2026-08-15), podman (main-stable, 2026-08-15)."
 # breaking_changes: none
 services:
   litellm:

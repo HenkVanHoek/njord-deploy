@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="configurator_app" type="Python.FlaskServer">
-    <option name="additionalOptions" value="--debug --port 5000 --host=0.0.0.0" />
+    <option name="additionalOptions" value="--debug --port 5001 --host=0.0.0.0" />
     <module name="NjordDeploy" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />

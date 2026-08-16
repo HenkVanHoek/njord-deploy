@@ -1,25 +1,29 @@
 # status: "tested"
-# last_tested_version: "2.31.6"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "2.34.6"
+# platform_notes: "Tested on Proxmox LXC: docker (2.34.6, 2026-08-15), podman (2.34.6, 2026-08-15); Proxmox VM: docker (2.34.6, 2026-08-15), podman (2.34.6, 2026-08-15)."
 # breaking_changes: none
 services:
   n8n:
-    image: "{{ image_name }}:{{ component_version }}"
+    image: "{{ image_name | default('n8nio/n8n') }}:{{ component_version | default('latest') }}"
     container_name: njorddeploy-n8n
     ports:
-      - "{{ N8N_WEB_PORT }}:5678"
+      - "{{ N8N_WEB_PORT | default('5678') }}:5678"
     volumes:
-      - "{{ DATA_ROOT }}/n8n:/home/node/.n8n"
+      - n8n_data:/home/node/.n8n
     environment:
       - "N8N_BASIC_AUTH_ACTIVE=true"
-      - "N8N_BASIC_AUTH_USER={{ N8N_BASIC_AUTH_USER }}"
-      - "N8N_BASIC_AUTH_PASSWORD={{ N8N_BASIC_AUTH_PASSWORD }}"
-      - "WEBHOOK_URL={{ N8N_WEBHOOK_URL }}"
-      - "GENERIC_TIMEZONE={{ N8N_TIMEZONE }}"
+      - "N8N_BASIC_AUTH_USER={{ N8N_BASIC_AUTH_USER | default('njorduser') }}"
+      - "N8N_BASIC_AUTH_PASSWORD={{ N8N_BASIC_AUTH_PASSWORD | default('CHANGEMEPASSWORD123') }}"
+      - "WEBHOOK_URL={{ N8N_WEBHOOK_URL | default('http://localhost:5678') }}"
+      - "GENERIC_TIMEZONE={{ N8N_TIMEZONE | default('UTC') }}"
       - "N8N_SECURE_COOKIE=false"
-    user: "0:0"
     networks:
       - njorddeploy_net
+
+volumes:
+  n8n_data:
+    name: njorddeploy-n8n-data
+
 networks:
   njorddeploy_net:
     external: true

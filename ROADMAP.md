@@ -44,6 +44,12 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
     *   **Implementation**: This has been implemented as an intuitive UI in the Editor where a developer can describe a service or input any Git repository URL (supporting GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, and self-hosted Git servers). The backend queries an LLM to generate draft versions of the component's metadata, variables, and `docker-compose.template.yml`.
         1.  **[✅] Multi-Provider AI Support**: Fully active support for local models (Ollama RTX 3060) and cloud APIs (Google Gemini, OpenAI, HostYourAI EU), featuring automatic repository analysis, image presence verification across Docker Hub & OCI registries, validation warning flags, and multi-turn self-correction loops.
         2.  **[✅] Multi-Forge Git Support**: Generalized repository parsing and raw content extraction across GitHub, GitLab (including nested namespaces), Codeberg, Gitea, Bitbucket, and self-hosted instances.
+*   **[✅] Closed-Loop Self-Healing DevOps & Cross-Matrix AI Failure Diagnosis**:
+    *   **Why?**: To automatically diagnose heterogenous environment test failures across 4-way matrices (LXC/VM × Docker/Podman) and generate rapid self-healing patches.
+    *   **Implementation**: Built `AIFailureDiagnoser` (`src/utils/ai_failure_diagnoser.py`) with root-cause categorization (`TEMPLATE_CONFIG`, `CORE_PLATFORM_CODE`, `ENVIRONMENT_INFRA`, `MATRIX_CONSTRAINT`) and 1-click Jinja2 compose/matrix patches, detailed in `docs/CASE_STUDY_SELF_HEALING_DEVOPS.md`.
+*   **[✅] Standardized Production WSGI Entrypoints & Uniform IDE Integration**:
+    *   **Why?**: To provide identical, reliable, multithreaded runtime entrypoints across all apps and eliminate IDE configuration discrepancies.
+    *   **Implementation**: Created standardized Waitress WSGI runners (`run_editor.py` on port 5000, `run_configurator.py` on port 5001, `run_proxmox_gui.py` on port 5050) with auto-browser launching, port collision handling, and shared PyCharm `.run/` configurations.
 *   **[Planned] Advanced Installer Options**: Introduce an "Advanced Mode" in the installer for power users to tweak more specific Docker settings.
 
 ---

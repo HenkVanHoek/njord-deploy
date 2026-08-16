@@ -6,7 +6,7 @@ import os
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import requests  # type: ignore
 from dotenv import load_dotenv
@@ -20,6 +20,7 @@ from managers.deployment_manager import DeploymentManager  # noqa: E402
 from managers.setup_manager import SetupManager  # noqa: E402
 from managers.ssh_manager import SSHManager  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
+from utils.template_header import update_template_header_content  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -344,7 +345,9 @@ def update_template_status(
     templates_path: Path,
     component_id: str,
     tested_version: str,
-    platform_notes: str,
+    mode: str,
+    engine: str = "docker",
+    test_date: Optional[str] = None,
 ) -> None:
     """Updates status, last tested version and platform notes in template."""
     template_file = templates_path / component_id / "docker-compose.template.yml"
@@ -354,44 +357,17 @@ def update_template_status(
 
     try:
         content = template_file.read_text(encoding="utf-8")
-        lines = content.splitlines()
-
-        updated_lines = []
-        in_header = True
-        status_replaced = False
-        version_replaced = False
-        notes_replaced = False
-
-        for line in lines:
-            if in_header and line.startswith("#"):
-                stripped = line[1:].strip()
-                if stripped.startswith("status:"):
-                    updated_lines.append('# status: "tested"')
-                    status_replaced = True
-                elif stripped.startswith("last_tested_version:"):
-                    updated_lines.append(f'# last_tested_version: "{tested_version}"')
-                    version_replaced = True
-                elif stripped.startswith("platform_notes:"):
-                    updated_lines.append(f'# platform_notes: "{platform_notes}"')
-                    notes_replaced = True
-                else:
-                    updated_lines.append(line)
-            else:
-                in_header = False
-                updated_lines.append(line)
-
-        if not status_replaced or not version_replaced or not notes_replaced:
-            logger.warning(
-                f"Could not find standard headers in {template_file}, "
-                "skipping header update."
-            )
-            return
-
-        new_content = "\n".join(updated_lines) + "\n"
+        new_content = update_template_header_content(
+            content=content,
+            mode=mode,
+            engine=engine,
+            tested_version=tested_version,
+            test_date=test_date,
+        )
         template_file.write_text(new_content, encoding="utf-8")
         logger.info(
-            f"Updated template status headers for {component_id} to "
-            f"'tested' (version: {tested_version}, notes: {platform_notes})"
+            f"Updated template status headers for {component_id} "
+            f"(mode: {mode}, engine: {engine}, version: {tested_version})"
         )
     except Exception as e:
         logger.error(f"Failed to update template status for {component_id}: {e}")
@@ -493,6 +469,13 @@ def wait_for_proxmox_task(
                 exit_status = data.get("exitstatus")
                 if exit_status == "OK":
                     logger.info("Proxmox task completed successfully.")
+                    return
+                elif isinstance(exit_status, str) and exit_status.startswith(
+                    "WARNINGS"
+                ):
+                    logger.warning(
+                        f"Proxmox task completed with non-fatal warnings: {exit_status}"
+                    )
                     return
                 else:
                     raise RuntimeError(
@@ -750,16 +733,29 @@ def run_proxmox_package_tests(cli_args) -> int:
                         raise RuntimeError(
                             f"Cannot connect to shared LXC for cleanup: {conn_msg}"
                         )
-                    for cmd in [
-                        "docker ps -q | xargs -r docker stop 2>/dev/null || true",
-                        "docker ps -aq | xargs -r docker rm -f 2>/dev/null || true",
-                        "docker system prune -af --volumes",
-                        (
-                            "docker network inspect njorddeploy_net >/dev/null 2>&1 "
-                            "|| docker network create njorddeploy_net"
-                        ),
-                    ]:
-                        cleanup_ssh.execute_command(cmd, lambda msg: None)
+                    cleanup_script = (
+                        "if [ -d /opt/njorddeploy ]; then "
+                        "  (cd /opt/njorddeploy && docker compose down -v "
+                        "--remove-orphans 2>/dev/null || true); "
+                        "  (cd /opt/njorddeploy && docker-compose down -v "
+                        "--remove-orphans 2>/dev/null || true); "
+                        "fi; "
+                        "running_c=$(docker ps -q 2>/dev/null); "
+                        'if [ -n "$running_c" ]; then docker stop $running_c '
+                        "2>/dev/null || true; fi; "
+                        "all_c=$(docker ps -aq 2>/dev/null); "
+                        'if [ -n "$all_c" ]; then docker rm -f $all_c '
+                        "2>/dev/null || true; fi; "
+                        "docker system prune -af --volumes 2>/dev/null || true; "
+                        "docker network inspect njorddeploy_net >/dev/null 2>&1 || "
+                        "docker network create njorddeploy_net 2>/dev/null || true; "
+                        "rm -rf /opt/njorddeploy/* 2>/dev/null || true"
+                    )
+                    cleanup_ssh.execute_command(
+                        f"sh -c '{cleanup_script}'",
+                        lambda msg: None,
+                        check_exit_code=False,
+                    )
                     cleanup_ssh.close()
                     logger.info("Docker environment clean.")
 
@@ -955,19 +951,13 @@ def run_proxmox_package_tests(cli_args) -> int:
                             or "latest"
                         )
                         tested_ver = str(tested_ver_val)
-                        if is_lxc:
-                            notes = (
-                                "Tested successfully as part of package "
-                                f"'{pkg_id}' on Proxmox LXC."
-                            )
-                        else:
-                            notes = (
-                                f"Tested successfully as part of package "
-                                f"'{pkg_id}' on Proxmox VM "
-                                f"(template {template_id})."
-                            )
                         update_template_status(
-                            templates_path, comp_id, tested_ver, notes
+                            templates_path=templates_path,
+                            component_id=comp_id,
+                            tested_version=tested_ver,
+                            mode="LXC" if is_lxc else "VM",
+                            engine="docker",
+                            test_date=time.strftime("%Y-%m-%d"),
                         )
                 else:
                     test_record["status"] = "failed"

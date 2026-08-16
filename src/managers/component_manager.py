@@ -154,6 +154,14 @@ class ComponentManager:
             "resource_profile",
             {"cpu": "medium", "ram": "medium", "storage_type": "persistent"},
         )
+        details.setdefault(
+            "supported_matrix",
+            {
+                "modes": ["lxc", "vm"],
+                "engines": ["docker", "podman"],
+                "notes": "",
+            },
+        )
 
         details["has_traefik_support"] = component_data.get(
             "has_traefik_support", False
@@ -164,6 +172,65 @@ class ComponentManager:
         details["conflicts_with"] = component_data.get("conflicts_with", [])
 
         return details
+
+    def get_supported_matrix(self, component_id: str) -> Dict[str, Any]:
+        """Returns the supported environment matrix for a component."""
+        self._components_data = self._load_metadata()
+        comp = self._components_data.get("components", {}).get(component_id, {})
+        default_matrix = {
+            "modes": ["lxc", "vm"],
+            "engines": ["docker", "podman"],
+            "notes": "",
+        }
+        matrix = comp.get("supported_matrix")
+        if not isinstance(matrix, dict):
+            return default_matrix
+        raw_modes = matrix.get("modes")
+        modes = raw_modes if isinstance(raw_modes, list) else ["lxc", "vm"]
+        raw_engines = matrix.get("engines")
+        engines = raw_engines if isinstance(raw_engines, list) else ["docker", "podman"]
+        return {
+            "modes": modes,
+            "engines": engines,
+            "notes": str(matrix.get("notes") or ""),
+        }
+
+    def is_mode_supported(self, component_id: str, mode: str) -> bool:
+        """Checks if a target mode (lxc or vm) is supported by the component."""
+        matrix = self.get_supported_matrix(component_id)
+        modes = [m.lower() for m in matrix.get("modes", [])]
+        return mode.lower() in modes
+
+    def is_engine_supported(self, component_id: str, engine: str) -> bool:
+        """Checks if a container engine (docker or podman) is supported by component."""
+        matrix = self.get_supported_matrix(component_id)
+        engines = [e.lower() for e in matrix.get("engines", [])]
+        return engine.lower() in engines
+
+    def update_component_matrix_constraint(
+        self,
+        component_id: str,
+        modes: Optional[List[str]] = None,
+        engines: Optional[List[str]] = None,
+        notes: Optional[str] = None,
+    ) -> bool:
+        """Updates the supported matrix constraints for a component."""
+        self._components_data = self._load_metadata()
+        components = self._components_data.setdefault("components", {})
+        if component_id not in components:
+            raise KeyError(f"Component '{component_id}' not found.")
+
+        current = self.get_supported_matrix(component_id)
+        if modes is not None:
+            current["modes"] = modes
+        if engines is not None:
+            current["engines"] = engines
+        if notes is not None:
+            current["notes"] = notes
+
+        components[component_id]["supported_matrix"] = current
+        self.update_component_metadata(component_id, {"supported_matrix": current})
+        return True
 
     def validate_component_configuration(
         self,
@@ -484,6 +551,16 @@ class ComponentManager:
         if "DATA_ROOT" not in context:
             context["DATA_ROOT"] = "/opt/njorddeploy/data"
 
+        if "CONTAINER_ENGINE" not in context:
+            context["CONTAINER_ENGINE"] = "docker"
+        else:
+            context["CONTAINER_ENGINE"] = str(context["CONTAINER_ENGINE"]).lower()
+
+        if "TARGET_MODE" not in context:
+            context["TARGET_MODE"] = "vm"
+        else:
+            context["TARGET_MODE"] = str(context["TARGET_MODE"]).lower()
+
         template_content = self.get_component_template_content(component_id)
 
         has_traefik_support = component_details.get("has_traefik_support", False)
@@ -584,6 +661,18 @@ class ComponentManager:
         deployment_context["CONFIG_BASE_PATH"] = "../njorddeploy_data"
         if "DATA_ROOT" not in deployment_context:
             deployment_context["DATA_ROOT"] = "/opt/njorddeploy/data"
+        if "CONTAINER_ENGINE" not in deployment_context:
+            deployment_context["CONTAINER_ENGINE"] = "docker"
+        else:
+            deployment_context["CONTAINER_ENGINE"] = str(
+                deployment_context["CONTAINER_ENGINE"]
+            ).lower()
+        if "TARGET_MODE" not in deployment_context:
+            deployment_context["TARGET_MODE"] = "vm"
+        else:
+            deployment_context["TARGET_MODE"] = str(
+                deployment_context["TARGET_MODE"]
+            ).lower()
 
         component_ids: List[str] = [
             str(comp_id)

@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "master"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# platform_notes: "Tested on Proxmox LXC: docker (master, 2026-08-15), podman (master, 2026-08-15); Proxmox VM: docker (master, 2026-08-15), podman (master, 2026-08-15)."
 # breaking_changes: "None"
 services:
   octoprint:

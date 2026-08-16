@@ -86,6 +86,7 @@ def test_provisioning_commands_podman():
     root_cmds = engine.get_provisioning_commands("root")
     assert any("apt-get install -y podman podman-compose" in c for c in root_cmds)
     assert any("net.ipv4.ip_unprivileged_port_start=53" in c for c in root_cmds)
+    assert any("systemctl enable --now podman.socket" in c for c in root_cmds)
     assert any("podman network create njorddeploy_net" in c for c in root_cmds)
 
     user_cmds = engine.get_provisioning_commands("debian")

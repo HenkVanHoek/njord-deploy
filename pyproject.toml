@@ -85,22 +85,18 @@ replace = 'version = "{new_version}"'
 
 [[tool.mypy.overrides]]
 module = [
-    "utils.resource_utils",
-    "utils.container_engine",
-    "managers.ssh_manager",
-    "managers.sync_manager",
-    "managers.deployment_evaluator",
+    "utils.*",
+    "managers.*",
+    "configurator_app.*",
+    "editor_app.*",
     "onvif.*",
     "appdirs",
-    "managers.component_manager",
-    "managers.deployment_manager",
-    "managers.setup_manager",
+    "ansible_runner",
+    "passlib.*",
     "pi_scanner",
-    "utils.proxmox_client",
     "waitress.*",
     "requests.*",
     "node_scanner",
-    "utils.ai_generator",
     "scripts.*",
     "proxmox_gui",
 ]

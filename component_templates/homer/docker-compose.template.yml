@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "v26.4.2"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# platform_notes: "Tested on Proxmox LXC: docker (v26.4.2, 2026-08-15), podman (v26.4.2, 2026-08-15); Proxmox VM: docker (v26.4.2, 2026-08-15), podman (v26.4.2, 2026-08-15)."
 # breaking_changes: "None"
 services:
   homer:

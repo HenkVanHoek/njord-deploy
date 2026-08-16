@@ -717,6 +717,62 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     rowLxcResources.appendChild(renderLxcInput('comp-lxc-storage', 'Recommended Storage (GB)', profile.recommended_storage_gb, 'e.g. 20'));
 
     metadataPane.appendChild(rowLxcResources);
+
+    // Supported Environment Matrix Row
+    const matrixSectionHeader = document.createElement('h5');
+    matrixSectionHeader.className = 'mt-4 mb-3 text-warning';
+    matrixSectionHeader.innerHTML = '<i class="bi bi-grid-3x3-gap"></i> Supported Environment Matrix';
+    metadataPane.appendChild(matrixSectionHeader);
+
+    const rowMatrix = document.createElement('div');
+    rowMatrix.className = 'card bg-dark text-white mb-3 border-secondary p-3 small';
+
+    const supMatrix = details.supported_matrix || {
+        modes: ['lxc', 'vm'],
+        engines: ['docker', 'podman'],
+        notes: ''
+    };
+    const modesList = Array.isArray(supMatrix.modes) ? supMatrix.modes : ['lxc', 'vm'];
+    const enginesList = Array.isArray(supMatrix.engines) ? supMatrix.engines : ['docker', 'podman'];
+
+    const isLxcChecked = modesList.includes('lxc') ? 'checked' : '';
+    const isVmChecked = modesList.includes('vm') ? 'checked' : '';
+    const isDockerChecked = enginesList.includes('docker') ? 'checked' : '';
+    const isPodmanChecked = enginesList.includes('podman') ? 'checked' : '';
+    const matrixNotesVal = supMatrix.notes || '';
+
+    rowMatrix.innerHTML = `
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-bold"><i class="bi bi-hdd-stack me-1"></i>Supported Target Modes</label>
+                <div class="form-check form-switch mb-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="comp-matrix-lxc" ${isLxcChecked}>
+                    <label class="form-check-label" for="comp-matrix-lxc">LXC Container</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="comp-matrix-vm" ${isVmChecked}>
+                    <label class="form-check-label" for="comp-matrix-vm">QEMU / KVM Virtual Machine (VM)</label>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-bold"><i class="bi bi-box me-1"></i>Supported Container Engines</label>
+                <div class="form-check form-switch mb-1">
+                    <input class="form-check-input" type="checkbox" role="switch" id="comp-matrix-docker" ${isDockerChecked}>
+                    <label class="form-check-label" for="comp-matrix-docker">Docker Engine</label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="comp-matrix-podman" ${isPodmanChecked}>
+                    <label class="form-check-label" for="comp-matrix-podman">Podman Engine</label>
+                </div>
+            </div>
+            <div class="col-12 mt-2">
+                <label class="form-label small text-secondary" for="comp-matrix-notes">Environment &amp; Compatibility Notes</label>
+                <input type="text" class="form-control form-control-sm" id="comp-matrix-notes" placeholder="e.g., Requires /dev/net/tun kernel module or Docker root daemon socket" value="${escapeHtml(matrixNotesVal)}">
+            </div>
+        </div>
+    `;
+    metadataPane.appendChild(rowMatrix);
+
     // 3. Setup Metadata Event Listener
     metadataPane.addEventListener('input', () => markTabDirtyCallback('metadata-pane'));
     metadataPane.addEventListener('change', () => markTabDirtyCallback('metadata-pane'));

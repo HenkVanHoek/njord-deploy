@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'nextcloud-stack' on Proxmox LXC."
+# last_tested_version: "10.11.18"
+# platform_notes: "Tested on Proxmox LXC: docker (10.11.18, 2026-08-15), podman (10.11.18, 2026-08-15); Proxmox VM: docker (10.11.18, 2026-08-15), podman (10.11.18, 2026-08-15)."
 # breaking_changes: "None"
 services:
   nextcloud-db:
@@ -14,16 +14,19 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
     networks:
+      - njorddeploy_net
       - nextcloud-internal
     volumes:
-      - "{{ NEXTCLOUD_DB_PATH }}:/var/lib/mysql"
+      - "{{ NEXTCLOUD_DB_PATH | default(CONFIG_BASE_PATH ~ '/nextcloud/db', true) }}:/var/lib/mysql"
     environment:
-      TZ: "{{ TZ }}"
-      MYSQL_ROOT_PASSWORD: "{{ NEXTCLOUD_DB_ROOT_PASSWORD }}"
-      MYSQL_PASSWORD: "{{ NEXTCLOUD_DB_PASSWORD }}"
-      MYSQL_DATABASE: "{{ NEXTCLOUD_DB_NAME }}"
-      MYSQL_USER: "{{ NEXTCLOUD_DB_USER }}"
+      TZ: "{{ TZ | default('Europe/Amsterdam', true) }}"
+      MYSQL_ROOT_PASSWORD: "{{ NEXTCLOUD_DB_ROOT_PASSWORD | default('nextcloudrootpass', true) }}"
+      MYSQL_PASSWORD: "{{ NEXTCLOUD_DB_PASSWORD | default('nextcloudpass', true) }}"
+      MYSQL_DATABASE: "{{ NEXTCLOUD_DB_NAME | default('nextcloud', true) }}"
+      MYSQL_USER: "{{ NEXTCLOUD_DB_USER | default('nextcloud', true) }}"
 
 networks:
+  njorddeploy_net:
+    external: true
   nextcloud-internal:
     name: nextcloud-internal

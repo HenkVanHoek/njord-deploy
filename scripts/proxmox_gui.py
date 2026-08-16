@@ -8,27 +8,35 @@ import json
 import logging
 import os
 import queue
+import signal
 import subprocess  # nosec B404
 import sys
 import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, make_response, render_template, request
 
-# Ensure we can import from the 'src' root directory
+# Ensure we can import from project root and src directory
 project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root / "src"))
+sys.path.insert(0, str(project_root))
 
 from managers.component_manager import ComponentManager  # noqa: E402
 from scripts.proxmox_test_runner import get_template_status  # noqa: E402
+from utils.ai_failure_diagnoser import (  # noqa: E402
+    AIFailureDiagnoser,
+    apply_suggested_template,
+)
 from utils.container_engine import get_configured_engine  # noqa: E402
+from utils.failed_components import load_untestable_components  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
 )
 logger = logging.getLogger("proxmox_gui")
 
@@ -72,6 +80,7 @@ class TestRunnerManager:
             self.current_mode = mode.upper()
             # Clear log queue
             while not self.log_queue.empty():
+                # noinspection PyBroadException
                 try:
                     self.log_queue.get_nowait()
                 except queue.Empty:
@@ -99,13 +108,14 @@ class TestRunnerManager:
         logger.info(f"Launching test process: {' '.join(cmd)}")
 
         def run_worker():
+            # noinspection PyBroadException
             try:
-                # noinspection PyBroadException
                 env = os.environ.copy()
+                # noinspection SpellCheckingInspection
                 env["PYTHONUNBUFFERED"] = "1"
                 env["CONTAINER_ENGINE"] = engine
 
-                self.process = subprocess.Popen(  # nosec B603
+                running_proc = subprocess.Popen(  # nosec B603
                     cmd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
@@ -113,7 +123,9 @@ class TestRunnerManager:
                     bufsize=1,
                     env=env,
                     cwd=str(project_root),
+                    start_new_session=True,
                 )
+                self.process = running_proc
 
                 self.log_queue.put(
                     {
@@ -124,27 +136,27 @@ class TestRunnerManager:
                     }
                 )
 
-                if self.process.stdout:
-                    for line in iter(self.process.stdout.readline, ""):
+                if running_proc.stdout is not None:
+                    for line in iter(running_proc.stdout.readline, ""):
                         if not line:
                             break
                         if "\r" in line:
                             parts = [p.strip() for p in line.split("\r") if p.strip()]
-                            clean_line = parts[-1] if parts else ""
+                            clean_line = next(reversed(parts), "")
                         else:
                             clean_line = line.rstrip("\r\n")
 
                         if clean_line:
                             self.log_queue.put({"type": "log", "content": clean_line})
-                            self._inspect_log_line(clean_line, engine)
+                            self._inspect_log_line(clean_line, _engine=engine)
 
-                self.process.wait()
+                running_proc.wait()
             except Exception as exc:
                 logger.error(f"Error running test process: {exc}")
                 self.log_queue.put({"type": "log", "content": f"ERROR: {exc}"})
             finally:
                 exit_code = 0
-                if self.process:
+                if self.process is not None:
                     exit_code = self.process.returncode or 0
 
                 with self.lock:
@@ -169,39 +181,33 @@ class TestRunnerManager:
         worker_thread.start()
         return True
 
-    def _inspect_log_line(self, line: str, engine: str):
+    def _inspect_log_line(self, line: str, _engine: str = ""):
         """Analyzes stdout lines to emit structured events to the UI."""
         now_ts = time.strftime("%Y-%m-%d %H:%M:%S")
 
         # Detect component start: "Testing component: <id> (Engine: <e>, Mode: <m>)"
         if "Testing component:" in line:
-            parts = line.split("Testing component:", 1)
-            comp_part = parts[1].strip()
-            comp_id = comp_part.split()[0].strip("() ")
+            _, comp_part = line.split("Testing component:", 1)
+            comp_words = comp_part.strip().split()
+            comp_id = next(iter(comp_words), "unknown").strip("() ")
             self.current_component = comp_id
 
             current_engine = self.current_engine
             current_mode = self.current_mode
             if "Engine:" in line:
+                # noinspection PyBroadException
                 try:
-                    current_engine = (
-                        line.split("Engine:")[1]
-                        .split(",")[0]
-                        .split(")")[0]
-                        .strip()
-                        .upper()
-                    )
+                    _, eng_part = line.split("Engine:", 1)
+                    eng_token, *_ = eng_part.split(",")
+                    current_engine = eng_token.strip("() ").upper()
                 except Exception:  # nosec B110
                     pass
             if "Mode:" in line:
+                # noinspection PyBroadException
                 try:
-                    current_mode = (
-                        line.split("Mode:")[1]
-                        .split(",")[0]
-                        .split(")")[0]
-                        .strip()
-                        .upper()
-                    )
+                    _, mode_part = line.split("Mode:", 1)
+                    mode_token, *_ = mode_part.split(",")
+                    current_mode = mode_token.strip("() ").upper()
                 except Exception:  # nosec B110
                     pass
 
@@ -226,8 +232,9 @@ class TestRunnerManager:
         # Detect component success: "✅ Component adguard-home verified successfully!"
         elif "verified successfully!" in line and "Component" in line:
             self.current_run_passed += 1
-            parts = line.split("Component", 1)
-            comp_id = parts[1].split()[0] if len(parts) > 1 else "unknown"
+            _, comp_part = line.split("Component", 1)
+            comp_words = comp_part.strip().split()
+            comp_id = next(iter(comp_words), "unknown")
             self.log_queue.put(
                 {
                     "type": "record",
@@ -250,6 +257,10 @@ class TestRunnerManager:
         ):
             self.current_run_failures += 1
             comp_id = self.current_component or "unknown"
+            err_msg = line.strip()
+            if ":" in line:
+                _, err_msg = line.split(":", 1)
+                err_msg = err_msg.strip()
             self.log_queue.put(
                 {
                     "type": "record",
@@ -261,26 +272,86 @@ class TestRunnerManager:
                         "status": "failed",
                         "deployment": "failed",
                         "running": False,
+                        "error_message": err_msg,
+                    },
+                }
+            )
+
+        # Detect skipped: "⏭️ Skipping <comp_id>: ..."
+        elif "⏭️ Skipping" in line:
+            _, skip_part = line.split("Skipping", 1)
+            skip_words = skip_part.strip().split()
+            comp_id = next(iter(skip_words), "unknown").strip(":")
+            self.log_queue.put(
+                {
+                    "type": "record",
+                    "record": {
+                        "timestamp": now_ts,
+                        "component_id": comp_id,
+                        "mode": self.current_mode,
+                        "engine": self.current_engine,
+                        "status": "skipped",
+                        "deployment": "skipped",
+                        "running": False,
+                        "error_message": line.strip(),
                     },
                 }
             )
 
     def stop_test(self) -> bool:
-        """Terminates active test runner subprocess."""
+        """Terminates active test runner subprocess and all child processes."""
         with self.lock:
-            if not self.is_running or not self.process:
+            proc = self.process
+            if not self.is_running or proc is None:
                 return False
+            # noinspection PyBroadException
             try:
-                self.process.terminate()
+                pgid: Optional[int] = None
+                if proc.pid is not None:
+                    # noinspection PyBroadException
+                    try:
+                        found_pgid: int = os.getpgid(proc.pid)
+                        if found_pgid > 1 and found_pgid != os.getpgrp():
+                            pgid = found_pgid
+                            os.killpg(found_pgid, signal.SIGTERM)
+                        else:
+                            proc.terminate()
+                    except Exception:
+                        proc.terminate()
+
+                def _force_kill(p: subprocess.Popen, kill_pgid: Optional[int]):
+                    time.sleep(1.5)
+                    if isinstance(kill_pgid, int) and kill_pgid > 1:
+                        target_pgid: int = kill_pgid
+                        # noinspection PyBroadException
+                        try:
+                            if target_pgid != os.getpgrp():
+                                os.killpg(target_pgid, signal.SIGKILL)
+                        except Exception:  # nosec B110
+                            pass
+                    # noinspection PyBroadException
+                    try:
+                        if p.poll() is None:
+                            p.kill()
+                    except Exception:  # nosec B110
+                        pass
+
+                threading.Thread(
+                    target=_force_kill, args=(proc, pgid), daemon=True
+                ).start()
+
                 self.log_queue.put(
                     {
                         "type": "log",
-                        "content": "⚠️ Test execution terminated by user.",
+                        "content": (
+                            "⚠️ Test session aborted by user. "
+                            "Terminating all test processes..."
+                        ),
                     }
                 )
                 return True
             except Exception as exc:
-                logger.error(f"Failed to terminate process: {exc}")
+                logger.error(f"Failed to terminate process group: {exc}")
                 return False
 
 
@@ -300,7 +371,7 @@ def create_app() -> Flask:
     runner_mgr = TestRunnerManager()
 
     @app.route("/")
-    def index():
+    def index() -> Response:
         resp = make_response(
             render_template("proxmox_gui.html", cache_bust=int(time.time()))
         )
@@ -310,7 +381,7 @@ def create_app() -> Flask:
         return resp
 
     @app.route("/api/config", methods=["GET"])
-    def get_config():
+    def get_config() -> Response:
         """Returns Proxmox settings from .env."""
         default_engine = get_configured_engine()
         return jsonify(
@@ -323,10 +394,12 @@ def create_app() -> Flask:
         )
 
     @app.route("/api/components", methods=["GET"])
-    def get_components():
+    def get_components() -> Response:
         """Returns all components with template status and metadata."""
         metadata_path = project_root / "config" / "components_metadata.json"
         templates_path = project_root / "component_templates"
+        untestable_doc = project_root / "docs" / "FAILED_COMPONENTS.md"
+        untestable_map = load_untestable_components(untestable_doc)
 
         comp_mgr = ComponentManager(
             metadata_file_path=str(metadata_path),
@@ -341,6 +414,8 @@ def create_app() -> Flask:
                 continue
 
             status = get_template_status(templates_path, cid)
+            is_untestable = cid in untestable_map
+            untestable_reason = untestable_map.get(cid, {}).get("reason", "")
             enriched.append(
                 {
                     "id": cid,
@@ -350,6 +425,8 @@ def create_app() -> Flask:
                     "has_ui": bool(comp.get("has_ui", False)),
                     "status": status,
                     "version": comp.get("component_version", "latest"),
+                    "is_untestable": is_untestable,
+                    "untestable_reason": untestable_reason,
                 }
             )
 
@@ -358,9 +435,10 @@ def create_app() -> Flask:
         return jsonify(enriched)
 
     @app.route("/api/run", methods=["POST"])
-    def run_tests():
+    def run_tests() -> Union[Response, Tuple[Response, int]]:
         """Starts a test run with selected options."""
-        data = request.get_json() or {}
+        raw_data = request.get_json()
+        data = raw_data if isinstance(raw_data, dict) else {}
         components = data.get("components", [])
         engine = data.get("engine", "docker").lower()
         mode = data.get("mode", "lxc").lower()
@@ -389,13 +467,13 @@ def create_app() -> Flask:
         )
 
     @app.route("/api/stop", methods=["POST"])
-    def stop_tests():
+    def stop_tests() -> Response:
         """Stops active test run."""
         stopped = runner_mgr.stop_test()
         return jsonify({"success": stopped})
 
     @app.route("/api/status", methods=["GET"])
-    def get_status():
+    def get_status() -> Response:
         """Returns current runner status."""
         return jsonify(
             {
@@ -405,7 +483,7 @@ def create_app() -> Flask:
         )
 
     @app.route("/api/stream", methods=["GET"])
-    def stream_logs():
+    def stream_logs() -> Response:
         """Server-Sent Events endpoint for real-time log output."""
 
         def event_stream():
@@ -427,8 +505,8 @@ def create_app() -> Flask:
         )
 
     @app.route("/api/report", methods=["GET"])
-    def get_report():
-        """Reads latest markdown report."""
+    def get_report() -> Response:
+        """Reads latest Markdown report."""
         report_path = project_root / "docs" / "PROXMOX_TESTS.md"
         if report_path.exists():
             content = report_path.read_text(encoding="utf-8")
@@ -436,40 +514,239 @@ def create_app() -> Flask:
         return jsonify({"report": ""})
 
     @app.route("/api/results", methods=["GET"])
-    def get_results():
+    def get_results() -> Response:
         """Returns cumulative test results history."""
         results_file = project_root / "tests" / "proxmox_results.json"
         if results_file.exists():
+            # noinspection PyBroadException
             try:
                 with open(results_file, "r", encoding="utf-8") as f:
                     history_data = json.load(f)
                     if isinstance(history_data, list):
                         return jsonify(history_data)
-            except Exception as e:
-                logger.warning(f"Failed to read results file: {e}")
+            except Exception as exc:
+                logger.warning(f"Failed to read results file: {exc}")
         return jsonify([])
 
     @app.route("/api/results/clear", methods=["POST"])
-    def clear_results():
+    def clear_results() -> Union[Response, Tuple[Response, int]]:
         """Clears test results history."""
         results_file = project_root / "tests" / "proxmox_results.json"
+        # noinspection PyBroadException
         try:
             with open(results_file, "w", encoding="utf-8") as f:
                 json.dump([], f)
                 f.write("\n")
             runner_mgr.results_history = []
             return jsonify({"success": True})
-        except Exception as e:
-            logger.error(f"Failed to clear results file: {e}")
-            return jsonify({"success": False, "error": str(e)}), 500
+        except Exception as exc:
+            logger.error(f"Failed to clear results file: {exc}")
+            return jsonify({"success": False, "error": str(exc)}), 500
+
+    @app.route("/api/ai/status", methods=["GET"])
+    def ai_status() -> Response:
+        """Checks if AI failure diagnoser is configured and ready."""
+        diagnoser = AIFailureDiagnoser()
+        return jsonify(
+            {
+                "configured": diagnoser.is_configured(),
+                "provider": diagnoser.provider,
+                "model": diagnoser.engine.model,
+            }
+        )
+
+    @app.route("/api/ai/diagnose", methods=["POST"])
+    def ai_diagnose() -> Union[Response, Tuple[Response, int]]:
+        """Diagnoses a single component failure or batch of failures with Gemini."""
+        raw_payload = request.get_json()
+        payload = raw_payload if isinstance(raw_payload, dict) else {}
+        diagnoser = AIFailureDiagnoser()
+
+        if not diagnoser.is_configured():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": (
+                            f"AI provider '{diagnoser.provider}' is not configured. "
+                            "Please set GEMINI_API_KEY in your .env file."
+                        ),
+                    }
+                ),
+                400,
+            )
+
+        is_batch = payload.get("batch", False)
+
+        # noinspection PyBroadException
+        try:
+            if is_batch:
+                records = payload.get("records")
+                if not records:
+                    results_file = project_root / "tests" / "proxmox_results.json"
+                    if results_file.exists():
+                        all_res = json.loads(results_file.read_text(encoding="utf-8"))
+                        if isinstance(all_res, list):
+                            records = [
+                                r for r in all_res if r.get("status") == "failed"
+                            ]
+                        else:
+                            records = []
+                    else:
+                        records = []
+
+                if not records:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "No failed test records found to analyze.",
+                            }
+                        ),
+                        400,
+                    )
+
+                diagnosis = diagnoser.diagnose_batch_failures(failed_records=records)
+                return jsonify(
+                    {
+                        "success": True,
+                        "batch": True,
+                        "diagnosis": diagnosis,
+                    }
+                )
+
+            else:
+                raw_record = payload.get("record")
+                record = raw_record if isinstance(raw_record, dict) else {}
+                raw_comp_id = payload.get("component_id") or record.get("component_id")
+                if not isinstance(raw_comp_id, str) or not raw_comp_id.strip():
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "component_id is required",
+                            }
+                        ),
+                        400,
+                    )
+                comp_id = raw_comp_id.strip()
+
+                tmpl_file = (
+                    project_root
+                    / "component_templates"
+                    / comp_id
+                    / "docker-compose.template.yml"
+                )
+                tmpl_content = (
+                    tmpl_file.read_text(encoding="utf-8") if tmpl_file.exists() else ""
+                )
+                logs_snippet = payload.get("logs", "")
+
+                results_file = project_root / "tests" / "proxmox_results.json"
+                history_records = []
+                if results_file.exists():
+                    # noinspection PyBroadException
+                    try:
+                        raw_hist = json.loads(results_file.read_text(encoding="utf-8"))
+                        if isinstance(raw_hist, list):
+                            history_records = raw_hist
+                    except Exception:  # nosec B110
+                        pass
+
+                diagnosis = diagnoser.diagnose_single_failure(
+                    test_record=record
+                    or {
+                        "component_id": comp_id,
+                        "error_message": payload.get("error_message", ""),
+                    },
+                    template_content=tmpl_content,
+                    container_logs=logs_snippet,
+                    history_records=history_records,
+                )
+                return jsonify(
+                    {
+                        "success": True,
+                        "batch": False,
+                        "diagnosis": diagnosis,
+                    }
+                )
+
+        except Exception as exc:
+            logger.error(f"AI diagnosis error: {exc}", exc_info=True)
+            return jsonify({"success": False, "error": str(exc)}), 500
+
+    @app.route("/api/ai/apply-patch", methods=["POST"])
+    def ai_apply_patch() -> Union[Response, Tuple[Response, int]]:
+        """Applies a suggested AI template patch to the component template."""
+        raw_payload = request.get_json()
+        payload = raw_payload if isinstance(raw_payload, dict) else {}
+        comp_id = payload.get("component_id")
+        template_content = payload.get("template_content")
+
+        if not isinstance(comp_id, str) or not isinstance(template_content, str):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "component_id and template_content are required.",
+                    }
+                ),
+                400,
+            )
+
+        success = apply_suggested_template(
+            component_id=comp_id,
+            new_template_content=template_content,
+            project_root=project_root,
+        )
+        return jsonify({"success": success})
+
+    @app.route("/api/ai/apply-matrix-constraint", methods=["POST"])
+    def ai_apply_matrix_constraint() -> Union[Response, Tuple[Response, int]]:
+        """Applies a suggested matrix constraint (modes, engines, notes) to metadata."""
+        raw_payload = request.get_json()
+        payload = raw_payload if isinstance(raw_payload, dict) else {}
+        comp_id = payload.get("component_id")
+        modes = payload.get("modes")
+        engines = payload.get("engines")
+        notes = payload.get("notes")
+
+        if not isinstance(comp_id, str) or not comp_id.strip():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "component_id is required.",
+                    }
+                ),
+                400,
+            )
+
+        try:
+            component_manager = ComponentManager(
+                templates_path=str(project_root / "component_templates"),
+                metadata_file_path=str(
+                    project_root / "config" / "components_metadata.json"
+                ),
+            )
+            success = component_manager.update_component_matrix_constraint(
+                component_id=comp_id.strip(),
+                modes=modes if isinstance(modes, list) else None,
+                engines=engines if isinstance(engines, list) else None,
+                notes=str(notes) if notes is not None else None,
+            )
+            return jsonify({"success": success, "component_id": comp_id})
+        except Exception as exc:
+            logger.error(f"Failed to apply matrix constraint: {exc}", exc_info=True)
+            return jsonify({"success": False, "error": str(exc)}), 500
 
     return app
 
 
 if __name__ == "__main__":
     app_instance = create_app()
-    port = int(os.environ.get("PROXMOX_GUI_PORT", 5050))
-    host = os.environ.get("PROXMOX_GUI_HOST", "0.0.0.0")  # nosec B104
+    port = int(os.environ.get("PROXMOX_GUI_PORT", "5050"))
+    host = str(os.environ.get("PROXMOX_GUI_HOST", "0.0.0.0"))  # nosec B104
 
     print(f"Starting NjordDeploy Proxmox Test GUI on http://localhost:{port}")
     app_instance.run(host=host, port=port, debug=False)

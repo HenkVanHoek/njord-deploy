@@ -62,6 +62,30 @@ class DeploymentEvaluator:
                 "github_keywords": "",
             }
 
+        # Check for user cancellation or process abort
+        if (
+            exit_code in (130, -15, -9, 143)
+            or "abort" in sanitized.lower()
+            or "interrupted" in sanitized.lower()
+            or "sigterm" in sanitized.lower()
+            or "sigkill" in sanitized.lower()
+            or "keyboardinterrupt" in sanitized.lower()
+            or "cancelled" in sanitized.lower()
+            or "canceled" in sanitized.lower()
+        ):
+            return {
+                "status": "YELLOW",
+                "summary": (
+                    f"Deployment of '{component_name}' was cancelled by the user."
+                ),
+                "user_action": (
+                    "The deployment process was intentionally stopped. "
+                    "No error report is needed."
+                ),
+                "doc_anchor": "",
+                "github_keywords": "",
+            }
+
         # Rule checks for Scenario 2 (Yellow - User/Config Tuning)
         if "bind: address already in use" in sanitized:
             return {
@@ -98,6 +122,25 @@ class DeploymentEvaluator:
                 "user_action": "Free up disk space on the target node before retrying.",
                 "doc_anchor": "USER_GUIDE.md#disk-space",
                 "github_keywords": "",
+            }
+
+        if (
+            "/dev/net/tun" in sanitized.lower()
+            or "not a device node" in sanitized.lower()
+        ):
+            return {
+                "status": "YELLOW",
+                "summary": (
+                    f"Kernel device access error for '{component_name}'. "
+                    "The service requires host device access (/dev/net/tun) "
+                    "not available in standard unprivileged LXC containers."
+                ),
+                "user_action": (
+                    "Deploy this component on a full Virtual Machine (VM) or "
+                    "configure device passthrough on your Proxmox host."
+                ),
+                "doc_anchor": "USER_GUIDE.md#lxc-tun-devices",
+                "github_keywords": "lxc dev net tun",
             }
 
         # Rule checks for Scenario 3 (Red - System/Package Bug)
@@ -196,6 +239,21 @@ def evaluate_deployment(
     """Main entry point for evaluating a deployment session result."""
     status_dict = container_status or {"running": exit_code == 0}
     evaluator = DeploymentEvaluator()
+
+    sanitized_check = log_text.lower()
+    if (
+        exit_code in (130, -15, -9, 143)
+        or "aborted by user" in sanitized_check
+        or "abort requested" in sanitized_check
+        or "keyboardinterrupt" in sanitized_check
+        or "interrupted" in sanitized_check
+    ):
+        return evaluator.evaluate_with_rules(
+            component_name=component_name,
+            log_text=log_text,
+            exit_code=exit_code,
+            container_status=status_dict,
+        )
 
     if use_ai:
         # noinspection PyBroadException

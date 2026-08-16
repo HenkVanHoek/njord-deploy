@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "latest"
-# platform_notes: "Tested successfully as part of package 'nextcloud-stack' on Proxmox LXC."
+# last_tested_version: "8.10.0"
+# platform_notes: "Tested on Proxmox LXC: docker (8.10.0, 2026-08-15), podman (8.10.0, 2026-08-15); Proxmox VM: docker (8.10.0, 2026-08-15), podman (8.10.0, 2026-08-15)."
 # breaking_changes: "None"
 services:
   nextcloud-redis:
@@ -12,8 +12,11 @@ services:
     environment:
       TZ: "{{ TZ }}"
     networks:
+      - njorddeploy_net
       - nextcloud-internal
 
 networks:
+  njorddeploy_net:
+    external: true
   nextcloud-internal:
     name: nextcloud-internal

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v2.18.28"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "v2.19.7"
+# platform_notes: "Tested on Proxmox LXC: docker (v2.19.7, 2026-08-15), podman (v2.19.7, 2026-08-15); Proxmox VM: docker (v2.19.7, 2026-08-15), podman (v2.19.7, 2026-08-15)."
 # breaking_changes: none
 services:
   semaphore-ui:

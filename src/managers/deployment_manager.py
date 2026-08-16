@@ -120,6 +120,7 @@ class DeploymentManager:
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
+                    "ansible_remote_tmp": "/tmp/.ansible",  # nosec B108
                     "local_output_path": output_path,
                     "components_to_clean": mapped_clean,
                     "components_to_restart": mapped_restart,
@@ -142,9 +143,12 @@ class DeploymentManager:
                     extravars["ansible_password"] = ssh_password
                     extravars["ansible_become_password"] = ssh_password
 
-                # Prevent host key checking errors for dynamic test/reinstalled VMs
+                # Prevent host key checking errors and handle transient drops
+                extravars["ansible_ssh_retries"] = 3
                 extravars["ansible_ssh_common_args"] = (
-                    "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+                    "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
+                    "-o IdentitiesOnly=yes -o ServerAliveInterval=15 "
+                    "-o ServerAliveCountMax=4 -o ConnectTimeout=30"
                 )
 
                 # Log deployment manifest and docker-compose.yml contents

@@ -139,3 +139,4 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Audiobookshelf | A self-hosted audiobook and podcast server for organizing, streaming, and tracking playback progress across your personal audio media library. | [Link](https://www.audiobookshelf.org/) |
+| Immich | Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: "0:0"`) to prevent common permission issues with mounted volumes. | N/A |

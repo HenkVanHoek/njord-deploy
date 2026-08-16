@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "latest"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-08-15), podman (latest, 2026-08-15); Proxmox VM: docker (latest, 2026-08-15), podman (latest, 2026-08-15)."
 # breaking_changes: "None"
 services:
   matrix-conduit:
@@ -12,6 +12,8 @@ services:
     volumes:
       - "{{ CONFIG_BASE_PATH }}/conduit:/var/lib/matrix-conduit"
     environment:
+      - "CONDUIT_CONFIG="
+      - "CONDUIT_DATABASE_PATH=/var/lib/matrix-conduit"
       - "CONDUIT_SERVER_NAME={{ CONDUIT_SERVER_NAME | default('conduit.local') }}"
       - "CONDUIT_DATABASE_BACKEND=rocksdb"
       - "CONDUIT_PORT=6167"

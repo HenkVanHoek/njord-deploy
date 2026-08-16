@@ -187,9 +187,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const refreshSyncStatusBadge = async () => {
+    const refreshSyncStatusBadge = async (forceRemoteCheck = true) => {
         try {
-            const statusData = await fetchJson("/api/sync/check-updates", { method: "POST" });
+            const endpoint = forceRemoteCheck ? "/api/sync/check-updates" : "/api/sync/status";
+            const options = forceRemoteCheck ? { method: "POST" } : { method: "GET" };
+            const statusData = await fetchJson(endpoint, options);
             if (statusData.initial_seed_info && statusData.initial_seed_info.status !== "already_seeded") {
                 const seedInfo = statusData.initial_seed_info;
                 if (seedInfo.status === "downloaded") {
@@ -279,7 +281,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 : parseInt(portInput.value) || null,
             ai_instructions: document.getElementById('comp-ai-instructions')
                 ? (document.getElementById('comp-ai-instructions').value.trim() || null)
-                : null
+                : null,
+            supported_matrix: {
+                modes: [
+                    document.getElementById('comp-matrix-lxc')?.checked ? 'lxc' : null,
+                    document.getElementById('comp-matrix-vm')?.checked ? 'vm' : null,
+                ].filter(Boolean),
+                engines: [
+                    document.getElementById('comp-matrix-docker')?.checked ? 'docker' : null,
+                    document.getElementById('comp-matrix-podman')?.checked ? 'podman' : null,
+                ].filter(Boolean),
+                notes: document.getElementById('comp-matrix-notes')?.value.trim() || ''
+            }
         };
 
         if (payload.has_ui && !payload.ui_port_variable) {
@@ -544,6 +557,57 @@ document.addEventListener('DOMContentLoaded', () => {
                 codeEditor.setValue(defaultHeader + currentVal);
                 markTabAsDirty('template-pane');
                 showAlert("Metadata header added successfully!", "success");
+            };
+        }
+
+        // Setup Jinja Context helper badges and snippet buttons
+        document.querySelectorAll('.jinja-var-badge').forEach(badge => {
+            badge.onclick = () => {
+                if (!codeEditor) return;
+                const varName = badge.getAttribute('data-var');
+                const doc = codeEditor.getDoc();
+                const cursor = doc.getCursor();
+                doc.replaceRange(`{{ ${varName} }}`, cursor);
+                codeEditor.focus();
+                markTabAsDirty('template-pane');
+            };
+        });
+
+        const insertPodmanBtn = document.getElementById('insert-podman-condition-btn');
+        if (insertPodmanBtn) {
+            insertPodmanBtn.onclick = (e) => {
+                e.preventDefault();
+                if (!codeEditor) return;
+                const doc = codeEditor.getDoc();
+                const cursor = doc.getCursor();
+                const snippet =
+                    "{%- if CONTAINER_ENGINE == 'podman' %}\n" +
+                    "    # Podman specific settings\n" +
+                    "{%- else %}\n" +
+                    "    # Standard Docker settings\n" +
+                    "{%- endif %}\n";
+                doc.replaceRange(snippet, cursor);
+                codeEditor.focus();
+                markTabAsDirty('template-pane');
+            };
+        }
+
+        const insertLxcBtn = document.getElementById('insert-lxc-condition-btn');
+        if (insertLxcBtn) {
+            insertLxcBtn.onclick = (e) => {
+                e.preventDefault();
+                if (!codeEditor) return;
+                const doc = codeEditor.getDoc();
+                const cursor = doc.getCursor();
+                const snippet =
+                    "{%- if TARGET_MODE == 'lxc' %}\n" +
+                    "    # LXC container settings\n" +
+                    "{%- else %}\n" +
+                    "    # QEMU VM settings\n" +
+                    "{%- endif %}\n";
+                doc.replaceRange(snippet, cursor);
+                codeEditor.focus();
+                markTabAsDirty('template-pane');
             };
         }
 
@@ -2765,8 +2829,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const resJson = await response.json();
                 if (response.ok) {
                     showAlert(resJson.message || `Component ${compId} successfully uploaded!`, 'success');
-                    await fetchJson('/api/sync/fetch', { method: 'POST' }).catch(() => {});
-                    await refreshSyncStatusBadge();
+                    await refreshSyncStatusBadge(false);
                 } else {
                     showAlert(resJson.error || "Upload failed.", 'danger');
                 }
@@ -2802,8 +2865,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (response.ok) {
                     showAlert(resJson.message || "All components successfully uploaded!", 'success');
                     gitSyncModal.hide();
-                    await fetchJson('/api/sync/fetch', { method: 'POST' }).catch(() => {});
-                    await refreshSyncStatusBadge();
+                    await refreshSyncStatusBadge(false);
                 } else {
                     showAlert(resJson.error || "Bulk upload failed.", 'danger');
                 }

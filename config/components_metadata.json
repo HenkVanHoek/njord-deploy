@@ -181,6 +181,7 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "adguard/adguardhome",
+            "last_tested": "2026-08-15T21:15:58.441818+00:00",
             "name": "AdGuard Home",
             "package_id": null,
             "project_url": "https://adguard.com/en/adguard-home/overview.html",
@@ -198,7 +199,7 @@
                 "adblock",
                 "privacy"
             ],
-            "test_status": "beta",
+            "test_status": "tested",
             "traefik_internal_port": 80,
             "ui_port_variable": "ADGUARDHOME_WEB_PORT"
         },
@@ -213,6 +214,7 @@
             "has_ui": true,
             "image_name": "adminer",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:16:28.421826+00:00",
             "name": "Adminer",
             "package_id": null,
             "project_url": "https://www.adminer.org/",
@@ -230,6 +232,7 @@
                 "sqlite",
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "ADMINER_WEB_PORT"
         },
@@ -242,6 +245,7 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "ghcr.io/advplyr/audiobookshelf",
+            "last_tested": "2026-08-15T21:16:59.319934+00:00",
             "name": "Audiobookshelf",
             "project_url": "https://www.audiobookshelf.org/",
             "protocol": "http",
@@ -260,6 +264,7 @@
                 "server",
                 "audio"
             ],
+            "test_status": "tested",
             "ui_port_variable": "AUDIOBOOKSHELF_PORT"
         },
         "caddy": {
@@ -279,6 +284,7 @@
             "has_ui": false,
             "image_name": "caddy",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:17:25.402803+00:00",
             "name": "Caddy",
             "package_id": "caddy-filebrowser-stack",
             "project_url": "https://github.com/caddyserver/caddy",
@@ -293,6 +299,7 @@
                 "reverse-proxy",
                 "ssl"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": null
         },
@@ -307,6 +314,7 @@
             "has_ui": false,
             "image_name": "matrixconduit/matrix-conduit",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:17:50.209266+00:00",
             "name": "Conduit (Matrix Server)",
             "package_id": null,
             "project_url": "https://conduit.rs/",
@@ -318,6 +326,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": null
         },
@@ -331,6 +340,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "jitsi/web",
+            "last_tested": "2026-08-15T21:19:10.566542+00:00",
             "name": "jitsi-meet",
             "package_id": "general-stack",
             "project_url": "https://jitsi.org/",
@@ -349,6 +359,7 @@
                 "communications",
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "JITSI_HTTPS_PORT"
         },
@@ -362,6 +373,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "filebrowser/filebrowser",
+            "last_tested": "2026-08-15T21:19:48.053960+00:00",
             "name": "Filebrowser",
             "package_id": "caddy-filebrowser-stack",
             "project_url": "https://filebrowser.org/",
@@ -375,6 +387,7 @@
                 "utility",
                 "file-manager"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "FILEBROWSER_WEB_PORT"
         },
@@ -393,6 +406,7 @@
             "has_ui": true,
             "image_name": "blakeblackshear/frigate",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:21:21.691140+00:00",
             "name": "Frigate",
             "package_id": null,
             "project_url": "https://docs.frigate.video/",
@@ -405,6 +419,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "gitlab": {
@@ -418,6 +433,7 @@
             "has_ui": true,
             "image_name": "gitlab/gitlab-ce",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:22:31.682854+00:00",
             "name": "GitLab",
             "package_id": null,
             "project_url": "https://about.gitlab.com/",
@@ -430,6 +446,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "gluetun": {
@@ -471,6 +488,7 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "grafana/grafana-oss",
+            "last_tested": "2026-08-15T21:23:29.778110+00:00",
             "name": "Grafana Stack",
             "package_id": "monitoring-stack",
             "project_url": "https://grafana.com/",
@@ -486,6 +504,7 @@
                 "dashboard",
                 "metrics"
             ],
+            "test_status": "tested",
             "traefik_internal_port": 3000,
             "ui_port_variable": "GRAFANA_WEB_PORT",
             "variables": [
@@ -523,6 +542,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/heimdall",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:24:01.147314+00:00",
             "name": "Heimdall",
             "package_id": null,
             "project_url": "https://heimdall.site/",
@@ -535,6 +555,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "homarr": {
@@ -549,6 +570,7 @@
             "has_ui": true,
             "image_name": "ghcr.io/ajnart/homarr",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:24:52.348397+00:00",
             "name": "Homarr",
             "package_id": null,
             "project_url": "https://homarr.dev/",
@@ -561,6 +583,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "HOMARR_WEB_PORT"
         },
@@ -575,6 +598,8 @@
             "has_ui": true,
             "image_name": "homeassistant/home-assistant",
             "intent_questions": [],
+            "last_tested": "2026-08-16T09:08:52.676375+00:00",
+            "last_updated": "2026-08-16T07:52:52.825861+00:00",
             "name": "Home Assistant",
             "package_id": null,
             "project_url": "https://www.home-assistant.io/",
@@ -584,10 +609,23 @@
                 "ram": "medium",
                 "storage_type": "persistent"
             },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "Supported on Proxmox LXC and VM."
+            },
             "tags": [
                 "self-hosted"
             ],
-            "traefik_internal_port": null
+            "test_status": "tested",
+            "traefik_internal_port": 8123,
+            "ui_port_variable": "HA_WEB_PORT"
         },
         "homepage": {
             "component_version": "latest",
@@ -600,7 +638,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "ghcr.io/gethomepage/homepage",
-            "last_tested": "2026-08-13T07:54:05.156337+00:00",
+            "last_tested": "2026-08-15T21:28:08.459662+00:00",
             "name": "Homepage",
             "package_id": null,
             "project_url": "https://gethomepage.dev/",
@@ -626,6 +664,7 @@
             "has_ui": true,
             "image_name": "b4bz/homer",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:28:32.523670+00:00",
             "name": "Homer",
             "package_id": null,
             "project_url": "https://github.com/bastienwirtz/homer",
@@ -638,7 +677,44 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
+        },
+        "immich": {
+            "ai_instructions": null,
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: \"0:0\"`) to prevent common permission issues with mounted volumes.",
+            "docker_service_name": "immich-proxy",
+            "group": "Media Servers",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/immich-app/immich-server",
+            "last_tested": "2026-08-15T21:30:12.009157+00:00",
+            "last_updated": "2026-08-14T08:21:23.740141+00:00",
+            "name": "Immich",
+            "package_id": null,
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "recommended_cores": null,
+                "recommended_ram_mb": null,
+                "recommended_storage_gb": null,
+                "storage_type": "persistent"
+            },
+            "tags": [
+                "photo",
+                "video",
+                "gallery",
+                "self-hosted",
+                "media"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 8080,
+            "ui_port_variable": "IMMICH_WEB_PORT"
         },
         "jellyfin": {
             "component_version": "latest",
@@ -651,6 +727,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/jellyfin",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:30:58.896085+00:00",
             "name": "Jellyfin",
             "package_id": "media-stack",
             "project_url": "https://jellyfin.org/",
@@ -663,6 +740,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "JELLYFIN_WEB_PORT"
         },
@@ -681,7 +759,7 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/berriai/litellm",
-            "last_tested": "2026-08-13T05:54:47.232211+00:00",
+            "last_tested": "2026-08-15T21:32:36.780870+00:00",
             "name": "LiteLLM AI Gateway",
             "package_id": null,
             "project_url": "https://github.com/BerriAI/litellm",
@@ -726,6 +804,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "danielszabo99/microbin",
+            "last_tested": "2026-08-15T21:33:05.417591+00:00",
             "name": "Microbin",
             "package_id": "general-stack",
             "project_url": "https://microbin.eu/",
@@ -744,6 +823,7 @@
                 "text",
                 "privacy"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "MICROBIN_PORT"
         },
@@ -756,10 +836,13 @@
             "group": "Productivity",
             "has_configuration": true,
             "has_ui": true,
-            "image_name": "docker.n8n.io/n8nio/n8n",
+            "image_name": "n8nio/n8n",
+            "last_tested": "2026-08-15T21:33:55.793861+00:00",
+            "last_updated": "2026-08-15T18:43:03.221846+00:00",
             "name": "n8n",
             "project_url": "https://n8n.io/",
             "protocol": "http",
+            "test_status": "tested",
             "ui_port_variable": "N8N_WEB_PORT"
         },
         "nextcloud": {
@@ -774,6 +857,7 @@
             "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": true,
+            "last_tested": "2026-08-15T21:35:01.070563+00:00",
             "name": "Nextcloud",
             "package_id": "nextcloud-stack",
             "project_url": "https://nextcloud.com/",
@@ -789,6 +873,7 @@
                 "productivity",
                 "office"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "nextcloud-db": {
@@ -799,6 +884,7 @@
             "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": false,
+            "last_tested": "2026-08-15T21:35:29.840100+00:00",
             "name": "Nextcloud MariaDB",
             "package_id": "nextcloud-stack",
             "resource_profile": {
@@ -811,6 +897,7 @@
                 "mysql",
                 "mariadb"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "nextcloud-db-dumper": {
@@ -821,6 +908,7 @@
             "group": "databases",
             "has_configuration": true,
             "has_ui": false,
+            "last_tested": "2026-08-15T21:35:59.640500+00:00",
             "name": "Nextcloud DB Dumper",
             "package_id": "nextcloud-stack",
             "resource_profile": {
@@ -832,7 +920,8 @@
                 "backup",
                 "database",
                 "mariadb"
-            ]
+            ],
+            "test_status": "tested"
         },
         "nextcloud-redis": {
             "conflicts_with": [],
@@ -842,6 +931,7 @@
             "has_configuration": false,
             "has_traefik_support": false,
             "has_ui": false,
+            "last_tested": "2026-08-15T21:36:24.974979+00:00",
             "name": "Nextcloud Redis Cache",
             "package_id": "nextcloud-stack",
             "resource_profile": {
@@ -854,6 +944,7 @@
                 "cache",
                 "performance"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "nginx-proxy-manager": {
@@ -867,6 +958,7 @@
             "has_ui": true,
             "image_name": "jc21/nginx-proxy-manager",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:37:01.770198+00:00",
             "name": "Nginx Proxy Manager",
             "package_id": null,
             "project_url": "https://nginxproxymanager.com/",
@@ -879,6 +971,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "njorddeploy-service-maintenance": {
@@ -920,6 +1013,7 @@
             "has_configuration": false,
             "has_traefik_support": false,
             "has_ui": false,
+            "last_tested": "2026-08-15T21:38:01.073067+00:00",
             "name": "Nextcloud High-Performance Push",
             "package_id": "nextcloud-stack",
             "resource_profile": {
@@ -933,6 +1027,7 @@
                 "sync",
                 "rust"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "octoprint": {
@@ -943,6 +1038,7 @@
             "has_configuration": false,
             "has_traefik_support": false,
             "has_ui": true,
+            "last_tested": "2026-08-15T21:38:58.310825+00:00",
             "name": "OctoPrint",
             "package_id": null,
             "project_url": "https://octoprint.org/",
@@ -954,6 +1050,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "open-webui": {
@@ -967,6 +1064,7 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/open-webui/open-webui",
+            "last_tested": "2026-08-15T21:42:42.994683+00:00",
             "name": "Open WebUI with Ollama",
             "package_id": null,
             "project_url": "https://openwebui.com/",
@@ -978,6 +1076,7 @@
                 "OpenAI",
                 "Chatbot"
             ],
+            "test_status": "tested",
             "traefik_internal_port": 8080,
             "ui_port_variable": "OPEN_WEBUI_PORT"
         },
@@ -992,6 +1091,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/organizr",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:43:15.269661+00:00",
             "name": "Organizr",
             "package_id": null,
             "project_url": "https://organizr.app/",
@@ -1004,6 +1104,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "phpmyadmin": {
@@ -1020,6 +1121,7 @@
             "has_ui": true,
             "image_name": "phpmyadmin",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:43:51.819160+00:00",
             "name": "phpMyAdmin",
             "package_id": null,
             "project_url": "https://www.phpmyadmin.net/",
@@ -1036,6 +1138,7 @@
                 "mysql",
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "PHPMYADMIN_WEB_PORT"
         },
@@ -1050,6 +1153,7 @@
             "has_ui": true,
             "image_name": "pihole/pihole",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:44:22.697896+00:00",
             "name": "Pi-hole",
             "package_id": null,
             "project_url": "https://pi-hole.net/",
@@ -1062,6 +1166,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_host_variable": "VIRTUAL_HOST",
             "traefik_internal_port": 80,
             "ui_port_variable": "PIHOLE_WEB_PORT"
@@ -1077,6 +1182,8 @@
             "has_ui": true,
             "id": "pish-fluffychat-web",
             "image_name": "pish-fluffychat-web",
+            "last_tested": "2026-08-15T21:00:49.652791+00:00",
+            "last_updated": "2026-08-15T18:23:38.068040+00:00",
             "name": "FluffyChat Web",
             "package_id": "general-stack",
             "project_url": "https://fluffychat.im/",
@@ -1108,12 +1215,23 @@
                 "ram": "medium",
                 "storage_type": "persistent"
             },
+            "supported_matrix": {
+                "engines": [
+                    "docker"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "Requires Docker Engine for Git repository build context"
+            },
             "tags": [
                 "matrix",
                 "chat",
                 "web",
                 "client"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "FLUFFYCHAT_WEB_PORT",
             "variables": [
@@ -1152,6 +1270,7 @@
             "has_ui": true,
             "image_name": "portainer/portainer-ce",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:44:52.870889+00:00",
             "name": "Portainer",
             "package_id": null,
             "post_install_restart_option": true,
@@ -1165,6 +1284,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "PORTAINER_WEB_PORT"
         },
@@ -1182,6 +1302,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "prom/prometheus",
+            "last_tested": "2026-08-15T21:45:34.217978+00:00",
             "name": "Prometheus Stack",
             "package_id": "monitoring-stack",
             "project_url": "https://prometheus.io/",
@@ -1196,6 +1317,7 @@
                 "metrics",
                 "observability"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "PROMETHEUS_WEB_PORT",
             "variables": [
@@ -1231,6 +1353,7 @@
             "has_traefik_support": true,
             "has_ui": false,
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:45:59.858842+00:00",
             "name": "Prosody",
             "package_id": null,
             "project_url": "https://prosody.im/",
@@ -1242,6 +1365,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": 80
         },
         "prowlarr": {
@@ -1255,6 +1379,7 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/prowlarr",
+            "last_tested": "2026-08-15T21:46:32.109124+00:00",
             "name": "Prowlarr",
             "package_id": "media-stack",
             "project_url": "https://prowlarr.com/",
@@ -1266,6 +1391,7 @@
                 "usenet",
                 "arr"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "PROWLARR_WEB_PORT"
         },
@@ -1280,6 +1406,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/qbittorrent",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:47:05.511341+00:00",
             "name": "qBittorrent",
             "package_id": "media-stack",
             "project_url": "https://www.qbittorrent.org/",
@@ -1292,6 +1419,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "QBITTORRENT_WEB_PORT"
         },
@@ -1306,6 +1434,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/radarr",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:47:43.010376+00:00",
             "name": "Radarr",
             "package_id": "media-stack",
             "project_url": "https://radarr.video/",
@@ -1318,6 +1447,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "RADARR_WEB_PORT"
         },
@@ -1332,6 +1462,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/sabnzbd",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:48:16.258887+00:00",
             "name": "SABnzbd",
             "package_id": "media-stack",
             "project_url": "https://sabnzbd.org/",
@@ -1344,6 +1475,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "SABNZBD_WEB_PORT"
         },
@@ -1358,6 +1490,7 @@
             "has_ui": true,
             "image_name": "koush/scrypted",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:49:07.858386+00:00",
             "name": "Scrypted",
             "package_id": null,
             "project_url": "https://www.scrypted.app/",
@@ -1370,6 +1503,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "semaphore": {
@@ -1382,6 +1516,7 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "semaphoreui/semaphore",
+            "last_tested": "2026-08-15T21:49:44.261632+00:00",
             "name": "Semaphore UI",
             "project_url": "https://semaphoreui.com/",
             "protocol": "http",
@@ -1400,6 +1535,7 @@
                 "automation",
                 "ui"
             ],
+            "test_status": "tested",
             "ui_port_variable": "SEMAPHORE_PORT"
         },
         "sonarr": {
@@ -1413,6 +1549,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/sonarr",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:50:21.476474+00:00",
             "name": "Sonarr",
             "package_id": "media-stack",
             "project_url": "https://sonarr.tv/",
@@ -1425,6 +1562,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "SONARR_WEB_PORT"
         },
@@ -1437,6 +1575,7 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "stirlingtools/stirling-pdf",
+            "last_tested": "2026-08-15T21:51:26.811003+00:00",
             "name": "Stirling PDF",
             "project_url": "https://stirlingpdf.com/",
             "protocol": "http",
@@ -1455,6 +1594,7 @@
                 "document",
                 "productivity"
             ],
+            "test_status": "tested",
             "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
         },
         "traefik": {
@@ -1468,6 +1608,8 @@
             "has_ui": true,
             "image_name": "traefik",
             "intent_questions": [],
+            "last_tested": "2026-08-16T09:09:37.568697+00:00",
+            "last_updated": "2026-08-16T11:05:25.579862+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -1477,9 +1619,19 @@
                 "ram": "medium",
                 "storage_type": "persistent"
             },
+            "supported_matrix": {
+                "engines": [
+                    "docker"
+                ],
+                "modes": [
+                    "vm"
+                ],
+                "notes": "Requires VM mode"
+            },
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "TRAEFIK_WEB_PORT"
         },
@@ -1494,6 +1646,7 @@
             "has_ui": false,
             "image_name": "mvance/unbound",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:51:54.285980+00:00",
             "name": "Unbound",
             "package_id": null,
             "project_url": "https://www.nlnetlabs.nl/projects/unbound/about/",
@@ -1505,6 +1658,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "unifi-controller": {
@@ -1518,6 +1672,7 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/unifi-controller",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:52:50.721133+00:00",
             "name": "UniFi Controller",
             "package_id": null,
             "project_url": "https://ui.com/wi-fi",
@@ -1530,6 +1685,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "uptime-kuma": {
@@ -1543,6 +1699,7 @@
             "has_ui": true,
             "image_name": "louislam/uptime-kuma",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:53:30.811666+00:00",
             "name": "Uptime Kuma",
             "package_id": null,
             "project_url": "https://uptime.kuma.pet/",
@@ -1554,6 +1711,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "UPTIME_KUMA_WEB_PORT"
         },
@@ -1568,6 +1726,7 @@
             "has_ui": true,
             "image_name": "vaultwarden/server",
             "intent_questions": [],
+            "last_tested": "2026-08-15T21:54:01.268151+00:00",
             "name": "Vaultwarden",
             "package_id": null,
             "project_url": "https://github.com/dani-garcia/vaultwarden",
@@ -1580,6 +1739,7 @@
             "tags": [
                 "self-hosted"
             ],
+            "test_status": "tested",
             "traefik_internal_port": null
         },
         "voicebox": {
@@ -1592,7 +1752,7 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "ghcr.io/jamiepine/voicebox",
-            "last_tested": "2026-08-13T11:53:50.126655+00:00",
+            "last_tested": "2026-08-14T19:42:15.343332+00:00",
             "name": "Voicebox",
             "project_url": "https://github.com/HenkVanHoek/njord-deploy",
             "protocol": "http",
@@ -1625,7 +1785,7 @@
             "has_ui": true,
             "image_name": "docker.io/jdreinhardt/minimalist-web-notepad",
             "intent_questions": [],
-            "last_tested": "2026-08-13T16:08:35.928888+00:00",
+            "last_tested": "2026-08-15T21:54:31.134858+00:00",
             "name": "Web Notepad",
             "package_id": null,
             "project_url": "https://github.com/pajikos/minimalist-web-notepad",

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "2.14.2"
-# platform_notes: "Tested successfully on Proxmox LXC."
+# last_tested_version: "2.14.3"
+# platform_notes: "Tested on Proxmox LXC: docker (2.14.3, 2026-08-15), podman (2.14.3, 2026-08-15); Proxmox VM: docker (2.14.3, 2026-08-15), podman (2.14.3, 2026-08-15)."
 # breaking_changes: none
 services:
   stirling-pdf:
