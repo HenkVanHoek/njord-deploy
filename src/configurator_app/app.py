@@ -13,6 +13,7 @@ from pathlib import Path
 from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
+from configurator_app.openapi import get_openapi_spec
 from managers.component_manager import ComponentManager
 from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
@@ -284,6 +285,16 @@ def create_app(test_config=None):
             repo_config=repo_config,
         )
 
+    @flask_app.route("/api/docs", methods=["GET"])
+    def api_docs_page():
+        """Renders interactive Swagger UI documentation."""
+        return render_template("swagger.html")
+
+    @flask_app.route("/api/openapi.json", methods=["GET"])
+    def openapi_spec_json():
+        """Returns the OpenAPI 3.0.3 specification JSON."""
+        return jsonify(get_openapi_spec()), 200
+
     @flask_app.route("/help", methods=["GET"])
     def help_page():
         from utils.resource_utils import resource_path
@@ -291,6 +302,7 @@ def create_app(test_config=None):
         docs = {}
         for doc_name, filename in [
             ("Introduction", "README.md"),
+            ("REST API Reference", "docs/API_REFERENCE.md"),
             ("User & Network Guide", "docs/USER_GUIDE.md"),
             ("Contributing Guide", "CONTRIBUTING.md"),
             ("Helper Utilities", "UTILITIES.md"),

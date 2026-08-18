@@ -1,4 +1,4 @@
-Tokens: 346545 | VRAM Status: CRITICAL
+Tokens: 353756 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -33,6 +33,7 @@ scripts/update_docs.py
 src/__init__.py
 src/configurator_app/__init__.py
 src/configurator_app/app.py
+src/configurator_app/openapi.py
 src/configurator_app/static/__init__.py
 src/configurator_app/static/css/base.css
 src/configurator_app/static/css/configurator.css
@@ -49,6 +50,7 @@ src/configurator_app/templates/select_components.html
 src/configurator_app/templates/select_pi.html
 src/configurator_app/templates/settings.html
 src/configurator_app/templates/summary.html
+src/configurator_app/templates/swagger.html
 src/editor_app/__init__.py
 src/editor_app/app.py
 src/editor_app/static/accessibility.js

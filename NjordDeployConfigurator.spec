@@ -52,7 +52,9 @@ a = Analysis(
         'nacl',
         'bcrypt',
         'cryptography',
-        'src.configurator_app.app'
+        'src.configurator_app.app',
+        'src.configurator_app.openapi',
+        'configurator_app.openapi'
     ],
     hookspath=[],
     runtime_hooks=[],

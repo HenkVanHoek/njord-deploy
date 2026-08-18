@@ -7,6 +7,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Interactive Swagger UI & OpenAPI 3.0 Specification**:
+  - Implemented interactive Swagger UI documentation at `http://localhost:5001/api/docs` and raw OpenAPI 3.0.3 specification JSON at `/api/openapi.json`.
+  - Added direct navigation links in the Configurator navbar and Help topics menu.
 - **Headless REST API & Comprehensive API Reference Documentation**:
   - Published [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) documenting all headless REST endpoints for automated deployments, AI coding agents (such as Antigravity/Agy), and external DevOps pipelines.
   - Documented discovery, system analysis (`/api/v1/system/analyze`), Proxmox VE VM/LXC provisioning (`/api/proxmox/*`), deployment execution (`/deploy-configuration`), real-time SSE log streaming (`/stream-deployment/<task_id>`), and health evaluation (`/api/deployment/<task_id>/evaluate`).
