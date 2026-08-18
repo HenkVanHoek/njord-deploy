@@ -9,21 +9,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
+    <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #f8fafc;
+            background-color: var(--bs-body-bg, #02040a);
+            color: var(--bs-body-color, #f8fafc);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
         .topbar-wrapper {
-            background-color: #1e293b;
-            color: #ffffff;
+            background: var(--navbar-bg, #0f172a);
+            border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+            color: var(--bs-heading-color, #ffffff);
             padding: 12px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--glass-shadow, 0 2px 4px rgba(0,0,0,0.1));
+            backdrop-filter: blur(8px);
         }
         .topbar-brand {
             display: flex;
@@ -31,28 +36,29 @@
             gap: 12px;
             font-size: 1.15rem;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--bs-heading-color, #ffffff);
             text-decoration: none;
         }
         .topbar-brand img {
             border-radius: 6px;
         }
         .topbar-actions a {
-            color: #e2e8f0;
+            color: var(--navbar-color, #cbd5e1);
             text-decoration: none;
             font-size: 0.9rem;
-            margin-left: 16px;
+            margin-left: 12px;
             padding: 6px 12px;
             border-radius: 6px;
-            background: rgba(255,255,255,0.1);
+            background: var(--glass-bg, rgba(255,255,255,0.1));
+            border: 1px solid var(--glass-border, transparent);
             transition: all 0.2s;
         }
         .topbar-actions a:hover {
-            color: #ffffff;
-            background: rgba(255,255,255,0.2);
+            color: var(--bs-heading-color, #ffffff);
+            background: rgba(0, 176, 255, 0.2);
         }
         #swagger-ui {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -62,16 +68,171 @@
         .swagger-ui .info {
             margin: 20px 0;
         }
-        .swagger-ui .info .title {
-            font-size: 2rem;
-            color: #0f172a;
-        }
         .swagger-ui .scheme-container {
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 8px;
             padding: 15px 20px;
             margin-bottom: 20px;
+            transition: background 0.2s ease, border 0.2s ease;
+        }
+
+        /* Light Theme Overrides */
+        html[data-theme="light"] body,
+        html[data-theme="high-contrast-light"] body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-wrapper,
+        html[data-theme="high-contrast-light"] .topbar-wrapper {
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-brand,
+        html[data-theme="high-contrast-light"] .topbar-brand {
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-actions a,
+        html[data-theme="high-contrast-light"] .topbar-actions a {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        html[data-theme="light"] .topbar-actions a:hover,
+        html[data-theme="high-contrast-light"] .topbar-actions a:hover {
+            background: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .swagger-ui .scheme-container,
+        html[data-theme="high-contrast-light"] .swagger-ui .scheme-container {
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        html[data-theme="light"] .swagger-ui .info .title,
+        html[data-theme="high-contrast-light"] .swagger-ui .info .title {
+            color: #0f172a !important;
+        }
+
+        /* Dark Themes Overrides */
+        html[data-theme="dark"] body,
+        html[data-theme="futuristic-dark"] body,
+        html[data-theme="high-contrast-dark"] body {
+            background-color: #030712 !important;
+            color: #f8fafc !important;
+        }
+        html[data-theme="dark"] .swagger-ui,
+        html[data-theme="futuristic-dark"] .swagger-ui,
+        html[data-theme="high-contrast-dark"] .swagger-ui {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .info .title,
+        html[data-theme="futuristic-dark"] .swagger-ui .info .title,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info .title {
+            color: #38bdf8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .info p,
+        html[data-theme="futuristic-dark"] .swagger-ui .info p,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info p,
+        html[data-theme="dark"] .swagger-ui .info li,
+        html[data-theme="futuristic-dark"] .swagger-ui .info li,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info li,
+        html[data-theme="dark"] .swagger-ui .info table,
+        html[data-theme="futuristic-dark"] .swagger-ui .info table {
+            color: #cbd5e1 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .scheme-container,
+        html[data-theme="futuristic-dark"] .swagger-ui .scheme-container,
+        html[data-theme="high-contrast-dark"] .swagger-ui .scheme-container {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #f8fafc !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-tag,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-tag,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-tag {
+            color: #f8fafc !important;
+            border-bottom-color: rgba(255,255,255,0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-tag small,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-tag small,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-tag small {
+            color: #94a3b8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock {
+            background: rgba(15, 23, 42, 0.65) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary-path,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary-path,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary-path {
+            color: #f1f5f9 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary-description,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary-description,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary-description {
+            color: #94a3b8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui section.models,
+        html[data-theme="futuristic-dark"] .swagger-ui section.models,
+        html[data-theme="high-contrast-dark"] .swagger-ui section.models {
+            background: rgba(30, 41, 59, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui section.models h4,
+        html[data-theme="futuristic-dark"] .swagger-ui section.models h4,
+        html[data-theme="high-contrast-dark"] .swagger-ui section.models h4 {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui select,
+        html[data-theme="futuristic-dark"] .swagger-ui select,
+        html[data-theme="high-contrast-dark"] .swagger-ui select {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        html[data-theme="dark"] .swagger-ui input[type=text],
+        html[data-theme="futuristic-dark"] .swagger-ui input[type=text],
+        html[data-theme="high-contrast-dark"] .swagger-ui input[type=text],
+        html[data-theme="dark"] .swagger-ui textarea,
+        html[data-theme="futuristic-dark"] .swagger-ui textarea,
+        html[data-theme="high-contrast-dark"] .swagger-ui textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .response-col_status,
+        html[data-theme="futuristic-dark"] .swagger-ui .response-col_status,
+        html[data-theme="high-contrast-dark"] .swagger-ui .response-col_status,
+        html[data-theme="dark"] .swagger-ui .responses-table,
+        html[data-theme="futuristic-dark"] .swagger-ui .responses-table,
+        html[data-theme="high-contrast-dark"] .swagger-ui .responses-table,
+        html[data-theme="dark"] .swagger-ui .response-col_description,
+        html[data-theme="futuristic-dark"] .swagger-ui .response-col_description {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui table thead tr td,
+        html[data-theme="futuristic-dark"] .swagger-ui table thead tr td,
+        html[data-theme="high-contrast-dark"] .swagger-ui table thead tr td,
+        html[data-theme="dark"] .swagger-ui table thead tr th,
+        html[data-theme="futuristic-dark"] .swagger-ui table thead tr th,
+        html[data-theme="high-contrast-dark"] .swagger-ui table thead tr th {
+            color: #94a3b8 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-body pre.microlight,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-body pre.microlight,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-body pre.microlight {
+            background: #0b1120 !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
     </style>
 </head>
@@ -85,7 +246,26 @@
              height="30">
         NjordDeploy REST API (Swagger UI)
     </a>
-    <div class="topbar-actions">
+    <div class="topbar-actions d-flex align-items-center">
+        <div class="dropdown me-2">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-light"
+                    type="button"
+                    id="themeDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    style="border-color: var(--glass-border, rgba(255,255,255,0.2));">
+                <i class="fa-solid fa-palette me-1"></i> Theme
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow"
+                aria-labelledby="themeDropdown"
+                style="background-color: var(--glass-bg, #1e293b); border: 1px solid var(--glass-border, rgba(255,255,255,0.1)); backdrop-filter: blur(8px);">
+                <li><button class="dropdown-item" data-theme-value="futuristic-dark">Futuristic Dark</button></li>
+                <li><button class="dropdown-item" data-theme-value="light">Standard Light</button></li>
+                <li><hr class="dropdown-divider" style="border-color: var(--glass-border, rgba(255,255,255,0.1));"></li>
+                <li><button class="dropdown-item" data-theme-value="high-contrast-dark">High Contrast Dark</button></li>
+                <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
+            </ul>
+        </div>
         <a href="/" title="Return to Configurator"><i class="fa-solid fa-house me-1"></i> Wizard</a>
         <a href="/settings" title="Settings"><i class="fa-solid fa-gear me-1"></i> Settings</a>
         <a href="/help" title="Help & Guides"><i class="fa-solid fa-circle-question me-1"></i> Help</a>
@@ -95,6 +275,7 @@
 
 <div id="swagger-ui"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
 <script>
