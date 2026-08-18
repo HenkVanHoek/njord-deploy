@@ -1,4 +1,4 @@
-Tokens: 356424 | VRAM Status: CRITICAL
+Tokens: 387384 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -29,8 +29,11 @@ scripts/search_chat_history.py
 scripts/static/css/proxmox_gui.css
 scripts/static/js/proxmox_gui.js
 scripts/templates/proxmox_gui.html
+scripts/test_backup_restore_lxc.py
 scripts/update_docs.py
 src/__init__.py
+src/cli/__init__.py
+src/cli/runner.py
 src/configurator_app/__init__.py
 src/configurator_app/app.py
 src/configurator_app/openapi.py
@@ -40,6 +43,7 @@ src/configurator_app/static/css/configurator.css
 src/configurator_app/static/css/njorddeploy-style.css
 src/configurator_app/static/js/accessibility.js
 src/configurator_app/static/js/app.js
+src/configurator_app/static/js/backup_manager_ui.js
 src/configurator_app/templates/__init__.py
 src/configurator_app/templates/base.html
 src/configurator_app/templates/help.html
@@ -64,6 +68,7 @@ src/management_tools/routes.py
 src/management_tools/templates/backup_ui.html
 src/managers/__init__.py
 src/managers/artifact_generator.py
+src/managers/backup_manager.py
 src/managers/component_manager.py
 src/managers/component_reader.py
 src/managers/component_writer.py

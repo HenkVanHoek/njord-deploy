@@ -66,6 +66,13 @@ def get_openapi_spec() -> Dict[str, Any]:
                 "name": "Engine & Settings",
                 "description": ("Container runtime, repository sync, and environment"),
             },
+            {
+                "name": "Backup & Restore",
+                "description": (
+                    "Volume discovery, tarball archiving, and state restoration "
+                    "for NjordDeploy-managed services"
+                ),
+            },
         ],
         "paths": {
             "/api/components": {
@@ -557,6 +564,237 @@ def get_openapi_spec() -> Dict[str, Any]:
                     "responses": {
                         "200": {"description": "Repository connection is valid."},
                         "400": {"description": "Validation failed."},
+                    },
+                }
+            },
+            "/api/backup/discover-compose": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Scan target host for docker-compose stack files",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "List of discovered stack directories.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "discovered_paths": [
+                                            {
+                                                "directory": "/opt/njorddeploy",
+                                                "compose_file": (
+                                                    "/opt/njorddeploy/"
+                                                    "docker-compose.yml"
+                                                ),
+                                                "filename": "docker-compose.yml",
+                                            }
+                                        ],
+                                        "suggested_path": "/opt/njorddeploy",
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Missing host credentials."},
+                    },
+                }
+            },
+            "/api/backup/inspect": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Inspect NjordDeploy volumes and data sizes on host",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Discovered services and volume sizes.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "managed_scope": "/opt/njorddeploy",
+                                        "disclaimer": (
+                                            "This backup tool exclusively detects, "
+                                            "archives, and restores services "
+                                            "managed by NjordDeploy."
+                                        ),
+                                        "components": [
+                                            {
+                                                "id": "grafana",
+                                                "name": "Grafana",
+                                                "total_size_bytes": 10485760,
+                                                "total_size_human": "10.0 MB",
+                                            }
+                                        ],
+                                        "total_managed_size_bytes": 10485760,
+                                        "total_managed_size_human": "10.0 MB",
+                                    }
+                                }
+                            },
+                        },
+                        "404": {"description": "No active NjordDeploy stack found."},
+                    },
+                }
+            },
+            "/api/backup/create": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Create compressed backup tarball of services",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                    "selected_components": ["grafana"],
+                                    "pause_containers": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Backup archive successfully created.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "filename": (
+                                            "njorddeploy_backup_20260818_120000.tar.gz"
+                                        ),
+                                        "size_bytes": 5242880,
+                                        "size_human": "5.0 MB",
+                                        "sha256": "abcdef1234567890",
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Backup creation failed."},
+                    },
+                }
+            },
+            "/api/backup/list": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "List available NjordDeploy backups on target host",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "List of available backup archives.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "backups": [
+                                            {
+                                                "filename": (
+                                                    "njorddeploy_backup_"
+                                                    "20260818_120000.tar.gz"
+                                                ),
+                                                "size_bytes": 5242880,
+                                                "size_human": "5.0 MB",
+                                                "created_at": "2026-08-18 12:00:00",
+                                            }
+                                        ],
+                                    }
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            "/api/backup/restore": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Restore services and volumes from backup archive",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                    "backup_filename": (
+                                        "njorddeploy_backup_20260818_120000.tar.gz"
+                                    ),
+                                    "restart_after": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Restore completed successfully.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "restored_archive": (
+                                            "njorddeploy_backup_20260818_120000.tar.gz"
+                                        ),
+                                        "restored_components": ["grafana"],
+                                        "restarted": True,
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Restore operation failed."},
+                    },
+                }
+            },
+            "/api/backup/download/{filename}": {
+                "get": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Download backup tarball archive",
+                    "parameters": [
+                        {
+                            "name": "filename",
+                            "in": "path",
+                            "required": True,
+                            "schema": {"type": "string"},
+                            "description": "Name of the backup tarball file.",
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Backup archive file stream.",
+                            "content": {"application/gzip": {}},
+                        },
+                        "400": {"description": "Invalid filename."},
                     },
                 }
             },

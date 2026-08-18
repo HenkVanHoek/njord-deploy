@@ -167,6 +167,7 @@ class SSHManager:
                         log_callback(chunk)
                     if channel.recv_stderr_ready():
                         chunk = channel.recv_stderr(4096).decode("utf-8", "ignore")
+                        stdout_parts.append(chunk)
                         log_callback(chunk)
 
             exit_code = channel.recv_exit_status()

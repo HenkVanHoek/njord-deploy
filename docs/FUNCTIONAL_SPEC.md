@@ -540,3 +540,45 @@ repeatable, isolated environment.
 - **When** a client requests `GET /api/openapi.json`,
 - **Then** a valid OpenAPI 3.0.3 specification is returned containing discovery, system analysis, deployment execution, SSE streaming, and Proxmox orchestration schemas.
 - **And** direct navigation links exist in the Configurator navbar and the Help documentation view.
+
+---
+
+### Epic 7: Volume Backup & Disaster Recovery
+
+#### Story: Automated Volume Discovery & Backup Archiving
+
+> As an end-user or system administrator, I want to discover and create compressed snapshot backups of all NjordDeploy-managed services and persistent volumes on my target host, so that I can safeguard my self-hosted data against hardware failure or corruption.
+
+**Acceptance Criteria:**
+- **Given** an active NjordDeploy deployment exists on a remote host (under `/opt/njorddeploy`),
+- **When** the client queries `POST /api/backup/inspect`,
+- **Then** the backend returns a list of managed services, their bound volume mount paths, and calculated disk footprints in bytes and human-readable format.
+- **And** a prominent disclaimer is displayed stating that only NjordDeploy-managed services under `/opt/njorddeploy` are included, and external host files are untouched.
+- **When** the user initiates a backup via `POST /api/backup/create`,
+- **Then** a compressed `.tar.gz` archive is generated with stack configurations, a JSON manifest, and volume datasets, returning a SHA-256 integrity checksum and direct download capability via `GET /api/backup/download/<filename>`.
+
+#### Story: State Restoration & Permission Reconciliation
+
+> As an end-user, I want to restore services and volume datasets from a selected backup archive, so that I can recover a previous state or migrate my stack to a new machine.
+
+**Acceptance Criteria:**
+- **Given** a valid backup archive exists on the target host,
+- **When** the client initiates `POST /api/backup/restore`,
+- **Then** running containers are stopped, configuration and volume files are unpacked into target directories, directory permissions are reconciled (`chmod 777`), and containers are safely restarted.
+
+---
+
+### Epic 8: Headless CLI Runner & Zero-Browser Automation
+
+#### Story: Terminal-Driven Deployments and Automation
+
+> As a sysadmin, CI/CD engineer, or autonomous AI agent, I want to execute full stack deployments, backups, and restorations directly via CLI flags or JSON specification files without launching a web browser or starting a local web server.
+
+**Acceptance Criteria:**
+- **Given** a target device and deployment specification file or CLI arguments,
+- **When** `python3 run_configurator.py --deploy [CONFIG_JSON]` is executed,
+- **Then** the application runs headless in terminal mode, performs package preparation and artifact generation, executes the Ansible playbook synchronously, and streams log lines directly to stdout.
+- **When** `python3 run_configurator.py --backup` or `--restore` is executed,
+- **Then** disaster recovery operations run directly against the target host and output JSON summaries to stdout.
+- **When** `python3 run_configurator.py --example-config` is executed,
+- **Then** a valid sample deployment JSON configuration is printed to stdout.

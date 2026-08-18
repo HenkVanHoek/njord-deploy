@@ -42,6 +42,9 @@ class OpenApiTestCase(unittest.TestCase):
         self.assertIn("/api/v1/system/analyze", spec["paths"])
         self.assertIn("/deploy-configuration", spec["paths"])
         self.assertIn("/api/proxmox/create-lxc", spec["paths"])
+        self.assertIn("/api/backup/discover-compose", spec["paths"])
+        self.assertIn("/api/backup/inspect", spec["paths"])
+        self.assertIn("/api/backup/create", spec["paths"])
 
     def test_api_openapi_json_endpoint(self):
         """Verify that GET /api/openapi.json returns 200 OK and valid JSON."""

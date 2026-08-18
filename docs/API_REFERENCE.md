@@ -20,6 +20,8 @@ The Configurator backend runs by default at `http://localhost:5001`.
 5. [Deployment Evaluation & Diagnostics](#5-deployment-evaluation--diagnostics)
 6. [Proxmox VE Orchestration](#6-proxmox-ve-orchestration)
 7. [Engine & Repository Settings](#7-engine--repository-settings)
+8. [Backup & Restore Management](#8-backup--restore-management)
+9. [Headless CLI Runner Mode](#9-headless-cli-runner-mode)
 
 ---
 
@@ -544,4 +546,211 @@ Validates connectivity, authentication, and branch existence for a remote compon
   "valid": true,
   "message": "Repository connection validated successfully."
 }
+```
+
+---
+
+## 8. Backup & Restore Management
+
+> [!IMPORTANT]
+> **Scope Boundary:** NjordDeploy's backup and restore engine exclusively archives and restores services, persistent volumes, and configuration files managed under `/opt/njorddeploy`. Foreign host directories and unmanaged containers are never altered or included.
+
+### `POST /api/backup/discover-compose`
+Scans target host common filesystem locations (`$HOME`, `/opt`, `/srv`, `/etc/docker`) for existing `docker-compose.yml` or `compose.yaml` files.
+
+- **Method:** `POST`
+- **Request Body:**
+```json
+{
+  "ip": "192.168.178.150",
+  "username": "root",
+  "password": "TargetPassword123"
+}
+```
+- **Response `200 OK`:**
+```json
+{
+  "status": "success",
+  "discovered_paths": [
+    {
+      "directory": "/home/pi/docker",
+      "compose_file": "/home/pi/docker/docker-compose.yml",
+      "filename": "docker-compose.yml"
+    }
+  ],
+  "suggested_path": "/home/pi/docker"
+}
+```
+
+---
+
+### `POST /api/backup/inspect`
+Inspects the target host's Docker Compose stack configuration and calculates disk space consumed by each service's persistent volume mounts. Supports custom stack locations (e.g., `~/docker`).
+
+- **Method:** `POST`
+- **Request Body:**
+```json
+{
+  "ip": "192.168.178.150",
+  "username": "root",
+  "password": "TargetPassword123",
+  "project_config_dir": "~/docker",
+  "port": 22
+}
+```
+- **Response `200 OK`:**
+```json
+{
+  "status": "success",
+  "managed_scope": "/opt/njorddeploy",
+  "disclaimer": "This backup tool exclusively detects, archives, and restores services, configurations, and persistent volumes managed by NjordDeploy under /opt/njorddeploy.",
+  "components": [
+    {
+      "id": "grafana",
+      "name": "Grafana",
+      "container_name": "njorddeploy-grafana",
+      "volumes": [
+        {
+          "type": "bind",
+          "host_path": "/opt/grafana/data",
+          "container_path": "/var/lib/grafana",
+          "size_bytes": 10485760,
+          "size_human": "10.0 MB"
+        }
+      ],
+      "total_size_bytes": 10485760,
+      "total_size_human": "10.0 MB",
+      "is_heavy": false
+    }
+  ],
+  "total_managed_size_bytes": 10485760,
+  "total_managed_size_human": "10.0 MB"
+}
+```
+
+---
+
+### `POST /api/backup/create`
+Creates a timestamped `.tar.gz` archive on the target host containing the stack configuration (`.env`, `docker-compose.yml`), a JSON manifest, and compressed volume datasets.
+
+- **Method:** `POST`
+- **Request Body:**
+```json
+{
+  "ip": "192.168.178.150",
+  "username": "root",
+  "password": "TargetPassword123",
+  "selected_components": ["grafana", "uptime-kuma"],
+  "pause_containers": true
+}
+```
+- **Response `200 OK`:**
+```json
+{
+  "status": "success",
+  "filename": "njorddeploy_backup_20260818_120000.tar.gz",
+  "remote_path": "/opt/njorddeploy/backups/njorddeploy_backup_20260818_120000.tar.gz",
+  "size_bytes": 5242880,
+  "size_human": "5.0 MB",
+  "sha256": "3a8c5f90...",
+  "components": ["grafana", "uptime-kuma"]
+}
+```
+
+---
+
+### `POST /api/backup/list`
+Lists all available NjordDeploy backup archives located on the target host.
+
+- **Method:** `POST`
+- **Response `200 OK`:**
+```json
+{
+  "status": "success",
+  "backups": [
+    {
+      "filename": "njorddeploy_backup_20260818_120000.tar.gz",
+      "remote_path": "/opt/njorddeploy/backups/njorddeploy_backup_20260818_120000.tar.gz",
+      "size_bytes": 5242880,
+      "size_human": "5.0 MB",
+      "created_at": "2026-08-18 12:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### `POST /api/backup/restore`
+Restores services and volumes from a selected backup tarball, applies correct permissions (`chmod 777`), and restarts the container stack.
+
+- **Method:** `POST`
+- **Request Body:**
+```json
+{
+  "ip": "192.168.178.150",
+  "username": "root",
+  "password": "TargetPassword123",
+  "backup_filename": "njorddeploy_backup_20260818_120000.tar.gz",
+  "restart_after": true
+}
+```
+- **Response `200 OK`:**
+```json
+{
+  "status": "success",
+  "restored_archive": "njorddeploy_backup_20260818_120000.tar.gz",
+  "restored_components": ["grafana", "uptime-kuma"],
+  "restarted": true
+}
+```
+
+---
+
+### `GET /api/backup/download/<filename>`
+Streams the `.tar.gz` archive from remote host via SFTP / local staging to the user's browser.
+
+- **Method:** `GET`
+- **Query Parameters:** `ip`, `username`, `password` (optional if in session)
+- **Response `200 OK`:** Binary file stream (`application/gzip`).
+
+---
+
+## 9. Headless CLI Runner Mode
+
+NjordDeploy includes a built-in headless CLI runner (`run_configurator.py` / `src/cli/runner.py`) designed for zero-browser CI/CD automation, scheduled tasks, and autonomous AI agents.
+
+### Example Configuration Export
+```bash
+python3 run_configurator.py --example-config > deployment.json
+```
+
+### Headless Deployment via JSON Specification
+```bash
+python3 run_configurator.py --deploy deployment.json
+```
+
+### Direct CLI Deployment via Flags
+```bash
+python3 run_configurator.py --deploy --ip 192.168.178.31 --user root --components uptime-kuma,homarr --engine docker
+```
+
+### Stack Inspection & Diagnostics
+```bash
+python3 run_configurator.py --inspect --ip 192.168.178.31 --user root
+```
+
+### Disaster Recovery Backup via CLI
+```bash
+python3 run_configurator.py --backup --ip 192.168.178.31 --user root --components uptime-kuma --pause-containers
+```
+
+### Snapshot Restoration via CLI
+```bash
+python3 run_configurator.py --restore njorddeploy_backup_20260818_134348.tar.gz --ip 192.168.178.31 --user root
+```
+
+### Stack Auto-Discovery
+```bash
+python3 run_configurator.py --scan-stacks --ip 192.168.178.31 --user root
 ```

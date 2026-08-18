@@ -14,6 +14,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 - **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
 - **Component Editor**: A powerful web-based developer tool for creating, testing, and managing all components in the NjordDeploy ecosystem.
 - **AI-Assisted Component Generator**: Bootstrap new services in seconds from any public Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, or self-hosted Git instances**) using multi-provider AI (local Ollama, Google Gemini, OpenAI, or HostYourAI) with automatic context enrichment, validation checks, and self-correction.
+- **Volume Backup & Disaster Recovery**: Point-in-time state backups for all managed persistent volumes and configurations with transactional pause, SHA-256 verification, single-click restoration, and target filesystem auto-detection.
 
 ## 🏛️ How It Works
 

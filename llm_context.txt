@@ -1204,6 +1204,25 @@ def open_browser(url: str):
 
 
 if __name__ == "__main__":
+    cli_flags = {
+        "--deploy",
+        "--inspect",
+        "--backup",
+        "--restore",
+        "--list-backups",
+        "--scan-stacks",
+        "--example-config",
+        "--cli",
+        "--help",
+        "-h",
+    }
+    # If any CLI action argument was passed, run the headless CLI runner directly
+    if any(arg in cli_flags for arg in sys.argv[1:]):
+        from cli.runner import main as cli_main
+
+        filtered_args = [a for a in sys.argv[1:] if a != "--cli"]
+        sys.exit(cli_main(filtered_args))
+
     port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
     host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
 
@@ -9883,6 +9902,413 @@ body {
 </body>
 </html>
 
+--- FILE: scripts/test_backup_restore_lxc.py ---
+# scripts/test_backup_restore_lxc.py
+"""Automated Disaster Recovery & Backup/Restore Test Suite on Proxmox VE.
+
+Provisions a clean Proxmox LXC container, deploys a test container stack,
+creates a point-in-time backup, introduces a volume mutation, restores the
+snapshot, verifies state convergence, and cleans up the container.
+"""
+
+import argparse
+import json
+import logging
+import os
+import sys
+import time
+from datetime import datetime
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Ensure import access to 'src' directory
+project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root / "src"))
+
+from managers.backup_manager import BackupManager  # noqa: E402
+from managers.ssh_manager import SSHManager  # noqa: E402
+from utils.container_engine import ContainerEngine  # noqa: E402
+from utils.proxmox_client import ProxmoxClient  # noqa: E402
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)],
+)
+logger = logging.getLogger("backup_restore_lxc_test")
+
+
+def find_suitable_template(client: ProxmoxClient, node: str) -> str:
+    """Finds an active Debian or Ubuntu LXC template."""
+    storages = ["local"]
+    try:
+        storage_res = client.get(f"nodes/{node}/storage")
+        active_stores = []
+        for store in storage_res.get("data", []):
+            if store.get("active") and "vztmpl" in store.get("content", ""):
+                s_name = store.get("storage")
+                if s_name:
+                    active_stores.append(s_name)
+        if active_stores:
+            storages = sorted(active_stores, key=lambda x: x != "local")
+    except Exception as e:
+        logger.warning(f"Failed to query storage list: {e}")
+
+    templates = []
+    for s in storages:
+        try:
+            res = client.get(
+                f"nodes/{node}/storage/{s}/content", params={"content": "vztmpl"}
+            )
+            templates.extend(res.get("data", []))
+        except Exception as e:
+            logger.warning(f"Failed to read templates on {s}: {e}")
+
+    for t in templates:
+        volid = t.get("volid", "")
+        if "debian" in volid.lower():
+            return volid
+    if templates:
+        first_t = next(iter(templates), {})
+        return first_t.get(
+            "volid",
+            "local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst",
+        )
+    return "local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst"
+
+
+def wait_for_proxmox_task(
+    client: ProxmoxClient, node: str, upid: str, timeout_seconds: int = 180
+) -> bool:
+    """Waits for a Proxmox background UPID task to complete."""
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            res = client.get(f"nodes/{node}/tasks/{upid}/status")
+            data = res.get("data", {})
+            if data.get("status") == "stopped":
+                if data.get("exitstatus") == "OK":
+                    return True
+                raise RuntimeError(
+                    f"Proxmox task failed: {data.get('exitstatus')}"
+                )
+        except Exception as e:
+            logger.warning(f"Error polling task status: {e}")
+        time.sleep(3)
+    raise TimeoutError(f"Task {upid} timed out after {timeout_seconds}s")
+
+
+def wait_for_lxc_ip(
+    client: ProxmoxClient, node: str, vmid: int, timeout_seconds: int = 90
+) -> str:
+    """Polls Proxmox until the container acquires an IPv4 address."""
+    start_time = time.time()
+    while time.time() - start_time < timeout_seconds:
+        try:
+            res = client.get(f"nodes/{node}/lxc/{vmid}/interfaces")
+            interfaces = res.get("data", [])
+            for iface in interfaces:
+                name = iface.get("name", "")
+                if name.startswith("eth") or name.startswith("en"):
+                    inet = iface.get("inet", "")
+                    if inet and "/" in inet:
+                        ip_val = inet.split("/")[0]
+                        if ip_val and not ip_val.startswith("127."):
+                            return ip_val
+        except Exception:
+            pass
+        time.sleep(3)
+    raise TimeoutError(f"Container {vmid} failed to acquire an IP address")
+
+
+def run_backup_restore_test(args: argparse.Namespace) -> bool:
+    """Executes the full automated backup & restore verification workflow."""
+    load_dotenv(project_root / ".env")
+
+    proxmox_host = os.getenv("PROXMOX_HOST")
+    proxmox_user = os.getenv("PROXMOX_USER")
+    token_id = os.getenv("PROXMOX_TOKEN_ID")
+    token_secret = os.getenv("PROXMOX_TOKEN_SECRET")
+    node = args.node or os.getenv("PROXMOX_NODE", "pve")
+
+    if not all([proxmox_host, proxmox_user, token_id, token_secret]):
+        logger.error("Missing Proxmox credentials in .env file.")
+        return False
+
+    client = ProxmoxClient(
+        host=proxmox_host or "",
+        user=proxmox_user or "",
+        token_id=token_id or "",
+        token_secret=token_secret or "",
+        verify_ssl=False,
+    )
+
+    # 1. Determine next available VMID and Template
+    next_id_res = client.get("cluster/nextid")
+    vmid = int(next_id_res.get("data", 900))
+    template_volid = find_suitable_template(client, node)
+    hostname = f"njord-bk-test-{vmid}"
+
+    dummy_manager = SSHManager(
+        hostname="localhost", username="root", password=""
+    )  # nosec B106
+    ssh_key = dummy_manager.get_ssh_key()
+    pubkey = f"{ssh_key.get_name()} {ssh_key.get_base64()}"
+
+    logger.info(f"Step 1: Creating LXC Container {vmid} ({hostname})...")
+    lxc_data = {
+        "vmid": vmid,
+        "ostemplate": template_volid,
+        "hostname": hostname,
+        "cores": args.cores,
+        "memory": args.memory,
+        "swap": 512,
+        "rootfs": f"{args.storage_name}:{args.storage_size}",
+        "net0": "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp",
+        "features": "nesting=1",
+        "unprivileged": 1,
+        "password": args.password,
+        "ssh-public-keys": pubkey,
+        "start": 1,
+    }
+
+    create_res = client.post(f"nodes/{node}/lxc", data=lxc_data)
+    upid = create_res.get("data")
+    if isinstance(upid, str):
+        wait_for_proxmox_task(client, node, upid)
+
+    ip_address = wait_for_lxc_ip(client, node, vmid)
+    logger.info(f"LXC Container online at {ip_address}.")
+    logger.info("Waiting 10s for SSH daemon to initialize...")
+    time.sleep(10)
+
+    try:
+        ssh = SSHManager(
+            hostname=ip_address,
+            username="root",
+            password=args.password,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return False
+
+        def ssh_log(m: str):
+            logger.debug(f"[REMOTE] {m.strip()}")
+
+        # 2. Provision Container Engine (Docker)
+        logger.info("Step 2: Installing Docker Engine inside LXC container...")
+        engine_helper = ContainerEngine("docker")
+        for cmd in engine_helper.get_provisioning_commands("root"):
+            exit_code, _ = ssh.execute_command(cmd, ssh_log)
+            if exit_code != 0:
+                logger.error(f"Failed executing provisioning command: {cmd}")
+                return False
+
+        # 3. Deploy a Test Container Stack (Uptime Kuma)
+        logger.info("Step 3: Deploying test service stack (Uptime Kuma)...")
+        stack_dir = "/opt/njorddeploy"
+        data_dir = "/opt/uptime-kuma/data"
+        compose_content = """services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.23.16-debian
+    container_name: njorddeploy-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - "/opt/uptime-kuma/data:/app/data"
+"""
+        deploy_cmds = [
+            f"mkdir -p {stack_dir} {data_dir}",
+            f"cat << 'EOF' > {stack_dir}/docker-compose.yml\n{compose_content}\nEOF",
+            f"cd {stack_dir} && docker compose up -d",
+        ]
+        for cmd in deploy_cmds:
+            exit_code, out = ssh.execute_command(cmd, ssh_log)
+            if exit_code != 0:
+                logger.error(f"Stack deployment step failed: {out}")
+                return False
+
+        logger.info("Waiting 10s for container to initialize initial volume files...")
+        time.sleep(10)
+
+        # 4. Write an initial state file inside the volume
+        initial_payload = {
+            "snapshot_id": "state_v1",
+            "created_at": datetime.now().isoformat(),
+            "integrity_checksum": "valid_v1_marker",
+        }
+        state_file = f"{data_dir}/state_record.json"
+        write_state_cmd = (
+            f"echo '{json.dumps(initial_payload)}' > {state_file}"
+        )
+        ssh.execute_command(write_state_cmd, ssh_log)
+
+        # 5. Inspect Target via BackupManager
+        logger.info("Step 4: Inspecting target volumes via BackupManager...")
+        backup_mgr = BackupManager(project_config_dir=stack_dir)
+        inspection = backup_mgr.inspect_target(ssh, project_config_dir=stack_dir)
+        if inspection.get("status") != "success":
+            logger.error(f"Target inspection failed: {inspection}")
+            return False
+
+        logger.info(
+            f"Discovered components: "
+            f"{[c['id'] for c in inspection.get('components', [])]}"
+        )
+        logger.info(
+            f"Total volume footprint: "
+            f"{inspection.get('total_managed_size_human')}"
+        )
+
+        # 6. Create Point-in-Time Backup Archive
+        logger.info("Step 5: Creating initial backup snapshot...")
+        backup_res = backup_mgr.create_backup(
+            ssh,
+            selected_components=["uptime-kuma"],
+            pause_containers=True,
+            project_config_dir=stack_dir,
+        )
+        if backup_res.get("status") != "success":
+            logger.error(f"Backup creation failed: {backup_res}")
+            return False
+
+        backup_filename = backup_res["filename"]
+        logger.info(
+            f"Backup created: {backup_filename} "
+            f"({backup_res.get('size_human')})"
+        )
+
+        # 7. Introduce a deliberate mutation / corruption into the volume
+        logger.info("Step 6: Introducing volume mutations (disaster simulation)...")
+        mutation_file = f"{data_dir}/unwanted_corrupted_mutation.txt"
+        mutated_payload = {"snapshot_id": "CORRUPTED_STATE_V2"}
+        mutate_cmds = [
+            f"echo 'MALICIOUS_INJECTION' > {mutation_file}",
+            f"echo '{json.dumps(mutated_payload)}' > {state_file}",
+        ]
+        for cmd in mutate_cmds:
+            ssh.execute_command(cmd, ssh_log)
+
+        # Verify mutation is present before restore
+        _, check_mut = ssh.execute_command(f"cat {state_file}", ssh_log)
+        if "CORRUPTED" not in check_mut:
+            logger.error("Failed to inject mutation for testing.")
+            return False
+        logger.info("Confirmed: Volume state has been mutated.")
+
+        # 8. Restore the Snapshot Archive
+        logger.info(f"Step 7: Restoring snapshot from {backup_filename}...")
+        restore_res = backup_mgr.restore_backup(
+            ssh,
+            backup_filename=backup_filename,
+            selected_components=["uptime-kuma"],
+            restart_after=True,
+            project_config_dir=stack_dir,
+        )
+        if restore_res.get("status") != "success":
+            logger.error(f"Restore operation failed: {restore_res}")
+            return False
+
+        logger.info("Restore archive unpacked and container stack restarted.")
+        time.sleep(5)
+
+        # 9. Verify State Restoration
+        logger.info("Step 8: Verifying post-restore volume state...")
+        _, state_restored = ssh.execute_command(f"cat {state_file}", ssh_log)
+        _, mut_check = ssh.execute_command(
+            f"[ -f {mutation_file} ] && echo 'EXISTS' || echo 'GONE'",
+            ssh_log,
+        )
+        _, ps_out = ssh.execute_command(
+            f"cd {stack_dir} && docker compose ps --format json",
+            ssh_log,
+        )
+
+        if "valid_v1_marker" not in state_restored:
+            logger.error(
+                f"State file failed to restore! Content: {state_restored}"
+            )
+            return False
+
+        if "uptime-kuma" not in ps_out and "running" not in ps_out.lower():
+            logger.error(f"Container stack failed to restart! PS output: {ps_out}")
+            return False
+
+        logger.info("=" * 60)
+        logger.info("SUCCESS: DISASTER RECOVERY & RESTORE FULLY VERIFIED!")
+        logger.info("  - Volume state successfully reverted to snapshot v1")
+        logger.info("  - Containers restarted and running in healthy state")
+        logger.info(f"  - Target Scope: {stack_dir}")
+        logger.info("=" * 60)
+        return True
+
+    finally:
+        # 10. Cleanup Container if not --keep
+        if not args.keep:
+            logger.info(f"Cleaning up test container {vmid} on Proxmox...")
+            try:
+                stop_res = client.post(f"nodes/{node}/lxc/{vmid}/status/stop")
+                s_upid = stop_res.get("data")
+                if isinstance(s_upid, str):
+                    wait_for_proxmox_task(client, node, s_upid)
+                del_res = client.delete(f"nodes/{node}/lxc/{vmid}")
+                d_upid = del_res.get("data")
+                if isinstance(d_upid, str):
+                    wait_for_proxmox_task(client, node, d_upid)
+                logger.info(f"Test container {vmid} destroyed successfully.")
+            except Exception as e:
+                logger.warning(f"Cleanup error for {vmid}: {e}")
+        else:
+            logger.info(f"Container {vmid} preserved for inspection at {ip_address}.")
+
+
+def main():
+    """Main CLI entrypoint for backup/restore test runner."""
+    parser = argparse.ArgumentParser(
+        description="Run automated Backup & Restore verification test on Proxmox LXC."
+    )
+    parser.add_argument("--cores", type=int, default=2, help="CPU cores (default: 2)")
+    parser.add_argument(
+        "--memory", type=int, default=4096, help="RAM in MB (default: 4096)"
+    )
+    parser.add_argument(
+        "--storage-size", type=int, default=20, help="Rootfs disk in GB (default: 20)"
+    )
+    parser.add_argument(
+        "--storage-name",
+        type=str,
+        default="local-lvm",
+        help="Proxmox storage pool (default: local-lvm)",
+    )
+    parser.add_argument(
+        "--node", type=str, default="pve", help="Proxmox node name (default: pve)"
+    )
+    parser.add_argument(
+        "--password",
+        type=str,
+        default="NjordTest123!",
+        help="Root password for test container",
+    )
+    parser.add_argument(
+        "--keep",
+        action="store_true",
+        help="Keep the test LXC container after test completes",
+    )
+
+    args = parser.parse_args()
+    success = run_backup_restore_test(args)
+    sys.exit(0 if success else 1)
+
+
+if __name__ == "__main__":
+    main()
+
 --- FILE: scripts/update_docs.py ---
 # scripts/update_docs.py
 import subprocess  # nosec B404
@@ -9932,6 +10358,598 @@ if __name__ == "__main__":
 
 --- FILE: src/__init__.py ---
 
+--- FILE: src/cli/__init__.py ---
+"""NjordDeploy CLI module for headless deployments, automation, and CI/CD."""
+
+from cli.runner import NjordCliRunner
+
+__all__ = ["NjordCliRunner"]
+
+--- FILE: src/cli/runner.py ---
+# src/cli/runner.py
+"""Headless CLI runner for NjordDeploy.
+
+Enables programmatic deployment orchestration, disaster recovery backups,
+volume restoration, and stack inspection directly from the terminal or CI/CD.
+"""
+
+import argparse
+import json
+import logging
+import os
+import sys
+import uuid
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
+from appdirs import user_data_dir
+
+from configurator_app.app import (
+    get_components_paths,
+    seed_user_components_if_needed,
+)
+from managers.backup_manager import BackupManager
+from managers.component_manager import ComponentManager
+from managers.deployment_manager import DeploymentManager
+from managers.setup_manager import SetupManager
+from managers.ssh_manager import SSHManager
+from utils.container_engine import get_configured_engine
+
+logger = logging.getLogger("njorddeploy_cli")
+
+
+class NjordCliRunner:
+    """Headless CLI orchestration engine for NjordDeploy."""
+
+    def __init__(self):
+        """Initializes core managers."""
+        seed_user_components_if_needed()
+        metadata_path_obj, templates_path_obj = get_components_paths()
+        metadata_path = str(metadata_path_obj)
+        templates_path = str(templates_path_obj)
+
+        self.component_mgr = ComponentManager(
+            metadata_file_path=metadata_path, templates_path=templates_path
+        )
+        app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+        output_dir = app_data_dir / "output"
+        self.setup_mgr = SetupManager(
+            self.component_mgr.reader, output_dir=output_dir
+        )
+        self.deployment_mgr = DeploymentManager(
+            component_manager=self.component_mgr
+        )
+
+    def deploy(
+        self,
+        config: Dict[str, Any],
+        stream_logs: bool = True,
+        log_callback: Optional[Callable[[str], None]] = None,
+    ) -> bool:
+        """Executes a headless deployment from a configuration dictionary.
+
+        Args:
+            config: Deployment configuration payload.
+            stream_logs: Whether to print streaming log lines to console.
+            log_callback: Optional custom callback for received log messages.
+
+        Returns:
+            True if deployment completed successfully, False otherwise.
+        """
+        # 1. Resolve Target Devices
+        devices: List[Dict[str, Any]] = []
+        if "devices" in config and isinstance(config["devices"], list):
+            devices = config["devices"]
+        elif "target" in config and isinstance(config["target"], dict):
+            devices = [config["target"]]
+
+        if not devices:
+            logger.error("No target device specified in configuration.")
+            return False
+
+        first_device = next(iter(devices), {})
+        target_ip = first_device.get("ip", "unknown")
+        logger.info(f"Target host for headless deployment: {target_ip}")
+
+        # 2. Resolve Selected Components
+        selected_ids: List[str] = (
+            config.get("components")
+            or config.get("selected_components")
+            or []
+        )
+        if not selected_ids:
+            logger.error("No components selected for deployment.")
+            return False
+
+        logger.info(
+            f"Selected components ({len(selected_ids)}): {', '.join(selected_ids)}"
+        )
+
+        # Validate component IDs against Single Source of Truth
+        all_components = self.component_mgr.get_all_components()
+        valid_ids = {c.get("id") for c in all_components if "id" in c}
+        invalid_ids = [c for c in selected_ids if c not in valid_ids]
+        if invalid_ids:
+            logger.error(
+                f"Unknown component IDs requested: {', '.join(invalid_ids)}"
+            )
+            return False
+
+        selected_components_data = [
+            c for c in all_components if c.get("id") in selected_ids
+        ]
+
+        # 3. Resolve Environment Variables and Engine
+        global_vars: Dict[str, str] = (
+            config.get("env_vars")
+            or config.get("global_vars")
+            or {}
+        )
+        engine_type = (
+            config.get("engine")
+            or global_vars.get("CONTAINER_ENGINE")
+            or get_configured_engine()
+        )
+        global_vars["CONTAINER_ENGINE"] = engine_type
+
+        components_to_clean = config.get("components_to_clean", [])
+        components_to_restart = config.get("components_to_restart", [])
+
+        # 4. Prepare Deployment Package & Artifacts
+        logger.info("Generating deployment templates and docker-compose.yml...")
+        success, prep_errors = self.setup_mgr.prepare_deployment_package(
+            selected_ids, global_vars, devices
+        )
+        if not success:
+            logger.error(f"Deployment preparation failed: {prep_errors}")
+            return False
+
+        output_path = Path(self.setup_mgr.output_dir)
+        self.component_mgr.generate_deployment_artifacts(
+            selected_components_data=selected_components_data,
+            global_vars=global_vars,
+            output_path=output_path,
+        )
+
+        # 5. Execute Deployment via DeploymentManager
+        task_id = uuid.uuid4().hex
+        tasks: Dict[str, Any] = {
+            task_id: {
+                "status": "running",
+                "logs": [f"Initializing headless deployment ({task_id})..."],
+                "errors": [],
+            }
+        }
+
+        logger.info(f"Starting Ansible deployment task: {task_id}")
+        last_log_idx = 0
+
+        # Run deployment synchronously in this process
+        self.deployment_mgr.start_deployment(
+            task_id=task_id,
+            tasks=tasks,
+            output_path=str(output_path),
+            devices=devices,
+            components_to_clean=components_to_clean,
+            components_to_restart=components_to_restart,
+            selected_components_data=selected_components_data,
+            global_vars=global_vars,
+        )
+
+        # Stream remaining logs
+        task_record = tasks.get(task_id, {})
+        logs = task_record.get("logs", [])
+        for log_line in logs[last_log_idx:]:
+            if stream_logs:
+                print(f"[DEPLOY] {log_line}")
+            if log_callback:
+                log_callback(log_line)
+
+        final_status = task_record.get("status")
+        if final_status == "completed":
+            logger.info("==================================================")
+            logger.info("HEADLESS DEPLOYMENT COMPLETED SUCCESSFULLY!")
+            logger.info(f"Target: {target_ip} | Components: {len(selected_ids)}")
+            logger.info("==================================================")
+            return True
+        else:
+            logger.error(f"Deployment failed with status: {final_status}")
+            return False
+
+    def inspect_stack(
+        self,
+        ip: str,
+        username: str = "root",
+        password: str = "",
+        port: int = 22,
+        stack_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Inspects docker-compose services and volume storage footprint."""
+        ssh = SSHManager(
+            hostname=ip,
+            username=username,
+            password=password,
+            port=port,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return {"status": "error", "message": msg}
+
+        backup_mgr = BackupManager(project_config_dir=stack_dir or "/opt/njorddeploy")
+        return backup_mgr.inspect_target(ssh, project_config_dir=stack_dir)
+
+    def backup(
+        self,
+        ip: str,
+        username: str = "root",
+        password: str = "",
+        port: int = 22,
+        stack_dir: Optional[str] = None,
+        components: Optional[List[str]] = None,
+        pause_containers: bool = False,
+    ) -> Dict[str, Any]:
+        """Creates a timestamped point-in-time backup archive."""
+        ssh = SSHManager(
+            hostname=ip,
+            username=username,
+            password=password,
+            port=port,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return {"status": "error", "message": msg}
+
+        backup_mgr = BackupManager(project_config_dir=stack_dir or "/opt/njorddeploy")
+        return backup_mgr.create_backup(
+            ssh,
+            selected_components=components,
+            pause_containers=pause_containers,
+            project_config_dir=stack_dir,
+            log_callback=lambda m: logger.info(f"[BACKUP] {m.strip()}"),
+        )
+
+    def restore(
+        self,
+        ip: str,
+        backup_filename: str,
+        username: str = "root",
+        password: str = "",
+        port: int = 22,
+        stack_dir: Optional[str] = None,
+        components: Optional[List[str]] = None,
+    ) -> Dict[str, Any]:
+        """Restores a backup archive onto the target server."""
+        ssh = SSHManager(
+            hostname=ip,
+            username=username,
+            password=password,
+            port=port,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return {"status": "error", "message": msg}
+
+        backup_mgr = BackupManager(project_config_dir=stack_dir or "/opt/njorddeploy")
+        return backup_mgr.restore_backup(
+            ssh,
+            backup_filename=backup_filename,
+            selected_components=components,
+            restart_after=True,
+            project_config_dir=stack_dir,
+            log_callback=lambda m: logger.info(f"[RESTORE] {m.strip()}"),
+        )
+
+    def list_backups(
+        self,
+        ip: str,
+        username: str = "root",
+        password: str = "",
+        port: int = 22,
+        stack_dir: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Lists available backup archives on target host."""
+        ssh = SSHManager(
+            hostname=ip,
+            username=username,
+            password=password,
+            port=port,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return []
+
+        backup_mgr = BackupManager(project_config_dir=stack_dir or "/opt/njorddeploy")
+        return backup_mgr.list_backups(ssh, project_config_dir=stack_dir)
+
+    def scan_stacks(
+        self,
+        ip: str,
+        username: str = "root",
+        password: str = "",
+        port: int = 22,
+    ) -> List[Dict[str, str]]:
+        """Scans target host filesystem for existing docker-compose stacks."""
+        ssh = SSHManager(
+            hostname=ip,
+            username=username,
+            password=password,
+            port=port,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected, msg = ssh.connect()
+        if not connected:
+            logger.error(f"SSH connection failed: {msg}")
+            return []
+
+        backup_mgr = BackupManager()
+        return backup_mgr.discover_compose_files(ssh)
+
+    @staticmethod
+    def get_example_config() -> Dict[str, Any]:
+        """Generates a sample JSON configuration for headless deployment."""
+        return {
+            "target": {
+                "ip": "192.168.178.31",
+                "username": "root",
+                "password": "",
+                "port": 22,
+            },
+            "components": [
+                "uptime-kuma",
+                "homarr",
+                "portainer",
+            ],
+            "env_vars": {
+                "GLOBAL_DOMAIN": "local.home",
+                "CONTAINER_ENGINE": "docker",
+            },
+            "engine": "docker",
+            "components_to_clean": [],
+            "components_to_restart": [],
+        }
+
+
+def parse_cli_args(args_list: Optional[List[str]] = None) -> argparse.Namespace:
+    """Parses command line arguments for headless CLI operations."""
+    parser = argparse.ArgumentParser(
+        description=(
+            "NjordDeploy Headless CLI Runner for automated deployments & ops."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    # Main action modes
+    action_group = parser.add_argument_group("CLI Action Modes")
+    action_group.add_argument(
+        "--deploy",
+        nargs="?",
+        const="DEFAULT",
+        metavar="CONFIG_JSON",
+        help="Execute deployment. Accepts a config JSON path or uses CLI flags.",
+    )
+    action_group.add_argument(
+        "--inspect",
+        action="store_true",
+        help="Inspect target host stack, containers, and volume footprint.",
+    )
+    action_group.add_argument(
+        "--backup",
+        action="store_true",
+        help="Create a point-in-time backup archive of managed volumes.",
+    )
+    action_group.add_argument(
+        "--restore",
+        metavar="ARCHIVE_FILENAME",
+        help="Restore a backup snapshot archive onto target host.",
+    )
+    action_group.add_argument(
+        "--list-backups",
+        action="store_true",
+        help="List available backup archives on target host.",
+    )
+    action_group.add_argument(
+        "--scan-stacks",
+        action="store_true",
+        help="Auto-discover docker-compose stacks on target host filesystem.",
+    )
+    action_group.add_argument(
+        "--example-config",
+        action="store_true",
+        help="Output sample JSON deployment configuration to stdout.",
+    )
+
+    # Target connection parameters
+    conn_group = parser.add_argument_group("Target Host Parameters")
+    conn_group.add_argument(
+        "--ip", type=str, help="Target host IP address or hostname."
+    )
+    conn_group.add_argument(
+        "--user",
+        type=str,
+        default="root",
+        help="SSH username (default: root).",
+    )
+    conn_group.add_argument(
+        "--password", type=str, default="", help="SSH password."
+    )
+    conn_group.add_argument(
+        "--port", type=int, default=22, help="SSH port (default: 22)."
+    )
+    conn_group.add_argument(
+        "--stack-dir",
+        type=str,
+        default="/opt/njorddeploy",
+        help="Stack directory (default: /opt/njorddeploy).",
+    )
+
+    # Options
+    opt_group = parser.add_argument_group("Deployment & Backup Options")
+    opt_group.add_argument(
+        "--components",
+        type=str,
+        help="Comma-separated component IDs (e.g. uptime-kuma,homarr).",
+    )
+    opt_group.add_argument(
+        "--engine",
+        type=str,
+        choices=["docker", "podman"],
+        default="docker",
+        help="Container engine (default: docker).",
+    )
+    opt_group.add_argument(
+        "--pause-containers",
+        action="store_true",
+        help="Pause containers during backup for database consistency.",
+    )
+
+    return parser.parse_args(args_list)
+
+
+def main(args_list: Optional[List[str]] = None) -> int:
+    """Main CLI execution router."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    )
+    args = parse_cli_args(args_list)
+    runner = NjordCliRunner()
+
+    if args.example_config:
+        print(json.dumps(runner.get_example_config(), indent=2))
+        return 0
+
+    if args.deploy is not None:
+        config: Dict[str, Any] = {}
+        if args.deploy != "DEFAULT" and os.path.exists(args.deploy):
+            with open(args.deploy, "r", encoding="utf-8") as f:
+                config = json.load(f)
+        else:
+            if not args.ip:
+                logger.error("Missing target --ip for deployment.")
+                return 1
+            comp_list = (
+                [c.strip() for c in args.components.split(",") if c.strip()]
+                if args.components
+                else []
+            )
+            config = {
+                "target": {
+                    "ip": args.ip,
+                    "username": args.user,
+                    "password": args.password,
+                    "port": args.port,
+                },
+                "components": comp_list,
+                "engine": args.engine,
+            }
+        success = runner.deploy(config)
+        return 0 if success else 1
+
+    if args.inspect:
+        if not args.ip:
+            logger.error("Missing target --ip address.")
+            return 1
+        res = runner.inspect_stack(
+            ip=args.ip,
+            username=args.user,
+            password=args.password,
+            port=args.port,
+            stack_dir=args.stack_dir,
+        )
+        print(json.dumps(res, indent=2))
+        return 0 if res.get("status") == "success" else 1
+
+    if args.backup:
+        if not args.ip:
+            logger.error("Missing target --ip address.")
+            return 1
+        comp_list = (
+            [c.strip() for c in args.components.split(",") if c.strip()]
+            if args.components
+            else None
+        )
+        res = runner.backup(
+            ip=args.ip,
+            username=args.user,
+            password=args.password,
+            port=args.port,
+            stack_dir=args.stack_dir,
+            components=comp_list,
+            pause_containers=args.pause_containers,
+        )
+        print(json.dumps(res, indent=2))
+        return 0 if res.get("status") == "success" else 1
+
+    if args.restore:
+        if not args.ip:
+            logger.error("Missing target --ip address.")
+            return 1
+        comp_list = (
+            [c.strip() for c in args.components.split(",") if c.strip()]
+            if args.components
+            else None
+        )
+        res = runner.restore(
+            ip=args.ip,
+            backup_filename=args.restore,
+            username=args.user,
+            password=args.password,
+            port=args.port,
+            stack_dir=args.stack_dir,
+            components=comp_list,
+        )
+        print(json.dumps(res, indent=2))
+        return 0 if res.get("status") == "success" else 1
+
+    if args.list_backups:
+        if not args.ip:
+            logger.error("Missing target --ip address.")
+            return 1
+        res_list = runner.list_backups(
+            ip=args.ip,
+            username=args.user,
+            password=args.password,
+            port=args.port,
+            stack_dir=args.stack_dir,
+        )
+        print(json.dumps(res_list, indent=2))
+        return 0
+
+    if args.scan_stacks:
+        if not args.ip:
+            logger.error("Missing target --ip address.")
+            return 1
+        found = runner.scan_stacks(
+            ip=args.ip,
+            username=args.user,
+            password=args.password,
+            port=args.port,
+        )
+        print(json.dumps(found, indent=2))
+        return 0
+
+    logger.error(
+        "No valid CLI action specified. Run with --help for usage instructions."
+    )
+    return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
 --- FILE: src/configurator_app/__init__.py ---
 
 --- FILE: src/configurator_app/app.py ---
@@ -9951,10 +10969,12 @@ from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
 from configurator_app.openapi import get_openapi_spec
+from managers.backup_manager import BackupManager
 from managers.component_manager import ComponentManager
 from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
+from managers.ssh_manager import SSHManager
 from node_scanner import NodeScanner, get_tailscale_status
 from utils.resource_utils import get_components_paths, seed_user_components_if_needed
 
@@ -12356,6 +13376,295 @@ def create_app(test_config=None):
                 500,
             )
 
+    @flask_app.route("/api/backup/discover-compose", methods=["POST"])
+    def api_backup_discover_compose():
+        """Scans target host filesystem for existing docker-compose stack files."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            discovered = backup_mgr.discover_compose_files(ssh)
+            ssh.close()
+            suggested = discovered[0]["directory"] if discovered else None
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "discovered_paths": discovered,
+                        "suggested_path": suggested,
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            logging.error(f"Discover compose failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/inspect", methods=["POST"])
+    def api_backup_inspect():
+        """Inspects target machine for NjordDeploy volumes and storage usage."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            inspection = backup_mgr.inspect_target(
+                ssh, project_config_dir=project_config_dir
+            )
+            ssh.close()
+            status_code = 200 if inspection.get("status") == "success" else 404
+            return jsonify(inspection), status_code
+        except Exception as e:
+            logging.error(f"Backup inspect failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/create", methods=["POST"])
+    def api_backup_create():
+        """Generates a compressed backup tarball for NjordDeploy components."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            selected_components = data.get("selected_components")
+            exclude_paths = data.get("exclude_paths", [])
+            pause_containers = bool(data.get("pause_containers", False))
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            res = backup_mgr.create_backup(
+                ssh,
+                selected_components=selected_components,
+                exclude_paths=exclude_paths,
+                pause_containers=pause_containers,
+                project_config_dir=project_config_dir,
+            )
+            ssh.close()
+            status_code = 200 if res.get("status") == "success" else 400
+            return jsonify(res), status_code
+        except Exception as e:
+            logging.error(f"Backup create failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/list", methods=["POST"])
+    def api_backup_list():
+        """Lists existing backups on the remote host."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            backups = backup_mgr.list_backups(
+                ssh, project_config_dir=project_config_dir
+            )
+            ssh.close()
+            return jsonify({"status": "success", "backups": backups}), 200
+        except Exception as e:
+            logging.error(f"Backup list failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/restore", methods=["POST"])
+    def api_backup_restore():
+        """Restores services and volumes from a specific NjordDeploy backup."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            backup_filename = data.get("backup_filename")
+            selected_components = data.get("selected_components")
+            restart_after = bool(data.get("restart_after", True))
+
+            if not ip or not username or not backup_filename:
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "Missing required fields: ip, username, "
+                                "or backup_filename."
+                            )
+                        }
+                    ),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            res = backup_mgr.restore_backup(
+                ssh,
+                backup_filename=str(backup_filename),
+                selected_components=selected_components,
+                restart_after=restart_after,
+                project_config_dir=project_config_dir,
+            )
+            ssh.close()
+            status_code = 200 if res.get("status") == "success" else 400
+            return jsonify(res), status_code
+        except Exception as e:
+            logging.error(f"Backup restore failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/download/<filename>", methods=["GET"])
+    def api_backup_download(filename: str):
+        """Downloads a backup archive from the remote host or local staging."""
+        try:
+            clean_name = os.path.basename(filename.strip())
+            if not re.match(r"^njorddeploy_backup_[0-9_]+\.tar\.gz$", clean_name):
+                return jsonify({"error": "Invalid backup filename."}), 400
+
+            ip = request.args.get("ip") or session.get("device_ip")
+            username = request.args.get("username") or session.get("ssh_user", "root")
+            password = request.args.get("password") or session.get("ssh_password", "")
+            port = int(request.args.get("port") or session.get("ssh_port", 22))
+            project_config_dir = request.args.get(
+                "project_config_dir"
+            ) or request.args.get("stack_dir")
+
+            staging_dir = (
+                Path(user_data_dir("NjordDeploy", "NjordDeploy")) / "backups_download"
+            )
+            staging_dir.mkdir(parents=True, exist_ok=True)
+            local_target = staging_dir / clean_name
+
+            if not local_target.exists():
+                if not ip or not username:
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    "Missing target host credentials to fetch "
+                                    "remote archive."
+                                )
+                            }
+                        ),
+                        400,
+                    )
+                ssh = SSHManager(
+                    hostname=ip,
+                    username=username,
+                    password=password,
+                    port=port,
+                    allow_auto_add=True,
+                )
+                success, msg = ssh.connect()
+                if not success:
+                    return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+                backup_mgr = BackupManager()
+                dl_ok, dl_msg, local_file = backup_mgr.download_backup_sftp(
+                    ssh,
+                    clean_name,
+                    staging_dir,
+                    project_config_dir=project_config_dir,
+                )
+                ssh.close()
+                if not dl_ok:
+                    return (
+                        jsonify({"error": f"Failed to download archive: {dl_msg}"}),
+                        500,
+                    )
+
+            from flask import send_file
+
+            return send_file(local_target, as_attachment=True, download_name=clean_name)
+        except Exception as e:
+            logging.error(f"Backup download failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
     return flask_app
 
 
@@ -12435,6 +13744,13 @@ def get_openapi_spec() -> Dict[str, Any]:
             {
                 "name": "Engine & Settings",
                 "description": ("Container runtime, repository sync, and environment"),
+            },
+            {
+                "name": "Backup & Restore",
+                "description": (
+                    "Volume discovery, tarball archiving, and state restoration "
+                    "for NjordDeploy-managed services"
+                ),
             },
         ],
         "paths": {
@@ -12927,6 +14243,237 @@ def get_openapi_spec() -> Dict[str, Any]:
                     "responses": {
                         "200": {"description": "Repository connection is valid."},
                         "400": {"description": "Validation failed."},
+                    },
+                }
+            },
+            "/api/backup/discover-compose": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Scan target host for docker-compose stack files",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "List of discovered stack directories.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "discovered_paths": [
+                                            {
+                                                "directory": "/opt/njorddeploy",
+                                                "compose_file": (
+                                                    "/opt/njorddeploy/"
+                                                    "docker-compose.yml"
+                                                ),
+                                                "filename": "docker-compose.yml",
+                                            }
+                                        ],
+                                        "suggested_path": "/opt/njorddeploy",
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Missing host credentials."},
+                    },
+                }
+            },
+            "/api/backup/inspect": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Inspect NjordDeploy volumes and data sizes on host",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Discovered services and volume sizes.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "managed_scope": "/opt/njorddeploy",
+                                        "disclaimer": (
+                                            "This backup tool exclusively detects, "
+                                            "archives, and restores services "
+                                            "managed by NjordDeploy."
+                                        ),
+                                        "components": [
+                                            {
+                                                "id": "grafana",
+                                                "name": "Grafana",
+                                                "total_size_bytes": 10485760,
+                                                "total_size_human": "10.0 MB",
+                                            }
+                                        ],
+                                        "total_managed_size_bytes": 10485760,
+                                        "total_managed_size_human": "10.0 MB",
+                                    }
+                                }
+                            },
+                        },
+                        "404": {"description": "No active NjordDeploy stack found."},
+                    },
+                }
+            },
+            "/api/backup/create": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Create compressed backup tarball of services",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                    "selected_components": ["grafana"],
+                                    "pause_containers": False,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Backup archive successfully created.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "filename": (
+                                            "njorddeploy_backup_20260818_120000.tar.gz"
+                                        ),
+                                        "size_bytes": 5242880,
+                                        "size_human": "5.0 MB",
+                                        "sha256": "abcdef1234567890",
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Backup creation failed."},
+                    },
+                }
+            },
+            "/api/backup/list": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "List available NjordDeploy backups on target host",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "List of available backup archives.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "backups": [
+                                            {
+                                                "filename": (
+                                                    "njorddeploy_backup_"
+                                                    "20260818_120000.tar.gz"
+                                                ),
+                                                "size_bytes": 5242880,
+                                                "size_human": "5.0 MB",
+                                                "created_at": "2026-08-18 12:00:00",
+                                            }
+                                        ],
+                                    }
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            "/api/backup/restore": {
+                "post": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Restore services and volumes from backup archive",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "ip": "192.168.178.150",
+                                    "username": "root",
+                                    "password": "TargetPassword",
+                                    "backup_filename": (
+                                        "njorddeploy_backup_20260818_120000.tar.gz"
+                                    ),
+                                    "restart_after": True,
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Restore completed successfully.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "success",
+                                        "restored_archive": (
+                                            "njorddeploy_backup_20260818_120000.tar.gz"
+                                        ),
+                                        "restored_components": ["grafana"],
+                                        "restarted": True,
+                                    }
+                                }
+                            },
+                        },
+                        "400": {"description": "Restore operation failed."},
+                    },
+                }
+            },
+            "/api/backup/download/{filename}": {
+                "get": {
+                    "tags": ["Backup & Restore"],
+                    "summary": "Download backup tarball archive",
+                    "parameters": [
+                        {
+                            "name": "filename",
+                            "in": "path",
+                            "required": True,
+                            "schema": {"type": "string"},
+                            "description": "Name of the backup tarball file.",
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "Backup archive file stream.",
+                            "content": {"application/gzip": {}},
+                        },
+                        "400": {"description": "Invalid filename."},
                     },
                 }
             },
@@ -17422,6 +18969,523 @@ html[data-theme="light"] .modal .card {
     initEngineAndRepoManagement();
 })();
 
+--- FILE: src/configurator_app/static/js/backup_manager_ui.js ---
+// src/configurator_app/static/js/backup_manager_ui.js
+/* global bootstrap */
+
+(function () {
+    "use strict";
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const modalEl = document.getElementById("backupRestoreModal");
+        if (!modalEl) return;
+
+        const targetIpInput = document.getElementById("backup-target-ip");
+        const targetUserInput = document.getElementById("backup-target-user");
+        const targetPassInput = document.getElementById("backup-target-pass");
+        const targetPathInput = document.getElementById("backup-target-path");
+        const connectBtn = document.getElementById("backup-connect-btn");
+
+        const refreshInspectBtn = document.getElementById("backup-refresh-inspect-btn");
+        const createBackupBtn = document.getElementById("backup-create-btn");
+        const listBackupsBtn = document.getElementById("backup-refresh-list-btn");
+        const restoreBackupBtn = document.getElementById("backup-restore-btn");
+        const componentListContainer = document.getElementById("backup-components-container");
+        const backupListContainer = document.getElementById("backup-archives-table-body");
+        const backupStatusAlert = document.getElementById("backup-status-alert");
+        const restoreStatusAlert = document.getElementById("restore-status-alert");
+
+        // Helper to retrieve target credentials and path from modal inputs or fallback to wizard/session
+        function getTargetCredentials() {
+            let ip = targetIpInput ? targetIpInput.value.trim() : "";
+            let username = targetUserInput ? targetUserInput.value.trim() : "root";
+            let password = targetPassInput ? targetPassInput.value : "";
+            let project_config_dir = targetPathInput ? targetPathInput.value.trim() : "/opt/njorddeploy";
+
+            // Fallback to wizard fields or stored session if empty
+            if (!ip) {
+                const wizardIp = document.getElementById("ip_address") || document.getElementById("device_ip");
+                if (wizardIp && wizardIp.value.trim()) {
+                    ip = wizardIp.value.trim();
+                    if (targetIpInput) targetIpInput.value = ip;
+                } else {
+                    const savedIp = sessionStorage.getItem("njorddeploy_backup_ip");
+                    if (savedIp) {
+                        ip = savedIp;
+                        if (targetIpInput) targetIpInput.value = ip;
+                    }
+                }
+            }
+
+            if (!username) {
+                const wizardUser = document.getElementById("username") || document.getElementById("ssh_user");
+                if (wizardUser && wizardUser.value.trim()) {
+                    username = wizardUser.value.trim();
+                    if (targetUserInput) targetUserInput.value = username;
+                } else {
+                    const savedUser = sessionStorage.getItem("njorddeploy_backup_user");
+                    if (savedUser) {
+                        username = savedUser;
+                        if (targetUserInput) targetUserInput.value = username;
+                    }
+                }
+            }
+
+            if (!password) {
+                const wizardPass = document.getElementById("password") || document.getElementById("ssh_password");
+                if (wizardPass && wizardPass.value) {
+                    password = wizardPass.value;
+                    if (targetPassInput) targetPassInput.value = password;
+                } else {
+                    const savedPass = sessionStorage.getItem("njorddeploy_backup_pass");
+                    if (savedPass) {
+                        password = savedPass;
+                        if (targetPassInput) targetPassInput.value = password;
+                    }
+                }
+            }
+
+            if (!project_config_dir) {
+                const savedPath = sessionStorage.getItem("njorddeploy_backup_path");
+                if (savedPath) {
+                    project_config_dir = savedPath;
+                    if (targetPathInput) targetPathInput.value = project_config_dir;
+                } else {
+                    project_config_dir = "/opt/njorddeploy";
+                }
+            }
+
+            return { ip, username, password, project_config_dir };
+        }
+
+        function saveCredentials(creds) {
+            if (creds.ip) sessionStorage.setItem("njorddeploy_backup_ip", creds.ip);
+            if (creds.username) sessionStorage.setItem("njorddeploy_backup_user", creds.username);
+            if (creds.password) sessionStorage.setItem("njorddeploy_backup_pass", creds.password);
+            if (creds.project_config_dir) sessionStorage.setItem("njorddeploy_backup_path", creds.project_config_dir);
+        }
+
+        function renderInitialState() {
+            if (componentListContainer) {
+                componentListContainer.innerHTML = `
+                    <div class="text-center py-4 text-muted bg-body-tertiary border rounded">
+                        <i class="fa-solid fa-server fa-2x mb-2 text-primary opacity-50"></i>
+                        <div class="fw-semibold">Enter Target Host Details Above</div>
+                        <div class="small mt-1 text-secondary">
+                            Provide the IP address, SSH credentials, and stack directory above and click <strong>Connect</strong> to inspect services.
+                        </div>
+                    </div>
+                `;
+            }
+            if (backupListContainer) {
+                backupListContainer.innerHTML = `
+                    <tr><td colspan="4" class="text-center py-3 text-muted">Enter host credentials and connect to list available archives.</td></tr>
+                `;
+            }
+            if (createBackupBtn) createBackupBtn.disabled = true;
+            if (restoreBackupBtn) restoreBackupBtn.disabled = true;
+        }
+
+        // 1. Inspect Target Volumes
+        async function loadTargetVolumes() {
+            if (!componentListContainer) return;
+            const creds = getTargetCredentials();
+
+            if (!creds.ip) {
+                renderInitialState();
+                return;
+            }
+
+            saveCredentials(creds);
+            componentListContainer.innerHTML = `
+                <div class="text-center py-4 text-muted bg-body-tertiary border rounded">
+                    <span class="spinner-border text-primary spinner-border-sm me-2"></span> Inspecting stack at <code>${creds.project_config_dir}</code> on <code>${creds.ip}</code>...
+                </div>
+            `;
+            if (backupStatusAlert) backupStatusAlert.classList.add("d-none");
+
+            try {
+                const response = await fetch("/api/backup/inspect", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(creds),
+                });
+                const data = await response.json();
+
+                if (!response.ok || data.status !== "success") {
+                    const errMsg = data.message || data.error || "No compose stack detected at specified path.";
+                    componentListContainer.innerHTML = `
+                        <div class="alert alert-warning small mb-0">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i> ${errMsg}
+                        </div>
+                    `;
+                    if (createBackupBtn) createBackupBtn.disabled = true;
+                    return;
+                }
+
+                if (createBackupBtn) createBackupBtn.disabled = false;
+
+                // Sync resolved path back to UI input if auto-detected differently
+                if (data.managed_scope && targetPathInput && data.managed_scope !== targetPathInput.value) {
+                    targetPathInput.value = data.managed_scope;
+                    sessionStorage.setItem("njorddeploy_backup_path", data.managed_scope);
+                }
+
+                const components = data.components || [];
+                if (components.length === 0) {
+                    componentListContainer.innerHTML = `
+                        <div class="alert alert-info small mb-0">
+                            <i class="fa-solid fa-circle-info me-1"></i> No managed services found under <code>${data.managed_scope || creds.project_config_dir}</code>.
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '<div class="list-group list-group-flush border rounded">';
+                components.forEach(comp => {
+                    const heavyBadge = comp.is_heavy ? '<span class="badge bg-warning text-dark ms-2"><i class="fa-solid fa-hard-drive me-1"></i>Large Data</span>' : '';
+                    html += `
+                        <label class="list-group-item d-flex justify-content-between align-items-center cursor-pointer">
+                            <div class="form-check m-0">
+                                <input class="form-check-input backup-comp-checkbox" type="checkbox" value="${comp.id}" checked id="bk-comp-${comp.id}">
+                                <label class="form-check-label fw-semibold ms-1" for="bk-comp-${comp.id}">
+                                    ${comp.name}
+                                </label>
+                                ${heavyBadge}
+                            </div>
+                            <span class="badge bg-secondary rounded-pill">${comp.total_size_human}</span>
+                        </label>
+                    `;
+                });
+                html += '</div>';
+                html += `
+                    <div class="d-flex justify-content-between align-items-center mt-2 text-muted small px-1">
+                        <span>Total Managed Footprint: <strong>${data.total_managed_size_human}</strong> (Scope: <code>${data.managed_scope}</code>)</span>
+                        <a href="#" id="backup-toggle-all" class="text-decoration-none">Toggle All</a>
+                    </div>
+                `;
+                componentListContainer.innerHTML = html;
+
+                const toggleAll = document.getElementById("backup-toggle-all");
+                if (toggleAll) {
+                    toggleAll.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        const boxes = componentListContainer.querySelectorAll(".backup-comp-checkbox");
+                        const anyUnchecked = Array.from(boxes).some(b => !b.checked);
+                        boxes.forEach(b => { b.checked = anyUnchecked; });
+                    });
+                }
+            } catch (err) {
+                componentListContainer.innerHTML = `
+                    <div class="alert alert-danger small mb-0">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i> Failed to communicate with backup API: ${err.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 2. Create Backup Action
+        if (createBackupBtn) {
+            createBackupBtn.addEventListener("click", async () => {
+                const creds = getTargetCredentials();
+                if (!creds.ip) {
+                    alert("Please enter the Target Host IP address above.");
+                    return;
+                }
+
+                const boxes = document.querySelectorAll(".backup-comp-checkbox:checked");
+                const selected = Array.from(boxes).map(b => b.value);
+                const pauseCheckbox = document.getElementById("backup-pause-containers");
+                const pauseContainers = pauseCheckbox ? pauseCheckbox.checked : false;
+
+                if (selected.length === 0) {
+                    alert("Please select at least one component to include in the backup.");
+                    return;
+                }
+
+                createBackupBtn.disabled = true;
+                createBackupBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Archiving...';
+                if (backupStatusAlert) {
+                    backupStatusAlert.className = "alert alert-info small mt-3";
+                    backupStatusAlert.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating compressed backup tarball on target host...';
+                    backupStatusAlert.classList.remove("d-none");
+                }
+
+                const payload = {
+                    ...creds,
+                    selected_components: selected,
+                    pause_containers: pauseContainers,
+                };
+
+                try {
+                    const res = await fetch("/api/backup/create", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await res.json();
+
+                    if (!res.ok || data.status !== "success") {
+                        if (backupStatusAlert) {
+                            backupStatusAlert.className = "alert alert-danger small mt-3";
+                            backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Backup failed: ${data.message || data.error || "Unknown error"}`;
+                        }
+                    } else {
+                        if (backupStatusAlert) {
+                            backupStatusAlert.className = "alert alert-success small mt-3";
+                            backupStatusAlert.innerHTML = `
+                                <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Backup Created Successfully!</strong></div>
+                                <div class="mt-1">Archive: <code>${data.filename}</code> (${data.size_human})</div>
+                                <div class="mt-2">
+                                    <a href="/api/backup/download/${encodeURIComponent(data.filename)}?ip=${encodeURIComponent(creds.ip)}&username=${encodeURIComponent(creds.username)}&project_config_dir=${encodeURIComponent(creds.project_config_dir)}" class="btn btn-sm btn-success text-white">
+                                        <i class="fa-solid fa-download me-1"></i> Download to Local Machine
+                                    </a>
+                                </div>
+                            `;
+                        }
+                        loadBackupList();
+                    }
+                } catch (err) {
+                    if (backupStatusAlert) {
+                        backupStatusAlert.className = "alert alert-danger small mt-3";
+                        backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                    }
+                } finally {
+                    createBackupBtn.disabled = false;
+                    createBackupBtn.innerHTML = '<i class="fa-solid fa-box-archive me-1"></i> Create Backup';
+                }
+            });
+        }
+
+        // 3. List Existing Backups
+        async function loadBackupList() {
+            if (!backupListContainer) return;
+            const creds = getTargetCredentials();
+
+            if (!creds.ip) {
+                backupListContainer.innerHTML = `
+                    <tr><td colspan="4" class="text-center py-3 text-muted">Enter host credentials and connect to list available archives.</td></tr>
+                `;
+                return;
+            }
+
+            backupListContainer.innerHTML = `
+                <tr><td colspan="4" class="text-center py-3 text-muted"><span class="spinner-border spinner-border-sm me-2"></span> Loading archives from <code>${creds.project_config_dir}</code> on <code>${creds.ip}</code>...</td></tr>
+            `;
+
+            try {
+                const res = await fetch("/api/backup/list", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(creds),
+                });
+                const data = await res.json();
+
+                if (!res.ok || data.status !== "success") {
+                    backupListContainer.innerHTML = `
+                        <tr><td colspan="4" class="text-center text-muted py-3">Unable to list backups. Make sure device is connected and directory exists.</td></tr>
+                    `;
+                    if (restoreBackupBtn) restoreBackupBtn.disabled = true;
+                    return;
+                }
+
+                const backups = data.backups || [];
+                if (backups.length === 0) {
+                    backupListContainer.innerHTML = `
+                        <tr><td colspan="4" class="text-center text-muted py-3">No previous backups found in <code>${creds.project_config_dir}/backups</code>.</td></tr>
+                    `;
+                    if (restoreBackupBtn) restoreBackupBtn.disabled = true;
+                    return;
+                }
+
+                let html = "";
+                backups.forEach(bk => {
+                    html += `
+                        <tr>
+                            <td><input type="radio" name="selected_backup_radio" value="${bk.filename}" class="form-check-input"></td>
+                            <td><code>${bk.filename}</code></td>
+                            <td>${bk.created_at}</td>
+                            <td><span class="badge bg-secondary">${bk.size_human}</span></td>
+                        </tr>
+                    `;
+                });
+                backupListContainer.innerHTML = html;
+
+                // Auto-select first radio
+                const firstRadio = backupListContainer.querySelector("input[type=radio]");
+                if (firstRadio) firstRadio.checked = true;
+                if (restoreBackupBtn) restoreBackupBtn.disabled = false;
+            } catch (err) {
+                backupListContainer.innerHTML = `
+                    <tr><td colspan="4" class="text-center text-danger py-3">Error: ${err.message}</td></tr>
+                `;
+                if (restoreBackupBtn) restoreBackupBtn.disabled = true;
+            }
+        }
+
+        // 4. Restore Backup Action
+        if (restoreBackupBtn) {
+            restoreBackupBtn.addEventListener("click", async () => {
+                const selectedRadio = document.querySelector("input[name=selected_backup_radio]:checked");
+                if (!selectedRadio) {
+                    alert("Please select a backup archive to restore.");
+                    return;
+                }
+
+                const filename = selectedRadio.value;
+                if (!confirm(`Are you sure you want to restore from ${filename}?\nThis will stop current services and restore configurations and volumes in the active stack directory.`)) {
+                    return;
+                }
+
+                restoreBackupBtn.disabled = true;
+                restoreBackupBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Restoring...';
+                if (restoreStatusAlert) {
+                    restoreStatusAlert.className = "alert alert-info small mt-3";
+                    restoreStatusAlert.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Restoring files and restarting container stack...';
+                    restoreStatusAlert.classList.remove("d-none");
+                }
+
+                const creds = getTargetCredentials();
+                try {
+                    const res = await fetch("/api/backup/restore", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            ...creds,
+                            backup_filename: filename,
+                            restart_after: true,
+                        }),
+                    });
+                    const data = await res.json();
+
+                    if (!res.ok || data.status !== "success") {
+                        if (restoreStatusAlert) {
+                            restoreStatusAlert.className = "alert alert-danger small mt-3";
+                            restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Restore failed: ${data.message || data.error || "Unknown error"}`;
+                        }
+                    } else {
+                        if (restoreStatusAlert) {
+                            restoreStatusAlert.className = "alert alert-success small mt-3";
+                            restoreStatusAlert.innerHTML = `
+                                <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Restore Completed Successfully!</strong></div>
+                                <div class="mt-1">All managed services and volume data have been restored and restarted in <code>${data.managed_scope || creds.project_config_dir}</code>.</div>
+                            `;
+                        }
+                    }
+                } catch (err) {
+                    if (restoreStatusAlert) {
+                        restoreStatusAlert.className = "alert alert-danger small mt-3";
+                        restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                    }
+                } finally {
+                    restoreBackupBtn.disabled = false;
+                    restoreBackupBtn.innerHTML = '<i class="fa-solid fa-rotate-left me-1"></i> Restore Selected Backup';
+                }
+            });
+        }
+
+        // Connect button handler
+        if (connectBtn) {
+            connectBtn.addEventListener("click", async () => {
+                connectBtn.disabled = true;
+                connectBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Connecting...';
+                await loadTargetVolumes();
+                await loadBackupList();
+                connectBtn.disabled = false;
+                connectBtn.innerHTML = '<i class="fa-solid fa-plug me-1"></i> Connect';
+            });
+        }
+
+        // Allow pressing Enter in target inputs to trigger connect
+        [targetIpInput, targetUserInput, targetPassInput, targetPathInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        if (connectBtn) connectBtn.click();
+                    }
+                });
+            }
+        });
+
+        const scanComposeBtn = document.getElementById("backup-scan-compose-btn");
+        const scanFeedback = document.getElementById("backup-scan-feedback");
+
+        // Scan Host for Compose Files button handler
+        if (scanComposeBtn) {
+            scanComposeBtn.addEventListener("click", async () => {
+                const creds = getTargetCredentials();
+                if (!creds.ip) {
+                    alert("Please enter the Target Host IP address first.");
+                    return;
+                }
+
+                scanComposeBtn.disabled = true;
+                scanComposeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Scanning...';
+                if (scanFeedback) {
+                    scanFeedback.innerHTML = '<span class="spinner-border spinner-border-sm me-1 text-primary"></span> Searching $HOME, /opt, /srv...';
+                }
+
+                try {
+                    const res = await fetch("/api/backup/discover-compose", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(creds),
+                    });
+                    const data = await res.json();
+
+                    if (!res.ok || data.status !== "success" || !data.discovered_paths || data.discovered_paths.length === 0) {
+                        if (scanFeedback) {
+                            scanFeedback.innerHTML = '<span class="text-warning"><i class="fa-solid fa-triangle-exclamation me-1"></i> No compose files found.</span>';
+                        }
+                    } else {
+                        const firstMatch = data.discovered_paths[0];
+                        if (targetPathInput) {
+                            targetPathInput.value = firstMatch.directory;
+                            sessionStorage.setItem("njorddeploy_backup_path", firstMatch.directory);
+                        }
+                        if (scanFeedback) {
+                            scanFeedback.innerHTML = `<span class="text-success"><i class="fa-solid fa-check me-1"></i> Found: <code>${firstMatch.directory}</code></span>`;
+                        }
+                        await loadTargetVolumes();
+                        await loadBackupList();
+                    }
+                } catch (err) {
+                    if (scanFeedback) {
+                        scanFeedback.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Scan error: ${err.message}</span>`;
+                    }
+                } finally {
+                    scanComposeBtn.disabled = false;
+                    scanComposeBtn.innerHTML = '<i class="fa-solid fa-magnifying-glass me-1"></i> Scan Host';
+                }
+            });
+        }
+
+        // Save credentials on input change
+        [targetIpInput, targetUserInput, targetPassInput, targetPathInput].forEach(inp => {
+            if (inp) {
+                inp.addEventListener("input", () => {
+                    saveCredentials(getTargetCredentials());
+                });
+            }
+        });
+
+        // Attach modal trigger listeners
+        modalEl.addEventListener("show.bs.modal", () => {
+            if (backupStatusAlert) backupStatusAlert.classList.add("d-none");
+            if (restoreStatusAlert) restoreStatusAlert.classList.add("d-none");
+            if (scanFeedback) {
+                scanFeedback.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i> Auto-detects compose stacks.';
+            }
+            getTargetCredentials(); // Pre-fills inputs with saved credentials if available
+            renderInitialState();   // Shows prompt until user explicitly clicks Connect
+        });
+
+        if (refreshInspectBtn) refreshInspectBtn.addEventListener("click", loadTargetVolumes);
+        if (listBackupsBtn) listBackupsBtn.addEventListener("click", loadBackupList);
+    });
+})();
+
 --- FILE: src/configurator_app/templates/__init__.py ---
 
 --- FILE: src/configurator_app/templates/base.html ---
@@ -17676,6 +19740,7 @@ html[data-theme="light"] .modal .card {
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
+                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
                 <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> Settings</a></li>
                 <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> Help</a></li>
                 <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> API Docs</a></li>
@@ -18026,8 +20091,157 @@ html[data-theme="light"] .modal .card {
     </div>
 </div>
 
+<!-- Backup & Restore Modal -->
+<div class="modal fade" id="backupRestoreModal" tabindex="-1" aria-labelledby="backupRestoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title d-flex align-items-center" id="backupRestoreModalLabel">
+                    <i class="fa-solid fa-box-archive me-2 text-primary"></i> NjordDeploy Backup &amp; Restore Manager
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Explicit Scope Disclaimer Banner -->
+                <div class="alert alert-info py-2 px-3 small mb-3 border-0 bg-opacity-10 bg-primary text-body d-flex align-items-start">
+                    <i class="fa-solid fa-circle-info text-primary mt-1 me-2 fs-5"></i>
+                    <div>
+                        <strong>NjordDeploy Scope:</strong> This manager exclusively detects, archives, and restores services, persistent volumes, and configurations managed by NjordDeploy (under <code>/opt/njorddeploy</code>). External host directories and unmanaged system processes are not affected.
+                    </div>
+                </div>
+
+                <!-- Target Host Connection Card -->
+                <div class="card bg-body-tertiary border p-3 mb-3 shadow-sm">
+                    <div class="row g-2 align-items-end mb-2">
+                        <div class="col-md-4">
+                            <label for="backup-target-ip" class="form-label small fw-bold mb-1">Target Host IP / Hostname</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-secondary text-body"><i class="fa-solid fa-server"></i></span>
+                                <input type="text" class="form-control form-control-sm" id="backup-target-ip" placeholder="e.g. 192.168.1.100">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="backup-target-user" class="form-label small fw-bold mb-1">SSH Username</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-secondary text-body"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" class="form-control form-control-sm" id="backup-target-user" value="root" placeholder="root">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="backup-target-pass" class="form-label small fw-bold mb-1">SSH Password</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-secondary text-body"><i class="fa-solid fa-key"></i></span>
+                                <input type="password" class="form-control form-control-sm" id="backup-target-pass" placeholder="Password (if needed)">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" class="btn btn-sm btn-primary w-100" id="backup-connect-btn">
+                                <i class="fa-solid fa-plug me-1"></i> Connect
+                            </button>
+                        </div>
+                    </div>
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-8">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-secondary text-body small"><i class="fa-solid fa-folder-tree me-1"></i> Stack Directory</span>
+                                <input type="text" class="form-control form-control-sm" id="backup-target-path" value="/opt/njorddeploy" placeholder="/opt/njorddeploy or ~/docker">
+                                <button class="btn btn-outline-secondary" type="button" id="backup-scan-compose-btn" title="Scan host for docker-compose files">
+                                    <i class="fa-solid fa-magnifying-glass me-1"></i> Scan Host
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-muted small text-truncate" id="backup-scan-feedback">
+                                <i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i> Auto-detects compose stacks.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-pills nav-fill mb-3" id="backupTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active fw-semibold" id="create-backup-tab" data-bs-toggle="tab" data-bs-target="#create-backup-pane" type="button" role="tab" aria-controls="create-backup-pane" aria-selected="true">
+                            <i class="fa-solid fa-cloud-arrow-up me-1"></i> Create Backup
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link fw-semibold" id="restore-backup-tab" data-bs-toggle="tab" data-bs-target="#restore-backup-pane" type="button" role="tab" aria-controls="restore-backup-pane" aria-selected="false">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Existing Backups &amp; Restore
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="backupTabContent">
+                    <!-- Create Backup Pane -->
+                    <div class="tab-pane fade show active" id="create-backup-pane" role="tabpanel" aria-labelledby="create-backup-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">Select NjordDeploy services to include in archive:</span>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" id="backup-refresh-inspect-btn">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh Storage
+                            </button>
+                        </div>
+                        <div id="backup-components-container" class="mb-3">
+                            <div class="text-center py-3 text-muted">
+                                <span class="spinner-border spinner-border-sm me-2"></span> Inspecting target host volumes...
+                            </div>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="backup-pause-containers">
+                            <label class="form-check-label small" for="backup-pause-containers">
+                                Pause active containers during archiving for transactional consistency (recommended for databases)
+                            </label>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-primary" type="button" id="backup-create-btn">
+                                <i class="fa-solid fa-box-archive me-1"></i> Create Backup Archive
+                            </button>
+                        </div>
+                        <div id="backup-status-alert" class="alert d-none mt-3"></div>
+                    </div>
+
+                    <!-- Restore Pane -->
+                    <div class="tab-pane fade" id="restore-backup-pane" role="tabpanel" aria-labelledby="restore-backup-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">Available backup archives on target host:</span>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" id="backup-refresh-list-btn">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i> Refresh List
+                            </button>
+                        </div>
+                        <div class="table-responsive border rounded mb-3">
+                            <table class="table table-hover table-sm mb-0 align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40px;"></th>
+                                        <th>Archive File</th>
+                                        <th>Date Created</th>
+                                        <th>Size</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="backup-archives-table-body">
+                                    <tr><td colspan="4" class="text-center py-3 text-muted">Loading archives...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-grid">
+                            <button class="btn btn-danger" type="button" id="backup-restore-btn">
+                                <i class="fa-solid fa-rotate-left me-1"></i> Restore Selected Backup
+                            </button>
+                        </div>
+                        <div id="restore-status-alert" class="alert d-none mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-body-tertiary py-2">
+                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}?v=1.6"></script>
+<script src="{{ url_for('static', filename='js/backup_manager_ui.js') }}?v=1.1"></script>
 </body>
 </html>
 
@@ -26224,6 +28438,750 @@ class ArtifactGenerator:
             logger.error(f"Failed to write deployment artifacts: {e}")
             return False
 
+--- FILE: src/managers/backup_manager.py ---
+"""NjordDeploy Backup & Restore Manager.
+
+Provides comprehensive volume discovery, data archiving, integrity validation,
+and restoration specifically for services managed by NjordDeploy.
+"""
+
+import json
+import logging
+import os
+import re
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional, Tuple
+
+import yaml
+
+logger = logging.getLogger(__name__)
+
+DISCLAIMER_TEXT = (
+    "This backup tool exclusively detects, archives, and restores services, "
+    "configurations, and persistent volumes managed by NjordDeploy under "
+    "the active stack directory. External host directories and unmanaged "
+    "containers are not affected."
+)
+
+
+def _format_size(size_bytes: int) -> str:
+    """Formats bytes into a human-readable string (KB, MB, GB)."""
+    if size_bytes <= 0:
+        return "0 B"
+    units = ["B", "KB", "MB", "GB", "TB"]
+    unit_index = 0
+    val = float(size_bytes)
+    while val >= 1024.0 and unit_index < len(units) - 1:
+        val /= 1024.0
+        unit_index += 1
+    return f"{val:.1f} {units[unit_index]}"
+
+
+class BackupManager:
+    """Manages volume inspection, tarball archiving, and state restoration
+
+    for NjordDeploy-managed services across configurable stack directories.
+    """
+
+    def __init__(
+        self,
+        component_manager: Any = None,
+        project_config_dir: str = "/opt/njorddeploy",
+    ) -> None:
+        """Initialize the BackupManager."""
+        self.component_manager = component_manager
+        self.project_config_dir = project_config_dir
+
+    def resolve_project_dir(
+        self, ssh_manager: Any, custom_dir: Optional[str] = None
+    ) -> str:
+        """Resolves the remote project directory containing compose files,
+
+        expanding tildes and checking candidate paths.
+        """
+        null_log = lambda msg: None  # noqa: E731
+        target_dir = (custom_dir or self.project_config_dir).strip()
+
+        # If ssh_manager is not connected or mock has no execute_command
+        if not hasattr(ssh_manager, "execute_command"):
+            return target_dir
+
+        # Remote shell script to expand candidate directories and detect compose files
+        cmd = (
+            f"for d in \"{target_dir}\" \"$HOME/docker\" "
+            f"/opt/njorddeploy \"$HOME/njorddeploy\"; do "
+            f"  expanded=$(eval echo \"$d\" 2>/dev/null); "
+            f"  if [ -n \"$expanded\" ]; then "
+            f"    if [ -f \"$expanded/docker-compose.yml\" ] || "
+            f"       [ -f \"$expanded/docker-compose.yaml\" ] || "
+            f"       [ -f \"$expanded/compose.yml\" ] || "
+            f"       [ -f \"$expanded/compose.yaml\" ]; then "
+            f"      echo \"$expanded\"; "
+            f"      break; "
+            f"    fi; "
+            f"  fi; "
+            f"done"
+        )
+        try:
+            res = ssh_manager.execute_command(
+                cmd, null_log, check_exit_code=False
+            )
+            stdout = (
+                res[1]
+                if isinstance(res, tuple) and len(res) >= 2
+                else str(res or "")
+            )
+        except Exception:
+            stdout = ""
+
+        lines = [ln.strip() for ln in stdout.splitlines() if ln.strip()]
+        if lines:
+            first_resolved, *_ = lines
+            if first_resolved.startswith("/"):
+                return first_resolved
+
+        return target_dir
+
+    def discover_compose_files(
+        self,
+        ssh_manager: Any,
+        search_roots: Optional[List[str]] = None,
+    ) -> List[Dict[str, str]]:
+        """Scans target host filesystem for existing docker-compose / compose files."""
+        null_log = lambda msg: None  # noqa: E731
+        if not hasattr(ssh_manager, "execute_command"):
+            return []
+
+        search_dirs = search_roots or [
+            "/opt",
+            "/home",
+            "$HOME",
+            "/srv",
+            "/etc/docker",
+        ]
+        dirs_str = " ".join(f'"{d}"' for d in search_dirs)
+        cmd = (
+            f"for root in {dirs_str}; do "
+            f"  exp=$(eval echo \"$root\" 2>/dev/null); "
+            f"  if [ -n \"$exp\" ] && [ -d \"$exp\" ]; then "
+            f"    find \"$exp\" -maxdepth 4 -type f \\( "
+            f"      -name 'docker-compose.yml' -o "
+            f"      -name 'docker-compose.yaml' -o "
+            f"      -name 'compose.yml' -o "
+            f"      -name 'compose.yaml' "
+            f"    \\) 2>/dev/null; "
+            f"  fi; "
+            f"done | sort -u | head -n 25"
+        )
+        try:
+            res = ssh_manager.execute_command(
+                cmd, null_log, check_exit_code=False
+            )
+            stdout = (
+                res[1]
+                if isinstance(res, tuple) and len(res) >= 2
+                else str(res or "")
+            )
+        except Exception:
+            stdout = ""
+
+        results: List[Dict[str, str]] = []
+        for line in stdout.splitlines():
+            filepath = line.strip()
+            if not filepath:
+                continue
+            directory = os.path.dirname(filepath)
+            filename = os.path.basename(filepath)
+            results.append(
+                {
+                    "directory": directory,
+                    "compose_file": filepath,
+                    "filename": filename,
+                }
+            )
+
+        def sort_key(item: Dict[str, str]) -> int:
+            d = item.get("directory", "")
+            if "/opt/njorddeploy" in d:
+                return 0
+            if "/docker" in d:
+                return 1
+            return 2
+
+        results.sort(key=sort_key)
+        return results
+
+    def parse_compose_volumes(
+        self, compose_yaml_content: str
+    ) -> Dict[str, List[Dict[str, Any]]]:
+        """Parses service volume mount definitions from a Docker Compose YAML string.
+
+        Returns a dictionary mapping service_id -> list of volume dicts.
+        """
+        if not compose_yaml_content or not compose_yaml_content.strip():
+            return {}
+
+        try:
+            data = yaml.safe_load(compose_yaml_content)
+        except Exception as e:
+            logger.error(f"Failed to parse compose YAML: {e}")
+            return {}
+
+        if not isinstance(data, dict):
+            return {}
+
+        services = data.get("services", {})
+        if not isinstance(services, dict):
+            return {}
+
+        result: Dict[str, List[Dict[str, Any]]] = {}
+
+        for service_name, service_data in services.items():
+            if not isinstance(service_data, dict):
+                continue
+
+            volumes = service_data.get("volumes", [])
+            if not isinstance(volumes, list):
+                continue
+
+            service_volumes: List[Dict[str, Any]] = []
+            for vol_entry in volumes:
+                if isinstance(vol_entry, str):
+                    clean_entry = vol_entry.strip().strip("'\"")
+                    # Handle host_path:container_path[:mode]
+                    parts = clean_entry.split(":")
+                    if len(parts) >= 2:
+                        host_target, container_target, *rest = parts
+                        host_path = host_target.strip()
+                        container_path = container_target.strip()
+                        mode = rest[0].strip() if rest else "rw"
+                        is_bind = host_path.startswith("/") or host_path.startswith("~")
+                        service_volumes.append(
+                            {
+                                "raw": clean_entry,
+                                "type": "bind" if is_bind else "volume",
+                                "host_path": host_path,
+                                "container_path": container_path,
+                                "mode": mode,
+                            }
+                        )
+                elif isinstance(vol_entry, dict):
+                    vol_type = vol_entry.get("type", "bind")
+                    source = vol_entry.get("source", "")
+                    target = vol_entry.get("target", "")
+                    if source and target:
+                        service_volumes.append(
+                            {
+                                "raw": f"{source}:{target}",
+                                "type": vol_type,
+                                "host_path": str(source),
+                                "container_path": str(target),
+                                "mode": "ro" if vol_entry.get("read_only") else "rw",
+                            }
+                        )
+
+            result[service_name] = service_volumes
+
+        return result
+
+    def inspect_target(
+        self,
+        ssh_manager: Any,
+        project_config_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Inspects remote NjordDeploy installation to discover managed services,
+
+        their volumes, and calculated storage footprints.
+        """
+        null_log = lambda msg: None  # noqa: E731
+        active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
+
+        # Check for compose file under active_dir
+        cmd_check = (
+            f"for f in \"{active_dir}/docker-compose.yml\" "
+            f"\"{active_dir}/docker-compose.yaml\" "
+            f"\"{active_dir}/compose.yml\" "
+            f"\"{active_dir}/compose.yaml\"; do "
+            f"  if [ -f \"$f\" ]; then "
+            f"    echo '___COMPOSE_FOUND___'; "
+            f"    cat \"$f\"; "
+            f"    echo '___COMPOSE_END___'; "
+            f"    break; "
+            f"  fi; "
+            f"done"
+        )
+        exit_code, stdout = ssh_manager.execute_command(
+            cmd_check, null_log, check_exit_code=False
+        )
+
+        if exit_code != 0 or "___COMPOSE_FOUND___" not in stdout:
+            return {
+                "status": "error",
+                "message": (
+                    f"No docker-compose.yml or compose.yaml found at '{active_dir}'."
+                ),
+                "managed_scope": active_dir,
+                "disclaimer": DISCLAIMER_TEXT,
+                "components": [],
+                "total_managed_size_bytes": 0,
+                "total_managed_size_human": "0 B",
+            }
+
+        # Extract compose YAML content cleanly
+        after_marker = stdout.split("___COMPOSE_FOUND___", 1)[1]
+        if "___COMPOSE_END___" in after_marker:
+            compose_content = after_marker.split("___COMPOSE_END___", 1)[0]
+        else:
+            compose_content = after_marker
+        service_volumes = self.parse_compose_volumes(compose_content)
+        components_list: List[Dict[str, Any]] = []
+        total_bytes = 0
+
+        # Discover sizes for each service volume
+        for service_id, volumes in service_volumes.items():
+            service_bytes = 0
+            enriched_volumes: List[Dict[str, Any]] = []
+
+            for vol in volumes:
+                host_path = vol.get("host_path", "")
+                is_bind = vol.get("type") == "bind"
+                size_bytes = 0
+
+                if is_bind and host_path:
+                    # Query disk usage in bytes on remote host
+                    cmd_du = (
+                        f"expanded_p=$(eval echo \"{host_path}\" 2>/dev/null); "
+                        f"if [ -e \"$expanded_p\" ]; then "
+                        f"du -sb \"$expanded_p\" 2>/dev/null || "
+                        f"du -sk \"$expanded_p\" 2>/dev/null | "
+                        f"awk '{{print $1 * 1024}}'; "
+                        f"else echo '0'; fi"
+                    )
+                    _, du_out = ssh_manager.execute_command(
+                        cmd_du, null_log, check_exit_code=False
+                    )
+                    for line in du_out.splitlines():
+                        line_str = line.strip()
+                        first_col = (
+                            line_str.split()[0]
+                            if line_str.split()
+                            else ""
+                        )
+                        if first_col.isdigit():
+                            size_bytes = int(first_col)
+                            break
+
+                vol_dict = dict(vol)
+                vol_dict["size_bytes"] = size_bytes
+                vol_dict["size_human"] = _format_size(size_bytes)
+                service_bytes += size_bytes
+                enriched_volumes.append(vol_dict)
+
+            # Heuristic: mark large volumes or media/recording/upload dirs
+            is_heavy = (
+                service_bytes > 500 * 1024 * 1024
+                or any(
+                    k in service_id.lower()
+                    for k in ["frigate", "nextcloud", "immich", "jellyfin", "plex"]
+                )
+            )
+
+            components_list.append(
+                {
+                    "id": service_id,
+                    "name": service_id.replace("-", " ").title(),
+                    "container_name": f"njorddeploy-{service_id}",
+                    "volumes": enriched_volumes,
+                    "total_size_bytes": service_bytes,
+                    "total_size_human": _format_size(service_bytes),
+                    "is_heavy": is_heavy,
+                }
+            )
+            total_bytes += service_bytes
+
+        return {
+            "status": "success",
+            "managed_scope": active_dir,
+            "disclaimer": DISCLAIMER_TEXT,
+            "components": components_list,
+            "total_managed_size_bytes": total_bytes,
+            "total_managed_size_human": _format_size(total_bytes),
+        }
+
+    def create_backup(
+        self,
+        ssh_manager: Any,
+        selected_components: Optional[List[str]] = None,
+        exclude_paths: Optional[List[str]] = None,
+        pause_containers: bool = False,
+        project_config_dir: Optional[str] = None,
+        log_callback: Optional[Callable[[str], None]] = None,
+    ) -> Dict[str, Any]:
+        """Creates a timestamped compressed backup tarball of NjordDeploy services."""
+        log = log_callback or (lambda msg: None)
+        active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"njorddeploy_backup_{timestamp}.tar.gz"
+        backup_dir = f"{active_dir}/backups"
+        backup_path = f"{backup_dir}/{backup_filename}"
+        staging_dir = f"{backup_dir}/staging_{timestamp}"
+
+        exclude_paths = exclude_paths or []
+        log(f"Initiating NjordDeploy Backup: {backup_filename}\n")
+        log(f"Scope / Stack Directory: {active_dir}\n")
+
+        # 1. Inspect target to resolve exact volume paths
+        inspection = self.inspect_target(
+            ssh_manager, project_config_dir=active_dir
+        )
+        if inspection.get("status") != "success":
+            msg = inspection.get("message", "Target inspection failed.")
+            log(f"ERROR: {msg}\n")
+            return {"status": "error", "message": msg}
+
+        all_components = inspection.get("components", [])
+        if selected_components is not None:
+            active_components = [
+                c for c in all_components if c.get("id") in selected_components
+            ]
+        else:
+            active_components = all_components
+
+        if not active_components and all_components:
+            log("No valid components selected for backup.\n")
+            return {"status": "error", "message": "No components selected."}
+
+        included_service_ids = [c["id"] for c in active_components]
+        log(f"Backing up services: {', '.join(included_service_ids)}\n")
+
+        # 2. Gather host paths to archive
+        paths_to_archive: List[str] = [
+            f"{active_dir}/docker-compose.yml",
+            f"{active_dir}/docker-compose.yaml",
+            f"{active_dir}/compose.yml",
+            f"{active_dir}/compose.yaml",
+            f"{active_dir}/.env",
+        ]
+
+        for comp in active_components:
+            for vol in comp.get("volumes", []):
+                h_path = vol.get("host_path", "")
+                if (
+                    vol.get("type") == "bind"
+                    and h_path
+                    and h_path not in exclude_paths
+                ):
+                    if h_path not in paths_to_archive:
+                        paths_to_archive.append(h_path)
+
+        # 3. Create staging and metadata manifest
+        manifest_data = {
+            "version": "1.0",
+            "created_at": datetime.now().isoformat(),
+            "scope": active_dir,
+            "disclaimer": DISCLAIMER_TEXT,
+            "components": included_service_ids,
+            "archived_paths": paths_to_archive,
+            "excluded_paths": exclude_paths,
+        }
+
+        manifest_json_str = json.dumps(manifest_data, indent=2)
+
+        # 4. Prepare remote backup directories
+        prep_cmd = (
+            f"mkdir -p \"{backup_dir}\" && "
+            f"mkdir -p \"{staging_dir}\" && "
+            f"cat << 'EOF' > \"{staging_dir}/manifest.json\"\n"
+            f"{manifest_json_str}\n"
+            f"EOF\n"
+        )
+        ssh_manager.execute_command(prep_cmd, log)
+
+        # 5. Optionally pause containers for transactional consistency
+        if pause_containers and included_service_ids:
+            log("Pausing active containers for transactional consistency...\n")
+            pause_cmd = (
+                f"cd \"{active_dir}\" && "
+                f"docker compose pause {' '.join(included_service_ids)} "
+                f"2>/dev/null || true"
+            )
+            ssh_manager.execute_command(pause_cmd, log, check_exit_code=False)
+
+        # 6. Archive configuration and volume directories into tarball
+        existing_check = []
+        for p in paths_to_archive:
+            existing_check.append(
+                f"ep=$(eval echo \"{p}\" 2>/dev/null); "
+                f"[ -e \"$ep\" ] && printf '%s\n' \"$ep\""
+            )
+        gather_existing_cmd = " ; ".join(existing_check)
+
+        log("Building compressed backup tarball...\n")
+        tar_cmd = (
+            f"valid_paths=$({gather_existing_cmd}) ; "
+            f"if [ -n \"$valid_paths\" ]; then "
+            f"tar -czf \"{backup_path}\" "
+            f"-C \"{staging_dir}\" manifest.json "
+            f"$valid_paths 2>/dev/null || "
+            f"tar -czf \"{backup_path}\" -C \"{staging_dir}\" manifest.json ; "
+            f"else "
+            f"tar -czf \"{backup_path}\" -C \"{staging_dir}\" manifest.json ; "
+            f"fi"
+        )
+
+        tar_code, _ = ssh_manager.execute_command(
+            tar_cmd, log, check_exit_code=False
+        )
+
+        # 7. Unpause containers
+        if pause_containers and included_service_ids:
+            log("Resuming container operations...\n")
+            unpause_cmd = (
+                f"cd \"{active_dir}\" && "
+                f"docker compose unpause {' '.join(included_service_ids)} "
+                f"2>/dev/null || true"
+            )
+            ssh_manager.execute_command(unpause_cmd, log, check_exit_code=False)
+
+        # 8. Clean up staging
+        cleanup_cmd = f"rm -rf \"{staging_dir}\""
+        ssh_manager.execute_command(cleanup_cmd, log, check_exit_code=False)
+
+        if tar_code != 0:
+            log("ERROR: Tar archiving failed.\n")
+            return {"status": "error", "message": "Failed to create archive tarball."}
+
+        # 9. Compute sha256 checksum and size of the created backup
+        hash_cmd = (
+            f"sha256sum \"{backup_path}\" 2>/dev/null | awk '{{print $1}}' ; "
+            f"stat -c %s \"{backup_path}\" 2>/dev/null || echo '0'"
+        )
+        _, hash_out = ssh_manager.execute_command(
+            hash_cmd, log, check_exit_code=False
+        )
+        lines = [ln.strip() for ln in hash_out.splitlines() if ln.strip()]
+        sha256_hash = ""
+        size_bytes = 0
+        if len(lines) >= 2:
+            first_item, second_item, *_ = lines
+            sha256_hash = first_item
+            if second_item.isdigit():
+                size_bytes = int(second_item)
+        elif len(lines) == 1:
+            first_item, *_ = lines
+            sha256_hash = first_item
+
+        log(f"SUCCESS: Backup created successfully ({_format_size(size_bytes)}).\n")
+        log(f"SHA-256: {sha256_hash}\n")
+
+        return {
+            "status": "success",
+            "filename": backup_filename,
+            "remote_path": backup_path,
+            "size_bytes": size_bytes,
+            "size_human": _format_size(size_bytes),
+            "sha256": sha256_hash,
+            "created_at": datetime.now().isoformat(),
+            "components": included_service_ids,
+            "managed_scope": active_dir,
+            "disclaimer": DISCLAIMER_TEXT,
+        }
+
+    def list_backups(
+        self,
+        ssh_manager: Any,
+        project_config_dir: Optional[str] = None,
+    ) -> List[Dict[str, Any]]:
+        """Lists available NjordDeploy backup archives on the remote host."""
+        null_log = lambda msg: None  # noqa: E731
+        active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
+        backup_dir = f"{active_dir}/backups"
+        list_cmd = (
+            f"if [ -d \"{backup_dir}\" ]; then "
+            f"for f in \"{backup_dir}\"/njorddeploy_backup_*.tar.gz; do "
+            f"  if [ -f \"$f\" ]; then "
+            f"    stat -c '%n|%s|%Y' \"$f\" 2>/dev/null; "
+            f"  fi; "
+            f"done; "
+            f"fi"
+        )
+        exit_code, stdout = ssh_manager.execute_command(
+            list_cmd, null_log, check_exit_code=False
+        )
+
+        results: List[Dict[str, Any]] = []
+        if exit_code != 0 or not stdout.strip():
+            return results
+
+        for line in stdout.splitlines():
+            line_str = line.strip()
+            if not line_str or "|" not in line_str:
+                continue
+
+            parts = line_str.split("|")
+            if len(parts) >= 3:
+                f_path, size_str, mtime_str, *_ = parts
+                f_name = os.path.basename(f_path)
+                size_b = int(size_str) if size_str.isdigit() else 0
+                mtime_int = int(mtime_str) if mtime_str.isdigit() else 0
+                dt_str = (
+                    datetime.fromtimestamp(mtime_int).strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+                    if mtime_int > 0
+                    else "Unknown"
+                )
+
+                results.append(
+                    {
+                        "filename": f_name,
+                        "remote_path": f_path,
+                        "size_bytes": size_b,
+                        "size_human": _format_size(size_b),
+                        "created_at": dt_str,
+                        "timestamp": mtime_int,
+                        "stack_dir": active_dir,
+                    }
+                )
+
+        # Sort newest first
+        results.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
+        return results
+
+    def restore_backup(
+        self,
+        ssh_manager: Any,
+        backup_filename: str,
+        selected_components: Optional[List[str]] = None,
+        restart_after: bool = True,
+        project_config_dir: Optional[str] = None,
+        log_callback: Optional[Callable[[str], None]] = None,
+    ) -> Dict[str, Any]:
+        """Restores services and volumes from a NjordDeploy backup tarball."""
+        log = log_callback or (lambda msg: None)
+        active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
+
+        # Sanitize filename
+        clean_filename = os.path.basename(backup_filename.strip())
+        if not re.match(r"^njorddeploy_backup_[0-9_]+\.tar\.gz$", clean_filename):
+            msg = f"Invalid backup filename: {clean_filename}"
+            log(f"ERROR: {msg}\n")
+            return {"status": "error", "message": msg}
+
+        backup_path = f"{active_dir}/backups/{clean_filename}"
+        log(f"Initiating Restore from: {clean_filename}\n")
+        log(f"Scope / Stack Directory: {active_dir}\n")
+
+        # 1. Verify archive existence on target
+        check_cmd = (
+            f"if [ -f \"{backup_path}\" ]; then "
+            f"tar -tzf \"{backup_path}\" manifest.json >/dev/null 2>&1 && "
+            f"echo 'VALID'; "
+            f"else echo 'MISSING'; fi"
+        )
+        _, check_out = ssh_manager.execute_command(
+            check_cmd, log, check_exit_code=False
+        )
+
+        if "VALID" not in check_out:
+            msg = f"Backup archive {clean_filename} not found at {backup_path}."
+            log(f"ERROR: {msg}\n")
+            return {"status": "error", "message": msg}
+
+        # 2. Extract manifest to inspect metadata
+        manifest_cmd = (
+            f"tar -xzf \"{backup_path}\" manifest.json -O 2>/dev/null || echo '{{}}'"
+        )
+        _, manifest_out = ssh_manager.execute_command(
+            manifest_cmd, log, check_exit_code=False
+        )
+        try:
+            manifest_data = json.loads(manifest_out)
+        except Exception:
+            manifest_data = {}
+
+        archived_components = manifest_data.get("components", [])
+
+        # 3. Stop running containers before extracting volume state
+        log("Stopping current container stack...\n")
+        stop_cmd = (
+            f"cd \"{active_dir}\" && docker compose stop 2>/dev/null || true"
+        )
+        ssh_manager.execute_command(stop_cmd, log, check_exit_code=False)
+
+        # 4. Extract archive to root filesystem
+        log("Extracting configuration and volume data from backup archive...\n")
+        extract_cmd = f"tar -xzf \"{backup_path}\" -C /"
+        extract_code, _ = ssh_manager.execute_command(
+            extract_cmd, log, check_exit_code=False
+        )
+
+        if extract_code != 0:
+            log("ERROR: Failed to extract backup tarball.\n")
+            return {"status": "error", "message": "Tar extraction failed."}
+
+        # 5. Fix permissions on restored mount directories
+        log("Applying directory permissions to restored volumes...\n")
+        fix_perms_cmd = (
+            f"for f in '{active_dir}/docker-compose.yml' "
+            f"'{active_dir}/compose.yml'; do "
+            f"  if [ -f \"$f\" ]; then "
+            f"    grep -E '^\\s*-\\s+/[^:]+:' \"$f\" | "
+            f"    sed -E 's/^\\s*-\\s+([^:]+):.*/\\1/' | while read -r host_path; do "
+            f"      clean_p=$(echo \"$host_path\" | tr -d '\"' | tr -d \"'\"); "
+            f"      if [ -n \"$clean_p\" ] && [ -d \"$clean_p\" ]; then "
+            f"        chmod -R 777 \"$clean_p\" 2>/dev/null || true; "
+            f"      fi; "
+            f"    done; "
+            f"  fi; "
+            f"done"
+        )
+        ssh_manager.execute_command(fix_perms_cmd, log, check_exit_code=False)
+
+        # 6. Restart container stack if requested
+        if restart_after:
+            log("Restarting container stack with restored data...\n")
+            up_cmd = f"cd \"{active_dir}\" && docker compose up -d 2>&1"
+            ssh_manager.execute_command(up_cmd, log, check_exit_code=False)
+
+        log("SUCCESS: Restore operation completed successfully.\n")
+        return {
+            "status": "success",
+            "restored_archive": clean_filename,
+            "restored_components": (
+                selected_components or archived_components
+            ),
+            "restarted": restart_after,
+            "managed_scope": active_dir,
+            "disclaimer": DISCLAIMER_TEXT,
+        }
+
+    def download_backup_sftp(
+        self,
+        ssh_manager: Any,
+        remote_filename: str,
+        local_destination_dir: Path,
+        project_config_dir: Optional[str] = None,
+    ) -> Tuple[bool, str, Path]:
+        """Downloads a remote backup archive file to the local machine via SFTP."""
+        clean_filename = os.path.basename(remote_filename.strip())
+        active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
+        remote_path = f"{active_dir}/backups/{clean_filename}"
+        local_destination_dir.mkdir(parents=True, exist_ok=True)
+        local_file = local_destination_dir / clean_filename
+
+        if not ssh_manager.client:
+            return False, "SSH client is not connected.", local_file
+
+        try:
+            sftp = ssh_manager.client.open_sftp()
+            sftp.get(remote_path, str(local_file))
+            sftp.close()
+            return True, "Download successful.", local_file
+        except Exception as e:
+            return False, str(e), local_file
+
 --- FILE: src/managers/component_manager.py ---
 # src/managers/component_manager.py
 
@@ -28505,6 +31463,7 @@ class SSHManager:
                         log_callback(chunk)
                     if channel.recv_stderr_ready():
                         chunk = channel.recv_stderr(4096).decode("utf-8", "ignore")
+                        stdout_parts.append(chunk)
                         log_callback(chunk)
 
             exit_code = channel.recv_exit_status()

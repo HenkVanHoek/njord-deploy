@@ -45,6 +45,25 @@ def open_browser(url: str):
 
 
 if __name__ == "__main__":
+    cli_flags = {
+        "--deploy",
+        "--inspect",
+        "--backup",
+        "--restore",
+        "--list-backups",
+        "--scan-stacks",
+        "--example-config",
+        "--cli",
+        "--help",
+        "-h",
+    }
+    # If any CLI action argument was passed, run the headless CLI runner directly
+    if any(arg in cli_flags for arg in sys.argv[1:]):
+        from cli.runner import main as cli_main
+
+        filtered_args = [a for a in sys.argv[1:] if a != "--cli"]
+        sys.exit(cli_main(filtered_args))
+
     port = int(os.environ.get("CONFIGURATOR_PORT", 5001))
     host = os.environ.get("CONFIGURATOR_HOST", "0.0.0.0")  # nosec B104
 

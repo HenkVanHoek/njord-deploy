@@ -54,7 +54,11 @@ a = Analysis(
         'cryptography',
         'src.configurator_app.app',
         'src.configurator_app.openapi',
-        'configurator_app.openapi'
+        'configurator_app.openapi',
+        'src.managers.backup_manager',
+        'managers.backup_manager',
+        'src.cli.runner',
+        'cli.runner'
     ],
     hookspath=[],
     runtime_hooks=[],

@@ -37,8 +37,9 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
     *   **Why?**: To allow custom component repositories (private GitLab/Forgejo/Gitea) and air-gapped offline installations.
     *   **Implementation**: Fully dynamic `SyncManager` supporting `COMPONENTS_REPO_URL`, `COMPONENTS_REPO_BRANCH`, `COMPONENTS_REPO_TOKEN`, with live URL validation endpoint (`/api/validate-repo`) and offline local-only fallback mode.
 *   **[In Progress] Component Configuration Tools**: Develop modular, post-installation tools for key services. The core ONVIF camera discovery and configuration tool for Frigate (`frigate_camera_config_tool.py`) has been completed, with dashboard integration being the next step.
-*   **[Planned] Integrated Backup & Restore**: Develop a user-friendly, Flask-based tool to back up and restore all persistent service data. This is a critical feature for data security and user peace of mind.
-    *   **Implementation**: This will be a new, optional management tool built with Flask. It will provide a simple web UI to automatically detect and back up all persistent Docker volumes. The tool will feature **smart, configurable defaults**, allowing users to easily exclude large data volumes (like Frigate video recordings) to ensure fast and efficient backups of critical configuration data.
+*   **[✅] Integrated Backup & Restore Engine & REST API**:
+    *   **Why?**: To provide automated, dependable backups and restoration specifically for NjordDeploy-managed services, volumes, and configurations.
+    *   **Implementation**: Built `BackupManager` (`src/managers/backup_manager.py`) and REST endpoints (`/api/backup/*`) supporting remote volume discovery, disk footprint inspection, smart large-data flags, transactional container pausing, SHA-256 integrity manifests, single-click downloads, and safe state restoration with permission reconciliation.
 *   **[✅] AI-Assisted Component Generation**:
     *   **Why?**: To dramatically accelerate the process of adding new services and lower the barrier for new contributors. As a nod to the powerful AI assistance that has been instrumental in this project's development, this feature brings that same power directly to our developers.
     *   **Implementation**: This has been implemented as an intuitive UI in the Editor where a developer can describe a service or input any Git repository URL (supporting GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, and self-hosted Git servers). The backend queries an LLM to generate draft versions of the component's metadata, variables, and `docker-compose.template.yml`.
@@ -53,6 +54,9 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
 *   **[✅] Headless REST API, Interactive Swagger UI & OpenAPI Specification**:
     *   **Why?**: To enable seamless programmatic deployments for external scripts, CI/CD pipelines, Homelab automation, and AI coding agents (such as Antigravity/Agy), with live in-browser testing and machine-readable schema contracts.
     *   **Implementation**: Fully documented and standardized REST endpoints across discovery, system analysis (`/api/v1/system/analyze`), Proxmox provisioning (`/api/proxmox/*`), deployment execution (`/deploy-configuration`), and real-time SSE streaming (`/stream-deployment/<task_id>`), published in [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md), with an interactive Swagger UI (`/api/docs`) and raw OpenAPI 3.0 specification (`/api/openapi.json`).
+*   **[✅] Headless CLI Runner Mode & Zero-Browser Automation**:
+    *   **Why?**: To execute automated deployments, volume backups, state restorations, and stack inspections directly from terminal scripts, cron jobs, and CI/CD without starting a web browser or WSGI server.
+    *   **Implementation**: Built `NjordCliRunner` (`src/cli/runner.py`) integrated directly into `run_configurator.py` supporting `--deploy <config.json>`, `--backup`, `--restore <archive>`, `--inspect`, `--list-backups`, `--scan-stacks`, and `--example-config`.
 *   **[Planned] Advanced Installer Options**: Introduce an "Advanced Mode" in the installer for power users to tweak more specific Docker settings.
 
 ---

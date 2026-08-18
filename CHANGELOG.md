@@ -6,7 +6,19 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.24] - 2026-08-18
+
 ### Added
+- **Headless CLI Runner Mode & Zero-Browser Automation**:
+  - Implemented `NjordCliRunner` ([`src/cli/runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/cli/runner.py)) and integrated it directly into [`run_configurator.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/run_configurator.py).
+  - Enables zero-browser automated deployments (`--deploy <config.json>` or direct CLI flags), stack inspections (`--inspect`), volume backups (`--backup`), snapshot restorations (`--restore <archive>`), and sample config exports (`--example-config`).
+- **Automated Proxmox LXC Disaster Recovery Test Suite & Skill**:
+  - Built `scripts/test_backup_restore_lxc.py` and skill `.agents/skills/proxmox-backup-test/SKILL.md` automating clean Debian 12 LXC provisioning, Docker setup, stack deployment, point-in-time snapshot backup, data corruption injection, state restoration, convergence verification, and automatic cleanup.
+- **Backup & Restore Module, Auto-Discovery & REST Endpoints**:
+  - Implemented `BackupManager` ([`src/managers/backup_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/backup_manager.py)) providing remote volume discovery, multi-root compose file scanning (`/api/backup/discover-compose`), disk footprint calculation, smart large-data flags, transactional container pausing, SHA-256 integrity manifests, and safe state restoration with permission reconciliation.
+  - Added REST API endpoints: `POST /api/backup/inspect`, `POST /api/backup/create`, `POST /api/backup/list`, `POST /api/backup/restore`, `POST /api/backup/discover-compose`, and `GET /api/backup/download/<filename>`.
+  - Added Backup & Restore modal and action interface in the Configurator UI ([`src/configurator_app/static/js/backup_manager_ui.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/static/js/backup_manager_ui.js)) with explicit connection lifecycle, theme adaptation, and scope boundaries.
+  - Updated OpenAPI 3.0 specification and [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) with full Backup & Restore and Headless CLI documentation.
 - **Interactive Swagger UI & OpenAPI 3.0 Specification**:
   - Implemented interactive Swagger UI documentation at `http://localhost:5001/api/docs` and raw OpenAPI 3.0.3 specification JSON at `/api/openapi.json`.
   - Added direct navigation links in the Configurator navbar and Help topics menu.

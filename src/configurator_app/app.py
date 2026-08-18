@@ -14,10 +14,12 @@ from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
 from configurator_app.openapi import get_openapi_spec
+from managers.backup_manager import BackupManager
 from managers.component_manager import ComponentManager
 from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
+from managers.ssh_manager import SSHManager
 from node_scanner import NodeScanner, get_tailscale_status
 from utils.resource_utils import get_components_paths, seed_user_components_if_needed
 
@@ -2418,6 +2420,295 @@ def create_app(test_config=None):
                 jsonify({"error": "An unexpected error occurred reading files."}),
                 500,
             )
+
+    @flask_app.route("/api/backup/discover-compose", methods=["POST"])
+    def api_backup_discover_compose():
+        """Scans target host filesystem for existing docker-compose stack files."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            discovered = backup_mgr.discover_compose_files(ssh)
+            ssh.close()
+            suggested = discovered[0]["directory"] if discovered else None
+            return (
+                jsonify(
+                    {
+                        "status": "success",
+                        "discovered_paths": discovered,
+                        "suggested_path": suggested,
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            logging.error(f"Discover compose failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/inspect", methods=["POST"])
+    def api_backup_inspect():
+        """Inspects target machine for NjordDeploy volumes and storage usage."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            inspection = backup_mgr.inspect_target(
+                ssh, project_config_dir=project_config_dir
+            )
+            ssh.close()
+            status_code = 200 if inspection.get("status") == "success" else 404
+            return jsonify(inspection), status_code
+        except Exception as e:
+            logging.error(f"Backup inspect failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/create", methods=["POST"])
+    def api_backup_create():
+        """Generates a compressed backup tarball for NjordDeploy components."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            selected_components = data.get("selected_components")
+            exclude_paths = data.get("exclude_paths", [])
+            pause_containers = bool(data.get("pause_containers", False))
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            res = backup_mgr.create_backup(
+                ssh,
+                selected_components=selected_components,
+                exclude_paths=exclude_paths,
+                pause_containers=pause_containers,
+                project_config_dir=project_config_dir,
+            )
+            ssh.close()
+            status_code = 200 if res.get("status") == "success" else 400
+            return jsonify(res), status_code
+        except Exception as e:
+            logging.error(f"Backup create failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/list", methods=["POST"])
+    def api_backup_list():
+        """Lists existing backups on the remote host."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            if not ip or not username:
+                return (
+                    jsonify({"error": "Missing IP or username for target host."}),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            backups = backup_mgr.list_backups(
+                ssh, project_config_dir=project_config_dir
+            )
+            ssh.close()
+            return jsonify({"status": "success", "backups": backups}), 200
+        except Exception as e:
+            logging.error(f"Backup list failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/restore", methods=["POST"])
+    def api_backup_restore():
+        """Restores services and volumes from a specific NjordDeploy backup."""
+        try:
+            data = request.get_json(force=True) or {}
+            ip = data.get("ip") or session.get("device_ip")
+            username = data.get("username") or session.get("ssh_user", "root")
+            password = data.get("password") or session.get("ssh_password", "")
+            port = int(data.get("port") or session.get("ssh_port", 22))
+            project_config_dir = data.get("project_config_dir") or data.get("stack_dir")
+
+            backup_filename = data.get("backup_filename")
+            selected_components = data.get("selected_components")
+            restart_after = bool(data.get("restart_after", True))
+
+            if not ip or not username or not backup_filename:
+                return (
+                    jsonify(
+                        {
+                            "error": (
+                                "Missing required fields: ip, username, "
+                                "or backup_filename."
+                            )
+                        }
+                    ),
+                    400,
+                )
+
+            ssh = SSHManager(
+                hostname=ip,
+                username=username,
+                password=password,
+                port=port,
+                allow_auto_add=True,
+            )
+            success, msg = ssh.connect()
+            if not success:
+                return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+
+            backup_mgr = BackupManager()
+            res = backup_mgr.restore_backup(
+                ssh,
+                backup_filename=str(backup_filename),
+                selected_components=selected_components,
+                restart_after=restart_after,
+                project_config_dir=project_config_dir,
+            )
+            ssh.close()
+            status_code = 200 if res.get("status") == "success" else 400
+            return jsonify(res), status_code
+        except Exception as e:
+            logging.error(f"Backup restore failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
+
+    @flask_app.route("/api/backup/download/<filename>", methods=["GET"])
+    def api_backup_download(filename: str):
+        """Downloads a backup archive from the remote host or local staging."""
+        try:
+            clean_name = os.path.basename(filename.strip())
+            if not re.match(r"^njorddeploy_backup_[0-9_]+\.tar\.gz$", clean_name):
+                return jsonify({"error": "Invalid backup filename."}), 400
+
+            ip = request.args.get("ip") or session.get("device_ip")
+            username = request.args.get("username") or session.get("ssh_user", "root")
+            password = request.args.get("password") or session.get("ssh_password", "")
+            port = int(request.args.get("port") or session.get("ssh_port", 22))
+            project_config_dir = request.args.get(
+                "project_config_dir"
+            ) or request.args.get("stack_dir")
+
+            staging_dir = (
+                Path(user_data_dir("NjordDeploy", "NjordDeploy")) / "backups_download"
+            )
+            staging_dir.mkdir(parents=True, exist_ok=True)
+            local_target = staging_dir / clean_name
+
+            if not local_target.exists():
+                if not ip or not username:
+                    return (
+                        jsonify(
+                            {
+                                "error": (
+                                    "Missing target host credentials to fetch "
+                                    "remote archive."
+                                )
+                            }
+                        ),
+                        400,
+                    )
+                ssh = SSHManager(
+                    hostname=ip,
+                    username=username,
+                    password=password,
+                    port=port,
+                    allow_auto_add=True,
+                )
+                success, msg = ssh.connect()
+                if not success:
+                    return jsonify({"error": f"SSH connection failed: {msg}"}), 400
+                backup_mgr = BackupManager()
+                dl_ok, dl_msg, local_file = backup_mgr.download_backup_sftp(
+                    ssh,
+                    clean_name,
+                    staging_dir,
+                    project_config_dir=project_config_dir,
+                )
+                ssh.close()
+                if not dl_ok:
+                    return (
+                        jsonify({"error": f"Failed to download archive: {dl_msg}"}),
+                        500,
+                    )
+
+            from flask import send_file
+
+            return send_file(local_target, as_attachment=True, download_name=clean_name)
+        except Exception as e:
+            logging.error(f"Backup download failed: {e}", exc_info=True)
+            return jsonify({"error": f"Internal server error: {e}"}), 500
 
     return flask_app
 
