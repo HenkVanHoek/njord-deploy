@@ -9950,13 +9950,13 @@ from pathlib import Path
 from appdirs import user_data_dir
 from flask import Flask, Response, jsonify, render_template, request, session
 
+from configurator_app.openapi import get_openapi_spec
 from managers.component_manager import ComponentManager
 from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
 from node_scanner import NodeScanner, get_tailscale_status
 from utils.resource_utils import get_components_paths, seed_user_components_if_needed
-from configurator_app.openapi import get_openapi_spec
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -12384,9 +12384,10 @@ def get_openapi_spec() -> Dict[str, Any]:
         "info": {
             "title": "NjordDeploy Configurator REST API",
             "description": (
-                "High-performance REST API for headless deployment orchestration, "
-                "Agentic DevOps, Proxmox VE container/VM provisioning, "
-                "pre-flight conflict safety analysis, and real-time SSE log streaming."
+                "High-performance REST API for headless deployment "
+                "orchestration, Agentic DevOps, Proxmox VE container/VM "
+                "provisioning, pre-flight conflict safety analysis, "
+                "and real-time SSE log streaming."
             ),
             "version": "0.5.24",
             "contact": {
@@ -12411,27 +12412,29 @@ def get_openapi_spec() -> Dict[str, Any]:
         "tags": [
             {
                 "name": "Components & Metadata",
-                "description": "Service registry, templates, packages, and variables",
+                "description": ("Service registry, templates, packages, and variables"),
             },
             {
                 "name": "Discovery & Inspection",
-                "description": "Network scanning, device snapshotting, and hardware",
+                "description": ("Network scanning, device snapshotting, and hardware"),
             },
             {
                 "name": "Conflict Analysis",
-                "description": "Pre-flight port, volume, and resource conflict checks",
+                "description": (
+                    "Pre-flight port, volume, and resource conflict checks"
+                ),
             },
             {
                 "name": "Deployment & Streaming",
-                "description": "Artifact generation, execution, SSE logs, and health",
+                "description": ("Artifact generation, execution, SSE logs, and health"),
             },
             {
                 "name": "Proxmox Orchestration",
-                "description": "Proxmox VE LXC container and QEMU VM provisioning",
+                "description": ("Proxmox VE LXC container and QEMU VM provisioning"),
             },
             {
                 "name": "Engine & Settings",
-                "description": "Container runtime, repository sync, and environment",
+                "description": ("Container runtime, repository sync, and environment"),
             },
         ],
         "paths": {
@@ -12440,12 +12443,14 @@ def get_openapi_spec() -> Dict[str, Any]:
                     "tags": ["Components & Metadata"],
                     "summary": "Retrieve all registered software components",
                     "description": (
-                        "Returns a dictionary of all available services from the "
-                        "single source of truth."
+                        "Returns a dictionary of all available services from "
+                        "the single source of truth."
                     ),
                     "responses": {
                         "200": {
-                            "description": "Map of component ID to metadata.",
+                            "description": (
+                                "Map of component ID to metadata definition."
+                            ),
                             "content": {
                                 "application/json": {
                                     "example": {
@@ -12466,10 +12471,10 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/get-available-software": {
                 "post": {
                     "tags": ["Components & Metadata"],
-                    "summary": "List available software and pre-bundled packages",
+                    "summary": "List available software and packages",
                     "responses": {
                         "200": {
-                            "description": "List of available software and packages.",
+                            "description": ("List of available software and packages."),
                         }
                     },
                 }
@@ -12477,7 +12482,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/get-software-groups": {
                 "get": {
                     "tags": ["Components & Metadata"],
-                    "summary": "Get software categories, ordering, and exclusivity rules",
+                    "summary": "Get software categories and ordering rules",
                     "responses": {
                         "200": {"description": "Categorized software groups."}
                     },
@@ -12486,13 +12491,16 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/get-required-variables": {
                 "post": {
                     "tags": ["Components & Metadata"],
-                    "summary": "Get required environment variables for selected components",
+                    "summary": "Get required environment variables",
                     "requestBody": {
                         "required": True,
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "selected_components": ["grafana", "nextcloud"]
+                                    "selected_components": [
+                                        "grafana",
+                                        "nextcloud",
+                                    ]
                                 }
                             }
                         },
@@ -12512,21 +12520,24 @@ def get_openapi_spec() -> Dict[str, Any]:
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "selected_components": ["adguard-home", "grafana"]
+                                    "selected_components": [
+                                        "adguard-home",
+                                        "grafana",
+                                    ]
                                 }
                             }
                         },
                     },
                     "responses": {
                         "200": {"description": "Selection is valid."},
-                        "400": {"description": "Missing template or variable files."},
+                        "400": {"description": "Missing template or config files."},
                     },
                 }
             },
             "/scan-pis": {
                 "post": {
                     "tags": ["Discovery & Inspection"],
-                    "summary": "Discover target hosts across local network or Tailscale",
+                    "summary": "Discover target hosts across local network",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12547,7 +12558,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/get-device-details": {
                 "post": {
                     "tags": ["Discovery & Inspection"],
-                    "summary": "Inspect remote host hardware, disks, and runtime via SSH",
+                    "summary": "Inspect remote host hardware and OS details",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12562,14 +12573,14 @@ def get_openapi_spec() -> Dict[str, Any]:
                     },
                     "responses": {
                         "200": {"description": "Hardware and OS details snapshot."},
-                        "400": {"description": "Authentication or connection failure."},
+                        "400": {"description": "Authentication or SSH error."},
                     },
                 }
             },
             "/api/v1/system/analyze": {
                 "post": {
                     "tags": ["Conflict Analysis"],
-                    "summary": "Perform pre-flight port, volume, and resource conflict analysis",
+                    "summary": "Perform pre-flight safety conflict analysis",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12589,7 +12600,7 @@ def get_openapi_spec() -> Dict[str, Any]:
                                             "name": "Grafana",
                                             "ports": ["3000:3000/tcp"],
                                             "volumes": [
-                                                "/opt/grafana/data:/var/lib/grafana"
+                                                "/opt/grafana/data:" "/var/lib/grafana"
                                             ],
                                         }
                                     ],
@@ -12599,7 +12610,7 @@ def get_openapi_spec() -> Dict[str, Any]:
                     },
                     "responses": {
                         "200": {
-                            "description": "Safety analysis completed successfully.",
+                            "description": "Safety analysis completed.",
                             "content": {
                                 "application/json": {
                                     "example": {
@@ -12621,7 +12632,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/start-installation": {
                 "post": {
                     "tags": ["Deployment & Streaming"],
-                    "summary": "Generate deployment staging artifacts (compose, .env)",
+                    "summary": "Generate deployment staging artifacts",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12636,14 +12647,14 @@ def get_openapi_spec() -> Dict[str, Any]:
                                         }
                                     ],
                                     "env_vars": {
-                                        "GF_SECURITY_ADMIN_PASSWORD": "AdminPassword"
+                                        "GF_SECURITY_ADMIN_PASSWORD": ("AdminPassword")
                                     },
                                 }
                             }
                         },
                     },
                     "responses": {
-                        "200": {"description": "Artifacts generated in staging area."},
+                        "200": {"description": "Artifacts generated in staging."},
                         "400": {"description": "Generation failure."},
                     },
                 }
@@ -12651,13 +12662,15 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/deploy-configuration": {
                 "post": {
                     "tags": ["Deployment & Streaming"],
-                    "summary": "Initiate asynchronous SSH deployment to target host",
+                    "summary": "Initiate asynchronous SSH deployment to host",
                     "requestBody": {
                         "required": True,
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "output_path": "/tmp/session_output",
+                                    "output_path": (
+                                        "/opt/njorddeploy/staging/session_1"
+                                    ),
                                     "devices": [
                                         {
                                             "ip": "192.168.178.150",
@@ -12669,7 +12682,7 @@ def get_openapi_spec() -> Dict[str, Any]:
                                         {"id": "grafana", "name": "Grafana"}
                                     ],
                                     "global_vars": {
-                                        "GF_SECURITY_ADMIN_PASSWORD": "AdminPassword"
+                                        "GF_SECURITY_ADMIN_PASSWORD": ("AdminPassword")
                                     },
                                 }
                             }
@@ -12691,19 +12704,19 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/stream-deployment/{target_task_id}": {
                 "get": {
                     "tags": ["Deployment & Streaming"],
-                    "summary": "Stream live deployment logs via Server-Sent Events (SSE)",
+                    "summary": "Stream live deployment logs via SSE",
                     "parameters": [
                         {
                             "name": "target_task_id",
                             "in": "path",
                             "required": True,
                             "schema": {"type": "string"},
-                            "description": "Hexadecimal task ID returned by deploy.",
+                            "description": ("Hexadecimal task ID returned by deploy."),
                         }
                     ],
                     "responses": {
                         "200": {
-                            "description": "SSE event stream of live deployment logs.",
+                            "description": "SSE event stream of live logs.",
                             "content": {"text/event-stream": {}},
                         }
                     },
@@ -12730,7 +12743,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/deployment/{target_task_id}/evaluate": {
                 "post": {
                     "tags": ["Deployment & Streaming"],
-                    "summary": "Run post-deployment AI/deterministic health evaluation",
+                    "summary": "Run post-deployment health evaluation",
                     "parameters": [
                         {
                             "name": "target_task_id",
@@ -12758,7 +12771,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/get-container-logs": {
                 "post": {
                     "tags": ["Deployment & Streaming"],
-                    "summary": "Fetch live container logs from remote host via SSH",
+                    "summary": "Fetch live container logs via SSH",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12782,7 +12795,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/proxmox/create-lxc": {
                 "post": {
                     "tags": ["Proxmox Orchestration"],
-                    "summary": "Create, boot, and provision a clean Debian LXC container",
+                    "summary": "Create and provision a clean Debian LXC",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12801,7 +12814,7 @@ def get_openapi_spec() -> Dict[str, Any]:
                     },
                     "responses": {
                         "201": {
-                            "description": "Container provisioned and IP assigned.",
+                            "description": ("Container provisioned and IP assigned."),
                             "content": {
                                 "application/json": {
                                     "example": {
@@ -12816,7 +12829,9 @@ def get_openapi_spec() -> Dict[str, Any]:
                         },
                         "400": {"description": "Configuration or template error."},
                         "409": {
-                            "description": "Duplicate hostname or stale container pool."
+                            "description": (
+                                "Duplicate hostname or stale container pool."
+                            )
                         },
                         "500": {"description": "Proxmox provisioning error."},
                     },
@@ -12825,16 +12840,14 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/proxmox/list-targets": {
                 "post": {
                     "tags": ["Proxmox Orchestration"],
-                    "summary": "List all active LXC containers and QEMU VMs on node",
-                    "responses": {
-                        "200": {"description": "List of available Proxmox targets."}
-                    },
+                    "summary": "List all active LXCs and VMs on Proxmox node",
+                    "responses": {"200": {"description": "List of Proxmox targets."}},
                 }
             },
             "/api/proxmox/start-target": {
                 "post": {
                     "tags": ["Proxmox Orchestration"],
-                    "summary": "Start a stopped target and wait for IPv4 assignment",
+                    "summary": "Start a stopped target and wait for IP",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12855,7 +12868,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/engine-status": {
                 "get": {
                     "tags": ["Engine & Settings"],
-                    "summary": "Get active container runtime (docker/podman) and sync status",
+                    "summary": "Get active container runtime and sync status",
                     "responses": {
                         "200": {
                             "description": "Active container engine details.",
@@ -12865,7 +12878,10 @@ def get_openapi_spec() -> Dict[str, Any]:
                                         "engine": "docker",
                                         "is_docker": True,
                                         "is_podman": False,
-                                        "supported_engines": ["docker", "podman"],
+                                        "supported_engines": [
+                                            "docker",
+                                            "podman",
+                                        ],
                                         "is_remote_sync_enabled": True,
                                     }
                                 }
@@ -12877,7 +12893,7 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/engine-switch": {
                 "post": {
                     "tags": ["Engine & Settings"],
-                    "summary": "Switch active container engine dynamically (docker or podman)",
+                    "summary": "Switch active container engine dynamically",
                     "requestBody": {
                         "required": True,
                         "content": {
@@ -12893,13 +12909,16 @@ def get_openapi_spec() -> Dict[str, Any]:
             "/api/validate-repo": {
                 "post": {
                     "tags": ["Engine & Settings"],
-                    "summary": "Validate connection and branch for remote component repository",
+                    "summary": "Validate connection for remote repository",
                     "requestBody": {
                         "required": True,
                         "content": {
                             "application/json": {
                                 "example": {
-                                    "url": "https://github.com/HenkVanHoek/njord-deploy-components.git",
+                                    "url": (
+                                        "https://github.com/HenkVanHoek/"
+                                        "njord-deploy-components.git"
+                                    ),
                                     "branch": "main",
                                 }
                             }
@@ -18879,21 +18898,26 @@ html[data-theme="light"] .modal .card {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
+    <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #f8fafc;
+            background-color: var(--bs-body-bg, #02040a);
+            color: var(--bs-body-color, #f8fafc);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            transition: background-color 0.2s ease, color 0.2s ease;
         }
         .topbar-wrapper {
-            background-color: #1e293b;
-            color: #ffffff;
+            background: var(--navbar-bg, #0f172a);
+            border-bottom: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+            color: var(--bs-heading-color, #ffffff);
             padding: 12px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: var(--glass-shadow, 0 2px 4px rgba(0,0,0,0.1));
+            backdrop-filter: blur(8px);
         }
         .topbar-brand {
             display: flex;
@@ -18901,28 +18925,29 @@ html[data-theme="light"] .modal .card {
             gap: 12px;
             font-size: 1.15rem;
             font-weight: 600;
-            color: #ffffff;
+            color: var(--bs-heading-color, #ffffff);
             text-decoration: none;
         }
         .topbar-brand img {
             border-radius: 6px;
         }
         .topbar-actions a {
-            color: #e2e8f0;
+            color: var(--navbar-color, #cbd5e1);
             text-decoration: none;
             font-size: 0.9rem;
-            margin-left: 16px;
+            margin-left: 12px;
             padding: 6px 12px;
             border-radius: 6px;
-            background: rgba(255,255,255,0.1);
+            background: var(--glass-bg, rgba(255,255,255,0.1));
+            border: 1px solid var(--glass-border, transparent);
             transition: all 0.2s;
         }
         .topbar-actions a:hover {
-            color: #ffffff;
-            background: rgba(255,255,255,0.2);
+            color: var(--bs-heading-color, #ffffff);
+            background: rgba(0, 176, 255, 0.2);
         }
         #swagger-ui {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -18932,16 +18957,171 @@ html[data-theme="light"] .modal .card {
         .swagger-ui .info {
             margin: 20px 0;
         }
-        .swagger-ui .info .title {
-            font-size: 2rem;
-            color: #0f172a;
-        }
         .swagger-ui .scheme-container {
-            background: #ffffff;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 8px;
             padding: 15px 20px;
             margin-bottom: 20px;
+            transition: background 0.2s ease, border 0.2s ease;
+        }
+
+        /* Light Theme Overrides */
+        html[data-theme="light"] body,
+        html[data-theme="high-contrast-light"] body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-wrapper,
+        html[data-theme="high-contrast-light"] .topbar-wrapper {
+            background: #ffffff !important;
+            border-bottom: 1px solid #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-brand,
+        html[data-theme="high-contrast-light"] .topbar-brand {
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .topbar-actions a,
+        html[data-theme="high-contrast-light"] .topbar-actions a {
+            color: #334155 !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+        }
+        html[data-theme="light"] .topbar-actions a:hover,
+        html[data-theme="high-contrast-light"] .topbar-actions a:hover {
+            background: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        html[data-theme="light"] .swagger-ui .scheme-container,
+        html[data-theme="high-contrast-light"] .swagger-ui .scheme-container {
+            background: #ffffff !important;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        html[data-theme="light"] .swagger-ui .info .title,
+        html[data-theme="high-contrast-light"] .swagger-ui .info .title {
+            color: #0f172a !important;
+        }
+
+        /* Dark Themes Overrides */
+        html[data-theme="dark"] body,
+        html[data-theme="futuristic-dark"] body,
+        html[data-theme="high-contrast-dark"] body {
+            background-color: #030712 !important;
+            color: #f8fafc !important;
+        }
+        html[data-theme="dark"] .swagger-ui,
+        html[data-theme="futuristic-dark"] .swagger-ui,
+        html[data-theme="high-contrast-dark"] .swagger-ui {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .info .title,
+        html[data-theme="futuristic-dark"] .swagger-ui .info .title,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info .title {
+            color: #38bdf8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .info p,
+        html[data-theme="futuristic-dark"] .swagger-ui .info p,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info p,
+        html[data-theme="dark"] .swagger-ui .info li,
+        html[data-theme="futuristic-dark"] .swagger-ui .info li,
+        html[data-theme="high-contrast-dark"] .swagger-ui .info li,
+        html[data-theme="dark"] .swagger-ui .info table,
+        html[data-theme="futuristic-dark"] .swagger-ui .info table {
+            color: #cbd5e1 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .scheme-container,
+        html[data-theme="futuristic-dark"] .swagger-ui .scheme-container,
+        html[data-theme="high-contrast-dark"] .swagger-ui .scheme-container {
+            background: rgba(30, 41, 59, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #f8fafc !important;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-tag,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-tag,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-tag {
+            color: #f8fafc !important;
+            border-bottom-color: rgba(255,255,255,0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-tag small,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-tag small,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-tag small {
+            color: #94a3b8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock {
+            background: rgba(15, 23, 42, 0.65) !important;
+            border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary {
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary-path,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary-path,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary-path {
+            color: #f1f5f9 !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock .opblock-summary-description,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock .opblock-summary-description,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock .opblock-summary-description {
+            color: #94a3b8 !important;
+        }
+        html[data-theme="dark"] .swagger-ui section.models,
+        html[data-theme="futuristic-dark"] .swagger-ui section.models,
+        html[data-theme="high-contrast-dark"] .swagger-ui section.models {
+            background: rgba(30, 41, 59, 0.5) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui section.models h4,
+        html[data-theme="futuristic-dark"] .swagger-ui section.models h4,
+        html[data-theme="high-contrast-dark"] .swagger-ui section.models h4 {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui select,
+        html[data-theme="futuristic-dark"] .swagger-ui select,
+        html[data-theme="high-contrast-dark"] .swagger-ui select {
+            background-color: #1e293b !important;
+            color: #f8fafc !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+        html[data-theme="dark"] .swagger-ui input[type=text],
+        html[data-theme="futuristic-dark"] .swagger-ui input[type=text],
+        html[data-theme="high-contrast-dark"] .swagger-ui input[type=text],
+        html[data-theme="dark"] .swagger-ui textarea,
+        html[data-theme="futuristic-dark"] .swagger-ui textarea,
+        html[data-theme="high-contrast-dark"] .swagger-ui textarea {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .response-col_status,
+        html[data-theme="futuristic-dark"] .swagger-ui .response-col_status,
+        html[data-theme="high-contrast-dark"] .swagger-ui .response-col_status,
+        html[data-theme="dark"] .swagger-ui .responses-table,
+        html[data-theme="futuristic-dark"] .swagger-ui .responses-table,
+        html[data-theme="high-contrast-dark"] .swagger-ui .responses-table,
+        html[data-theme="dark"] .swagger-ui .response-col_description,
+        html[data-theme="futuristic-dark"] .swagger-ui .response-col_description {
+            color: #e2e8f0 !important;
+        }
+        html[data-theme="dark"] .swagger-ui table thead tr td,
+        html[data-theme="futuristic-dark"] .swagger-ui table thead tr td,
+        html[data-theme="high-contrast-dark"] .swagger-ui table thead tr td,
+        html[data-theme="dark"] .swagger-ui table thead tr th,
+        html[data-theme="futuristic-dark"] .swagger-ui table thead tr th,
+        html[data-theme="high-contrast-dark"] .swagger-ui table thead tr th {
+            color: #94a3b8 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        html[data-theme="dark"] .swagger-ui .opblock-body pre.microlight,
+        html[data-theme="futuristic-dark"] .swagger-ui .opblock-body pre.microlight,
+        html[data-theme="high-contrast-dark"] .swagger-ui .opblock-body pre.microlight {
+            background: #0b1120 !important;
+            color: #38bdf8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
         }
     </style>
 </head>
@@ -18955,7 +19135,26 @@ html[data-theme="light"] .modal .card {
              height="30">
         NjordDeploy REST API (Swagger UI)
     </a>
-    <div class="topbar-actions">
+    <div class="topbar-actions d-flex align-items-center">
+        <div class="dropdown me-2">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-light"
+                    type="button"
+                    id="themeDropdown"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    style="border-color: var(--glass-border, rgba(255,255,255,0.2));">
+                <i class="fa-solid fa-palette me-1"></i> Theme
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow"
+                aria-labelledby="themeDropdown"
+                style="background-color: var(--glass-bg, #1e293b); border: 1px solid var(--glass-border, rgba(255,255,255,0.1)); backdrop-filter: blur(8px);">
+                <li><button class="dropdown-item" data-theme-value="futuristic-dark">Futuristic Dark</button></li>
+                <li><button class="dropdown-item" data-theme-value="light">Standard Light</button></li>
+                <li><hr class="dropdown-divider" style="border-color: var(--glass-border, rgba(255,255,255,0.1));"></li>
+                <li><button class="dropdown-item" data-theme-value="high-contrast-dark">High Contrast Dark</button></li>
+                <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
+            </ul>
+        </div>
         <a href="/" title="Return to Configurator"><i class="fa-solid fa-house me-1"></i> Wizard</a>
         <a href="/settings" title="Settings"><i class="fa-solid fa-gear me-1"></i> Settings</a>
         <a href="/help" title="Help & Guides"><i class="fa-solid fa-circle-question me-1"></i> Help</a>
@@ -18965,6 +19164,7 @@ html[data-theme="light"] .modal .card {
 
 <div id="swagger-ui"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
 <script>

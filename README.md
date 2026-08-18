@@ -8,6 +8,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
 - **Headless REST API & Agentic DevOps**: Full programmatic control for CI/CD pipelines, Homelab orchestration, and AI coding agents (like Antigravity/Agy). Automate end-to-end deployments, Proxmox LXC provisioning, pre-flight safety analysis, and log evaluation via clean REST endpoints (see [API Reference](docs/API_REFERENCE.md)).
+- **Interactive Swagger UI & OpenAPI 3.0**: Explore, test, and inspect all REST API endpoints directly in your browser at `http://localhost:5001/api/docs` or consume the machine-readable OpenAPI schema at `/api/openapi.json`. Supports dark and light theme switching.
 - **Modular & Flexible**: Choose only the services you want from a curated list of popular applications (see the list of [Supported Services](docs/SUPPORTED_SERVICES.md)).
 - **Dual Container Engine Support (Docker & Rootless Podman)**: Universal container engine abstraction supporting both standard Docker and rootless Podman environments with automated low-port kernel configuration and user lingering.
 - **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
@@ -18,7 +19,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 NjordDeploy provides a **dual-interface architecture**:
 1. **Interactive Web Wizard (Configurator)**: End-users download a standalone release executable and interact with a guided web UI (`http://localhost:5001`) for automatic network scanning, component selection, variable customization, and real-time deployment log streaming.
-2. **Headless REST Engine**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
+2. **Headless REST Engine & Interactive Swagger UI**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API or exploring the interactive Swagger UI (`http://localhost:5001/api/docs`) to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
 
 ## 📋 System Requirements
 
@@ -83,7 +84,7 @@ Behavior during deployment
    - **`NjordDeployEditor`** (`.exe` on Windows): The developer tool for creating and modifying component metadata (runs on `http://localhost:5000`).
    - **`NjordDeployProxmoxTest`** (`.exe` on Windows): The developer testing suite for automated Proxmox VE component validation (runs on `http://localhost:5050`).
    - *Linux / macOS:* Make executable if needed (`chmod +x NjordDeployConfigurator`) and launch `./NjordDeployConfigurator`.
-3. **Configure**: Your default web browser will open automatically to `http://localhost:5001`. Follow the on-screen wizard to discover your device, select services, and customize your configuration.
+3. **Configure & Automate**: Your default web browser will open automatically to `http://localhost:5001`. Follow the on-screen wizard to discover your device, select services, and customize your configuration. Or navigate to `http://localhost:5001/api/docs` to inspect and test the interactive Swagger REST API.
 4. **Deploy**: Confirm your selections to generate Docker Compose files and deploy services to your target host with a live browser log.
 
 ### One-Time Setup for Linux Users
@@ -132,8 +133,9 @@ The following tree represents the current physical layout of the project:
 ├── src
 │   ├── configurator_app
 │   │   ├── app.py
+│   │   ├── openapi.py (OpenAPI 3.0 specification provider)
 │   │   ├── static (base.css, configurator.css, images, js)
-│   │   └── templates (base.html, index.html, help.html, etc.)
+│   │   └── templates (base.html, index.html, help.html, swagger.html, etc.)
 │   ├── editor_app
 │   │   ├── app.py
 │   │   ├── static (editor.v2.js, ui_render_utils.js)
