@@ -524,3 +524,19 @@ repeatable, isolated environment.
 - **When** the user inputs a custom repository URL (GitHub, GitLab, Forgejo) and branch/token,
 - **Then** the user can click "Test Connection" (`/api/validate-repo`) to verify connectivity.
 - **And** if set to `"none"` or `"local"`, remote synchronization is cleanly disabled, and local pre-packaged templates are used without network delays.
+
+---
+
+### Epic 6: Programmable REST API & Interactive Documentation
+
+#### Story: Interactive Swagger UI & OpenAPI 3.0 Specification
+
+> As an external developer, automation engineer, or AI coding agent (e.g. Antigravity/Agy), I want to interact with a documented REST API and inspect live Swagger UI documentation, so that I can test, automate, and orchestrate headless deployments.
+
+**Acceptance Criteria:**
+- **Given** the Configurator application is running on port 5001,
+- **When** a user or client sends a `GET /api/docs` request,
+- **Then** the interactive Swagger UI is rendered with dynamic accessibility theme integration (Dark/Light).
+- **When** a client requests `GET /api/openapi.json`,
+- **Then** a valid OpenAPI 3.0.3 specification is returned containing discovery, system analysis, deployment execution, SSE streaming, and Proxmox orchestration schemas.
+- **And** direct navigation links exist in the Configurator navbar and the Help documentation view.

@@ -4,9 +4,15 @@ NjordDeploy provides a comprehensive, headless REST API that enables automated a
 
 The Configurator backend runs by default at `http://localhost:5001`.
 
+> [!TIP]
+> **Interactive Swagger UI**: Explore and execute requests interactively in your browser at [`http://localhost:5001/api/docs`](http://localhost:5001/api/docs).
+>
+> **OpenAPI 3.0 Specification**: Raw schema JSON is available at [`http://localhost:5001/api/openapi.json`](http://localhost:5001/api/openapi.json).
+
 ---
 
 ## Table of Contents
+- [Interactive Swagger UI & OpenAPI Spec](#interactive-swagger-ui--openapi-spec)
 1. [Component Discovery & Metadata](#1-component-discovery--metadata)
 2. [Target Discovery & Node Inspection](#2-target-discovery--node-inspection)
 3. [Pre-Flight Conflict Analysis](#3-pre-flight-conflict-analysis)
@@ -14,6 +20,16 @@ The Configurator backend runs by default at `http://localhost:5001`.
 5. [Deployment Evaluation & Diagnostics](#5-deployment-evaluation--diagnostics)
 6. [Proxmox VE Orchestration](#6-proxmox-ve-orchestration)
 7. [Engine & Repository Settings](#7-engine--repository-settings)
+
+---
+
+## Interactive Swagger UI & OpenAPI Spec
+
+### `GET /api/docs`
+Renders the full, interactive Swagger UI with live request execution and dynamic accessibility theming (Futuristic Dark, Standard Light, High Contrast).
+
+### `GET /api/openapi.json`
+Returns the complete OpenAPI 3.0.3 machine-readable specification formatted for automated tooling and agent ingestion.
 
 ---
 
