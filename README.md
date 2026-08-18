@@ -7,6 +7,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 ## 🌟 Key Features
 
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
+- **Headless REST API & Agentic DevOps**: Full programmatic control for CI/CD pipelines, Homelab orchestration, and AI coding agents (like Antigravity/Agy). Automate end-to-end deployments, Proxmox LXC provisioning, pre-flight safety analysis, and log evaluation via clean REST endpoints (see [API Reference](docs/API_REFERENCE.md)).
 - **Modular & Flexible**: Choose only the services you want from a curated list of popular applications (see the list of [Supported Services](docs/SUPPORTED_SERVICES.md)).
 - **Dual Container Engine Support (Docker & Rootless Podman)**: Universal container engine abstraction supporting both standard Docker and rootless Podman environments with automated low-port kernel configuration and user lingering.
 - **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
@@ -15,7 +16,9 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 ## 🏛️ How It Works
 
-A user downloads a single installer package from GitHub Releases. The installer runs a local web-based "Configurator" for device discovery, container engine selection (Docker vs Podman), and component selection, which then generates the necessary Compose files and streams the installation process directly into the browser for the user.
+NjordDeploy provides a **dual-interface architecture**:
+1. **Interactive Web Wizard (Configurator)**: End-users download a standalone release executable and interact with a guided web UI (`http://localhost:5001`) for automatic network scanning, component selection, variable customization, and real-time deployment log streaming.
+2. **Headless REST Engine**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
 
 ## 📋 System Requirements
 
@@ -107,6 +110,7 @@ The following tree represents the current physical layout of the project:
 │   ├── components_metadata.json
 │   └── raspberry_pi_oui.json
 ├── docs
+│   ├── API_REFERENCE.md
 │   ├── ARCHITECTURE.md
 │   ├── DATA_CONTRACTS.md
 │   ├── FUNCTIONAL_SPEC.md

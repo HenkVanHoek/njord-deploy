@@ -50,6 +50,9 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
 *   **[✅] Standardized Production WSGI Entrypoints & Uniform IDE Integration**:
     *   **Why?**: To provide identical, reliable, multithreaded runtime entrypoints across all apps and eliminate IDE configuration discrepancies.
     *   **Implementation**: Created standardized Waitress WSGI runners (`run_editor.py` on port 5000, `run_configurator.py` on port 5001, `run_proxmox_gui.py` on port 5050) with auto-browser launching, port collision handling, and shared PyCharm `.run/` configurations.
+*   **[✅] Headless REST API & Programmable Deployment Engine**:
+    *   **Why?**: To enable seamless programmatic deployments for external scripts, CI/CD pipelines, Homelab automation, and AI coding agents (such as Antigravity/Agy).
+    *   **Implementation**: Fully documented and standardized REST endpoints across discovery, system analysis (`/api/v1/system/analyze`), Proxmox provisioning (`/api/proxmox/*`), deployment execution (`/deploy-configuration`), and real-time SSE streaming (`/stream-deployment/<task_id>`), published in [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md).
 *   **[Planned] Advanced Installer Options**: Introduce an "Advanced Mode" in the installer for power users to tweak more specific Docker settings.
 
 ---

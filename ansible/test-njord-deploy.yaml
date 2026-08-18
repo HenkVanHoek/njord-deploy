@@ -1,0 +1,133 @@
+---
+- name: Test NjordDeploy Release op Proxmox VM Template
+  hosts: proxmox
+  gather_facts: false
+
+  vars:
+    template_vmid: "902"
+    test_vmid: "999"
+    njord_tag: "v0.5.9-Alpha"
+    njord_zip_url: "https://github.com/HenkVanHoek/njord-deploy/releases/download/{{ njord_tag }}/NjordDeploy-Linux.zip"
+    vm_name: "njord-test-{{ njord_tag | regex_replace('[^a-zA-Z0-9-]', '-') }}"
+
+  tasks:
+    - name: Controleer of de opgegeven template VM bestaat en een sjabloon is
+      ansible.builtin.command:
+        cmd: "qm config {{ template_vmid }}"
+      register: template_check
+      failed_when: template_check.rc != 0
+
+    - name: Toon geselecteerde template gegevens
+      ansible.builtin.debug:
+        msg: "Start test voor NjordDeploy release '{{ njord_tag }}' op basis van template VMID {{ template_vmid }}"
+
+    - name: Controleer of er al een eerdere test VM actief is op VMID {{ test_vmid }}
+      ansible.builtin.command:
+        cmd: "qm status {{ test_vmid }}"
+      register: existing_vm_status
+      failed_when: false
+      changed_when: false
+
+    - name: Stop en verwijder eerdere test VM indien aanwezig
+      ansible.builtin.shell: |
+        qm stop {{ test_vmid }} || true
+        qm destroy {{ test_vmid }} --purge || true
+      when: existing_vm_status.rc == 0
+
+    - name: Kloon Proxmox template VM {{ template_vmid }} naar test VM {{ test_vmid }}
+      ansible.builtin.command:
+        cmd: "qm clone {{ template_vmid }} {{ test_vmid }} --name {{ vm_name }} --full true"
+
+    - name: Start de nieuwe test VM
+      ansible.builtin.command:
+        cmd: "qm start {{ test_vmid }}"
+
+    - name: Wacht op het voltooien van cloud-init en QEMU guest agent op de test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cloud-init status --wait'"
+      register: cloud_init_res
+      until: '"\"exitcode\" : 0" in cloud_init_res.stdout or "\"exitcode\": 0" in cloud_init_res.stdout or "\"exitcode\":0" in cloud_init_res.stdout'
+      retries: 15
+      delay: 5
+
+    - name: Zorg dat curl en unzip aanwezig zijn op de test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'DEBIAN_FRONTEND=noninteractive apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y curl unzip'"
+      register: apt_install_result
+      until: '"\"exitcode\" : 0" in apt_install_result.stdout or "\"exitcode\": 0" in apt_install_result.stdout or "\"exitcode\":0" in apt_install_result.stdout'
+      retries: 10
+      delay: 5
+      failed_when: '"\"exitcode\" : 0" not in apt_install_result.stdout and "\"exitcode\": 0" not in apt_install_result.stdout and "\"exitcode\":0" not in apt_install_result.stdout'
+
+    - name: Download NjordDeploy release zip in de test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'curl -L -o /tmp/NjordDeploy-Linux.zip {{ njord_zip_url }}'"
+      register: dl_res
+      failed_when: '"\"exitcode\" : 0" not in dl_res.stdout and "\"exitcode\": 0" not in dl_res.stdout and "\"exitcode\":0" not in dl_res.stdout'
+
+    - name: Pak NjordDeploy uit in de test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cd /tmp && unzip -o NjordDeploy-Linux.zip'"
+      register: unzip_res
+      failed_when: '"\"exitcode\" : 0" not in unzip_res.stdout and "\"exitcode\": 0" not in unzip_res.stdout and "\"exitcode\":0" not in unzip_res.stdout'
+
+    - name: Maak NjordDeploy binaries uitvoerbaar
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cd /tmp && chmod +x NjordDeployConfigurator NjordDeployEditor NjordDeploy-Linux 2>/dev/null || true'"
+
+    - name: Start NjordDeployConfigurator op de achtergrond (Port 5001)
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cd /tmp && if [ -f NjordDeployConfigurator ]; then nohup ./NjordDeployConfigurator > /tmp/configurator.log 2>&1 & elif [ -f NjordDeploy-Linux ]; then nohup ./NjordDeploy-Linux > /tmp/configurator.log 2>&1 & fi'"
+
+    - name: Start NjordDeployEditor op de achtergrond (Port 5000)
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cd /tmp && if [ -f NjordDeployEditor ]; then nohup ./NjordDeployEditor > /tmp/editor.log 2>&1 & fi'"
+
+    - name: Wacht 8 seconden tot de webservers zijn gestart
+      ansible.builtin.pause:
+        seconds: 8
+
+    - name: Verifieer HTTP endpoint Configurator (Port 5001)
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'curl -s -I http://127.0.0.1:5001'"
+      register: configurator_http_result
+      failed_when: false
+
+    - name: Verifieer HTTP endpoint Editor (Port 5000)
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'curl -s -I http://127.0.0.1:5000'"
+      register: editor_http_result
+      failed_when: false
+
+    - name: Haal Configurator logfile op van test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cat /tmp/configurator.log 2>/dev/null || echo Geen configurator log'"
+      register: configurator_log_result
+      failed_when: false
+
+    - name: Haal Editor logfile op van test VM
+      ansible.builtin.command:
+        cmd: "qm guest exec {{ test_vmid }} -- sh -c 'cat /tmp/editor.log 2>/dev/null || echo Geen editor log'"
+      register: editor_log_result
+      failed_when: false
+
+    - name: Toon testresultaten van NjordDeploy release
+      ansible.builtin.debug:
+        msg:
+          - "=================================================="
+          - "NJORDDEPLOY TEST RESULTATEN"
+          - "Release Tag: {{ njord_tag }}"
+          - "Template VMID: {{ template_vmid }}"
+          - "Test VMID: {{ test_vmid }}"
+          - "Test VM Name: {{ vm_name }}"
+          - "--------------------------------------------------"
+          - "CONFIGURATOR (Port 5001) HTTP Response:"
+          - "{{ configurator_http_result.stdout | default('Geen respons ontvangen') }}"
+          - "Configurator Log Output:"
+          - "{{ configurator_log_result.stdout | default('Geen log') }}"
+          - "--------------------------------------------------"
+          - "EDITOR (Port 5000) HTTP Response:"
+          - "{{ editor_http_result.stdout | default('Geen respons ontvangen') }}"
+          - "Editor Log Output:"
+          - "{{ editor_log_result.stdout | default('Geen log') }}"
+          - "=================================================="

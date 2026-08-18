@@ -1,0 +1,8 @@
+all:
+  children:
+    hypervisors:
+      hosts:
+        proxmox:
+          ansible_host: 192.168.178.51
+          ansible_user: root
+          description: Proxmox VE Server voor het testen van VM templates en releases

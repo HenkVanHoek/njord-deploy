@@ -2292,6 +2292,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from dotenv import load_dotenv
 from flask import Flask, Response, jsonify, make_response, render_template, request
 
+
 def get_project_root() -> Path:
     """Returns base project root, supporting PyInstaller frozen bundles."""
     if getattr(sys, "frozen", False):

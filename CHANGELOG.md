@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Added
+- **Headless REST API & Comprehensive API Reference Documentation**:
+  - Published [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) documenting all headless REST endpoints for automated deployments, AI coding agents (such as Antigravity/Agy), and external DevOps pipelines.
+  - Documented discovery, system analysis (`/api/v1/system/analyze`), Proxmox VE VM/LXC provisioning (`/api/proxmox/*`), deployment execution (`/deploy-configuration`), real-time SSE log streaming (`/stream-deployment/<task_id>`), and health evaluation (`/api/deployment/<task_id>/evaluate`).
+  - Updated `README.md` to highlight the dual-interface architecture (Web UI & Headless REST Engine).
+
 ## [0.5.23] - 2026-08-16
 
 ### Added
