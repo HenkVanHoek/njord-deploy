@@ -75,3 +75,17 @@ Every target machine must meet the following minimum requirements:
 * **`nmap` Not Installed:** Install nmap via your package manager: `sudo apt install nmap` or `sudo apk add nmap`.
 * **Host Key Changed:** If target VM or LXC container was reinstalled, clear old host key with: `ssh-keygen -R target-ip`.
 * **Tailscale Inactive:** Ensure Tailscale daemon is running: `sudo tailscale up`.
+
+---
+
+## 5. AI Failure Diagnostics & Multi-Provider LLM Configuration
+
+NjordDeploy includes AI-powered failure diagnostics and automatic stack bootstrapping. You can configure your preferred LLM provider in the **Settings** menu (`/settings`) or directly in your `.env` file.
+
+### Supported Providers & API Key Sources:
+* **Google Gemini:** Recommended default (`gemini-2.5-flash`). Get key: [Google AI Studio](https://aistudio.google.com/app/apikey) (`GEMINI_API_KEY`).
+* **OpenAI:** (`gpt-4o-mini`). Get key: [OpenAI Platform](https://platform.openai.com/api-keys) (`OPENAI_API_KEY`).
+* **Anthropic Claude:** (`claude-3-5-sonnet-20241022`). Get key: [Anthropic Console](https://console.anthropic.com/settings/keys) (`ANTHROPIC_API_KEY`).
+* **HostYourAI / Loes (EU):** GDPR and EU AI Act compliant European private cloud. Portal: [HostYourAI](https://hostyourai.com) (`HOSTYOURAI_API_KEY`).
+* **Ollama Local (Offline):** 100% private, offline LLMs running locally without API keys. Download: [Ollama](https://ollama.com) (`OLLAMA_BASE_URL=http://localhost:11434/v1`).
+* **Custom Endpoints:** Compatible with any OpenAI-standard chat completion API (`CUSTOM_AI_BASE_URL`, `CUSTOM_AI_API_KEY`).

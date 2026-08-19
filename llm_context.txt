@@ -2125,7 +2125,7 @@ def main():
     logger.info("LXC CONTAINER PROVISIONING COMPLETED SUCCESSFULLY!")
     logger.info(f"  Container ID:  {vmid}")
     logger.info(f"  IP Address:    {ip_address}")
-    logger.info(f"  Root Password: {args.password}")
+    logger.info("  Root Password: [PROTECTED]")
     logger.info(f"  Engine:        {args.engine.upper()}")
     logger.info("  SSH Port:      22")
     logger.info(
@@ -2194,6 +2194,374 @@ def fetch_assets():
 
 if __name__ == "__main__":
     fetch_assets()
+
+--- FILE: scripts/fetch_github_security_alerts.py ---
+#!/usr/bin/env python3
+"""
+scripts/fetch_github_security_alerts.py
+
+Utility script to query GitHub Security Alerts (Code Scanning / CodeQL,
+Dependabot vulnerabilities, and Secret Scanning) for the NjordDeploy repository
+via the GitHub REST API, displaying actionable remediation context.
+"""
+
+import argparse
+import json
+import os
+import subprocess  # nosec B404
+from typing import Any, Dict, List, Optional, Tuple
+
+import requests
+
+DEFAULT_REPO = "HenkVanHoek/njord-deploy"
+BASE_GITHUB_API = "https://api.github.com"
+
+
+def get_git_repo_name() -> str:
+    """
+    Detects the remote repository name from git config or returns default.
+    """
+    # noinspection PyBroadException
+    try:
+        cmd = ["git", "config", "--get", "remote.origin.url"]
+        result = subprocess.run(  # nosec B603
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False,
+        )
+        if result.returncode == 0 and result.stdout.strip():
+            url = result.stdout.strip()
+            # Parse git@github.com:owner/repo.git or https://github.com/owner/repo.git
+            if "github.com" in url:
+                cleaned = url.split("github.com")[-1].lstrip(":/")
+                if cleaned.endswith(".git"):
+                    cleaned = cleaned[:-4]
+                if cleaned:
+                    return cleaned
+    except Exception:  # nosec B110
+        pass
+    return DEFAULT_REPO
+
+
+def get_auth_token(cli_token: Optional[str] = None) -> Optional[str]:
+    """
+    Retrieves GitHub token from CLI arg, environment variables, or .env file.
+    """
+    if cli_token and cli_token.strip():
+        return cli_token.strip()
+
+    env_token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    if env_token and env_token.strip():
+        return env_token.strip()
+
+    # Check .env file in workspace
+    env_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+    )
+    if os.path.exists(env_file):
+        # noinspection PyBroadException
+        try:
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    stripped = line.strip()
+                    if stripped.startswith("GITHUB_TOKEN=") or stripped.startswith(
+                        "GH_TOKEN="
+                    ):
+                        parts = stripped.split("=", 1)
+                        if len(parts) == 2:
+                            _, val = parts
+                            cleaned_val = val.strip("\"' ")
+                            if cleaned_val:
+                                return cleaned_val
+        except Exception:  # nosec B110
+            pass
+
+    return None
+
+
+def make_request(
+    endpoint: str,
+    token: Optional[str],
+    params: Optional[Dict[str, Any]] = None,
+) -> Tuple[int, Any]:
+    """
+    Performs an authenticated GET request to GitHub API.
+    """
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "NjordDeploy-Security-Fetcher",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+
+    # noinspection PyBroadException
+    try:
+        response = requests.get(
+            f"{BASE_GITHUB_API}/{endpoint.lstrip('/')}",
+            headers=headers,
+            params=params,
+            timeout=15,
+        )
+        try:
+            data = response.json()
+        except Exception:
+            data = {"message": response.text}
+        return response.status_code, data
+    except Exception as e:
+        return 0, {"message": str(e)}
+
+
+def fetch_code_scanning_alerts(
+    repo: str, token: Optional[str], state: str = "open"
+) -> List[Dict[str, Any]]:
+    """
+    Fetches CodeQL / Code Scanning alerts.
+    """
+    params = {"state": state, "per_page": 100}
+    status, data = make_request(f"repos/{repo}/code-scanning/alerts", token, params)
+    if status == 200 and isinstance(data, list):
+        return data
+    if status == 401 or status == 403 or status == 404:
+        msg = data.get("message", "Authentication or permission error")
+        print(f"⚠️ Code Scanning API ({status}): {msg}")
+    return []
+
+
+def fetch_dependabot_alerts(
+    repo: str, token: Optional[str], state: str = "open"
+) -> List[Dict[str, Any]]:
+    """
+    Fetches Dependabot vulnerability alerts.
+    """
+    params = {"state": state, "per_page": 100}
+    status, data = make_request(f"repos/{repo}/dependabot/alerts", token, params)
+    if status == 200 and isinstance(data, list):
+        return data
+    if status == 401 or status == 403 or status == 404:
+        msg = data.get("message", "Authentication or permission error")
+        print(f"⚠️ Dependabot API ({status}): {msg}")
+    return []
+
+
+def fetch_secret_scanning_alerts(
+    repo: str, token: Optional[str], state: str = "open"
+) -> List[Dict[str, Any]]:
+    """
+    Fetches Secret Scanning alerts.
+    """
+    params = {"state": state, "per_page": 100}
+    status, data = make_request(f"repos/{repo}/secret-scanning/alerts", token, params)
+    if status == 200 and isinstance(data, list):
+        return data
+    if status == 401 or status == 403 or status == 404:
+        msg = data.get("message", "Authentication or permission error")
+        print(f"⚠️ Secret Scanning API ({status}): {msg}")
+    return []
+
+
+def display_code_scanning(alerts: List[Dict[str, Any]]) -> None:
+    """
+    Formats and prints Code Scanning alerts.
+    """
+    print(f"\n{'='*70}")
+    print(f"🛡️  CODE SCANNING ALERTS (CodeQL / Static Analysis): {len(alerts)} found")
+    print(f"{'='*70}")
+    if not alerts:
+        print("✅ No open code scanning alerts found.")
+        return
+
+    for alert in alerts:
+        number = alert.get("number")
+        rule = alert.get("rule", {})
+        rule_id = rule.get("id", "N/A")
+        severity = rule.get("security_severity_level") or rule.get("severity", "medium")
+        desc = rule.get("description", "No description")
+        html_url = alert.get("html_url", "")
+
+        instance = alert.get("most_recent_instance", {})
+        location = instance.get("location", {})
+        path = location.get("path", "unknown")
+        start_line = location.get("start_line", 0)
+        end_line = location.get("end_line", 0)
+        line_str = (
+            f"L{start_line}" if start_line == end_line else f"L{start_line}-L{end_line}"
+        )
+        msg_text = instance.get("message", {}).get("text", desc)
+
+        print(f"\n[Alert #{number}] [{severity.upper()}] {rule_id}")
+        print(f"  📁 Location: {path}:{line_str}")
+        print(f"  📝 Issue:    {msg_text}")
+        print(f"  🔗 URL:      {html_url}")
+
+
+def display_dependabot(alerts: List[Dict[str, Any]]) -> None:
+    """
+    Formats and prints Dependabot alerts.
+    """
+    print(f"\n{'='*70}")
+    print(f"📦 DEPENDABOT ALERTS (Vulnerable Dependencies): {len(alerts)} found")
+    print(f"{'='*70}")
+    if not alerts:
+        print("✅ No open Dependabot alerts found.")
+        return
+
+    for alert in alerts:
+        number = alert.get("number")
+        advisory = alert.get("security_advisory", {})
+        ghsa_id = advisory.get("ghsa_id", "N/A")
+        cve_id = advisory.get("cve_id") or "No CVE"
+        summary = advisory.get("summary", "No summary")
+        severity = advisory.get("severity", "medium")
+
+        dep = alert.get("dependency", {})
+        package = dep.get("package", {}).get("name", "unknown")
+        manifest = dep.get("manifest_path", "pyproject.toml")
+
+        vuln = alert.get("security_vulnerability", {})
+        vuln_range = vuln.get("vulnerable_version_range", "N/A")
+        patched = vuln.get("first_patched_version", {})
+        patched_ver = patched.get("identifier") if isinstance(patched, dict) else "N/A"
+        html_url = alert.get("html_url", "")
+
+        print(
+            f"\n[Alert #{number}] [{severity.upper()}] {package} "
+            f"({ghsa_id} / {cve_id})"
+        )
+        print(f"  📦 Package:       {package} (in {manifest})")
+        print(f"  ⚠️ Vulnerable:    {vuln_range}")
+        print(f"  ✅ Fixed Version: >= {patched_ver}")
+        print(f"  📝 Summary:       {summary}")
+        print(f"  🔗 URL:           {html_url}")
+
+
+def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
+    """
+    Formats and prints Secret Scanning alerts.
+    """
+    print(f"\n{'='*70}")
+    print(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found")
+    print(f"{'='*70}")
+    if not alerts:
+        print("✅ No open secret scanning alerts found.")
+        return
+
+    for alert in alerts:
+        number = alert.get("number")
+        secret_type = alert.get("secret_type_display_name") or alert.get(
+            "secret_type", "Secret"
+        )
+        state = alert.get("state", "open")
+        created_at = alert.get("created_at", "")
+        html_url = alert.get("html_url", "")
+
+        print(f"\n[Alert #{number}] [{state.upper()}] {secret_type}")
+        print(f"  📅 Detected At: {created_at}")
+        print(f"  🔗 URL:         {html_url}")
+
+
+def main() -> None:
+    """
+    Main CLI entrypoint.
+    """
+    parser = argparse.ArgumentParser(
+        description="Fetch and inspect GitHub Security Alerts for NjordDeploy"
+    )
+    repo_name = get_git_repo_name()
+    parser.add_argument(
+        "--repo",
+        type=str,
+        default=repo_name,
+        help=f"Target GitHub repository (default: {repo_name})",
+    )
+    parser.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="GitHub Personal Access Token (or set GITHUB_TOKEN env var)",
+    )
+    parser.add_argument(
+        "--type",
+        type=str,
+        choices=["all", "code-scanning", "dependabot", "secret-scanning"],
+        default="all",
+        help="Alert type filter (default: all)",
+    )
+    parser.add_argument(
+        "--state",
+        type=str,
+        choices=["open", "closed", "all"],
+        default="open",
+        help="Alert state filter (default: open)",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output raw JSON instead of formatted text",
+    )
+
+    args = parser.parse_args()
+    token = get_auth_token(args.token)
+
+    if not token:
+        print("⚠️ Warning: No GitHub token provided or found in environment.")
+        print("GitHub Security APIs require authentication with read permissions.")
+        print(
+            "Please provide a token via '--token <TOKEN>' or export "
+            "GITHUB_TOKEN=<TOKEN>."
+        )
+        print("\nRequired Token Scopes:")
+        print("  - Personal Access Token (classic): 'security_events', 'repo'")
+        print(
+            "  - Fine-grained PAT: Read permissions for 'Code scanning alerts', "
+            "'Dependabot alerts', 'Secret scanning alerts'"
+        )
+
+    results: Dict[str, Any] = {
+        "repo": args.repo,
+        "code_scanning": [],
+        "dependabot": [],
+        "secret_scanning": [],
+    }
+
+    if args.type in ("all", "code-scanning"):
+        results["code_scanning"] = fetch_code_scanning_alerts(
+            args.repo, token, args.state
+        )
+    if args.type in ("all", "dependabot"):
+        results["dependabot"] = fetch_dependabot_alerts(args.repo, token, args.state)
+    if args.type in ("all", "secret-scanning"):
+        results["secret_scanning"] = fetch_secret_scanning_alerts(
+            args.repo, token, args.state
+        )
+
+    if args.json:
+        print(json.dumps(results, indent=2))
+        return
+
+    print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")
+    print(f"State filter: {args.state}")
+
+    if args.type in ("all", "code-scanning"):
+        display_code_scanning(results["code_scanning"])
+    if args.type in ("all", "dependabot"):
+        display_dependabot(results["dependabot"])
+    if args.type in ("all", "secret-scanning"):
+        display_secret_scanning(results["secret_scanning"])
+
+    total_alerts = (
+        len(results["code_scanning"])
+        + len(results["dependabot"])
+        + len(results["secret_scanning"])
+    )
+    print(f"\n{'='*70}")
+    print(f"Total Open Security Alerts: {total_alerts}")
+    print(f"{'='*70}\n")
+
+
+if __name__ == "__main__":
+    main()
 
 --- FILE: scripts/generate_services_doc.py ---
 import json
@@ -2848,7 +3216,10 @@ def create_app() -> Flask:
             return jsonify({"success": True})
         except Exception as exc:
             logger.error(f"Failed to clear results file: {exc}")
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify({"success": False, "error": "Failed to clear results file."}),
+                500,
+            )
 
     @app.route("/api/ai/status", methods=["GET"])
     def ai_status() -> Response:
@@ -2936,14 +3307,23 @@ def create_app() -> Flask:
                         ),
                         400,
                     )
-                comp_id = raw_comp_id.strip()
+                from werkzeug.utils import secure_filename
 
-                tmpl_file = (
-                    project_root
-                    / "component_templates"
-                    / comp_id
-                    / "docker-compose.template.yml"
-                )
+                comp_id = secure_filename(raw_comp_id.strip())
+                tmpl_dir = (project_root / "component_templates" / comp_id).resolve()
+                templates_root = (project_root / "component_templates").resolve()
+                if not tmpl_dir.is_relative_to(templates_root):
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Invalid component ID path.",
+                            }
+                        ),
+                        400,
+                    )
+
+                tmpl_file = tmpl_dir / "docker-compose.template.yml"
                 tmpl_content = (
                     tmpl_file.read_text(encoding="utf-8") if tmpl_file.exists() else ""
                 )
@@ -2980,7 +3360,10 @@ def create_app() -> Flask:
 
         except Exception as exc:
             logger.error(f"AI diagnosis error: {exc}", exc_info=True)
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify({"success": False, "error": "AI diagnosis failed."}),
+                500,
+            )
 
     @app.route("/api/ai/apply-patch", methods=["POST"])
     def ai_apply_patch() -> Union[Response, Tuple[Response, int]]:
@@ -3045,7 +3428,15 @@ def create_app() -> Flask:
             return jsonify({"success": success, "component_id": comp_id})
         except Exception as exc:
             logger.error(f"Failed to apply matrix constraint: {exc}", exc_info=True)
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Failed to apply matrix constraint.",
+                    }
+                ),
+                500,
+            )
 
     return app
 
@@ -9919,6 +10310,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict
 
 from dotenv import load_dotenv
 
@@ -9970,7 +10362,7 @@ def find_suitable_template(client: ProxmoxClient, node: str) -> str:
         if "debian" in volid.lower():
             return volid
     if templates:
-        first_t = next(iter(templates), {})
+        first_t: Dict[str, Any] = next(iter(templates), {})
         return first_t.get(
             "volid",
             "local:vztmpl/debian-12-standard_12.2-1_amd64.tar.zst",
@@ -9990,9 +10382,7 @@ def wait_for_proxmox_task(
             if data.get("status") == "stopped":
                 if data.get("exitstatus") == "OK":
                     return True
-                raise RuntimeError(
-                    f"Proxmox task failed: {data.get('exitstatus')}"
-                )
+                raise RuntimeError(f"Proxmox task failed: {data.get('exitstatus')}")
         except Exception as e:
             logger.warning(f"Error polling task status: {e}")
         time.sleep(3)
@@ -10016,8 +10406,8 @@ def wait_for_lxc_ip(
                         ip_val = inet.split("/")[0]
                         if ip_val and not ip_val.startswith("127."):
                             return ip_val
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"IP poll error: {e}")
         time.sleep(3)
     raise TimeoutError(f"Container {vmid} failed to acquire an IP address")
 
@@ -10144,9 +10534,7 @@ def run_backup_restore_test(args: argparse.Namespace) -> bool:
             "integrity_checksum": "valid_v1_marker",
         }
         state_file = f"{data_dir}/state_record.json"
-        write_state_cmd = (
-            f"echo '{json.dumps(initial_payload)}' > {state_file}"
-        )
+        write_state_cmd = f"echo '{json.dumps(initial_payload)}' > {state_file}"
         ssh.execute_command(write_state_cmd, ssh_log)
 
         # 5. Inspect Target via BackupManager
@@ -10162,8 +10550,7 @@ def run_backup_restore_test(args: argparse.Namespace) -> bool:
             f"{[c['id'] for c in inspection.get('components', [])]}"
         )
         logger.info(
-            f"Total volume footprint: "
-            f"{inspection.get('total_managed_size_human')}"
+            f"Total volume footprint: " f"{inspection.get('total_managed_size_human')}"
         )
 
         # 6. Create Point-in-Time Backup Archive
@@ -10180,8 +10567,7 @@ def run_backup_restore_test(args: argparse.Namespace) -> bool:
 
         backup_filename = backup_res["filename"]
         logger.info(
-            f"Backup created: {backup_filename} "
-            f"({backup_res.get('size_human')})"
+            f"Backup created: {backup_filename} " f"({backup_res.get('size_human')})"
         )
 
         # 7. Introduce a deliberate mutation / corruption into the volume
@@ -10231,9 +10617,7 @@ def run_backup_restore_test(args: argparse.Namespace) -> bool:
         )
 
         if "valid_v1_marker" not in state_restored:
-            logger.error(
-                f"State file failed to restore! Content: {state_restored}"
-            )
+            logger.error(f"State file failed to restore! Content: {state_restored}")
             return False
 
         if "uptime-kuma" not in ps_out and "running" not in ps_out.lower():
@@ -10384,10 +10768,7 @@ from typing import Any, Callable, Dict, List, Optional
 
 from appdirs import user_data_dir
 
-from configurator_app.app import (
-    get_components_paths,
-    seed_user_components_if_needed,
-)
+from configurator_app.app import get_components_paths, seed_user_components_if_needed
 from managers.backup_manager import BackupManager
 from managers.component_manager import ComponentManager
 from managers.deployment_manager import DeploymentManager
@@ -10413,12 +10794,8 @@ class NjordCliRunner:
         )
         app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
         output_dir = app_data_dir / "output"
-        self.setup_mgr = SetupManager(
-            self.component_mgr.reader, output_dir=output_dir
-        )
-        self.deployment_mgr = DeploymentManager(
-            component_manager=self.component_mgr
-        )
+        self.setup_mgr = SetupManager(self.component_mgr.reader, output_dir=output_dir)
+        self.deployment_mgr = DeploymentManager(component_manager=self.component_mgr)
 
     def deploy(
         self,
@@ -10453,9 +10830,7 @@ class NjordCliRunner:
 
         # 2. Resolve Selected Components
         selected_ids: List[str] = (
-            config.get("components")
-            or config.get("selected_components")
-            or []
+            config.get("components") or config.get("selected_components") or []
         )
         if not selected_ids:
             logger.error("No components selected for deployment.")
@@ -10470,9 +10845,7 @@ class NjordCliRunner:
         valid_ids = {c.get("id") for c in all_components if "id" in c}
         invalid_ids = [c for c in selected_ids if c not in valid_ids]
         if invalid_ids:
-            logger.error(
-                f"Unknown component IDs requested: {', '.join(invalid_ids)}"
-            )
+            logger.error(f"Unknown component IDs requested: {', '.join(invalid_ids)}")
             return False
 
         selected_components_data = [
@@ -10481,9 +10854,7 @@ class NjordCliRunner:
 
         # 3. Resolve Environment Variables and Engine
         global_vars: Dict[str, str] = (
-            config.get("env_vars")
-            or config.get("global_vars")
-            or {}
+            config.get("env_vars") or config.get("global_vars") or {}
         )
         engine_type = (
             config.get("engine")
@@ -10560,7 +10931,7 @@ class NjordCliRunner:
         self,
         ip: str,
         username: str = "root",
-        password: str = "",
+        password: str = "",  # nosec B107
         port: int = 22,
         stack_dir: Optional[str] = None,
     ) -> Dict[str, Any]:
@@ -10585,7 +10956,7 @@ class NjordCliRunner:
         self,
         ip: str,
         username: str = "root",
-        password: str = "",
+        password: str = "",  # nosec B107
         port: int = 22,
         stack_dir: Optional[str] = None,
         components: Optional[List[str]] = None,
@@ -10619,7 +10990,7 @@ class NjordCliRunner:
         ip: str,
         backup_filename: str,
         username: str = "root",
-        password: str = "",
+        password: str = "",  # nosec B107
         port: int = 22,
         stack_dir: Optional[str] = None,
         components: Optional[List[str]] = None,
@@ -10652,7 +11023,7 @@ class NjordCliRunner:
         self,
         ip: str,
         username: str = "root",
-        password: str = "",
+        password: str = "",  # nosec B107
         port: int = 22,
         stack_dir: Optional[str] = None,
     ) -> List[Dict[str, Any]]:
@@ -10677,7 +11048,7 @@ class NjordCliRunner:
         self,
         ip: str,
         username: str = "root",
-        password: str = "",
+        password: str = "",  # nosec B107
         port: int = 22,
     ) -> List[Dict[str, str]]:
         """Scans target host filesystem for existing docker-compose stacks."""
@@ -10782,9 +11153,7 @@ def parse_cli_args(args_list: Optional[List[str]] = None) -> argparse.Namespace:
         default="root",
         help="SSH username (default: root).",
     )
-    conn_group.add_argument(
-        "--password", type=str, default="", help="SSH password."
-    )
+    conn_group.add_argument("--password", type=str, default="", help="SSH password.")
     conn_group.add_argument(
         "--port", type=int, default=22, help="SSH port (default: 22)."
     )
@@ -10876,7 +11245,7 @@ def main(args_list: Optional[List[str]] = None) -> int:
         if not args.ip:
             logger.error("Missing target --ip address.")
             return 1
-        comp_list = (
+        comp_list_backup: Optional[List[str]] = (
             [c.strip() for c in args.components.split(",") if c.strip()]
             if args.components
             else None
@@ -10887,7 +11256,7 @@ def main(args_list: Optional[List[str]] = None) -> int:
             password=args.password,
             port=args.port,
             stack_dir=args.stack_dir,
-            components=comp_list,
+            components=comp_list_backup,
             pause_containers=args.pause_containers,
         )
         print(json.dumps(res, indent=2))
@@ -10897,7 +11266,7 @@ def main(args_list: Optional[List[str]] = None) -> int:
         if not args.ip:
             logger.error("Missing target --ip address.")
             return 1
-        comp_list = (
+        comp_list_restore: Optional[List[str]] = (
             [c.strip() for c in args.components.split(",") if c.strip()]
             if args.components
             else None
@@ -10909,7 +11278,7 @@ def main(args_list: Optional[List[str]] = None) -> int:
             password=args.password,
             port=args.port,
             stack_dir=args.stack_dir,
-            components=comp_list,
+            components=comp_list_restore,
         )
         print(json.dumps(res, indent=2))
         return 0 if res.get("status") == "success" else 1
@@ -11331,8 +11700,9 @@ def create_app(test_config=None):
                     200,
                 )
             except Exception as e:
+                logging.error(f"Failed to save .env file: {e}", exc_info=True)
                 return (
-                    jsonify({"error": f"Failed to save .env file: {str(e)}"}),
+                    jsonify({"error": "Failed to save .env file."}),
                     500,
                 )
 
@@ -11382,8 +11752,9 @@ def create_app(test_config=None):
                     200,
                 )
             except Exception as e:
+                logging.error(f"Failed to update settings: {e}", exc_info=True)
                 return (
-                    jsonify({"error": f"Failed to update settings: {str(e)}"}),
+                    jsonify({"error": "Failed to update settings."}),
                     500,
                 )
 
@@ -11461,8 +11832,9 @@ def create_app(test_config=None):
                 200,
             )
         except Exception as e:
+            logging.error(f"Failed to persist engine setting: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to persist engine setting: {str(e)}"}),
+                jsonify({"error": "Failed to persist engine setting."}),
                 500,
             )
 
@@ -12109,7 +12481,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to create Proxmox LXC: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Proxmox LXC creation failed: {str(e)}"}),
+                jsonify({"error": "Proxmox LXC creation failed."}),
                 500,
             )
 
@@ -12157,7 +12529,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to list Proxmox QEMU templates: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to list templates: {str(e)}"}),
+                jsonify({"error": "Failed to list templates."}),
                 500,
             )
 
@@ -12463,7 +12835,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to create Proxmox VM: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Proxmox VM creation failed: {str(e)}"}),
+                jsonify({"error": "Proxmox VM creation failed."}),
                 500,
             )
 
@@ -12539,7 +12911,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to list Proxmox targets: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to list Proxmox targets: {str(e)}"}),
+                jsonify({"error": "Failed to list Proxmox targets."}),
                 500,
             )
 
@@ -12589,7 +12961,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to query Proxmox target IP: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to query target IP: {str(e)}"}),
+                jsonify({"error": "Failed to query target IP."}),
                 500,
             )
 
@@ -12664,7 +13036,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to start Proxmox target: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to start target: {str(e)}"}),
+                jsonify({"error": "Failed to start target."}),
                 500,
             )
 
@@ -13342,8 +13714,11 @@ def create_app(test_config=None):
             # Recursively find and filter files
             files_dict = {}
             for file_path in target_path.rglob("*"):
-                if file_path.is_file():
-                    relative_path = file_path.relative_to(target_path)
+                resolved_file = file_path.resolve()
+                if not resolved_file.is_relative_to(target_path):
+                    continue
+                if resolved_file.is_file():
+                    relative_path = resolved_file.relative_to(target_path)
                     parts = relative_path.parts
 
                     should_show = False
@@ -13361,7 +13736,7 @@ def create_app(test_config=None):
                     if should_show:
                         relative_name = str(relative_path)
                         try:
-                            with open(file_path, "r", encoding="utf-8") as f:
+                            with open(resolved_file, "r", encoding="utf-8") as f:
                                 files_dict[relative_name] = f.read()
                         except (UnicodeDecodeError, IOError):
                             # Skip binary or unreadable files
@@ -13419,7 +13794,10 @@ def create_app(test_config=None):
             )
         except Exception as e:
             logging.error(f"Discover compose failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to discover compose files."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/inspect", methods=["POST"])
     def api_backup_inspect():
@@ -13458,7 +13836,10 @@ def create_app(test_config=None):
             return jsonify(inspection), status_code
         except Exception as e:
             logging.error(f"Backup inspect failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to inspect target host."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/create", methods=["POST"])
     def api_backup_create():
@@ -13505,7 +13886,10 @@ def create_app(test_config=None):
             return jsonify(res), status_code
         except Exception as e:
             logging.error(f"Backup create failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to create backup archive."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/list", methods=["POST"])
     def api_backup_list():
@@ -13543,7 +13927,10 @@ def create_app(test_config=None):
             return jsonify({"status": "success", "backups": backups}), 200
         except Exception as e:
             logging.error(f"Backup list failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to list backups."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/restore", methods=["POST"])
     def api_backup_restore():
@@ -13597,13 +13984,18 @@ def create_app(test_config=None):
             return jsonify(res), status_code
         except Exception as e:
             logging.error(f"Backup restore failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to restore backup."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/download/<filename>", methods=["GET"])
     def api_backup_download(filename: str):
         """Downloads a backup archive from the remote host or local staging."""
         try:
-            clean_name = os.path.basename(filename.strip())
+            from werkzeug.utils import secure_filename
+
+            clean_name = secure_filename(os.path.basename(filename.strip()))
             if not re.match(r"^njorddeploy_backup_[0-9_]+\.tar\.gz$", clean_name):
                 return jsonify({"error": "Invalid backup filename."}), 400
 
@@ -13616,10 +14008,14 @@ def create_app(test_config=None):
             ) or request.args.get("stack_dir")
 
             staging_dir = (
-                Path(user_data_dir("NjordDeploy", "NjordDeploy")) / "backups_download"
+                Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
+                / "backups_download"
             )
             staging_dir.mkdir(parents=True, exist_ok=True)
-            local_target = staging_dir / clean_name
+            local_target = (staging_dir / clean_name).resolve()
+
+            if not local_target.is_relative_to(staging_dir):
+                return jsonify({"error": "Unauthorized path access."}), 403
 
             if not local_target.exists():
                 if not ip or not username:
@@ -13663,7 +14059,10 @@ def create_app(test_config=None):
             return send_file(local_target, as_attachment=True, download_name=clean_name)
         except Exception as e:
             logging.error(f"Backup download failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to download backup."}),
+                500,
+            )
 
     return flask_app
 
@@ -17545,12 +17944,14 @@ html[data-theme="light"] .modal .card {
                     const compName = compData ? compData.name : compId;
                     const containerName = `njorddeploy-${compId}`;
                     const paneId = `log-pane-${compId}`;
+                    const escapedCompId = escapeHTML(compId);
+                    const escapedPaneId = escapeHTML(paneId);
 
                     const li = document.createElement('li');
                     li.className = 'nav-item';
                     li.setAttribute('role', 'presentation');
                     li.innerHTML = `
-                        <button class="nav-link" id="tab-${compId}" data-bs-toggle="tab" data-bs-target="#${paneId}" type="button" role="tab">
+                        <button class="nav-link" id="tab-${escapedCompId}" data-bs-toggle="tab" data-bs-target="#${escapedPaneId}" type="button" role="tab">
                             <i class="fa-solid fa-cubes text-info me-1"></i>${escapeHTML(compName)} Logs
                         </button>
                     `;
@@ -17565,11 +17966,11 @@ html[data-theme="light"] .modal .card {
                             <div class="card-body bg-dark text-white rounded" style="font-family: monospace; font-size: 0.9em; max-height: 400px; overflow-y: auto;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Container: ${escapeHTML(containerName)}</span>
-                                    <button class="btn btn-sm btn-outline-info btn-refresh-logs" data-comp-id="${compId}">
+                                    <button class="btn btn-sm btn-outline-info btn-refresh-logs" data-comp-id="${escapedCompId}">
                                         <i class="fa-solid fa-arrows-rotate me-1"></i>Refresh
                                     </button>
                                 </div>
-                                <pre id="log-output-${compId}" class="mb-0 text-light" style="white-space: pre-wrap;">Loading logs...</pre>
+                                <pre id="log-output-${escapedCompId}" class="mb-0 text-light" style="white-space: pre-wrap;">Loading logs...</pre>
                             </div>
                         </div>
                     `;
@@ -18964,15 +19365,177 @@ html[data-theme="light"] .modal .card {
         checkFirstRun();
     }
 
+    /**
+     * Initializes the Quick Start modal, Prerequisites Banner, and Intro.js Interactive Tour.
+     */
+    function initQuickStartAndTour() {
+        const quickStartModalEl = document.getElementById('quickStartModal');
+        const hideGuideCheckbox = document.getElementById('hide-quickstart-checkbox');
+        const navQuickStartBtn = document.getElementById('nav-quick-start-btn');
+        const navStartTourBtn = document.getElementById('nav-start-tour-btn');
+        const quickstartTourBtn = document.getElementById('quickstart-tour-btn');
+        const prereqCollapseEl = document.getElementById('prerequisitesCollapse');
+        const prereqChevron = document.getElementById('prereq-chevron');
+
+        // Manage collapsible prerequisites banner state and chevron
+        if (prereqCollapseEl && prereqChevron) {
+            prereqCollapseEl.addEventListener('show.bs.collapse', () => {
+                prereqChevron.className = 'fa-solid fa-chevron-up text-primary transition-transform';
+                localStorage.setItem('configurator_prerequisites_open', 'true');
+            });
+            prereqCollapseEl.addEventListener('hide.bs.collapse', () => {
+                prereqChevron.className = 'fa-solid fa-chevron-down text-muted transition-transform';
+                localStorage.setItem('configurator_prerequisites_open', 'false');
+            });
+
+            // Restore user preference if previously expanded
+            if (localStorage.getItem('configurator_prerequisites_open') === 'true') {
+                // @ts-ignore
+                const collapseInstance = bootstrap.Collapse.getOrCreateInstance(prereqCollapseEl, { toggle: false });
+                collapseInstance.show();
+            }
+        }
+
+        function startInteractiveTour(e) {
+            if (e) e.preventDefault();
+            localStorage.setItem('configurator_tour_shown', 'true');
+
+            // Hide quick start modal if currently open
+            if (quickStartModalEl) {
+                // @ts-ignore
+                const modal = bootstrap.Modal.getInstance(quickStartModalEl);
+                if (modal) modal.hide();
+            }
+
+            // @ts-ignore
+            if (window.introJs) {
+                // @ts-ignore
+                window.introJs().setOptions({
+                    steps: [
+                        {
+                            title: "Welcome to NjordDeploy",
+                            intro: "Welcome to the <strong>NjordDeploy Deployment Wizard</strong>! This quick guided tour walks you through discovering devices, configuring stacks, and launching self-hosted services."
+                        },
+                        {
+                            element: document.getElementById("prerequisites-banner-card"),
+                            title: "Getting Started & Prerequisites",
+                            intro: "Click this banner anytime to view target machine requirements, SSH setup hints, and direct links to get API keys for optional AI Failure Diagnosis & Generation.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("topbar-engine-badge") || document.getElementById("engineDropdown"),
+                            title: "Active Container Engine",
+                            intro: "NjordDeploy supports standard <strong>Docker CE</strong> and rootless <strong>Podman</strong>. Switch engines or configure your component template repository anytime.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("themeDropdown"),
+                            title: "Themes & Accessibility",
+                            intro: "Switch effortlessly between <strong>Futuristic Dark</strong>, <strong>Standard Light</strong>, and <strong>High-Contrast</strong> themes.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("discovery-methods-card"),
+                            title: "Target Discovery Methods",
+                            intro: "Select how to find your target machine: <strong>Auto-Detect</strong> via L2 ARP sweep, <strong>Manual CIDR</strong> subnet scan, <strong>Direct IP / Hostname / MAC</strong>, <strong>Tailscale mesh</strong>, or <strong>Proxmox LXC/VM</strong> provisioning.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("method-help-card"),
+                            title: "Contextual Help & SSH Tip",
+                            intro: "Get instant setup tips and 1-click <code>ssh-copy-id</code> snippets to authorize your SSH key on the target machine for secure, passwordless deployment.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("begin-scan-btn"),
+                            title: "Start Discovery",
+                            intro: "Click <strong>Begin Scan</strong> to find devices on your network, select your target single-board computer, and proceed to service selection.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("nav-backup-btn"),
+                            title: "Backup & Disaster Recovery",
+                            intro: "Create full archives of your stack configurations and volume data, or restore from previous backups directly from the navigation bar.",
+                            position: "bottom"
+                        },
+                        {
+                            title: "Ready to Deploy!",
+                            intro: "You're all set! Choose a discovery option and click <strong>Begin Scan</strong> to start deploying your self-hosted services."
+                        }
+                    ],
+                    showProgress: true,
+                    showBullets: false,
+                    disableInteraction: false,
+                    nextLabel: 'Next &rarr;',
+                    prevLabel: '&larr; Back',
+                    doneLabel: 'Done'
+                }).start();
+            }
+        }
+
+        if (navQuickStartBtn && quickStartModalEl) {
+            navQuickStartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // @ts-ignore
+                const modal = bootstrap.Modal.getOrCreateInstance(quickStartModalEl);
+                modal.show();
+            });
+        }
+
+        if (navStartTourBtn) {
+            navStartTourBtn.addEventListener('click', (e) => {
+                startInteractiveTour(e);
+            });
+        }
+
+        if (quickstartTourBtn) {
+            quickstartTourBtn.addEventListener('click', (e) => {
+                startInteractiveTour(e);
+            });
+        }
+
+        if (hideGuideCheckbox) {
+            const isHidden = localStorage.getItem('configurator_hide_quickstart_guide') === 'true';
+            // @ts-ignore
+            hideGuideCheckbox.checked = isHidden;
+
+            hideGuideCheckbox.addEventListener('change', (e) => {
+                // @ts-ignore
+                if (e.target && e.target.checked) {
+                    localStorage.setItem('configurator_hide_quickstart_guide', 'true');
+                } else {
+                    localStorage.removeItem('configurator_hide_quickstart_guide');
+                }
+            });
+        }
+
+        // Auto-show Quick Start on first visit if not explicitly hidden
+        const guideHidden = localStorage.getItem('configurator_hide_quickstart_guide') === 'true';
+        const guideShown = localStorage.getItem('configurator_quickstart_shown') === 'true';
+
+        if (!guideHidden && !guideShown && quickStartModalEl) {
+            localStorage.setItem('configurator_quickstart_shown', 'true');
+            setTimeout(() => {
+                // Check if onboarding modal (engine setup) isn't showing
+                const onboardModalEl = document.getElementById('onboardingModal');
+                const isEngineModalOpen = onboardModalEl && onboardModalEl.classList.contains('show');
+                if (!isEngineModalOpen) {
+                    // @ts-ignore
+                    const modal = bootstrap.Modal.getOrCreateInstance(quickStartModalEl);
+                    modal.show();
+                }
+            }, 600);
+        }
+    }
+
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();
     initEngineAndRepoManagement();
+    initQuickStartAndTour();
 })();
 
 --- FILE: src/configurator_app/static/js/backup_manager_ui.js ---
 // src/configurator_app/static/js/backup_manager_ui.js
-/* global bootstrap */
-
 (function () {
     "use strict";
 
@@ -18994,6 +19557,17 @@ html[data-theme="light"] .modal .card {
         const backupListContainer = document.getElementById("backup-archives-table-body");
         const backupStatusAlert = document.getElementById("backup-status-alert");
         const restoreStatusAlert = document.getElementById("restore-status-alert");
+
+        // Helper to safely escape HTML special characters
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         // Helper to retrieve target credentials and path from modal inputs or fallback to wizard/session
         function getTargetCredentials() {
@@ -19036,12 +19610,6 @@ html[data-theme="light"] .modal .card {
                 if (wizardPass && wizardPass.value) {
                     password = wizardPass.value;
                     if (targetPassInput) targetPassInput.value = password;
-                } else {
-                    const savedPass = sessionStorage.getItem("njorddeploy_backup_pass");
-                    if (savedPass) {
-                        password = savedPass;
-                        if (targetPassInput) targetPassInput.value = password;
-                    }
                 }
             }
 
@@ -19061,7 +19629,6 @@ html[data-theme="light"] .modal .card {
         function saveCredentials(creds) {
             if (creds.ip) sessionStorage.setItem("njorddeploy_backup_ip", creds.ip);
             if (creds.username) sessionStorage.setItem("njorddeploy_backup_user", creds.username);
-            if (creds.password) sessionStorage.setItem("njorddeploy_backup_pass", creds.password);
             if (creds.project_config_dir) sessionStorage.setItem("njorddeploy_backup_path", creds.project_config_dir);
         }
 
@@ -19228,14 +19795,14 @@ html[data-theme="light"] .modal .card {
                     if (!res.ok || data.status !== "success") {
                         if (backupStatusAlert) {
                             backupStatusAlert.className = "alert alert-danger small mt-3";
-                            backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Backup failed: ${data.message || data.error || "Unknown error"}`;
+                            backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Backup failed: ${escapeHtml(data.message || data.error || "Unknown error")}`;
                         }
                     } else {
                         if (backupStatusAlert) {
                             backupStatusAlert.className = "alert alert-success small mt-3";
                             backupStatusAlert.innerHTML = `
                                 <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Backup Created Successfully!</strong></div>
-                                <div class="mt-1">Archive: <code>${data.filename}</code> (${data.size_human})</div>
+                                <div class="mt-1">Archive: <code>${escapeHtml(data.filename)}</code> (${escapeHtml(data.size_human)})</div>
                                 <div class="mt-2">
                                     <a href="/api/backup/download/${encodeURIComponent(data.filename)}?ip=${encodeURIComponent(creds.ip)}&username=${encodeURIComponent(creds.username)}&project_config_dir=${encodeURIComponent(creds.project_config_dir)}" class="btn btn-sm btn-success text-white">
                                         <i class="fa-solid fa-download me-1"></i> Download to Local Machine
@@ -19248,7 +19815,7 @@ html[data-theme="light"] .modal .card {
                 } catch (err) {
                     if (backupStatusAlert) {
                         backupStatusAlert.className = "alert alert-danger small mt-3";
-                        backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                        backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${escapeHtml(err.message)}`;
                     }
                 } finally {
                     createBackupBtn.disabled = false;
@@ -19302,10 +19869,10 @@ html[data-theme="light"] .modal .card {
                 backups.forEach(bk => {
                     html += `
                         <tr>
-                            <td><input type="radio" name="selected_backup_radio" value="${bk.filename}" class="form-check-input"></td>
-                            <td><code>${bk.filename}</code></td>
-                            <td>${bk.created_at}</td>
-                            <td><span class="badge bg-secondary">${bk.size_human}</span></td>
+                            <td><input type="radio" name="selected_backup_radio" value="${escapeHtml(bk.filename)}" class="form-check-input"></td>
+                            <td><code>${escapeHtml(bk.filename)}</code></td>
+                            <td>${escapeHtml(bk.created_at)}</td>
+                            <td><span class="badge bg-secondary">${escapeHtml(bk.size_human)}</span></td>
                         </tr>
                     `;
                 });
@@ -19317,7 +19884,7 @@ html[data-theme="light"] .modal .card {
                 if (restoreBackupBtn) restoreBackupBtn.disabled = false;
             } catch (err) {
                 backupListContainer.innerHTML = `
-                    <tr><td colspan="4" class="text-center text-danger py-3">Error: ${err.message}</td></tr>
+                    <tr><td colspan="4" class="text-center text-danger py-3">Error: ${escapeHtml(err.message)}</td></tr>
                 `;
                 if (restoreBackupBtn) restoreBackupBtn.disabled = true;
             }
@@ -19361,21 +19928,21 @@ html[data-theme="light"] .modal .card {
                     if (!res.ok || data.status !== "success") {
                         if (restoreStatusAlert) {
                             restoreStatusAlert.className = "alert alert-danger small mt-3";
-                            restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Restore failed: ${data.message || data.error || "Unknown error"}`;
+                            restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Restore failed: ${escapeHtml(data.message || data.error || "Unknown error")}`;
                         }
                     } else {
                         if (restoreStatusAlert) {
                             restoreStatusAlert.className = "alert alert-success small mt-3";
                             restoreStatusAlert.innerHTML = `
                                 <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Restore Completed Successfully!</strong></div>
-                                <div class="mt-1">All managed services and volume data have been restored and restarted in <code>${data.managed_scope || creds.project_config_dir}</code>.</div>
+                                <div class="mt-1">All managed services and volume data have been restored and restarted in <code>${escapeHtml(data.managed_scope || creds.project_config_dir)}</code>.</div>
                             `;
                         }
                     }
                 } catch (err) {
                     if (restoreStatusAlert) {
                         restoreStatusAlert.className = "alert alert-danger small mt-3";
-                        restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                        restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${escapeHtml(err.message)}`;
                     }
                 } finally {
                     restoreBackupBtn.disabled = false;
@@ -19445,14 +20012,14 @@ html[data-theme="light"] .modal .card {
                             sessionStorage.setItem("njorddeploy_backup_path", firstMatch.directory);
                         }
                         if (scanFeedback) {
-                            scanFeedback.innerHTML = `<span class="text-success"><i class="fa-solid fa-check me-1"></i> Found: <code>${firstMatch.directory}</code></span>`;
+                            scanFeedback.innerHTML = `<span class="text-success"><i class="fa-solid fa-check me-1"></i> Found: <code>${escapeHtml(firstMatch.directory)}</code></span>`;
                         }
                         await loadTargetVolumes();
                         await loadBackupList();
                     }
                 } catch (err) {
                     if (scanFeedback) {
-                        scanFeedback.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Scan error: ${err.message}</span>`;
+                        scanFeedback.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Scan error: ${escapeHtml(err.message)}</span>`;
                     }
                 } finally {
                     scanComposeBtn.disabled = false;
@@ -19638,6 +20205,7 @@ html[data-theme="light"] .modal .card {
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/introjs.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/configurator.css') }}?v=1.0">
@@ -19740,7 +20308,9 @@ html[data-theme="light"] .modal .card {
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn" title="Start Interactive Quick Tour"><i class="fa-solid fa-compass me-1"></i> Quick Tour</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-quick-start-btn" title="View Quick Start Guide"><i class="fa-solid fa-graduation-cap me-1"></i> Quick Start</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-backup-btn" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
                 <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> Settings</a></li>
                 <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> Help</a></li>
                 <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> API Docs</a></li>
@@ -19777,7 +20347,69 @@ html[data-theme="light"] .modal .card {
                 <h2 class="h4 mb-3">Network Discovery</h2>
                 <p class="text-muted mb-4">We need to find supported single-board computers (Raspberry Pi, Orange Pi, ODROID, Radxa, or Pine64) on your network to begin.</p>
 
-                <div class="card bg-light mx-auto mb-4 text-start" style="max-width: 500px;">
+                <!-- Collapsible Getting Started & Prerequisites Banner -->
+                <div class="card border-0 shadow-sm mx-auto mb-4 text-start" style="max-width: 650px; background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(12px); border: 1px solid var(--glass-border, #e2e8f0) !important;" id="prerequisites-banner-card">
+                    <div class="card-header bg-transparent border-0 p-3 d-flex justify-content-between align-items-center cursor-pointer"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#prerequisitesCollapse"
+                         aria-expanded="false"
+                         aria-controls="prerequisitesCollapse"
+                         style="cursor: pointer;"
+                         id="prerequisites-toggle-header">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-circle-info text-primary me-2 fs-5"></i>
+                            <span class="fw-bold">Getting Started &amp; Prerequisites</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-2 small">Checklist &amp; AI Setup</span>
+                            <i class="fa-solid fa-chevron-down text-muted transition-transform" id="prereq-chevron"></i>
+                        </div>
+                    </div>
+                    <div class="collapse" id="prerequisitesCollapse">
+                        <div class="card-body p-3 pt-0 border-top mt-2">
+                            <!-- Section 1: Core System Prerequisites -->
+                            <h6 class="fw-bold small text-uppercase text-muted mb-2"><i class="fa-solid fa-list-check me-1"></i> Deployment Checklist</h6>
+                            <ul class="list-unstyled small text-muted mb-3 ps-1">
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Target Machine:</strong> Raspberry Pi, Orange Pi, ODROID, VM, or server running Debian/Ubuntu (64-bit recommended).</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>SSH Access:</strong> Port 22 open with sudo permissions. Key-based authentication recommended (<code>ssh-copy-id username@target-ip</code>).</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Network Scanner:</strong> <code>nmap</code> installed locally for auto-discovery (<code>sudo apt install nmap</code>), or use Direct IP / Tailscale / Proxmox.</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Container Engine:</strong> Choose Docker CE or rootless Podman via the topbar switcher.</li>
+                            </ul>
+
+                            <!-- Section 2: AI Assistance & LLM Setup -->
+                            <h6 class="fw-bold small text-uppercase text-muted mb-2"><i class="fa-solid fa-brain me-1"></i> AI Diagnostics &amp; LLM Keys (Optional)</h6>
+                            <p class="small text-muted mb-2">
+                                NjordDeploy features AI Failure Diagnosis &amp; Component Generation. Configure your API keys in <a href="/settings" class="fw-bold text-decoration-none"><i class="fa-solid fa-gear me-1"></i>Settings</a> or via <code>.env</code>:
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-brands fa-google text-primary me-1"></i> Google Gemini Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://platform.openai.com/api-keys" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-bolt text-success me-1"></i> OpenAI Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://console.anthropic.com/settings/keys" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-brain text-warning me-1"></i> Claude Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://hostyourai.com" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-shield-halved text-info me-1"></i> HostYourAI (EU) <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://ollama.com" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-laptop-code text-secondary me-1"></i> Ollama (Offline / No Key) <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <span class="text-muted small">Manage all keys and endpoints:</span>
+                                <a href="/settings" class="btn btn-sm btn-primary py-1 px-3">
+                                    <i class="fa-solid fa-sliders me-1"></i> Configure in Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light mx-auto mb-4 text-start" style="max-width: 500px;" id="discovery-methods-card">
                     <div class="card-body">
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="radio" name="scanMethod" id="autoDetectRadio" checked>
@@ -20239,8 +20871,109 @@ html[data-theme="light"] .modal .card {
     </div>
 </div>
 
+<!-- Quick Start & Onboarding Guide Modal -->
+<div class="modal fade" id="quickStartModal" tabindex="-1" aria-labelledby="quickStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(16px); border: 1px solid var(--glass-border, #e2e8f0);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary d-flex align-items-center" id="quickStartModalLabel">
+                    <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}"
+                         alt="NjordDeploy" width="28" height="28" class="me-2 rounded">
+                    Welcome to NjordDeploy
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <h6 class="fw-bold text-body mb-1">Self-Hosting Made Simple in 4 Easy Steps</h6>
+                    <p class="text-muted small mb-0">
+                        NjordDeploy provisions and orchestrates containerized services on Single-Board Computers (Raspberry Pi, Orange Pi, ODROID), cloud/local Linux servers, and Proxmox LXC/VMs.
+                    </p>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Step 1 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-primary bg-opacity-10 text-primary">
+                                    <i class="fa-solid fa-network-wired fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">1. Target Discovery</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Find target SBCs automatically via local L2 ARP scan, sweep custom CIDR subnets, target direct IPs / Tailscale mesh nodes, or provision new Proxmox LXCs/VMs.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 2 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-warning bg-opacity-10 text-warning">
+                                    <i class="fa-solid fa-key fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">2. SSH Connection</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Connect securely to your target machine using SSH key authentication (<code>ssh-copy-id</code>) or password with standard sudo privileges.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 3 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-info bg-opacity-10 text-info">
+                                    <i class="fa-solid fa-layer-group fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">3. Select Services</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Pick from 45+ modular container stacks (AdGuard Home, Vaultwarden, Nextcloud, etc.). NjordDeploy automatically checks for port and storage conflicts.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 4 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-success bg-opacity-10 text-success">
+                                    <i class="fa-solid fa-rocket fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">4. Live Deployment</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Watch live Ansible streaming logs, verify container status, launch your web UIs with direct links, and manage backups with the built-in backup manager.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="hide-quickstart-checkbox">
+                        <label class="form-check-label small text-muted" for="hide-quickstart-checkbox">
+                            Don't show this quick start guide on startup
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" id="quickstart-tour-btn">
+                    <i class="fa-solid fa-compass me-1"></i> Start Interactive Tour
+                </button>
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-right me-1"></i> Get Started
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}?v=1.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/intro.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=1.7"></script>
 <script src="{{ url_for('static', filename='js/backup_manager_ui.js') }}?v=1.1"></script>
 </body>
 </html>
@@ -20859,20 +21592,114 @@ html[data-theme="light"] .modal .card {
                         </div>
 
                         <!-- Section: AI Assistant API Integration -->
-                        <div class="col-md-6">
-                            <div class="card settings-card h-100 bg-light border-0">
+                        <div class="col-12">
+                            <div class="card settings-card bg-light border-0">
                                 <div class="card-body">
-                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-brain me-2"></i> AI Assistant Integration</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title text-primary mb-0"><i class="fa-solid fa-brain me-2"></i> AI Assistant &amp; LLM Provider Integration</h5>
+                                        <span class="badge bg-secondary-subtle text-secondary small">Multi-Provider &amp; Local Offline Supported</span>
+                                    </div>
+                                    <p class="text-muted small mb-4">
+                                        Configure API keys and endpoints for AI Failure Diagnosis and Component Editor AI Generation. Obtain API keys directly from the provider portals linked below.
+                                    </p>
                                     <div class="row g-3">
-                                        <div class="col-12">
-                                            <label for="GEMINI_API_KEY" class="form-label small fw-bold">Gemini API Key</label>
+                                        <!-- Google Gemini -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="GEMINI_API_KEY" class="form-label small fw-bold mb-0">Google Gemini API Key</label>
+                                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="small text-decoration-none" title="Get API Key from Google AI Studio">
+                                                    <i class="fa-brands fa-google me-1"></i>Get Gemini Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
                                             <div class="input-group">
                                                 <input type="password" class="form-control" id="GEMINI_API_KEY" value="{{ env_vars.get('GEMINI_API_KEY', '') }}" placeholder="AIzaSy...">
                                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
                                             </div>
-                                            <div class="form-text small mt-1">Used by the component editor to generate software profiles automatically.</div>
+                                            <div class="form-text small mt-1">Default model: <code>gemini-2.5-flash</code> via official OpenAI-compatible endpoint.</div>
+                                        </div>
+
+                                        <!-- OpenAI -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="OPENAI_API_KEY" class="form-label small fw-bold mb-0">OpenAI API Key</label>
+                                                <a href="https://platform.openai.com/api-keys" target="_blank" class="small text-decoration-none" title="Get API Key from OpenAI Platform">
+                                                    <i class="fa-solid fa-bolt me-1"></i>Get OpenAI Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="OPENAI_API_KEY" value="{{ env_vars.get('OPENAI_API_KEY', '') }}" placeholder="sk-proj-...">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Default model: <code>gpt-4o-mini</code>.</div>
+                                        </div>
+
+                                        <!-- Anthropic Claude -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="ANTHROPIC_API_KEY" class="form-label small fw-bold mb-0">Anthropic Claude API Key</label>
+                                                <a href="https://console.anthropic.com/settings/keys" target="_blank" class="small text-decoration-none" title="Get API Key from Anthropic Console">
+                                                    <i class="fa-solid fa-brain me-1"></i>Get Claude Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="ANTHROPIC_API_KEY" value="{{ env_vars.get('ANTHROPIC_API_KEY', '') }}" placeholder="sk-ant-...">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Default model: <code>claude-3-5-sonnet-20241022</code>.</div>
+                                        </div>
+
+                                        <!-- HostYourAI / Loes (EU) -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="HOSTYOURAI_API_KEY" class="form-label small fw-bold mb-0">HostYourAI / Loes (EU) Key</label>
+                                                <a href="https://hostyourai.com" target="_blank" class="small text-decoration-none" title="Open HostYourAI Portal">
+                                                    <i class="fa-solid fa-shield-halved me-1"></i>HostYourAI Portal <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="HOSTYOURAI_API_KEY" value="{{ env_vars.get('HOSTYOURAI_API_KEY', '') }}" placeholder="Key for European cloud">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">GDPR &amp; EU AI Act compliant private cloud.</div>
+                                        </div>
+
+                                        <!-- Ollama Base URL (Local Offline) -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="OLLAMA_BASE_URL" class="form-label small fw-bold mb-0">Ollama Base URL (Local Offline)</label>
+                                                <a href="https://ollama.com" target="_blank" class="small text-decoration-none" title="Download Ollama">
+                                                    <i class="fa-solid fa-laptop-code me-1"></i>Download Ollama <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <input type="text" class="form-control" id="OLLAMA_BASE_URL" value="{{ env_vars.get('OLLAMA_BASE_URL', 'http://localhost:11434/v1') }}" placeholder="http://localhost:11434/v1">
+                                            <div class="form-text small mt-1">100% private offline LLM (e.g. RTX 3060). No API key required.</div>
+                                        </div>
+
+                                        <!-- Custom AI Endpoint URL & Key -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="CUSTOM_AI_BASE_URL" class="form-label small fw-bold mb-0">Custom Endpoint &amp; Key</label>
+                                                <span class="small text-muted">OpenAI-compatible</span>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text small">URL</span>
+                                                <input type="text" class="form-control" id="CUSTOM_AI_BASE_URL" value="{{ env_vars.get('CUSTOM_AI_BASE_URL', '') }}" placeholder="https://api.custom.com/v1">
+                                            </div>
+                                            <div class="input-group">
+                                                <span class="input-group-text small">Key</span>
+                                                <input type="password" class="form-control" id="CUSTOM_AI_API_KEY" value="{{ env_vars.get('CUSTOM_AI_API_KEY', '') }}" placeholder="Optional custom key">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -21031,6 +21858,9 @@ html[data-theme="light"] .modal .card {
             } finally {
                 saveRawBtn.disabled = false;
                 saveRawBtn.innerHTML = originalHtml;
+            }
+        });
+
         // Password toggle button listener
         document.addEventListener("click", (e) => {
             const btn = e.target.closest(".toggle-password-btn");
@@ -21523,7 +22353,7 @@ def create_app(test_config=None):
                     {
                         "status": "error",
                         "is_offline": True,
-                        "message": str(e),
+                        "message": "Failed to check updates while offline.",
                     }
                 ),
                 200,
@@ -22214,10 +23044,31 @@ def create_app(test_config=None):
         details = ""
 
         if provider == "ollama":
-            url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+            from utils.security_utils import build_safe_target_url
+
+            raw_url = base_url or os.getenv(
+                "OLLAMA_BASE_URL", "http://localhost:11434/v1"
+            )
+            is_valid, tags_url, err = build_safe_target_url(
+                base_url=raw_url,
+                target_endpoint="/api/tags",
+                strip_suffix="/v1",
+                default_url="http://localhost:11434/v1",
+            )
+            if not is_valid or not tags_url:
+                return (
+                    jsonify(
+                        {
+                            "provider": provider,
+                            "status": "offline",
+                            "details": f"Invalid Ollama URL: {err}",
+                        }
+                    ),
+                    400 if request.method == "POST" else 200,
+                )
+
             try:
-                # Clean path to find raw tags list API
-                tags_url = url.replace("/v1", "/api/tags")
+                # Safe path to find raw tags list API
                 resp = requests.get(tags_url, timeout=3)
                 if resp.status_code == 200:
                     status = "online"
@@ -22240,9 +23091,9 @@ def create_app(test_config=None):
                 else:
                     status = "offline"
                     details = f"Ollama returned HTTP {resp.status_code}."
-            except Exception as e:
+            except Exception:
                 status = "offline"
-                details = f"Could not connect to Ollama at {url}: {e}"
+                details = f"Could not connect to Ollama service at {tags_url}."
         else:
             provider_info = registry.get(provider, {})
             var_name = provider_info.get("env_var")
@@ -22260,12 +23111,8 @@ def create_app(test_config=None):
                     status = "online"
                     details = f"API Key configured in environment ({var_name})."
                 else:
-                    status = (
-                        "configured_locally_only"
-                        if request.method == "POST"
-                        else "missing_key"
-                    )
-                    details = f"API Key ({var_name}) not found in .env file."
+                    status = "missing_key"
+                    details = f"API key not set in .env (needs {var_name})."
 
         return (
             jsonify({"provider": provider, "status": status, "details": details}),
@@ -22277,22 +23124,32 @@ def create_app(test_config=None):
         data = request.get_json() or {}
         repo_url = data.get("repo_url")
         custom_instructions = data.get("custom_instructions")
-        api_key = data.get("api_key")
-        save_key = data.get("save_key", False)
         provider = data.get("provider")
+        api_key = data.get("api_key")
         if not provider:
             provider = "gemini" if api_key else os.getenv("AI_PROVIDER", "ollama")
+        save_key = data.get("save_key", False)
         base_url = data.get("base_url")
         model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid Git repository URL is required")
 
+        if base_url:
+            from utils.security_utils import validate_and_sanitize_url
+
+            is_valid_base, clean_base, base_err = validate_and_sanitize_url(base_url)
+            if not is_valid_base:
+                return (
+                    jsonify({"error": f"Invalid base_url: {base_err}"}),
+                    400,
+                )
+            base_url = clean_base
+
         if isinstance(api_key, str):
             api_key = api_key.strip()
 
         try:
-            # Extract list of existing groups from metadata
             njorddeploy_meta = component_manager.get_njorddeploy_meta()
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
@@ -22348,8 +23205,7 @@ def create_app(test_config=None):
                             "error": "AI API Timeout",
                             "details": (
                                 "The connection to the AI API timed out. "
-                                "This is usually a temporary network issue or "
-                                "the server is overloaded. Please try again."
+                                "Please try again later."
                             ),
                         }
                     ),
@@ -22365,7 +23221,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI Connection Error",
-                            "details": err_msg,
+                            "details": (
+                                "Failed to connect to the configured AI API provider."
+                            ),
                         }
                     ),
                     502,
@@ -22375,7 +23233,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI API Error",
-                            "details": err_msg,
+                            "details": (
+                                "The AI API provider returned an error response."
+                            ),
                         }
                     ),
                     502,
@@ -22385,7 +23245,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI Generation Failed",
-                            "details": err_msg,
+                            "details": (
+                                "An unexpected error occurred during AI generation."
+                            ),
                         }
                     ),
                     500,
@@ -22420,10 +23282,20 @@ def create_app(test_config=None):
                     import yaml
 
                     cleaned_yaml = re.sub(
-                        r"\{#.*?#\}", "", docker_compose, flags=re.DOTALL
+                        r"\{#[^#]*(?:#(?!})[^#]*)*#\}",
+                        "",
+                        docker_compose,
                     )
-                    cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
+                    cleaned_yaml = re.sub(
+                        r"\{%[^%]*(?:%(?!})[^%]*)*%\}",
+                        "# jinja block",
+                        cleaned_yaml,
+                    )
+                    cleaned_yaml = re.sub(
+                        r"\{\{[^}]*\}\}",
+                        "JINJA_VAR",
+                        cleaned_yaml,
+                    )
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:
@@ -26407,6 +27279,21 @@ const VARIABLE_REQUIRED_OPTIONS = [
 ];
 
 /**
+ * Safely escapes HTML characters in a string.
+ * @param {string|null|undefined} str
+ * @returns {string}
+ */
+const escapeHtml = (str) => {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+/**
  * Creates a standard HTML option element.
  * @param {string} value - The option value.
  * @param {string} text - The option display text.
@@ -26901,14 +27788,14 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     timestampContainer.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div>
-                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${formattedUpdated}</span>
+                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${escapeHtml(formattedUpdated)}</span>
             </div>
             <div>
-                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${formattedTested}</span>
+                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${escapeHtml(formattedTested)}</span>
             </div>
         </div>
         <div class="mt-2 text-end">
-            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${details.id || ''}">
+            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${escapeHtml(details.id || '')}">
                 <i class="bi bi-check-circle me-1"></i> Markeer als getest (Vandaag)
             </button>
         </div>
@@ -28509,28 +29396,24 @@ class BackupManager:
 
         # Remote shell script to expand candidate directories and detect compose files
         cmd = (
-            f"for d in \"{target_dir}\" \"$HOME/docker\" "
-            f"/opt/njorddeploy \"$HOME/njorddeploy\"; do "
-            f"  expanded=$(eval echo \"$d\" 2>/dev/null); "
-            f"  if [ -n \"$expanded\" ]; then "
-            f"    if [ -f \"$expanded/docker-compose.yml\" ] || "
-            f"       [ -f \"$expanded/docker-compose.yaml\" ] || "
-            f"       [ -f \"$expanded/compose.yml\" ] || "
-            f"       [ -f \"$expanded/compose.yaml\" ]; then "
-            f"      echo \"$expanded\"; "
+            f'for d in "{target_dir}" "$HOME/docker" '
+            f'/opt/njorddeploy "$HOME/njorddeploy"; do '
+            f'  expanded=$(eval echo "$d" 2>/dev/null); '
+            f'  if [ -n "$expanded" ]; then '
+            f'    if [ -f "$expanded/docker-compose.yml" ] || '
+            f'       [ -f "$expanded/docker-compose.yaml" ] || '
+            f'       [ -f "$expanded/compose.yml" ] || '
+            f'       [ -f "$expanded/compose.yaml" ]; then '
+            f'      echo "$expanded"; '
             f"      break; "
             f"    fi; "
             f"  fi; "
             f"done"
         )
         try:
-            res = ssh_manager.execute_command(
-                cmd, null_log, check_exit_code=False
-            )
+            res = ssh_manager.execute_command(cmd, null_log, check_exit_code=False)
             stdout = (
-                res[1]
-                if isinstance(res, tuple) and len(res) >= 2
-                else str(res or "")
+                res[1] if isinstance(res, tuple) and len(res) >= 2 else str(res or "")
             )
         except Exception:
             stdout = ""
@@ -28563,9 +29446,9 @@ class BackupManager:
         dirs_str = " ".join(f'"{d}"' for d in search_dirs)
         cmd = (
             f"for root in {dirs_str}; do "
-            f"  exp=$(eval echo \"$root\" 2>/dev/null); "
-            f"  if [ -n \"$exp\" ] && [ -d \"$exp\" ]; then "
-            f"    find \"$exp\" -maxdepth 4 -type f \\( "
+            f'  exp=$(eval echo "$root" 2>/dev/null); '
+            f'  if [ -n "$exp" ] && [ -d "$exp" ]; then '
+            f'    find "$exp" -maxdepth 4 -type f \\( '
             f"      -name 'docker-compose.yml' -o "
             f"      -name 'docker-compose.yaml' -o "
             f"      -name 'compose.yml' -o "
@@ -28575,13 +29458,9 @@ class BackupManager:
             f"done | sort -u | head -n 25"
         )
         try:
-            res = ssh_manager.execute_command(
-                cmd, null_log, check_exit_code=False
-            )
+            res = ssh_manager.execute_command(cmd, null_log, check_exit_code=False)
             stdout = (
-                res[1]
-                if isinstance(res, tuple) and len(res) >= 2
-                else str(res or "")
+                res[1] if isinstance(res, tuple) and len(res) >= 2 else str(res or "")
             )
         except Exception:
             stdout = ""
@@ -28699,13 +29578,13 @@ class BackupManager:
 
         # Check for compose file under active_dir
         cmd_check = (
-            f"for f in \"{active_dir}/docker-compose.yml\" "
-            f"\"{active_dir}/docker-compose.yaml\" "
-            f"\"{active_dir}/compose.yml\" "
-            f"\"{active_dir}/compose.yaml\"; do "
-            f"  if [ -f \"$f\" ]; then "
+            f'for f in "{active_dir}/docker-compose.yml" '
+            f'"{active_dir}/docker-compose.yaml" '
+            f'"{active_dir}/compose.yml" '
+            f'"{active_dir}/compose.yaml"; do '
+            f'  if [ -f "$f" ]; then '
             f"    echo '___COMPOSE_FOUND___'; "
-            f"    cat \"$f\"; "
+            f'    cat "$f"; '
             f"    echo '___COMPOSE_END___'; "
             f"    break; "
             f"  fi; "
@@ -28751,10 +29630,10 @@ class BackupManager:
                 if is_bind and host_path:
                     # Query disk usage in bytes on remote host
                     cmd_du = (
-                        f"expanded_p=$(eval echo \"{host_path}\" 2>/dev/null); "
-                        f"if [ -e \"$expanded_p\" ]; then "
-                        f"du -sb \"$expanded_p\" 2>/dev/null || "
-                        f"du -sk \"$expanded_p\" 2>/dev/null | "
+                        f'expanded_p=$(eval echo "{host_path}" 2>/dev/null); '
+                        f'if [ -e "$expanded_p" ]; then '
+                        f'du -sb "$expanded_p" 2>/dev/null || '
+                        f'du -sk "$expanded_p" 2>/dev/null | '
                         f"awk '{{print $1 * 1024}}'; "
                         f"else echo '0'; fi"
                     )
@@ -28763,11 +29642,7 @@ class BackupManager:
                     )
                     for line in du_out.splitlines():
                         line_str = line.strip()
-                        first_col = (
-                            line_str.split()[0]
-                            if line_str.split()
-                            else ""
-                        )
+                        first_col = line_str.split()[0] if line_str.split() else ""
                         if first_col.isdigit():
                             size_bytes = int(first_col)
                             break
@@ -28779,12 +29654,9 @@ class BackupManager:
                 enriched_volumes.append(vol_dict)
 
             # Heuristic: mark large volumes or media/recording/upload dirs
-            is_heavy = (
-                service_bytes > 500 * 1024 * 1024
-                or any(
-                    k in service_id.lower()
-                    for k in ["frigate", "nextcloud", "immich", "jellyfin", "plex"]
-                )
+            is_heavy = service_bytes > 500 * 1024 * 1024 or any(
+                k in service_id.lower()
+                for k in ["frigate", "nextcloud", "immich", "jellyfin", "plex"]
             )
 
             components_list.append(
@@ -28832,9 +29704,7 @@ class BackupManager:
         log(f"Scope / Stack Directory: {active_dir}\n")
 
         # 1. Inspect target to resolve exact volume paths
-        inspection = self.inspect_target(
-            ssh_manager, project_config_dir=active_dir
-        )
+        inspection = self.inspect_target(ssh_manager, project_config_dir=active_dir)
         if inspection.get("status") != "success":
             msg = inspection.get("message", "Target inspection failed.")
             log(f"ERROR: {msg}\n")
@@ -28867,11 +29737,7 @@ class BackupManager:
         for comp in active_components:
             for vol in comp.get("volumes", []):
                 h_path = vol.get("host_path", "")
-                if (
-                    vol.get("type") == "bind"
-                    and h_path
-                    and h_path not in exclude_paths
-                ):
+                if vol.get("type") == "bind" and h_path and h_path not in exclude_paths:
                     if h_path not in paths_to_archive:
                         paths_to_archive.append(h_path)
 
@@ -28890,8 +29756,8 @@ class BackupManager:
 
         # 4. Prepare remote backup directories
         prep_cmd = (
-            f"mkdir -p \"{backup_dir}\" && "
-            f"mkdir -p \"{staging_dir}\" && "
+            f'mkdir -p "{backup_dir}" && '
+            f'mkdir -p "{staging_dir}" && '
             f"cat << 'EOF' > \"{staging_dir}/manifest.json\"\n"
             f"{manifest_json_str}\n"
             f"EOF\n"
@@ -28902,7 +29768,7 @@ class BackupManager:
         if pause_containers and included_service_ids:
             log("Pausing active containers for transactional consistency...\n")
             pause_cmd = (
-                f"cd \"{active_dir}\" && "
+                f'cd "{active_dir}" && '
                 f"docker compose pause {' '.join(included_service_ids)} "
                 f"2>/dev/null || true"
             )
@@ -28912,40 +29778,38 @@ class BackupManager:
         existing_check = []
         for p in paths_to_archive:
             existing_check.append(
-                f"ep=$(eval echo \"{p}\" 2>/dev/null); "
-                f"[ -e \"$ep\" ] && printf '%s\n' \"$ep\""
+                f'ep=$(eval echo "{p}" 2>/dev/null); '
+                f'[ -e "$ep" ] && printf \'%s\n\' "$ep"'
             )
         gather_existing_cmd = " ; ".join(existing_check)
 
         log("Building compressed backup tarball...\n")
         tar_cmd = (
             f"valid_paths=$({gather_existing_cmd}) ; "
-            f"if [ -n \"$valid_paths\" ]; then "
-            f"tar -czf \"{backup_path}\" "
-            f"-C \"{staging_dir}\" manifest.json "
+            f'if [ -n "$valid_paths" ]; then '
+            f'tar -czf "{backup_path}" '
+            f'-C "{staging_dir}" manifest.json '
             f"$valid_paths 2>/dev/null || "
-            f"tar -czf \"{backup_path}\" -C \"{staging_dir}\" manifest.json ; "
+            f'tar -czf "{backup_path}" -C "{staging_dir}" manifest.json ; '
             f"else "
-            f"tar -czf \"{backup_path}\" -C \"{staging_dir}\" manifest.json ; "
+            f'tar -czf "{backup_path}" -C "{staging_dir}" manifest.json ; '
             f"fi"
         )
 
-        tar_code, _ = ssh_manager.execute_command(
-            tar_cmd, log, check_exit_code=False
-        )
+        tar_code, _ = ssh_manager.execute_command(tar_cmd, log, check_exit_code=False)
 
         # 7. Unpause containers
         if pause_containers and included_service_ids:
             log("Resuming container operations...\n")
             unpause_cmd = (
-                f"cd \"{active_dir}\" && "
+                f'cd "{active_dir}" && '
                 f"docker compose unpause {' '.join(included_service_ids)} "
                 f"2>/dev/null || true"
             )
             ssh_manager.execute_command(unpause_cmd, log, check_exit_code=False)
 
         # 8. Clean up staging
-        cleanup_cmd = f"rm -rf \"{staging_dir}\""
+        cleanup_cmd = f'rm -rf "{staging_dir}"'
         ssh_manager.execute_command(cleanup_cmd, log, check_exit_code=False)
 
         if tar_code != 0:
@@ -28957,9 +29821,7 @@ class BackupManager:
             f"sha256sum \"{backup_path}\" 2>/dev/null | awk '{{print $1}}' ; "
             f"stat -c %s \"{backup_path}\" 2>/dev/null || echo '0'"
         )
-        _, hash_out = ssh_manager.execute_command(
-            hash_cmd, log, check_exit_code=False
-        )
+        _, hash_out = ssh_manager.execute_command(hash_cmd, log, check_exit_code=False)
         lines = [ln.strip() for ln in hash_out.splitlines() if ln.strip()]
         sha256_hash = ""
         size_bytes = 0
@@ -28998,9 +29860,9 @@ class BackupManager:
         active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
         backup_dir = f"{active_dir}/backups"
         list_cmd = (
-            f"if [ -d \"{backup_dir}\" ]; then "
-            f"for f in \"{backup_dir}\"/njorddeploy_backup_*.tar.gz; do "
-            f"  if [ -f \"$f\" ]; then "
+            f'if [ -d "{backup_dir}" ]; then '
+            f'for f in "{backup_dir}"/njorddeploy_backup_*.tar.gz; do '
+            f'  if [ -f "$f" ]; then '
             f"    stat -c '%n|%s|%Y' \"$f\" 2>/dev/null; "
             f"  fi; "
             f"done; "
@@ -29026,9 +29888,7 @@ class BackupManager:
                 size_b = int(size_str) if size_str.isdigit() else 0
                 mtime_int = int(mtime_str) if mtime_str.isdigit() else 0
                 dt_str = (
-                    datetime.fromtimestamp(mtime_int).strftime(
-                        "%Y-%m-%d %H:%M:%S"
-                    )
+                    datetime.fromtimestamp(mtime_int).strftime("%Y-%m-%d %H:%M:%S")
                     if mtime_int > 0
                     else "Unknown"
                 )
@@ -29075,8 +29935,8 @@ class BackupManager:
 
         # 1. Verify archive existence on target
         check_cmd = (
-            f"if [ -f \"{backup_path}\" ]; then "
-            f"tar -tzf \"{backup_path}\" manifest.json >/dev/null 2>&1 && "
+            f'if [ -f "{backup_path}" ]; then '
+            f'tar -tzf "{backup_path}" manifest.json >/dev/null 2>&1 && '
             f"echo 'VALID'; "
             f"else echo 'MISSING'; fi"
         )
@@ -29105,14 +29965,12 @@ class BackupManager:
 
         # 3. Stop running containers before extracting volume state
         log("Stopping current container stack...\n")
-        stop_cmd = (
-            f"cd \"{active_dir}\" && docker compose stop 2>/dev/null || true"
-        )
+        stop_cmd = f'cd "{active_dir}" && docker compose stop 2>/dev/null || true'
         ssh_manager.execute_command(stop_cmd, log, check_exit_code=False)
 
         # 4. Extract archive to root filesystem
         log("Extracting configuration and volume data from backup archive...\n")
-        extract_cmd = f"tar -xzf \"{backup_path}\" -C /"
+        extract_cmd = f'tar -xzf "{backup_path}" -C /'
         extract_code, _ = ssh_manager.execute_command(
             extract_cmd, log, check_exit_code=False
         )
@@ -29126,12 +29984,12 @@ class BackupManager:
         fix_perms_cmd = (
             f"for f in '{active_dir}/docker-compose.yml' "
             f"'{active_dir}/compose.yml'; do "
-            f"  if [ -f \"$f\" ]; then "
+            f'  if [ -f "$f" ]; then '
             f"    grep -E '^\\s*-\\s+/[^:]+:' \"$f\" | "
             f"    sed -E 's/^\\s*-\\s+([^:]+):.*/\\1/' | while read -r host_path; do "
-            f"      clean_p=$(echo \"$host_path\" | tr -d '\"' | tr -d \"'\"); "
-            f"      if [ -n \"$clean_p\" ] && [ -d \"$clean_p\" ]; then "
-            f"        chmod -R 777 \"$clean_p\" 2>/dev/null || true; "
+            f'      clean_p=$(echo "$host_path" | tr -d \'"\' | tr -d "\'"); '
+            f'      if [ -n "$clean_p" ] && [ -d "$clean_p" ]; then '
+            f'        chmod -R 777 "$clean_p" 2>/dev/null || true; '
             f"      fi; "
             f"    done; "
             f"  fi; "
@@ -29142,16 +30000,14 @@ class BackupManager:
         # 6. Restart container stack if requested
         if restart_after:
             log("Restarting container stack with restored data...\n")
-            up_cmd = f"cd \"{active_dir}\" && docker compose up -d 2>&1"
+            up_cmd = f'cd "{active_dir}" && docker compose up -d 2>&1'
             ssh_manager.execute_command(up_cmd, log, check_exit_code=False)
 
         log("SUCCESS: Restore operation completed successfully.\n")
         return {
             "status": "success",
             "restored_archive": clean_filename,
-            "restored_components": (
-                selected_components or archived_components
-            ),
+            "restored_components": (selected_components or archived_components),
             "restarted": restart_after,
             "managed_scope": active_dir,
             "disclaimer": DISCLAIMER_TEXT,
@@ -33777,9 +34633,13 @@ class AIGenerator:
         Uses the multi-provider AIGeneratorEngine.
         """
         # Clean and validate the repository URL
-        parsed_url = urllib.parse.urlparse(repo_url.strip())
-        if not parsed_url.scheme or not parsed_url.netloc:
-            raise ValueError("A valid Git repository URL is required.")
+        from utils.security_utils import validate_and_sanitize_url
+
+        is_valid_url, clean_repo_url, url_err = validate_and_sanitize_url(repo_url)
+        if not is_valid_url or not clean_repo_url:
+            raise ValueError(f"A valid Git repository URL is required: {url_err}")
+
+        parsed_url = urllib.parse.urlsplit(clean_repo_url)
 
         raw_path = parsed_url.path.strip("/")
         if raw_path.endswith(".git"):
@@ -34048,22 +34908,36 @@ class AIGenerator:
         repo = parts[-1] if len(parts) > 1 else ""
 
         host = netloc.lower()
+        if ":" in host:
+            host, *_ = host.split(":", 1)
 
-        if "github.com" in host and owner and repo:
+        is_github = host == "github.com" or host.endswith(".github.com")
+        is_bitbucket = host == "bitbucket.org" or host.endswith(".bitbucket.org")
+        is_codeberg = host == "codeberg.org" or host.endswith(".codeberg.org")
+        is_gitlab = (
+            host == "gitlab.com"
+            or host.endswith(".gitlab.com")
+            or "gitlab" in host.split(".")
+        )
+        is_gitea_forgejo = (
+            "gitea" in host.split(".") or "forgejo" in host.split(".") or is_codeberg
+        )
+
+        if is_github and owner and repo:
             for branch in branches:
                 urls.append(
                     f"https://raw.githubusercontent.com/{owner}/{repo}/"
                     f"{branch}/{filename}"
                 )
-        elif "gitlab" in host:
+        elif is_gitlab:
             for branch in branches:
                 urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
-        elif "bitbucket.org" in host:
+        elif is_bitbucket:
             for branch in branches:
                 urls.append(
                     f"https://bitbucket.org/{repo_path}/raw/{branch}/{filename}"
                 )
-        elif "codeberg.org" in host or "gitea" in host or "forgejo" in host:
+        elif is_gitea_forgejo:
             for branch in branches:
                 urls.append(
                     f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"
@@ -36155,6 +37029,126 @@ def get_components_paths() -> tuple[Path, Path]:
     fallback_metadata = resource_path("config/components_metadata.json")
     fallback_templates = resource_path("component_templates")
     return fallback_metadata, fallback_templates
+
+--- FILE: src/utils/security_utils.py ---
+# src/utils/security_utils.py
+
+import urllib.parse
+from typing import Optional, Tuple
+
+ALLOWED_HTTP_SCHEMES = {"http", "https"}
+
+
+def validate_and_sanitize_url(
+    raw_url: Optional[str],
+    allowed_schemes: Optional[set[str]] = None,
+    default_url: Optional[str] = None,
+) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Validates and sanitizes a URL to defend against SSRF and injection attacks.
+
+    Args:
+        raw_url: The untrusted URL string to validate.
+        allowed_schemes: Set of permitted URL schemes (defaults to {'http', 'https'}).
+        default_url: Optional fallback URL if raw_url is None or empty.
+
+    Returns:
+        A tuple of (is_valid, sanitized_url, error_message).
+    """
+    schemes = allowed_schemes if allowed_schemes is not None else ALLOWED_HTTP_SCHEMES
+    candidate = (raw_url or default_url or "").strip()
+
+    if not candidate:
+        return False, None, "URL cannot be empty."
+
+    # Check for forbidden control characters or whitespace within the URL string
+    if any(c in candidate for c in ("\r", "\n", "\t", "\x00")):
+        return False, None, "URL contains illegal control characters."
+
+    # noinspection PyBroadException
+    try:
+        parsed = urllib.parse.urlsplit(candidate)
+    except Exception as e:
+        return False, None, f"Malformed URL: {e}"
+
+    # 1. Validate Scheme
+    scheme = parsed.scheme.lower() if parsed.scheme else ""
+    if not scheme or scheme not in schemes:
+        allowed_str = ", ".join(sorted(schemes))
+        return (
+            False,
+            None,
+            f"Invalid URL scheme '{parsed.scheme}'. Only [{allowed_str}] are allowed.",
+        )
+
+    # 2. Validate Hostname / Netloc
+    if not parsed.netloc or not parsed.hostname:
+        return False, None, "URL must contain a valid hostname and network location."
+
+    # 3. Clean and reconstruct normalized URL (stripping fragments)
+    clean_url = urllib.parse.urlunsplit(
+        (
+            scheme,
+            parsed.netloc,
+            parsed.path,
+            parsed.query,
+            "",  # Remove fragment
+        )
+    )
+    return True, clean_url, None
+
+
+def build_safe_target_url(
+    base_url: Optional[str],
+    target_endpoint: str,
+    strip_suffix: Optional[str] = None,
+    default_url: Optional[str] = None,
+    allowed_schemes: Optional[set[str]] = None,
+) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Validates a base URL and constructs a safe target URL endpoint.
+
+    Args:
+        base_url: Untrusted base URL supplied by user or environment.
+        target_endpoint: The relative or absolute endpoint path (e.g. '/api/tags').
+        strip_suffix: Optional suffix to strip from base path (e.g. '/v1').
+        default_url: Fallback base URL if base_url is empty.
+        allowed_schemes: Permitted schemes (defaults to {'http', 'https'}).
+
+    Returns:
+        A tuple of (is_valid, safe_target_url, error_message).
+    """
+    is_valid, sanitized_base, err = validate_and_sanitize_url(
+        raw_url=base_url,
+        allowed_schemes=allowed_schemes,
+        default_url=default_url,
+    )
+    if not is_valid or not sanitized_base:
+        return False, None, err
+
+    # noinspection PyBroadException
+    try:
+        parsed = urllib.parse.urlsplit(sanitized_base)
+        base_path = parsed.path.rstrip("/")
+
+        if strip_suffix:
+            clean_suffix = strip_suffix.rstrip("/")
+            if base_path.endswith(clean_suffix):
+                base_path = base_path[: -len(clean_suffix)].rstrip("/")
+
+        clean_endpoint = "/" + target_endpoint.lstrip("/")
+        full_path = f"{base_path}{clean_endpoint}" if base_path else clean_endpoint
+
+        target_url = urllib.parse.urlunsplit(
+            (
+                parsed.scheme,
+                parsed.netloc,
+                full_path,
+                "",  # Query
+                "",  # Fragment
+            )
+        )
+        return True, target_url, None
+    except Exception as e:
+        return False, None, f"Failed to construct target URL: {e}"
 
 --- FILE: src/utils/ssh_utils.py ---
 # src/utils/ssh_utils.py

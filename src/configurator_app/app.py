@@ -376,8 +376,9 @@ def create_app(test_config=None):
                     200,
                 )
             except Exception as e:
+                logging.error(f"Failed to save .env file: {e}", exc_info=True)
                 return (
-                    jsonify({"error": f"Failed to save .env file: {str(e)}"}),
+                    jsonify({"error": "Failed to save .env file."}),
                     500,
                 )
 
@@ -427,8 +428,9 @@ def create_app(test_config=None):
                     200,
                 )
             except Exception as e:
+                logging.error(f"Failed to update settings: {e}", exc_info=True)
                 return (
-                    jsonify({"error": f"Failed to update settings: {str(e)}"}),
+                    jsonify({"error": "Failed to update settings."}),
                     500,
                 )
 
@@ -506,8 +508,9 @@ def create_app(test_config=None):
                 200,
             )
         except Exception as e:
+            logging.error(f"Failed to persist engine setting: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to persist engine setting: {str(e)}"}),
+                jsonify({"error": "Failed to persist engine setting."}),
                 500,
             )
 
@@ -1154,7 +1157,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to create Proxmox LXC: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Proxmox LXC creation failed: {str(e)}"}),
+                jsonify({"error": "Proxmox LXC creation failed."}),
                 500,
             )
 
@@ -1202,7 +1205,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to list Proxmox QEMU templates: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to list templates: {str(e)}"}),
+                jsonify({"error": "Failed to list templates."}),
                 500,
             )
 
@@ -1508,7 +1511,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to create Proxmox VM: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Proxmox VM creation failed: {str(e)}"}),
+                jsonify({"error": "Proxmox VM creation failed."}),
                 500,
             )
 
@@ -1584,7 +1587,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to list Proxmox targets: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to list Proxmox targets: {str(e)}"}),
+                jsonify({"error": "Failed to list Proxmox targets."}),
                 500,
             )
 
@@ -1634,7 +1637,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to query Proxmox target IP: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to query target IP: {str(e)}"}),
+                jsonify({"error": "Failed to query target IP."}),
                 500,
             )
 
@@ -1709,7 +1712,7 @@ def create_app(test_config=None):
         except Exception as e:
             logging.error(f"Failed to start Proxmox target: {e}", exc_info=True)
             return (
-                jsonify({"error": f"Failed to start target: {str(e)}"}),
+                jsonify({"error": "Failed to start target."}),
                 500,
             )
 
@@ -2387,8 +2390,11 @@ def create_app(test_config=None):
             # Recursively find and filter files
             files_dict = {}
             for file_path in target_path.rglob("*"):
-                if file_path.is_file():
-                    relative_path = file_path.relative_to(target_path)
+                resolved_file = file_path.resolve()
+                if not resolved_file.is_relative_to(target_path):
+                    continue
+                if resolved_file.is_file():
+                    relative_path = resolved_file.relative_to(target_path)
                     parts = relative_path.parts
 
                     should_show = False
@@ -2406,7 +2412,7 @@ def create_app(test_config=None):
                     if should_show:
                         relative_name = str(relative_path)
                         try:
-                            with open(file_path, "r", encoding="utf-8") as f:
+                            with open(resolved_file, "r", encoding="utf-8") as f:
                                 files_dict[relative_name] = f.read()
                         except (UnicodeDecodeError, IOError):
                             # Skip binary or unreadable files
@@ -2464,7 +2470,10 @@ def create_app(test_config=None):
             )
         except Exception as e:
             logging.error(f"Discover compose failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to discover compose files."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/inspect", methods=["POST"])
     def api_backup_inspect():
@@ -2503,7 +2512,10 @@ def create_app(test_config=None):
             return jsonify(inspection), status_code
         except Exception as e:
             logging.error(f"Backup inspect failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to inspect target host."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/create", methods=["POST"])
     def api_backup_create():
@@ -2550,7 +2562,10 @@ def create_app(test_config=None):
             return jsonify(res), status_code
         except Exception as e:
             logging.error(f"Backup create failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to create backup archive."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/list", methods=["POST"])
     def api_backup_list():
@@ -2588,7 +2603,10 @@ def create_app(test_config=None):
             return jsonify({"status": "success", "backups": backups}), 200
         except Exception as e:
             logging.error(f"Backup list failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to list backups."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/restore", methods=["POST"])
     def api_backup_restore():
@@ -2642,13 +2660,18 @@ def create_app(test_config=None):
             return jsonify(res), status_code
         except Exception as e:
             logging.error(f"Backup restore failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to restore backup."}),
+                500,
+            )
 
     @flask_app.route("/api/backup/download/<filename>", methods=["GET"])
     def api_backup_download(filename: str):
         """Downloads a backup archive from the remote host or local staging."""
         try:
-            clean_name = os.path.basename(filename.strip())
+            from werkzeug.utils import secure_filename
+
+            clean_name = secure_filename(os.path.basename(filename.strip()))
             if not re.match(r"^njorddeploy_backup_[0-9_]+\.tar\.gz$", clean_name):
                 return jsonify({"error": "Invalid backup filename."}), 400
 
@@ -2661,10 +2684,14 @@ def create_app(test_config=None):
             ) or request.args.get("stack_dir")
 
             staging_dir = (
-                Path(user_data_dir("NjordDeploy", "NjordDeploy")) / "backups_download"
+                Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
+                / "backups_download"
             )
             staging_dir.mkdir(parents=True, exist_ok=True)
-            local_target = staging_dir / clean_name
+            local_target = (staging_dir / clean_name).resolve()
+
+            if not local_target.is_relative_to(staging_dir):
+                return jsonify({"error": "Unauthorized path access."}), 403
 
             if not local_target.exists():
                 if not ip or not username:
@@ -2708,7 +2735,10 @@ def create_app(test_config=None):
             return send_file(local_target, as_attachment=True, download_name=clean_name)
         except Exception as e:
             logging.error(f"Backup download failed: {e}", exc_info=True)
-            return jsonify({"error": f"Internal server error: {e}"}), 500
+            return (
+                jsonify({"error": "Failed to download backup."}),
+                500,
+            )
 
     return flask_app
 

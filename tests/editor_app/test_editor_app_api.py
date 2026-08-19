@@ -254,3 +254,53 @@ class TestEditorAppAPI(unittest.TestCase):
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertEqual(res_data["status"], "deleted")
         mock_delete_config.assert_called_once_with("litellm", "config.yaml")
+
+    @patch("requests.get")
+    def test_ai_status_ollama_online(self, mock_get):
+        """Tests /api/ai/status with online Ollama instance."""
+        mock_resp = unittest.mock.MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.json.return_value = {
+            "models": [{"name": "llama3:latest"}, {"name": "mistral:latest"}]
+        }
+        mock_get.return_value = mock_resp
+
+        payload = {"provider": "ollama", "base_url": "http://localhost:11434/v1"}
+        response = self.client.post(
+            "/api/ai/status",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "online")
+        self.assertEqual(res_data["models"], ["llama3:latest", "mistral:latest"])
+        mock_get.assert_called_once_with("http://localhost:11434/api/tags", timeout=3)
+
+    def test_ai_status_ollama_ssrf_rejection(self):
+        """Tests /api/ai/status rejects unsafe SSRF schemes and malicious URLs."""
+        payload = {"provider": "ollama", "base_url": "file:///etc/passwd"}
+        response = self.client.post(
+            "/api/ai/status",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "offline")
+        self.assertIn("Invalid Ollama URL", res_data["details"])
+
+    @patch("requests.get")
+    def test_ai_status_ollama_connection_error(self, mock_get):
+        """Tests /api/ai/status handling when Ollama connection fails."""
+        mock_get.side_effect = Exception("Connection refused")
+        payload = {"provider": "ollama", "base_url": "http://localhost:11434/v1"}
+        response = self.client.post(
+            "/api/ai/status",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "offline")
+        self.assertIn("Could not connect to Ollama", res_data["details"])

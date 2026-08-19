@@ -6,6 +6,28 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.25] - 2026-08-19
+
+### Added
+- **Interactive Onboarding Tour & Prerequisites Banner in Configurator App**:
+  - Implemented interactive multi-step guided tour for step-by-step guidance on target discovery, component selection, environment variable configuration, and deployment.
+  - Added collapsible **Getting Started / Checklist & AI Setup** banner at the top of Step 1 in [`src/configurator_app/templates/index.html`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/templates/index.html) with persistence via `localStorage`, hardware and SSH prerequisites, and direct links to AI provider key portals.
+- **AI & Multi-Provider LLM Key Management Portal**:
+  - Expanded [`src/configurator_app/templates/settings.html`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/templates/settings.html) with dedicated inputs and direct clickable documentation links for obtaining API keys across Google Gemini, OpenAI, Anthropic Claude, HostYourAI (EU AI Act compliant), Ollama Local, and Custom OpenAI-compatible endpoints.
+  - Added Section 5 in [`docs/USER_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/USER_GUIDE.md) detailing multi-provider configuration.
+- **GitHub Security Alerts Skill & REST Ingestion Tooling**:
+  - Built [`.agents/skills/github-security/SKILL.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/.agents/skills/github-security/SKILL.md) and CLI tool [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py) to query GitHub Security APIs (`/code-scanning/alerts`, `/dependabot/alerts`, `/secret-scanning/alerts`).
+  - Added comprehensive test suite in [`tests/test_fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/tests/test_fetch_github_security_alerts.py).
+
+### Security & Hardening (Air Traffic Control Quality)
+- **Resolved All 48 GitHub CodeQL Security Alerts**:
+  - **Incomplete URL Sanitization (`py/incomplete-url-substring-sanitization`)**: Enforced strict hostname and domain boundary checking via `urllib.parse.urlsplit` in [`src/utils/ai_generator.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_generator.py).
+  - **ReDoS Prevention (`py/polynomial-redos`)**: Replaced unbounded backtracking regexes with linear character-class matchers for template and Jinja comment scrubbing in [`src/editor_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/app.py).
+  - **DOM-Based XSS Protection (`js/xss-through-dom`)**: Sanitized all dynamic API payloads, component IDs, and error messages via `escapeHtml()` across [`src/editor_app/static/ui_render_utils.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/static/ui_render_utils.js), [`src/configurator_app/static/js/backup_manager_ui.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/static/js/backup_manager_ui.js), and [`src/configurator_app/static/js/app.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/static/js/app.js).
+  - **Sensitive Data Exposure (`js/clear-text-storage-of-sensitive-data` & `py/clear-text-logging-sensitive-data`)**: Removed password caching from `sessionStorage` in `backup_manager_ui.js` and masked root credentials in [`scripts/create_proxmox_lxc.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/create_proxmox_lxc.py).
+  - **Path Injection Containment (`py/path-injection`)**: Enforced `is_relative_to()` directory containment and `secure_filename()` across [`src/configurator_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/app.py) and [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py).
+  - **Stack Trace Exposure (`py/stack-trace-exposure`)**: Replaced raw exception string propagation in JSON responses with sanitized messages while preserving full stack traces in server logs with `exc_info=True`.
+
 ## [0.5.24] - 2026-08-18
 
 ### Added

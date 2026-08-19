@@ -363,7 +363,7 @@ def main():
     logger.info("LXC CONTAINER PROVISIONING COMPLETED SUCCESSFULLY!")
     logger.info(f"  Container ID:  {vmid}")
     logger.info(f"  IP Address:    {ip_address}")
-    logger.info(f"  Root Password: {args.password}")
+    logger.info("  Root Password: [PROTECTED]")
     logger.info(f"  Engine:        {args.engine.upper()}")
     logger.info("  SSH Port:      22")
     logger.info(

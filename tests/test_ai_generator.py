@@ -273,8 +273,11 @@ class TestAIGenerator(unittest.TestCase):
         """Verify image registry replacement doesn't alter build context."""
 
         def mock_exists(url, **kwargs):
+            import urllib.parse
+
             mock_res = MagicMock()
-            if "ghcr.io" in url:
+            parsed = urllib.parse.urlsplit(url)
+            if parsed.netloc == "ghcr.io" or parsed.netloc.endswith(".ghcr.io"):
                 mock_res.status_code = 200
             else:
                 mock_res.status_code = 404

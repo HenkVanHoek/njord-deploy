@@ -1,6 +1,4 @@
 // src/configurator_app/static/js/backup_manager_ui.js
-/* global bootstrap */
-
 (function () {
     "use strict";
 
@@ -22,6 +20,17 @@
         const backupListContainer = document.getElementById("backup-archives-table-body");
         const backupStatusAlert = document.getElementById("backup-status-alert");
         const restoreStatusAlert = document.getElementById("restore-status-alert");
+
+        // Helper to safely escape HTML special characters
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         // Helper to retrieve target credentials and path from modal inputs or fallback to wizard/session
         function getTargetCredentials() {
@@ -64,12 +73,6 @@
                 if (wizardPass && wizardPass.value) {
                     password = wizardPass.value;
                     if (targetPassInput) targetPassInput.value = password;
-                } else {
-                    const savedPass = sessionStorage.getItem("njorddeploy_backup_pass");
-                    if (savedPass) {
-                        password = savedPass;
-                        if (targetPassInput) targetPassInput.value = password;
-                    }
                 }
             }
 
@@ -89,7 +92,6 @@
         function saveCredentials(creds) {
             if (creds.ip) sessionStorage.setItem("njorddeploy_backup_ip", creds.ip);
             if (creds.username) sessionStorage.setItem("njorddeploy_backup_user", creds.username);
-            if (creds.password) sessionStorage.setItem("njorddeploy_backup_pass", creds.password);
             if (creds.project_config_dir) sessionStorage.setItem("njorddeploy_backup_path", creds.project_config_dir);
         }
 
@@ -256,14 +258,14 @@
                     if (!res.ok || data.status !== "success") {
                         if (backupStatusAlert) {
                             backupStatusAlert.className = "alert alert-danger small mt-3";
-                            backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Backup failed: ${data.message || data.error || "Unknown error"}`;
+                            backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Backup failed: ${escapeHtml(data.message || data.error || "Unknown error")}`;
                         }
                     } else {
                         if (backupStatusAlert) {
                             backupStatusAlert.className = "alert alert-success small mt-3";
                             backupStatusAlert.innerHTML = `
                                 <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Backup Created Successfully!</strong></div>
-                                <div class="mt-1">Archive: <code>${data.filename}</code> (${data.size_human})</div>
+                                <div class="mt-1">Archive: <code>${escapeHtml(data.filename)}</code> (${escapeHtml(data.size_human)})</div>
                                 <div class="mt-2">
                                     <a href="/api/backup/download/${encodeURIComponent(data.filename)}?ip=${encodeURIComponent(creds.ip)}&username=${encodeURIComponent(creds.username)}&project_config_dir=${encodeURIComponent(creds.project_config_dir)}" class="btn btn-sm btn-success text-white">
                                         <i class="fa-solid fa-download me-1"></i> Download to Local Machine
@@ -276,7 +278,7 @@
                 } catch (err) {
                     if (backupStatusAlert) {
                         backupStatusAlert.className = "alert alert-danger small mt-3";
-                        backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                        backupStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${escapeHtml(err.message)}`;
                     }
                 } finally {
                     createBackupBtn.disabled = false;
@@ -330,10 +332,10 @@
                 backups.forEach(bk => {
                     html += `
                         <tr>
-                            <td><input type="radio" name="selected_backup_radio" value="${bk.filename}" class="form-check-input"></td>
-                            <td><code>${bk.filename}</code></td>
-                            <td>${bk.created_at}</td>
-                            <td><span class="badge bg-secondary">${bk.size_human}</span></td>
+                            <td><input type="radio" name="selected_backup_radio" value="${escapeHtml(bk.filename)}" class="form-check-input"></td>
+                            <td><code>${escapeHtml(bk.filename)}</code></td>
+                            <td>${escapeHtml(bk.created_at)}</td>
+                            <td><span class="badge bg-secondary">${escapeHtml(bk.size_human)}</span></td>
                         </tr>
                     `;
                 });
@@ -345,7 +347,7 @@
                 if (restoreBackupBtn) restoreBackupBtn.disabled = false;
             } catch (err) {
                 backupListContainer.innerHTML = `
-                    <tr><td colspan="4" class="text-center text-danger py-3">Error: ${err.message}</td></tr>
+                    <tr><td colspan="4" class="text-center text-danger py-3">Error: ${escapeHtml(err.message)}</td></tr>
                 `;
                 if (restoreBackupBtn) restoreBackupBtn.disabled = true;
             }
@@ -389,21 +391,21 @@
                     if (!res.ok || data.status !== "success") {
                         if (restoreStatusAlert) {
                             restoreStatusAlert.className = "alert alert-danger small mt-3";
-                            restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Restore failed: ${data.message || data.error || "Unknown error"}`;
+                            restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Restore failed: ${escapeHtml(data.message || data.error || "Unknown error")}`;
                         }
                     } else {
                         if (restoreStatusAlert) {
                             restoreStatusAlert.className = "alert alert-success small mt-3";
                             restoreStatusAlert.innerHTML = `
                                 <div><i class="fa-solid fa-circle-check me-1"></i> <strong>Restore Completed Successfully!</strong></div>
-                                <div class="mt-1">All managed services and volume data have been restored and restarted in <code>${data.managed_scope || creds.project_config_dir}</code>.</div>
+                                <div class="mt-1">All managed services and volume data have been restored and restarted in <code>${escapeHtml(data.managed_scope || creds.project_config_dir)}</code>.</div>
                             `;
                         }
                     }
                 } catch (err) {
                     if (restoreStatusAlert) {
                         restoreStatusAlert.className = "alert alert-danger small mt-3";
-                        restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${err.message}`;
+                        restoreStatusAlert.innerHTML = `<i class="fa-solid fa-circle-xmark me-1"></i> Network error: ${escapeHtml(err.message)}`;
                     }
                 } finally {
                     restoreBackupBtn.disabled = false;
@@ -473,14 +475,14 @@
                             sessionStorage.setItem("njorddeploy_backup_path", firstMatch.directory);
                         }
                         if (scanFeedback) {
-                            scanFeedback.innerHTML = `<span class="text-success"><i class="fa-solid fa-check me-1"></i> Found: <code>${firstMatch.directory}</code></span>`;
+                            scanFeedback.innerHTML = `<span class="text-success"><i class="fa-solid fa-check me-1"></i> Found: <code>${escapeHtml(firstMatch.directory)}</code></span>`;
                         }
                         await loadTargetVolumes();
                         await loadBackupList();
                     }
                 } catch (err) {
                     if (scanFeedback) {
-                        scanFeedback.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Scan error: ${err.message}</span>`;
+                        scanFeedback.innerHTML = `<span class="text-danger"><i class="fa-solid fa-circle-xmark me-1"></i> Scan error: ${escapeHtml(err.message)}</span>`;
                     }
                 } finally {
                     scanComposeBtn.disabled = false;

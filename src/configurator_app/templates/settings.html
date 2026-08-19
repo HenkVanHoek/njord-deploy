@@ -266,20 +266,114 @@
                         </div>
 
                         <!-- Section: AI Assistant API Integration -->
-                        <div class="col-md-6">
-                            <div class="card settings-card h-100 bg-light border-0">
+                        <div class="col-12">
+                            <div class="card settings-card bg-light border-0">
                                 <div class="card-body">
-                                    <h5 class="card-title text-primary mb-3"><i class="fa-solid fa-brain me-2"></i> AI Assistant Integration</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title text-primary mb-0"><i class="fa-solid fa-brain me-2"></i> AI Assistant &amp; LLM Provider Integration</h5>
+                                        <span class="badge bg-secondary-subtle text-secondary small">Multi-Provider &amp; Local Offline Supported</span>
+                                    </div>
+                                    <p class="text-muted small mb-4">
+                                        Configure API keys and endpoints for AI Failure Diagnosis and Component Editor AI Generation. Obtain API keys directly from the provider portals linked below.
+                                    </p>
                                     <div class="row g-3">
-                                        <div class="col-12">
-                                            <label for="GEMINI_API_KEY" class="form-label small fw-bold">Gemini API Key</label>
+                                        <!-- Google Gemini -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="GEMINI_API_KEY" class="form-label small fw-bold mb-0">Google Gemini API Key</label>
+                                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="small text-decoration-none" title="Get API Key from Google AI Studio">
+                                                    <i class="fa-brands fa-google me-1"></i>Get Gemini Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
                                             <div class="input-group">
                                                 <input type="password" class="form-control" id="GEMINI_API_KEY" value="{{ env_vars.get('GEMINI_API_KEY', '') }}" placeholder="AIzaSy...">
                                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
                                             </div>
-                                            <div class="form-text small mt-1">Used by the component editor to generate software profiles automatically.</div>
+                                            <div class="form-text small mt-1">Default model: <code>gemini-2.5-flash</code> via official OpenAI-compatible endpoint.</div>
+                                        </div>
+
+                                        <!-- OpenAI -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="OPENAI_API_KEY" class="form-label small fw-bold mb-0">OpenAI API Key</label>
+                                                <a href="https://platform.openai.com/api-keys" target="_blank" class="small text-decoration-none" title="Get API Key from OpenAI Platform">
+                                                    <i class="fa-solid fa-bolt me-1"></i>Get OpenAI Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="OPENAI_API_KEY" value="{{ env_vars.get('OPENAI_API_KEY', '') }}" placeholder="sk-proj-...">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Default model: <code>gpt-4o-mini</code>.</div>
+                                        </div>
+
+                                        <!-- Anthropic Claude -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="ANTHROPIC_API_KEY" class="form-label small fw-bold mb-0">Anthropic Claude API Key</label>
+                                                <a href="https://console.anthropic.com/settings/keys" target="_blank" class="small text-decoration-none" title="Get API Key from Anthropic Console">
+                                                    <i class="fa-solid fa-brain me-1"></i>Get Claude Key <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="ANTHROPIC_API_KEY" value="{{ env_vars.get('ANTHROPIC_API_KEY', '') }}" placeholder="sk-ant-...">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">Default model: <code>claude-3-5-sonnet-20241022</code>.</div>
+                                        </div>
+
+                                        <!-- HostYourAI / Loes (EU) -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="HOSTYOURAI_API_KEY" class="form-label small fw-bold mb-0">HostYourAI / Loes (EU) Key</label>
+                                                <a href="https://hostyourai.com" target="_blank" class="small text-decoration-none" title="Open HostYourAI Portal">
+                                                    <i class="fa-solid fa-shield-halved me-1"></i>HostYourAI Portal <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <div class="input-group">
+                                                <input type="password" class="form-control" id="HOSTYOURAI_API_KEY" value="{{ env_vars.get('HOSTYOURAI_API_KEY', '') }}" placeholder="Key for European cloud">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">GDPR &amp; EU AI Act compliant private cloud.</div>
+                                        </div>
+
+                                        <!-- Ollama Base URL (Local Offline) -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="OLLAMA_BASE_URL" class="form-label small fw-bold mb-0">Ollama Base URL (Local Offline)</label>
+                                                <a href="https://ollama.com" target="_blank" class="small text-decoration-none" title="Download Ollama">
+                                                    <i class="fa-solid fa-laptop-code me-1"></i>Download Ollama <i class="fa-solid fa-arrow-up-right-from-square ms-1" style="font-size: 0.75rem;"></i>
+                                                </a>
+                                            </div>
+                                            <input type="text" class="form-control" id="OLLAMA_BASE_URL" value="{{ env_vars.get('OLLAMA_BASE_URL', 'http://localhost:11434/v1') }}" placeholder="http://localhost:11434/v1">
+                                            <div class="form-text small mt-1">100% private offline LLM (e.g. RTX 3060). No API key required.</div>
+                                        </div>
+
+                                        <!-- Custom AI Endpoint URL & Key -->
+                                        <div class="col-md-6">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="CUSTOM_AI_BASE_URL" class="form-label small fw-bold mb-0">Custom Endpoint &amp; Key</label>
+                                                <span class="small text-muted">OpenAI-compatible</span>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <span class="input-group-text small">URL</span>
+                                                <input type="text" class="form-control" id="CUSTOM_AI_BASE_URL" value="{{ env_vars.get('CUSTOM_AI_BASE_URL', '') }}" placeholder="https://api.custom.com/v1">
+                                            </div>
+                                            <div class="input-group">
+                                                <span class="input-group-text small">Key</span>
+                                                <input type="password" class="form-control" id="CUSTOM_AI_API_KEY" value="{{ env_vars.get('CUSTOM_AI_API_KEY', '') }}" placeholder="Optional custom key">
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -438,6 +532,9 @@
             } finally {
                 saveRawBtn.disabled = false;
                 saveRawBtn.innerHTML = originalHtml;
+            }
+        });
+
         // Password toggle button listener
         document.addEventListener("click", (e) => {
             const btn = e.target.closest(".toggle-password-btn");

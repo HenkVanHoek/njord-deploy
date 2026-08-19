@@ -1,4 +1,4 @@
-Tokens: 387384 | VRAM Status: CRITICAL
+Tokens: 400291 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 ansible/playbook.yml
@@ -19,6 +19,7 @@ scripts/check_release_status.py
 scripts/check_secrets.py
 scripts/create_proxmox_lxc.py
 scripts/fetch_assets.py
+scripts/fetch_github_security_alerts.py
 scripts/generate_services_doc.py
 scripts/proxmox_gui.py
 scripts/proxmox_package_test_runner.py
@@ -93,6 +94,7 @@ src/utils/generation_logger.py
 src/utils/manual_test_get_ip.py
 src/utils/proxmox_client.py
 src/utils/resource_utils.py
+src/utils/security_utils.py
 src/utils/ssh_utils.py
 src/utils/template_header.py
 test_scanner.py

@@ -37,9 +37,13 @@ class AIGenerator:
         Uses the multi-provider AIGeneratorEngine.
         """
         # Clean and validate the repository URL
-        parsed_url = urllib.parse.urlparse(repo_url.strip())
-        if not parsed_url.scheme or not parsed_url.netloc:
-            raise ValueError("A valid Git repository URL is required.")
+        from utils.security_utils import validate_and_sanitize_url
+
+        is_valid_url, clean_repo_url, url_err = validate_and_sanitize_url(repo_url)
+        if not is_valid_url or not clean_repo_url:
+            raise ValueError(f"A valid Git repository URL is required: {url_err}")
+
+        parsed_url = urllib.parse.urlsplit(clean_repo_url)
 
         raw_path = parsed_url.path.strip("/")
         if raw_path.endswith(".git"):
@@ -308,22 +312,36 @@ class AIGenerator:
         repo = parts[-1] if len(parts) > 1 else ""
 
         host = netloc.lower()
+        if ":" in host:
+            host, *_ = host.split(":", 1)
 
-        if "github.com" in host and owner and repo:
+        is_github = host == "github.com" or host.endswith(".github.com")
+        is_bitbucket = host == "bitbucket.org" or host.endswith(".bitbucket.org")
+        is_codeberg = host == "codeberg.org" or host.endswith(".codeberg.org")
+        is_gitlab = (
+            host == "gitlab.com"
+            or host.endswith(".gitlab.com")
+            or "gitlab" in host.split(".")
+        )
+        is_gitea_forgejo = (
+            "gitea" in host.split(".") or "forgejo" in host.split(".") or is_codeberg
+        )
+
+        if is_github and owner and repo:
             for branch in branches:
                 urls.append(
                     f"https://raw.githubusercontent.com/{owner}/{repo}/"
                     f"{branch}/{filename}"
                 )
-        elif "gitlab" in host:
+        elif is_gitlab:
             for branch in branches:
                 urls.append(f"https://{netloc}/{repo_path}/-/raw/{branch}/{filename}")
-        elif "bitbucket.org" in host:
+        elif is_bitbucket:
             for branch in branches:
                 urls.append(
                     f"https://bitbucket.org/{repo_path}/raw/{branch}/{filename}"
                 )
-        elif "codeberg.org" in host or "gitea" in host or "forgejo" in host:
+        elif is_gitea_forgejo:
             for branch in branches:
                 urls.append(
                     f"https://{netloc}/{repo_path}/raw/branch/{branch}/{filename}"

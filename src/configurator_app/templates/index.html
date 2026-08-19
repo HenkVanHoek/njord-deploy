@@ -9,6 +9,7 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/introjs.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/configurator.css') }}?v=1.0">
@@ -111,7 +112,9 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn" title="Start Interactive Quick Tour"><i class="fa-solid fa-compass me-1"></i> Quick Tour</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-quick-start-btn" title="View Quick Start Guide"><i class="fa-solid fa-graduation-cap me-1"></i> Quick Start</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-backup-btn" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
                 <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> Settings</a></li>
                 <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> Help</a></li>
                 <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> API Docs</a></li>
@@ -148,7 +151,69 @@
                 <h2 class="h4 mb-3">Network Discovery</h2>
                 <p class="text-muted mb-4">We need to find supported single-board computers (Raspberry Pi, Orange Pi, ODROID, Radxa, or Pine64) on your network to begin.</p>
 
-                <div class="card bg-light mx-auto mb-4 text-start" style="max-width: 500px;">
+                <!-- Collapsible Getting Started & Prerequisites Banner -->
+                <div class="card border-0 shadow-sm mx-auto mb-4 text-start" style="max-width: 650px; background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(12px); border: 1px solid var(--glass-border, #e2e8f0) !important;" id="prerequisites-banner-card">
+                    <div class="card-header bg-transparent border-0 p-3 d-flex justify-content-between align-items-center cursor-pointer"
+                         data-bs-toggle="collapse"
+                         data-bs-target="#prerequisitesCollapse"
+                         aria-expanded="false"
+                         aria-controls="prerequisitesCollapse"
+                         style="cursor: pointer;"
+                         id="prerequisites-toggle-header">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-circle-info text-primary me-2 fs-5"></i>
+                            <span class="fw-bold">Getting Started &amp; Prerequisites</span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle me-2 small">Checklist &amp; AI Setup</span>
+                            <i class="fa-solid fa-chevron-down text-muted transition-transform" id="prereq-chevron"></i>
+                        </div>
+                    </div>
+                    <div class="collapse" id="prerequisitesCollapse">
+                        <div class="card-body p-3 pt-0 border-top mt-2">
+                            <!-- Section 1: Core System Prerequisites -->
+                            <h6 class="fw-bold small text-uppercase text-muted mb-2"><i class="fa-solid fa-list-check me-1"></i> Deployment Checklist</h6>
+                            <ul class="list-unstyled small text-muted mb-3 ps-1">
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Target Machine:</strong> Raspberry Pi, Orange Pi, ODROID, VM, or server running Debian/Ubuntu (64-bit recommended).</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>SSH Access:</strong> Port 22 open with sudo permissions. Key-based authentication recommended (<code>ssh-copy-id username@target-ip</code>).</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Network Scanner:</strong> <code>nmap</code> installed locally for auto-discovery (<code>sudo apt install nmap</code>), or use Direct IP / Tailscale / Proxmox.</li>
+                                <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i><strong>Container Engine:</strong> Choose Docker CE or rootless Podman via the topbar switcher.</li>
+                            </ul>
+
+                            <!-- Section 2: AI Assistance & LLM Setup -->
+                            <h6 class="fw-bold small text-uppercase text-muted mb-2"><i class="fa-solid fa-brain me-1"></i> AI Diagnostics &amp; LLM Keys (Optional)</h6>
+                            <p class="small text-muted mb-2">
+                                NjordDeploy features AI Failure Diagnosis &amp; Component Generation. Configure your API keys in <a href="/settings" class="fw-bold text-decoration-none"><i class="fa-solid fa-gear me-1"></i>Settings</a> or via <code>.env</code>:
+                            </p>
+                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-brands fa-google text-primary me-1"></i> Google Gemini Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://platform.openai.com/api-keys" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-bolt text-success me-1"></i> OpenAI Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://console.anthropic.com/settings/keys" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-brain text-warning me-1"></i> Claude Key <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://hostyourai.com" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-shield-halved text-info me-1"></i> HostYourAI (EU) <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                                <a href="https://ollama.com" target="_blank" class="btn btn-sm btn-outline-secondary d-flex align-items-center py-1 px-2 small">
+                                    <i class="fa-solid fa-laptop-code text-secondary me-1"></i> Ollama (Offline / No Key) <i class="fa-solid fa-arrow-up-right-from-square ms-1 opacity-50" style="font-size: 0.75rem;"></i>
+                                </a>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <span class="text-muted small">Manage all keys and endpoints:</span>
+                                <a href="/settings" class="btn btn-sm btn-primary py-1 px-3">
+                                    <i class="fa-solid fa-sliders me-1"></i> Configure in Settings
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-light mx-auto mb-4 text-start" style="max-width: 500px;" id="discovery-methods-card">
                     <div class="card-body">
                         <div class="form-check mb-3">
                             <input class="form-check-input" type="radio" name="scanMethod" id="autoDetectRadio" checked>
@@ -610,8 +675,109 @@
     </div>
 </div>
 
+<!-- Quick Start & Onboarding Guide Modal -->
+<div class="modal fade" id="quickStartModal" tabindex="-1" aria-labelledby="quickStartModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(16px); border: 1px solid var(--glass-border, #e2e8f0);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary d-flex align-items-center" id="quickStartModalLabel">
+                    <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}"
+                         alt="NjordDeploy" width="28" height="28" class="me-2 rounded">
+                    Welcome to NjordDeploy
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-4">
+                    <h6 class="fw-bold text-body mb-1">Self-Hosting Made Simple in 4 Easy Steps</h6>
+                    <p class="text-muted small mb-0">
+                        NjordDeploy provisions and orchestrates containerized services on Single-Board Computers (Raspberry Pi, Orange Pi, ODROID), cloud/local Linux servers, and Proxmox LXC/VMs.
+                    </p>
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <!-- Step 1 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-primary bg-opacity-10 text-primary">
+                                    <i class="fa-solid fa-network-wired fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">1. Target Discovery</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Find target SBCs automatically via local L2 ARP scan, sweep custom CIDR subnets, target direct IPs / Tailscale mesh nodes, or provision new Proxmox LXCs/VMs.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 2 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-warning bg-opacity-10 text-warning">
+                                    <i class="fa-solid fa-key fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">2. SSH Connection</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Connect securely to your target machine using SSH key authentication (<code>ssh-copy-id</code>) or password with standard sudo privileges.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 3 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-info bg-opacity-10 text-info">
+                                    <i class="fa-solid fa-layer-group fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">3. Select Services</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Pick from 45+ modular container stacks (AdGuard Home, Vaultwarden, Nextcloud, etc.). NjordDeploy automatically checks for port and storage conflicts.
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Step 4 Card -->
+                    <div class="col-md-6">
+                        <div class="card h-100 p-3 border shadow-sm" style="background: rgba(255, 255, 255, 0.02); border-color: var(--glass-border) !important;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rounded p-2 me-2 bg-success bg-opacity-10 text-success">
+                                    <i class="fa-solid fa-rocket fa-fw"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0">4. Live Deployment</h6>
+                            </div>
+                            <p class="text-muted small mb-0">
+                                Watch live Ansible streaming logs, verify container status, launch your web UIs with direct links, and manage backups with the built-in backup manager.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border);">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" role="switch" id="hide-quickstart-checkbox">
+                        <label class="form-check-label small text-muted" for="hide-quickstart-checkbox">
+                            Don't show this quick start guide on startup
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary" id="quickstart-tour-btn">
+                    <i class="fa-solid fa-compass me-1"></i> Start Interactive Tour
+                </button>
+                <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <i class="fa-solid fa-arrow-right me-1"></i> Get Started
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ url_for('static', filename='js/app.js') }}?v=1.6"></script>
+<script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/intro.min.js"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}?v=1.7"></script>
 <script src="{{ url_for('static', filename='js/backup_manager_ui.js') }}?v=1.1"></script>
 </body>
 </html>

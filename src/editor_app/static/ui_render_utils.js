@@ -20,6 +20,21 @@ const VARIABLE_REQUIRED_OPTIONS = [
 ];
 
 /**
+ * Safely escapes HTML characters in a string.
+ * @param {string|null|undefined} str
+ * @returns {string}
+ */
+const escapeHtml = (str) => {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
+/**
  * Creates a standard HTML option element.
  * @param {string} value - The option value.
  * @param {string} text - The option display text.
@@ -514,14 +529,14 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     timestampContainer.innerHTML = `
         <div class="d-flex justify-content-between align-items-center mb-2">
             <div>
-                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${formattedUpdated}</span>
+                <strong><i class="bi bi-clock-history me-1"></i> Laatst bijgewerkt:</strong> <span id="comp-updated-date-label">${escapeHtml(formattedUpdated)}</span>
             </div>
             <div>
-                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${formattedTested}</span>
+                <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${escapeHtml(formattedTested)}</span>
             </div>
         </div>
         <div class="mt-2 text-end">
-            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${details.id || ''}">
+            <button type="button" class="btn btn-outline-success btn-sm" id="btn-mark-component-tested" data-component-id="${escapeHtml(details.id || '')}">
                 <i class="bi bi-check-circle me-1"></i> Markeer als getest (Vandaag)
             </button>
         </div>

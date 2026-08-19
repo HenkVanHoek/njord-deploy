@@ -556,7 +556,10 @@ def create_app() -> Flask:
             return jsonify({"success": True})
         except Exception as exc:
             logger.error(f"Failed to clear results file: {exc}")
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify({"success": False, "error": "Failed to clear results file."}),
+                500,
+            )
 
     @app.route("/api/ai/status", methods=["GET"])
     def ai_status() -> Response:
@@ -644,14 +647,23 @@ def create_app() -> Flask:
                         ),
                         400,
                     )
-                comp_id = raw_comp_id.strip()
+                from werkzeug.utils import secure_filename
 
-                tmpl_file = (
-                    project_root
-                    / "component_templates"
-                    / comp_id
-                    / "docker-compose.template.yml"
-                )
+                comp_id = secure_filename(raw_comp_id.strip())
+                tmpl_dir = (project_root / "component_templates" / comp_id).resolve()
+                templates_root = (project_root / "component_templates").resolve()
+                if not tmpl_dir.is_relative_to(templates_root):
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "error": "Invalid component ID path.",
+                            }
+                        ),
+                        400,
+                    )
+
+                tmpl_file = tmpl_dir / "docker-compose.template.yml"
                 tmpl_content = (
                     tmpl_file.read_text(encoding="utf-8") if tmpl_file.exists() else ""
                 )
@@ -688,7 +700,10 @@ def create_app() -> Flask:
 
         except Exception as exc:
             logger.error(f"AI diagnosis error: {exc}", exc_info=True)
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify({"success": False, "error": "AI diagnosis failed."}),
+                500,
+            )
 
     @app.route("/api/ai/apply-patch", methods=["POST"])
     def ai_apply_patch() -> Union[Response, Tuple[Response, int]]:
@@ -753,7 +768,15 @@ def create_app() -> Flask:
             return jsonify({"success": success, "component_id": comp_id})
         except Exception as exc:
             logger.error(f"Failed to apply matrix constraint: {exc}", exc_info=True)
-            return jsonify({"success": False, "error": str(exc)}), 500
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Failed to apply matrix constraint.",
+                    }
+                ),
+                500,
+            )
 
     return app
 

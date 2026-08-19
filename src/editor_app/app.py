@@ -113,7 +113,7 @@ def create_app(test_config=None):
                     {
                         "status": "error",
                         "is_offline": True,
-                        "message": str(e),
+                        "message": "Failed to check updates while offline.",
                     }
                 ),
                 200,
@@ -804,10 +804,31 @@ def create_app(test_config=None):
         details = ""
 
         if provider == "ollama":
-            url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434/v1")
+            from utils.security_utils import build_safe_target_url
+
+            raw_url = base_url or os.getenv(
+                "OLLAMA_BASE_URL", "http://localhost:11434/v1"
+            )
+            is_valid, tags_url, err = build_safe_target_url(
+                base_url=raw_url,
+                target_endpoint="/api/tags",
+                strip_suffix="/v1",
+                default_url="http://localhost:11434/v1",
+            )
+            if not is_valid or not tags_url:
+                return (
+                    jsonify(
+                        {
+                            "provider": provider,
+                            "status": "offline",
+                            "details": f"Invalid Ollama URL: {err}",
+                        }
+                    ),
+                    400 if request.method == "POST" else 200,
+                )
+
             try:
-                # Clean path to find raw tags list API
-                tags_url = url.replace("/v1", "/api/tags")
+                # Safe path to find raw tags list API
                 resp = requests.get(tags_url, timeout=3)
                 if resp.status_code == 200:
                     status = "online"
@@ -830,9 +851,9 @@ def create_app(test_config=None):
                 else:
                     status = "offline"
                     details = f"Ollama returned HTTP {resp.status_code}."
-            except Exception as e:
+            except Exception:
                 status = "offline"
-                details = f"Could not connect to Ollama at {url}: {e}"
+                details = f"Could not connect to Ollama service at {tags_url}."
         else:
             provider_info = registry.get(provider, {})
             var_name = provider_info.get("env_var")
@@ -850,12 +871,8 @@ def create_app(test_config=None):
                     status = "online"
                     details = f"API Key configured in environment ({var_name})."
                 else:
-                    status = (
-                        "configured_locally_only"
-                        if request.method == "POST"
-                        else "missing_key"
-                    )
-                    details = f"API Key ({var_name}) not found in .env file."
+                    status = "missing_key"
+                    details = f"API key not set in .env (needs {var_name})."
 
         return (
             jsonify({"provider": provider, "status": status, "details": details}),
@@ -867,22 +884,32 @@ def create_app(test_config=None):
         data = request.get_json() or {}
         repo_url = data.get("repo_url")
         custom_instructions = data.get("custom_instructions")
-        api_key = data.get("api_key")
-        save_key = data.get("save_key", False)
         provider = data.get("provider")
+        api_key = data.get("api_key")
         if not provider:
             provider = "gemini" if api_key else os.getenv("AI_PROVIDER", "ollama")
+        save_key = data.get("save_key", False)
         base_url = data.get("base_url")
         model = data.get("model")
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid Git repository URL is required")
 
+        if base_url:
+            from utils.security_utils import validate_and_sanitize_url
+
+            is_valid_base, clean_base, base_err = validate_and_sanitize_url(base_url)
+            if not is_valid_base:
+                return (
+                    jsonify({"error": f"Invalid base_url: {base_err}"}),
+                    400,
+                )
+            base_url = clean_base
+
         if isinstance(api_key, str):
             api_key = api_key.strip()
 
         try:
-            # Extract list of existing groups from metadata
             njorddeploy_meta = component_manager.get_njorddeploy_meta()
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
@@ -938,8 +965,7 @@ def create_app(test_config=None):
                             "error": "AI API Timeout",
                             "details": (
                                 "The connection to the AI API timed out. "
-                                "This is usually a temporary network issue or "
-                                "the server is overloaded. Please try again."
+                                "Please try again later."
                             ),
                         }
                     ),
@@ -955,7 +981,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI Connection Error",
-                            "details": err_msg,
+                            "details": (
+                                "Failed to connect to the configured AI API provider."
+                            ),
                         }
                     ),
                     502,
@@ -965,7 +993,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI API Error",
-                            "details": err_msg,
+                            "details": (
+                                "The AI API provider returned an error response."
+                            ),
                         }
                     ),
                     502,
@@ -975,7 +1005,9 @@ def create_app(test_config=None):
                     jsonify(
                         {
                             "error": "AI Generation Failed",
-                            "details": err_msg,
+                            "details": (
+                                "An unexpected error occurred during AI generation."
+                            ),
                         }
                     ),
                     500,
@@ -1010,10 +1042,20 @@ def create_app(test_config=None):
                     import yaml
 
                     cleaned_yaml = re.sub(
-                        r"\{#.*?#\}", "", docker_compose, flags=re.DOTALL
+                        r"\{#[^#]*(?:#(?!})[^#]*)*#\}",
+                        "",
+                        docker_compose,
                     )
-                    cleaned_yaml = re.sub(r"\{%.*?%\}", "# jinja block", cleaned_yaml)
-                    cleaned_yaml = re.sub(r"\{\{.*?\}\}", "JINJA_VAR", cleaned_yaml)
+                    cleaned_yaml = re.sub(
+                        r"\{%[^%]*(?:%(?!})[^%]*)*%\}",
+                        "# jinja block",
+                        cleaned_yaml,
+                    )
+                    cleaned_yaml = re.sub(
+                        r"\{\{[^}]*\}\}",
+                        "JINJA_VAR",
+                        cleaned_yaml,
+                    )
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:

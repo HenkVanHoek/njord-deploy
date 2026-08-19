@@ -1990,12 +1990,14 @@
                     const compName = compData ? compData.name : compId;
                     const containerName = `njorddeploy-${compId}`;
                     const paneId = `log-pane-${compId}`;
+                    const escapedCompId = escapeHTML(compId);
+                    const escapedPaneId = escapeHTML(paneId);
 
                     const li = document.createElement('li');
                     li.className = 'nav-item';
                     li.setAttribute('role', 'presentation');
                     li.innerHTML = `
-                        <button class="nav-link" id="tab-${compId}" data-bs-toggle="tab" data-bs-target="#${paneId}" type="button" role="tab">
+                        <button class="nav-link" id="tab-${escapedCompId}" data-bs-toggle="tab" data-bs-target="#${escapedPaneId}" type="button" role="tab">
                             <i class="fa-solid fa-cubes text-info me-1"></i>${escapeHTML(compName)} Logs
                         </button>
                     `;
@@ -2010,11 +2012,11 @@
                             <div class="card-body bg-dark text-white rounded" style="font-family: monospace; font-size: 0.9em; max-height: 400px; overflow-y: auto;">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <span class="text-muted small">Container: ${escapeHTML(containerName)}</span>
-                                    <button class="btn btn-sm btn-outline-info btn-refresh-logs" data-comp-id="${compId}">
+                                    <button class="btn btn-sm btn-outline-info btn-refresh-logs" data-comp-id="${escapedCompId}">
                                         <i class="fa-solid fa-arrows-rotate me-1"></i>Refresh
                                     </button>
                                 </div>
-                                <pre id="log-output-${compId}" class="mb-0 text-light" style="white-space: pre-wrap;">Loading logs...</pre>
+                                <pre id="log-output-${escapedCompId}" class="mb-0 text-light" style="white-space: pre-wrap;">Loading logs...</pre>
                             </div>
                         </div>
                     `;
@@ -3409,7 +3411,171 @@
         checkFirstRun();
     }
 
+    /**
+     * Initializes the Quick Start modal, Prerequisites Banner, and Intro.js Interactive Tour.
+     */
+    function initQuickStartAndTour() {
+        const quickStartModalEl = document.getElementById('quickStartModal');
+        const hideGuideCheckbox = document.getElementById('hide-quickstart-checkbox');
+        const navQuickStartBtn = document.getElementById('nav-quick-start-btn');
+        const navStartTourBtn = document.getElementById('nav-start-tour-btn');
+        const quickstartTourBtn = document.getElementById('quickstart-tour-btn');
+        const prereqCollapseEl = document.getElementById('prerequisitesCollapse');
+        const prereqChevron = document.getElementById('prereq-chevron');
+
+        // Manage collapsible prerequisites banner state and chevron
+        if (prereqCollapseEl && prereqChevron) {
+            prereqCollapseEl.addEventListener('show.bs.collapse', () => {
+                prereqChevron.className = 'fa-solid fa-chevron-up text-primary transition-transform';
+                localStorage.setItem('configurator_prerequisites_open', 'true');
+            });
+            prereqCollapseEl.addEventListener('hide.bs.collapse', () => {
+                prereqChevron.className = 'fa-solid fa-chevron-down text-muted transition-transform';
+                localStorage.setItem('configurator_prerequisites_open', 'false');
+            });
+
+            // Restore user preference if previously expanded
+            if (localStorage.getItem('configurator_prerequisites_open') === 'true') {
+                // @ts-ignore
+                const collapseInstance = bootstrap.Collapse.getOrCreateInstance(prereqCollapseEl, { toggle: false });
+                collapseInstance.show();
+            }
+        }
+
+        function startInteractiveTour(e) {
+            if (e) e.preventDefault();
+            localStorage.setItem('configurator_tour_shown', 'true');
+
+            // Hide quick start modal if currently open
+            if (quickStartModalEl) {
+                // @ts-ignore
+                const modal = bootstrap.Modal.getInstance(quickStartModalEl);
+                if (modal) modal.hide();
+            }
+
+            // @ts-ignore
+            if (window.introJs) {
+                // @ts-ignore
+                window.introJs().setOptions({
+                    steps: [
+                        {
+                            title: "Welcome to NjordDeploy",
+                            intro: "Welcome to the <strong>NjordDeploy Deployment Wizard</strong>! This quick guided tour walks you through discovering devices, configuring stacks, and launching self-hosted services."
+                        },
+                        {
+                            element: document.getElementById("prerequisites-banner-card"),
+                            title: "Getting Started & Prerequisites",
+                            intro: "Click this banner anytime to view target machine requirements, SSH setup hints, and direct links to get API keys for optional AI Failure Diagnosis & Generation.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("topbar-engine-badge") || document.getElementById("engineDropdown"),
+                            title: "Active Container Engine",
+                            intro: "NjordDeploy supports standard <strong>Docker CE</strong> and rootless <strong>Podman</strong>. Switch engines or configure your component template repository anytime.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("themeDropdown"),
+                            title: "Themes & Accessibility",
+                            intro: "Switch effortlessly between <strong>Futuristic Dark</strong>, <strong>Standard Light</strong>, and <strong>High-Contrast</strong> themes.",
+                            position: "bottom"
+                        },
+                        {
+                            element: document.getElementById("discovery-methods-card"),
+                            title: "Target Discovery Methods",
+                            intro: "Select how to find your target machine: <strong>Auto-Detect</strong> via L2 ARP sweep, <strong>Manual CIDR</strong> subnet scan, <strong>Direct IP / Hostname / MAC</strong>, <strong>Tailscale mesh</strong>, or <strong>Proxmox LXC/VM</strong> provisioning.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("method-help-card"),
+                            title: "Contextual Help & SSH Tip",
+                            intro: "Get instant setup tips and 1-click <code>ssh-copy-id</code> snippets to authorize your SSH key on the target machine for secure, passwordless deployment.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("begin-scan-btn"),
+                            title: "Start Discovery",
+                            intro: "Click <strong>Begin Scan</strong> to find devices on your network, select your target single-board computer, and proceed to service selection.",
+                            position: "top"
+                        },
+                        {
+                            element: document.getElementById("nav-backup-btn"),
+                            title: "Backup & Disaster Recovery",
+                            intro: "Create full archives of your stack configurations and volume data, or restore from previous backups directly from the navigation bar.",
+                            position: "bottom"
+                        },
+                        {
+                            title: "Ready to Deploy!",
+                            intro: "You're all set! Choose a discovery option and click <strong>Begin Scan</strong> to start deploying your self-hosted services."
+                        }
+                    ],
+                    showProgress: true,
+                    showBullets: false,
+                    disableInteraction: false,
+                    nextLabel: 'Next &rarr;',
+                    prevLabel: '&larr; Back',
+                    doneLabel: 'Done'
+                }).start();
+            }
+        }
+
+        if (navQuickStartBtn && quickStartModalEl) {
+            navQuickStartBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // @ts-ignore
+                const modal = bootstrap.Modal.getOrCreateInstance(quickStartModalEl);
+                modal.show();
+            });
+        }
+
+        if (navStartTourBtn) {
+            navStartTourBtn.addEventListener('click', (e) => {
+                startInteractiveTour(e);
+            });
+        }
+
+        if (quickstartTourBtn) {
+            quickstartTourBtn.addEventListener('click', (e) => {
+                startInteractiveTour(e);
+            });
+        }
+
+        if (hideGuideCheckbox) {
+            const isHidden = localStorage.getItem('configurator_hide_quickstart_guide') === 'true';
+            // @ts-ignore
+            hideGuideCheckbox.checked = isHidden;
+
+            hideGuideCheckbox.addEventListener('change', (e) => {
+                // @ts-ignore
+                if (e.target && e.target.checked) {
+                    localStorage.setItem('configurator_hide_quickstart_guide', 'true');
+                } else {
+                    localStorage.removeItem('configurator_hide_quickstart_guide');
+                }
+            });
+        }
+
+        // Auto-show Quick Start on first visit if not explicitly hidden
+        const guideHidden = localStorage.getItem('configurator_hide_quickstart_guide') === 'true';
+        const guideShown = localStorage.getItem('configurator_quickstart_shown') === 'true';
+
+        if (!guideHidden && !guideShown && quickStartModalEl) {
+            localStorage.setItem('configurator_quickstart_shown', 'true');
+            setTimeout(() => {
+                // Check if onboarding modal (engine setup) isn't showing
+                const onboardModalEl = document.getElementById('onboardingModal');
+                const isEngineModalOpen = onboardModalEl && onboardModalEl.classList.contains('show');
+                if (!isEngineModalOpen) {
+                    // @ts-ignore
+                    const modal = bootstrap.Modal.getOrCreateInstance(quickStartModalEl);
+                    modal.show();
+                }
+            }, 600);
+        }
+    }
+
     // Initialize Onboarding/Welcome Step 0 on page load
     renderStep1_Welcome();
     initEngineAndRepoManagement();
+    initQuickStartAndTour();
 })();
