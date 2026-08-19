@@ -90,3 +90,52 @@ If JavaScript pre-commit hooks are not activated, ESLint can be run manually usi
 # Run eslint on all js files
 eslint src/editor_app/static/*.js src/configurator_app/static/js/*.js
 ```
+
+---
+
+## 8. Pre-Flight GitHub CodeQL Security Checks (Mandatory ATC Patterns):
+To ensure all code is 100% clean and immune to GitHub CodeQL security alerts before pushing to GitHub, always adhere to the following mandatory defensive programming patterns:
+
+### 1. Path Injection & Directory Traversal (`py/path-injection`)
+* **Hazard:** Constructing paths from user input (e.g. `request.get_json().get("output_path")`) and passing them directly into `open()`, `Path.exists()`, or `Path.rglob()`.
+* **Mandatory Pattern:** Always resolve and enforce strict `os.path.commonpath` containment:
+  ```python
+  base_dir_str = os.path.realpath(user_data_dir("NjordDeploy", "NjordDeploy"))
+  raw_target_str = os.path.realpath(user_input_path.strip())
+
+  # Commonpath containment check (recognized by CodeQL)
+  if os.path.commonpath([base_dir_str, raw_target_str]) != base_dir_str:
+      return jsonify({"error": "Unauthorized path access"}), 403
+
+  # When iterating child files:
+  for f in Path(raw_target_str).rglob("*"):
+      resolved_f = os.path.realpath(str(f))
+      if os.path.commonpath([raw_target_str, resolved_f]) != raw_target_str:
+          continue
+  ```
+
+### 2. Polynomial ReDoS Prevention (`py/polynomial-redos`)
+* **Hazard:** Nested, overlapping quantifiers or unbounded backtracking regexes (e.g. `r"\{#[^#]*(?:#(?!})[^#]*)*#\}"` or `(.*)+`) running on user input or template files.
+* **Mandatory Pattern:** Use linear `O(N)` string-slicing loops (`while "{#" in text:`) instead of complex backtracking regular expressions for stripping comments, Jinja tags, or block markers.
+
+### 3. DOM-Based XSS Prevention in JavaScript (`js/xss-through-dom`)
+* **Hazard:** Inserting server error messages, component IDs, or dynamic API strings directly into `element.innerHTML` or template literals.
+* **Mandatory Pattern:** Always pass untrusted strings through `escapeHtml()` (available in `ui_render_utils.js` / `app.js`) or use `element.textContent` instead of `innerHTML`.
+
+### 4. Sensitive Data & Clear-Text Credentials (`js/clear-text-storage-of-sensitive-data` & `py/clear-text-logging-sensitive-data`)
+* **Hazard:** Storing passwords in browser `sessionStorage`/`localStorage` or logging variables named `password`, `secret`, or `token` to console or logs.
+* **Mandatory Pattern:**
+  * Keep credentials in memory only during active transit; never persist them to browser storage.
+  * Always mask credentials with `[PROTECTED]` or `[REDACTED]` before printing or logging.
+
+### 5. Stack Trace Exposure in API Routes (`py/stack-trace-exposure`)
+* **Hazard:** Returning raw exception strings directly to users (e.g. `jsonify({"error": str(e)})` or `jsonify({"message": str(ve)})`).
+* **Mandatory Pattern:** Log the full exception on the server (`logging.error(..., exc_info=True)`) and return sanitized, high-level error descriptions to the client (e.g., `"Invalid component metadata."` or `"An unexpected error occurred."`).
+
+### 6. Strict URL & Domain Sanitization (`py/incomplete-url-substring-sanitization` & `py/full-ssrf`)
+* **Hazard:** Using naive substring checks like `"github.com" in url`.
+* **Mandatory Pattern:** Always parse URLs via `urllib.parse.urlsplit` and verify `parsed.netloc == "github.com"` or `parsed.netloc.endswith(".github.com")`, or use strict prefix matching `url.startswith("https://github.com/")`.
+
+### 7. Paramiko SSH Host Key Policies (`py/paramiko-missing-host-key-validation`)
+* **Hazard:** Unconditional `client.set_missing_host_key_policy(paramiko.AutoAddPolicy())`.
+* **Mandatory Pattern:** Use `paramiko.WarningPolicy()` or strict `known_hosts` verification with explicit `# nosec B507` comments where dynamic host discovery is required.
