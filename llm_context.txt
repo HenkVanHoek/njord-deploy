@@ -21433,6 +21433,24 @@ html[data-theme="light"] .modal .card {
             border-color: #007acc;
             box-shadow: 0 0 8px rgba(0, 122, 204, 0.4);
         }
+        .input-group-text {
+            background-color: #1e293b;
+            color: #cbd5e1;
+            border-color: #334155;
+            font-weight: 500;
+        }
+        [data-theme="light"] .input-group-text,
+        [data-theme="high-contrast-light"] .input-group-text {
+            background-color: #f1f5f9;
+            color: #475569;
+            border-color: #cbd5e1;
+        }
+        [data-theme="futuristic-dark"] .input-group-text,
+        [data-theme="high-contrast-dark"] .input-group-text {
+            background-color: #1e293b;
+            color: #cbd5e1;
+            border-color: #334155;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -21756,19 +21774,20 @@ html[data-theme="light"] .modal .card {
                                         <div class="col-md-6">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <label for="CUSTOM_AI_BASE_URL" class="form-label small fw-bold mb-0">Custom Endpoint &amp; Key</label>
-                                                <span class="small text-muted">OpenAI-compatible</span>
+                                                <span class="badge bg-secondary-subtle text-secondary-emphasis border border-secondary-subtle small">OpenAI-compatible</span>
                                             </div>
                                             <div class="input-group mb-2">
-                                                <span class="input-group-text small">URL</span>
+                                                <span class="input-group-text small" style="min-width: 75px;"><i class="fa-solid fa-link me-1 text-info"></i> URL</span>
                                                 <input type="text" class="form-control" id="CUSTOM_AI_BASE_URL" value="{{ env_vars.get('CUSTOM_AI_BASE_URL', '') }}" placeholder="https://api.custom.com/v1">
                                             </div>
                                             <div class="input-group">
-                                                <span class="input-group-text small">Key</span>
+                                                <span class="input-group-text small" style="min-width: 75px;"><i class="fa-solid fa-key me-1 text-warning"></i> Key</span>
                                                 <input type="password" class="form-control" id="CUSTOM_AI_API_KEY" value="{{ env_vars.get('CUSTOM_AI_API_KEY', '') }}" placeholder="Optional custom key">
                                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" tabindex="-1" title="Show/Hide Password">
                                                     <i class="fa-solid fa-eye"></i>
                                                 </button>
                                             </div>
+                                            <div class="form-text small mt-1">Self-hosted vLLM, LM Studio, LocalAI or custom proxy.</div>
                                         </div>
                                     </div>
                                 </div>

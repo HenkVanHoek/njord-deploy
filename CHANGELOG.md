@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.31] - 2026-08-19
+
+### Fixed
+- **Settings UI Polish**:
+  - Fixed unreadable solid white badge styling for URL and Key inputs under the **Custom Endpoint & Key** section in [`src/configurator_app/templates/settings.html`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/templates/settings.html), adding explicit theme-aware classes, FontAwesome icons (`<i class="fa-solid fa-link"></i>`, `<i class="fa-solid fa-key"></i>`), and high-contrast dark/light styling.
+
 ## [0.5.30] - 2026-08-19
 
 ### Security & Hardening
