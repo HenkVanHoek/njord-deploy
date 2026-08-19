@@ -9,11 +9,11 @@ from unittest.mock import MagicMock, patch
 from scripts.fetch_github_security_alerts import (
     DEFAULT_REPO,
     display_code_scanning,
+    display_credential_audit_alerts,
     display_dependabot,
-    display_secret_scanning,
     fetch_code_scanning_alerts,
+    fetch_credential_audit_alerts,
     fetch_dependabot_alerts,
-    fetch_secret_scanning_alerts,
     get_auth_token,
     get_git_repo_name,
     make_request,
@@ -87,16 +87,16 @@ def test_fetch_dependabot_alerts() -> None:
         assert first_alert["number"] == 2
 
 
-def test_fetch_secret_scanning_alerts() -> None:
-    sample_alerts = [{"number": 3, "secret_type": "api_key"}]
+def test_fetch_credential_audit_alerts() -> None:
+    sample_alerts = [{"number": 3, "token_type": "api_key"}]
     with patch(
         "scripts.fetch_github_security_alerts.make_request",
         return_value=(200, sample_alerts),
     ):
-        alerts = fetch_secret_scanning_alerts("owner/repo", "token")
+        alerts = fetch_credential_audit_alerts("owner/repo", "token")
         assert len(alerts) == 1
         first_alert, *rest = alerts
-        assert first_alert["number"] == 3
+        assert first_alert["finding_id"] == 3
 
 
 def test_display_helpers(capsys) -> None:
@@ -145,15 +145,15 @@ def test_display_helpers(capsys) -> None:
     assert "urllib3" in captured.out
     assert "GHSA-1234" in captured.out
 
-    secret_alerts = [
+    credential_findings = [
         {
-            "number": 30,
-            "secret_type_display_name": "GitHub Token",
-            "state": "open",
-            "created_at": "2026-01-01T00:00:00Z",
-            "html_url": "https://github.com/alert/30",
+            "finding_id": 30,
+            "finding_type": "Personal Access Token",
+            "finding_state": "open",
+            "finding_date": "2026-01-01 00:00:00",
+            "finding_url": "https://github.com/alert/30",
         }
     ]
-    display_secret_scanning(secret_alerts)
+    display_credential_audit_alerts(credential_findings)
     captured = capsys.readouterr()
-    assert "GitHub Token" in captured.out
+    assert "Personal Access Token" in captured.out

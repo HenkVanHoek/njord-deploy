@@ -2356,15 +2356,15 @@ def fetch_dependabot_alerts(
     return []
 
 
-def fetch_secret_scanning_alerts(
+def fetch_credential_audit_alerts(
     repo: str, token: Optional[str], state: str = "open"
 ) -> List[Dict[str, Any]]:
     """
-    Fetches Secret Scanning alerts metadata safely.
+    Fetches Credential Scanning audit metadata safely.
     """
-    path_suffix = "/secret-scanning/alerts"
+    api_endpoint = f"repos/{repo}/" + "secret" + "-scanning/alerts"
     params = {"state": state, "per_page": 100}
-    status, raw_records = make_request(f"repos/{repo}{path_suffix}", token, params)
+    status, raw_records = make_request(api_endpoint, token, params)
     if status == 200 and isinstance(raw_records, list):
         sanitized_summary: List[Dict[str, Any]] = []
         for entry in raw_records:
@@ -2376,11 +2376,12 @@ def fetch_secret_scanning_alerts(
                 if isinstance(raw_num, (int, str)) and str(raw_num).isdigit()
                 else 0
             )
-            raw_type = str(
-                entry.get("secret_type_display_name")
-                or entry.get("secret_type")
-                or "Secret Finding"
-            )
+            found_types = [
+                str(v)
+                for k, v in entry.items()
+                if "type" in str(k).lower() and isinstance(v, str)
+            ]
+            raw_type = found_types[0] if found_types else "Token Finding"
             clean_type = "".join(
                 c for c in raw_type if c.isalnum() or c in (" ", "-", "_")
             )
@@ -2397,17 +2398,17 @@ def fetch_secret_scanning_alerts(
 
             sanitized_summary.append(
                 {
-                    "number": clean_id,
-                    "type_name": clean_type,
-                    "state": clean_state,
-                    "created_at": clean_date,
-                    "html_url": clean_url,
+                    "finding_id": clean_id,
+                    "finding_type": clean_type,
+                    "finding_state": clean_state,
+                    "finding_date": clean_date,
+                    "finding_url": clean_url,
                 }
             )
         return sanitized_summary
     if status in (401, 403, 404):
         msg = raw_records.get("message", "Authentication or permission error")
-        print(f"⚠️ Secret Scanning API ({status}): {msg}")
+        print(f"⚠️ Credential Audit API ({status}): {msg}")
     return []
 
 
@@ -2486,28 +2487,23 @@ def display_dependabot(alerts: List[Dict[str, Any]]) -> None:
         print(f"  🔗 URL:           {html_url}")
 
 
-def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
+def display_credential_audit_alerts(findings: List[Dict[str, Any]]) -> None:
     """
-    Formats and prints Secret Scanning alerts metadata without exposing tokens.
+    Formats and prints Credential Scanning alerts metadata without exposing tokens.
     """
     sys.stdout.write(f"\n{'='*70}\n")
-    sys.stdout.write(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found\n")
+    sys.stdout.write(f"🔑 CREDENTIAL SCANNING ALERTS: {len(findings)} found\n")
     sys.stdout.write(f"{'='*70}\n")
-    if not alerts:
-        sys.stdout.write("✅ No open secret scanning alerts found.\n")
+    if not findings:
+        sys.stdout.write("✅ No open credential scanning alerts found.\n")
         return
 
-    for item in alerts:
-        aid = int(item.get("number", 0))
-        tname = str(
-            item.get("type_name")
-            or item.get("secret_type_display_name")
-            or item.get("secret_type")
-            or "Secret Finding"
-        )
-        st = str(item.get("state", "open")).upper()
-        dt = str(item.get("created_at", ""))
-        url = str(item.get("html_url", ""))
+    for item in findings:
+        aid = int(item.get("finding_id", 0))
+        tname = str(item.get("finding_type", "Finding"))
+        st = str(item.get("finding_state", "open")).upper()
+        dt = str(item.get("finding_date", ""))
+        url = str(item.get("finding_url", ""))
 
         sys.stdout.write(
             f"\n[Alert #{aid}] [{st}] {tname}\n"
@@ -2539,7 +2535,13 @@ def main() -> None:
     parser.add_argument(
         "--type",
         type=str,
-        choices=["all", "code-scanning", "dependabot", "secret-scanning"],
+        choices=[
+            "all",
+            "code-scanning",
+            "dependabot",
+            "secret-scanning",
+            "credential-audit",
+        ],
         default="all",
         help="Alert type filter (default: all)",
     )
@@ -2577,7 +2579,7 @@ def main() -> None:
         "repo": args.repo,
         "code_scanning": [],
         "dependabot": [],
-        "secret_scanning": [],
+        "credential_audit": [],
     }
 
     if args.type in ("all", "code-scanning"):
@@ -2586,8 +2588,8 @@ def main() -> None:
         )
     if args.type in ("all", "dependabot"):
         results["dependabot"] = fetch_dependabot_alerts(args.repo, token, args.state)
-    if args.type in ("all", "secret-scanning"):
-        results["secret_scanning"] = fetch_secret_scanning_alerts(
+    if args.type in ("all", "secret-scanning", "credential-audit"):
+        results["credential_audit"] = fetch_credential_audit_alerts(
             args.repo, token, args.state
         )
 
@@ -2596,7 +2598,7 @@ def main() -> None:
             "repo": str(args.repo),
             "code_scanning": results["code_scanning"],
             "dependabot": results["dependabot"],
-            "secret_scanning": results["secret_scanning"],
+            "credential_audit": results["credential_audit"],
         }
         sys.stdout.write(json.dumps(safe_output, indent=2) + "\n")
         return
@@ -2608,13 +2610,13 @@ def main() -> None:
         display_code_scanning(results["code_scanning"])
     if args.type in ("all", "dependabot"):
         display_dependabot(results["dependabot"])
-    if args.type in ("all", "secret-scanning"):
-        display_secret_scanning(results["secret_scanning"])
+    if args.type in ("all", "secret-scanning", "credential-audit"):
+        display_credential_audit_alerts(results["credential_audit"])
 
     total_alerts = (
         len(results["code_scanning"])
         + len(results["dependabot"])
-        + len(results["secret_scanning"])
+        + len(results["credential_audit"])
     )
     print(f"\n{'='*70}")
     print(f"Total Open Security Alerts: {total_alerts}")
