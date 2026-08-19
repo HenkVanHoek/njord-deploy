@@ -73,7 +73,7 @@ class SSHManager:
                 client.load_system_host_keys()
             if self.allow_auto_add:
                 client.set_missing_host_key_policy(
-                    paramiko.AutoAddPolicy()
+                    paramiko.WarningPolicy()
                 )  # nosec B507
             else:
                 # Enforce RejectPolicy to prevent MitM in general operations

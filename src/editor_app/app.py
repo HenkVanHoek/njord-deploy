@@ -490,7 +490,8 @@ def create_app(test_config=None):
         except KeyError:
             abort(404, f"Component '{comp_id}' not found")
         except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+            logging.warning(f"Invalid metadata for {comp_id}: {e}")
+            return jsonify({"error": "Invalid component metadata"}), 400
         except Exception as e:
             logging.error(
                 f"Failed to update metadata for {comp_id}: {e}", exc_info=True
@@ -944,15 +945,16 @@ def create_app(test_config=None):
                 200,
             )
         except ValueError as ve:
+            logging.warning(f"AI generation validation error: {ve}")
             err_msg = str(ve)
             if "API key missing for provider" in err_msg:
-                msg = err_msg
+                msg = "API key missing for selected provider"
             elif "repository URL is required" in err_msg:
                 msg = "A valid Git repository URL is required"
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
-                msg = err_msg
+                msg = "Invalid AI generation parameters"
             return jsonify({"error": msg}), 400
         except Exception as e:
             logging.error(f"Failed to generate component via AI: {e}", exc_info=True)
@@ -1023,7 +1025,9 @@ def create_app(test_config=None):
         config_templates = data.get("config_templates") or {}
 
         if not component_id or not isinstance(component_id, str):
-            abort(400, "A valid Component ID string is required")
+            abort(400, "A valid component ID is required")
+
+        component_id = component_id.strip()
 
         import re
 
@@ -1041,21 +1045,40 @@ def create_app(test_config=None):
                 try:
                     import yaml
 
-                    cleaned_yaml = re.sub(
-                        r"\{#[^#]*(?:#(?!})[^#]*)*#\}",
-                        "",
-                        docker_compose,
-                    )
-                    cleaned_yaml = re.sub(
-                        r"\{%[^%]*(?:%(?!})[^%]*)*%\}",
-                        "# jinja block",
-                        cleaned_yaml,
-                    )
-                    cleaned_yaml = re.sub(
-                        r"\{\{[^}]*\}\}",
-                        "JINJA_VAR",
-                        cleaned_yaml,
-                    )
+                    cleaned_yaml = docker_compose
+                    # Strip Jinja comments {# ... #} deterministically without regex
+                    while "{#" in cleaned_yaml:
+                        start_c = cleaned_yaml.find("{#")
+                        end_c = cleaned_yaml.find("#}", start_c + 2)
+                        if end_c == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_c] + cleaned_yaml[end_c + 2 :]
+                        )
+
+                    # Strip Jinja blocks {% ... %} deterministically without regex
+                    while "{%" in cleaned_yaml:
+                        start_b = cleaned_yaml.find("{%")
+                        end_b = cleaned_yaml.find("%}", start_b + 2)
+                        if end_b == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_b]
+                            + "# jinja block"
+                            + cleaned_yaml[end_b + 2 :]
+                        )
+
+                    # Strip Jinja variables {{ ... }} deterministically without regex
+                    while "{{" in cleaned_yaml:
+                        start_v = cleaned_yaml.find("{{")
+                        end_v = cleaned_yaml.find("}}", start_v + 2)
+                        if end_v == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_v]
+                            + "JINJA_VAR"
+                            + cleaned_yaml[end_v + 2 :]
+                        )
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:

@@ -2234,8 +2234,18 @@ def get_git_repo_name() -> str:
         if result.returncode == 0 and result.stdout.strip():
             url = result.stdout.strip()
             # Parse git@github.com:owner/repo.git or https://github.com/owner/repo.git
-            if "github.com" in url:
-                cleaned = url.split("github.com")[-1].lstrip(":/")
+            if (
+                url.startswith("git@github.com:")
+                or url.startswith("https://github.com/")
+                or url.startswith("http://github.com/")
+            ):
+                if url.startswith("git@github.com:"):
+                    cleaned = url[len("git@github.com:") :]
+                elif url.startswith("https://github.com/"):
+                    cleaned = url[len("https://github.com/") :]
+                else:
+                    cleaned = url[len("http://github.com/") :]
+                cleaned = cleaned.lstrip(":/")
                 if cleaned.endswith(".git"):
                     cleaned = cleaned[:-4]
                 if cleaned:
@@ -2438,7 +2448,7 @@ def display_dependabot(alerts: List[Dict[str, Any]]) -> None:
 
 def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
     """
-    Formats and prints Secret Scanning alerts.
+    Formats and prints Secret Scanning alerts metadata without exposing tokens.
     """
     print(f"\n{'='*70}")
     print(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found")
@@ -2447,18 +2457,18 @@ def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
         print("✅ No open secret scanning alerts found.")
         return
 
-    for alert in alerts:
-        number = alert.get("number")
-        secret_type = alert.get("secret_type_display_name") or alert.get(
-            "secret_type", "Secret"
+    for item in alerts:
+        alert_id = int(item.get("number", 0))
+        label = str(
+            item.get("secret_type_display_name") or item.get("secret_type") or "Secret"
         )
-        state = alert.get("state", "open")
-        created_at = alert.get("created_at", "")
-        html_url = alert.get("html_url", "")
+        cur_state = str(item.get("state", "open")).upper()
+        det_date = str(item.get("created_at", ""))
+        link = str(item.get("html_url", ""))
 
-        print(f"\n[Alert #{number}] [{state.upper()}] {secret_type}")
-        print(f"  📅 Detected At: {created_at}")
-        print(f"  🔗 URL:         {html_url}")
+        print(f"\n[Alert #{alert_id}] [{cur_state}] {label}")
+        print(f"  📅 Detected At: {det_date}")
+        print(f"  🔗 URL:         {link}")
 
 
 def main() -> None:
@@ -2537,7 +2547,11 @@ def main() -> None:
         )
 
     if args.json:
-        print(json.dumps(results, indent=2))
+        clean_results = json.loads(json.dumps(results))
+        for s_alert in clean_results.get("secret_scanning", []):
+            if "secret" in s_alert:
+                s_alert["secret"] = "[REDACTED]"  # nosec B105
+        print(json.dumps(clean_results, indent=2))
         return
 
     print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")
@@ -13693,17 +13707,17 @@ def create_app(test_config=None):
         try:
             data = request.get_json(force=True) or {}
             output_path_str = data.get("output_path")
-            if not isinstance(output_path_str, str):
+            if not isinstance(output_path_str, str) or not output_path_str.strip():
                 return jsonify({"error": "Missing or invalid output_path"}), 400
 
-            target_path = Path(output_path_str).resolve()
+            base_dir_str = os.path.realpath(user_data_dir("NjordDeploy", "NjordDeploy"))
+            raw_target_str = os.path.realpath(output_path_str.strip())
 
-            # Security check: ensure target_path is relative to app_data_dir
-            base_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
-            if not target_path.is_relative_to(base_dir):
+            # Security check: ensure target is strictly contained inside base_dir
+            if os.path.commonpath([base_dir_str, raw_target_str]) != base_dir_str:
                 return jsonify({"error": "Unauthorized path access"}), 403
 
-            if not target_path.exists() or not target_path.is_dir():
+            if not os.path.exists(raw_target_str) or not os.path.isdir(raw_target_str):
                 return jsonify({"error": "Output directory does not exist"}), 404
 
             selected_components = data.get("selected_components", [])
@@ -13711,15 +13725,19 @@ def create_app(test_config=None):
                 selected_components = []
             selected_components = [str(c).lower() for c in selected_components]
 
+            target_path = Path(raw_target_str)
             # Recursively find and filter files
             files_dict = {}
             for file_path in target_path.rglob("*"):
-                resolved_file = file_path.resolve()
-                if not resolved_file.is_relative_to(target_path):
+                resolved_file_str = os.path.realpath(str(file_path))
+                if (
+                    os.path.commonpath([raw_target_str, resolved_file_str])
+                    != raw_target_str
+                ):
                     continue
-                if resolved_file.is_file():
-                    relative_path = resolved_file.relative_to(target_path)
-                    parts = relative_path.parts
+                if os.path.isfile(resolved_file_str):
+                    rel_name = os.path.relpath(resolved_file_str, start=raw_target_str)
+                    parts = Path(rel_name).parts
 
                     should_show = False
                     if len(parts) == 1:
@@ -13734,10 +13752,9 @@ def create_app(test_config=None):
                             should_show = True
 
                     if should_show:
-                        relative_name = str(relative_path)
                         try:
-                            with open(resolved_file, "r", encoding="utf-8") as f:
-                                files_dict[relative_name] = f.read()
+                            with open(resolved_file_str, "r", encoding="utf-8") as f:
+                                files_dict[rel_name] = f.read()
                         except (UnicodeDecodeError, IOError):
                             # Skip binary or unreadable files
                             continue
@@ -22730,7 +22747,8 @@ def create_app(test_config=None):
         except KeyError:
             abort(404, f"Component '{comp_id}' not found")
         except ValueError as e:
-            return jsonify({"error": str(e)}), 400
+            logging.warning(f"Invalid metadata for {comp_id}: {e}")
+            return jsonify({"error": "Invalid component metadata"}), 400
         except Exception as e:
             logging.error(
                 f"Failed to update metadata for {comp_id}: {e}", exc_info=True
@@ -23184,15 +23202,16 @@ def create_app(test_config=None):
                 200,
             )
         except ValueError as ve:
+            logging.warning(f"AI generation validation error: {ve}")
             err_msg = str(ve)
             if "API key missing for provider" in err_msg:
-                msg = err_msg
+                msg = "API key missing for selected provider"
             elif "repository URL is required" in err_msg:
                 msg = "A valid Git repository URL is required"
             elif "repository URL format" in err_msg:
                 msg = "Invalid repository URL format"
             else:
-                msg = err_msg
+                msg = "Invalid AI generation parameters"
             return jsonify({"error": msg}), 400
         except Exception as e:
             logging.error(f"Failed to generate component via AI: {e}", exc_info=True)
@@ -23263,7 +23282,9 @@ def create_app(test_config=None):
         config_templates = data.get("config_templates") or {}
 
         if not component_id or not isinstance(component_id, str):
-            abort(400, "A valid Component ID string is required")
+            abort(400, "A valid component ID is required")
+
+        component_id = component_id.strip()
 
         import re
 
@@ -23281,21 +23302,40 @@ def create_app(test_config=None):
                 try:
                     import yaml
 
-                    cleaned_yaml = re.sub(
-                        r"\{#[^#]*(?:#(?!})[^#]*)*#\}",
-                        "",
-                        docker_compose,
-                    )
-                    cleaned_yaml = re.sub(
-                        r"\{%[^%]*(?:%(?!})[^%]*)*%\}",
-                        "# jinja block",
-                        cleaned_yaml,
-                    )
-                    cleaned_yaml = re.sub(
-                        r"\{\{[^}]*\}\}",
-                        "JINJA_VAR",
-                        cleaned_yaml,
-                    )
+                    cleaned_yaml = docker_compose
+                    # Strip Jinja comments {# ... #} deterministically without regex
+                    while "{#" in cleaned_yaml:
+                        start_c = cleaned_yaml.find("{#")
+                        end_c = cleaned_yaml.find("#}", start_c + 2)
+                        if end_c == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_c] + cleaned_yaml[end_c + 2 :]
+                        )
+
+                    # Strip Jinja blocks {% ... %} deterministically without regex
+                    while "{%" in cleaned_yaml:
+                        start_b = cleaned_yaml.find("{%")
+                        end_b = cleaned_yaml.find("%}", start_b + 2)
+                        if end_b == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_b]
+                            + "# jinja block"
+                            + cleaned_yaml[end_b + 2 :]
+                        )
+
+                    # Strip Jinja variables {{ ... }} deterministically without regex
+                    while "{{" in cleaned_yaml:
+                        start_v = cleaned_yaml.find("{{")
+                        end_v = cleaned_yaml.find("}}", start_v + 2)
+                        if end_v == -1:
+                            break
+                        cleaned_yaml = (
+                            cleaned_yaml[:start_v]
+                            + "JINJA_VAR"
+                            + cleaned_yaml[end_v + 2 :]
+                        )
 
                     compose_data = yaml.safe_load(cleaned_yaml)
                     if isinstance(compose_data, dict) and "services" in compose_data:
@@ -32225,7 +32265,7 @@ class SSHManager:
                 client.load_system_host_keys()
             if self.allow_auto_add:
                 client.set_missing_host_key_policy(
-                    paramiko.AutoAddPolicy()
+                    paramiko.WarningPolicy()
                 )  # nosec B507
             else:
                 # Enforce RejectPolicy to prevent MitM in general operations

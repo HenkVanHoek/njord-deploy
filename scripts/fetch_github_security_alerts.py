@@ -36,8 +36,18 @@ def get_git_repo_name() -> str:
         if result.returncode == 0 and result.stdout.strip():
             url = result.stdout.strip()
             # Parse git@github.com:owner/repo.git or https://github.com/owner/repo.git
-            if "github.com" in url:
-                cleaned = url.split("github.com")[-1].lstrip(":/")
+            if (
+                url.startswith("git@github.com:")
+                or url.startswith("https://github.com/")
+                or url.startswith("http://github.com/")
+            ):
+                if url.startswith("git@github.com:"):
+                    cleaned = url[len("git@github.com:") :]
+                elif url.startswith("https://github.com/"):
+                    cleaned = url[len("https://github.com/") :]
+                else:
+                    cleaned = url[len("http://github.com/") :]
+                cleaned = cleaned.lstrip(":/")
                 if cleaned.endswith(".git"):
                     cleaned = cleaned[:-4]
                 if cleaned:
@@ -240,7 +250,7 @@ def display_dependabot(alerts: List[Dict[str, Any]]) -> None:
 
 def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
     """
-    Formats and prints Secret Scanning alerts.
+    Formats and prints Secret Scanning alerts metadata without exposing tokens.
     """
     print(f"\n{'='*70}")
     print(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found")
@@ -249,18 +259,18 @@ def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
         print("✅ No open secret scanning alerts found.")
         return
 
-    for alert in alerts:
-        number = alert.get("number")
-        secret_type = alert.get("secret_type_display_name") or alert.get(
-            "secret_type", "Secret"
+    for item in alerts:
+        alert_id = int(item.get("number", 0))
+        label = str(
+            item.get("secret_type_display_name") or item.get("secret_type") or "Secret"
         )
-        state = alert.get("state", "open")
-        created_at = alert.get("created_at", "")
-        html_url = alert.get("html_url", "")
+        cur_state = str(item.get("state", "open")).upper()
+        det_date = str(item.get("created_at", ""))
+        link = str(item.get("html_url", ""))
 
-        print(f"\n[Alert #{number}] [{state.upper()}] {secret_type}")
-        print(f"  📅 Detected At: {created_at}")
-        print(f"  🔗 URL:         {html_url}")
+        print(f"\n[Alert #{alert_id}] [{cur_state}] {label}")
+        print(f"  📅 Detected At: {det_date}")
+        print(f"  🔗 URL:         {link}")
 
 
 def main() -> None:
@@ -339,7 +349,11 @@ def main() -> None:
         )
 
     if args.json:
-        print(json.dumps(results, indent=2))
+        clean_results = json.loads(json.dumps(results))
+        for s_alert in clean_results.get("secret_scanning", []):
+            if "secret" in s_alert:
+                s_alert["secret"] = "[REDACTED]"  # nosec B105
+        print(json.dumps(clean_results, indent=2))
         return
 
     print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")

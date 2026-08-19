@@ -2369,17 +2369,17 @@ def create_app(test_config=None):
         try:
             data = request.get_json(force=True) or {}
             output_path_str = data.get("output_path")
-            if not isinstance(output_path_str, str):
+            if not isinstance(output_path_str, str) or not output_path_str.strip():
                 return jsonify({"error": "Missing or invalid output_path"}), 400
 
-            target_path = Path(output_path_str).resolve()
+            base_dir_str = os.path.realpath(user_data_dir("NjordDeploy", "NjordDeploy"))
+            raw_target_str = os.path.realpath(output_path_str.strip())
 
-            # Security check: ensure target_path is relative to app_data_dir
-            base_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
-            if not target_path.is_relative_to(base_dir):
+            # Security check: ensure target is strictly contained inside base_dir
+            if os.path.commonpath([base_dir_str, raw_target_str]) != base_dir_str:
                 return jsonify({"error": "Unauthorized path access"}), 403
 
-            if not target_path.exists() or not target_path.is_dir():
+            if not os.path.exists(raw_target_str) or not os.path.isdir(raw_target_str):
                 return jsonify({"error": "Output directory does not exist"}), 404
 
             selected_components = data.get("selected_components", [])
@@ -2387,15 +2387,19 @@ def create_app(test_config=None):
                 selected_components = []
             selected_components = [str(c).lower() for c in selected_components]
 
+            target_path = Path(raw_target_str)
             # Recursively find and filter files
             files_dict = {}
             for file_path in target_path.rglob("*"):
-                resolved_file = file_path.resolve()
-                if not resolved_file.is_relative_to(target_path):
+                resolved_file_str = os.path.realpath(str(file_path))
+                if (
+                    os.path.commonpath([raw_target_str, resolved_file_str])
+                    != raw_target_str
+                ):
                     continue
-                if resolved_file.is_file():
-                    relative_path = resolved_file.relative_to(target_path)
-                    parts = relative_path.parts
+                if os.path.isfile(resolved_file_str):
+                    rel_name = os.path.relpath(resolved_file_str, start=raw_target_str)
+                    parts = Path(rel_name).parts
 
                     should_show = False
                     if len(parts) == 1:
@@ -2410,10 +2414,9 @@ def create_app(test_config=None):
                             should_show = True
 
                     if should_show:
-                        relative_name = str(relative_path)
                         try:
-                            with open(resolved_file, "r", encoding="utf-8") as f:
-                                files_dict[relative_name] = f.read()
+                            with open(resolved_file_str, "r", encoding="utf-8") as f:
+                                files_dict[rel_name] = f.read()
                         except (UnicodeDecodeError, IOError):
                             # Skip binary or unreadable files
                             continue

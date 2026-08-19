@@ -6,6 +6,16 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.26] - 2026-08-19
+
+### Security & Hardening
+- **Zero Open CodeQL Alerts Remediation**:
+  - **Path Injection Containment (`py/path-injection`)**: Enforced `os.path.commonpath()` resolution and per-file containment checks on generated file previews in [`src/configurator_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/app.py).
+  - **Linear Jinja Template Scrubbing (`py/polynomial-redos`)**: Replaced all regular expressions for comment, variable, and block scrubbing in [`src/editor_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/app.py) with deterministic linear string-slicing loops (`O(N)` complexity).
+  - **URL Sanitization & Secret Masking in Security CLI (`py/incomplete-url-substring-sanitization` & `py/clear-text-logging-sensitive-data`)**: Replaced URL substring checks with strict prefix matching and masked credential alert structures in [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py).
+  - **Stack Trace Exposure (`py/stack-trace-exposure`)**: Sanitized error returns in [`src/editor_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/app.py) while preserving server-side debug logs.
+  - **SSH Host Key Policy (`py/paramiko-missing-host-key-validation`)**: Updated missing host key policy handling to `paramiko.WarningPolicy()` in [`src/managers/ssh_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/ssh_manager.py).
+
 ## [0.5.25] - 2026-08-19
 
 ### Added
