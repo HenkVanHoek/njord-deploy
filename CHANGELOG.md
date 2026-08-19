@@ -6,6 +6,14 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.30] - 2026-08-19
+
+### Security & Hardening
+- **Zero-Alert Milestone**:
+  - Achieved 100% clean GitHub Security status with 0 open CodeQL alerts, 0 Dependabot vulnerabilities, and 0 credential alerts across the entire repository.
+  - Hardened CLI telemetry formatting in [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py) with clean identifier decoupling.
+  - Consolidated pre-flight CodeQL security checklists and automated validation workflows in [`.agents/skills/code-quality/SKILL.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/.agents/skills/code-quality/SKILL.md).
+
 ## [0.5.29] - 2026-08-19
 
 ### Security & Hardening
