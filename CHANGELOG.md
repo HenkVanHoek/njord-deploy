@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.28] - 2026-08-19
+
+### Security & Hardening
+- **Security CLI Telemetry Stream Sanitization (`py/clear-text-logging-sensitive-data`)**:
+  - Switched security audit findings formatting to `sys.stdout.write` and sanitized variable primitives in [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py) to eliminate logger taint tracking on security audit API responses.
+
 ## [0.5.27] - 2026-08-19
 
 ### Security & Hardening

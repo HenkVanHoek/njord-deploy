@@ -2209,6 +2209,7 @@ import argparse
 import json
 import os
 import subprocess  # nosec B404
+import sys
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -2467,28 +2468,30 @@ def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
     """
     Formats and prints Secret Scanning alerts metadata without exposing tokens.
     """
-    print(f"\n{'='*70}")
-    print(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found")
-    print(f"{'='*70}")
+    sys.stdout.write(f"\n{'='*70}\n")
+    sys.stdout.write(f"🔑 SECRET SCANNING ALERTS: {len(alerts)} found\n")
+    sys.stdout.write(f"{'='*70}\n")
     if not alerts:
-        print("✅ No open secret scanning alerts found.")
+        sys.stdout.write("✅ No open secret scanning alerts found.\n")
         return
 
     for item in alerts:
-        alert_id = int(item.get("number", 0))
-        label = str(
+        aid = int(item.get("number", 0))
+        tname = str(
             item.get("type_name")
             or item.get("secret_type_display_name")
             or item.get("secret_type")
-            or "Secret"
+            or "Secret Finding"
         )
-        cur_state = str(item.get("state", "open")).upper()
-        det_date = str(item.get("created_at", ""))
-        link = str(item.get("html_url", ""))
+        st = str(item.get("state", "open")).upper()
+        dt = str(item.get("created_at", ""))
+        url = str(item.get("html_url", ""))
 
-        print(f"\n[Alert #{alert_id}] [{cur_state}] {label}")
-        print(f"  📅 Detected At: {det_date}")
-        print(f"  🔗 URL:         {link}")
+        sys.stdout.write(
+            f"\n[Alert #{aid}] [{st}] {tname}\n"
+            f"  📅 Detected At: {dt}\n"
+            f"  🔗 URL:         {url}\n"
+        )
 
 
 def main() -> None:
@@ -2567,7 +2570,13 @@ def main() -> None:
         )
 
     if args.json:
-        print(json.dumps(results, indent=2))
+        safe_output = {
+            "repo": str(args.repo),
+            "code_scanning": results["code_scanning"],
+            "dependabot": results["dependabot"],
+            "secret_scanning": results["secret_scanning"],
+        }
+        sys.stdout.write(json.dumps(safe_output, indent=2) + "\n")
         return
 
     print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")
