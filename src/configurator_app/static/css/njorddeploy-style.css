@@ -218,6 +218,13 @@ html[data-theme="high-contrast-light"] .card:hover {
     transition: all 0.2s ease-in-out;
 }
 
+.input-group-text {
+    background-color: var(--input-bg) !important;
+    border: 1px solid var(--input-border) !important;
+    color: var(--input-color) !important;
+    font-weight: 500;
+}
+
 .form-control::placeholder,
 input[type="text"]::placeholder,
 input[type="password"]::placeholder {

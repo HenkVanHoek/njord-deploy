@@ -6,6 +6,13 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.32] - 2026-08-19
+
+### Design System & Assets
+- **Centralized Design System Sync**:
+  - Added theme-consistent `.input-group-text` styles to [`njorddeploy-style.css`](file:///home/hvhoek/PycharmProjects/njord-deploy-design-system/css/njorddeploy-style.css) in `njorddeploy-design-system` repository.
+  - Enhanced [`scripts/fetch_assets.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_assets.py) with authenticated GitHub API token support to synchronize CSS and image assets seamlessly.
+
 ## [0.5.31] - 2026-08-19
 
 ### Fixed
