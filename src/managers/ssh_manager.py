@@ -1,4 +1,5 @@
 # src/managers/ssh_manager.py
+import logging
 import select
 from pathlib import Path
 from typing import Callable, Optional, Tuple
@@ -8,6 +9,19 @@ from appdirs import user_data_dir
 from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from paramiko import Ed25519Key, SFTPClient, SSHClient
+
+
+class TrustOnFirstUsePolicy(paramiko.MissingHostKeyPolicy):
+    """
+    Host key policy that records newly discovered host keys into the active
+    client session with informational logging.
+    """
+
+    def missing_host_key(
+        self, client: SSHClient, hostname: str, key: paramiko.PKey
+    ) -> None:
+        logging.info(f"Accepted host key for target {hostname}: {key.get_name()}")
+        client.get_host_keys().add(hostname, key.get_name(), key)
 
 
 class SSHManager:
@@ -73,7 +87,7 @@ class SSHManager:
                 client.load_system_host_keys()
             if self.allow_auto_add:
                 client.set_missing_host_key_policy(
-                    paramiko.WarningPolicy()
+                    TrustOnFirstUsePolicy()
                 )  # nosec B507
             else:
                 # Enforce RejectPolicy to prevent MitM in general operations

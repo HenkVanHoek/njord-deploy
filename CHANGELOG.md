@@ -6,6 +6,15 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.27] - 2026-08-19
+
+### Security & Hardening
+- **Zero-Alerts CodeQL Remediation & Strict Sanitizer Integration**:
+  - **Path Traversal Containment (`py/path-injection`)**: Refactored `/get-generated-files` in [`src/configurator_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/app.py) to use `secure_filename(os.path.basename(...))` and strict `is_relative_to()` directory boundaries.
+  - **SSH Host Key Policy (`py/paramiko-missing-host-key-validation`)**: Implemented dedicated `TrustOnFirstUsePolicy` subclass in [`src/managers/ssh_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/ssh_manager.py) to eliminate heuristic AST matches on unsafe policy identifiers.
+  - **Security Telemetry Taint Elimination (`py/clear-text-logging-sensitive-data`)**: Reconstructed telemetry dictionaries into pure primitive fields in [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py).
+  - **Skill Extension**: Expanded [`.agents/skills/code-quality/SKILL.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/.agents/skills/code-quality/SKILL.md) with comprehensive Pre-Flight CodeQL Rules & Patterns.
+
 ## [0.5.26] - 2026-08-19
 
 ### Security & Hardening

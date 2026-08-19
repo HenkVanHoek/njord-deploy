@@ -166,8 +166,25 @@ def fetch_secret_scanning_alerts(
     params = {"state": state, "per_page": 100}
     status, data = make_request(f"repos/{repo}/secret-scanning/alerts", token, params)
     if status == 200 and isinstance(data, list):
-        return data
-    if status == 401 or status == 403 or status == 404:
+        sanitized_list: List[Dict[str, Any]] = []
+        for raw in data:
+            if not isinstance(raw, dict):
+                continue
+            sanitized_list.append(
+                {
+                    "number": int(raw.get("number") or 0),
+                    "type_name": str(
+                        raw.get("secret_type_display_name")
+                        or raw.get("secret_type")
+                        or "Secret Finding"
+                    ),
+                    "state": str(raw.get("state") or "open"),
+                    "created_at": str(raw.get("created_at") or ""),
+                    "html_url": str(raw.get("html_url") or ""),
+                }
+            )
+        return sanitized_list
+    if status in (401, 403, 404):
         msg = data.get("message", "Authentication or permission error")
         print(f"⚠️ Secret Scanning API ({status}): {msg}")
     return []
@@ -262,7 +279,10 @@ def display_secret_scanning(alerts: List[Dict[str, Any]]) -> None:
     for item in alerts:
         alert_id = int(item.get("number", 0))
         label = str(
-            item.get("secret_type_display_name") or item.get("secret_type") or "Secret"
+            item.get("type_name")
+            or item.get("secret_type_display_name")
+            or item.get("secret_type")
+            or "Secret"
         )
         cur_state = str(item.get("state", "open")).upper()
         det_date = str(item.get("created_at", ""))
@@ -349,11 +369,7 @@ def main() -> None:
         )
 
     if args.json:
-        clean_results = json.loads(json.dumps(results))
-        for s_alert in clean_results.get("secret_scanning", []):
-            if "secret" in s_alert:
-                s_alert["secret"] = "[REDACTED]"  # nosec B105
-        print(json.dumps(clean_results, indent=2))
+        print(json.dumps(results, indent=2))
         return
 
     print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")
