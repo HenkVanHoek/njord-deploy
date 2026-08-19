@@ -162,31 +162,53 @@ def fetch_secret_scanning_alerts(
     repo: str, token: Optional[str], state: str = "open"
 ) -> List[Dict[str, Any]]:
     """
-    Fetches Secret Scanning alerts.
+    Fetches Secret Scanning alerts metadata safely.
     """
+    path_suffix = "/secret-scanning/alerts"
     params = {"state": state, "per_page": 100}
-    status, data = make_request(f"repos/{repo}/secret-scanning/alerts", token, params)
-    if status == 200 and isinstance(data, list):
-        sanitized_list: List[Dict[str, Any]] = []
-        for raw in data:
-            if not isinstance(raw, dict):
+    status, raw_records = make_request(f"repos/{repo}{path_suffix}", token, params)
+    if status == 200 and isinstance(raw_records, list):
+        sanitized_summary: List[Dict[str, Any]] = []
+        for entry in raw_records:
+            if not isinstance(entry, dict):
                 continue
-            sanitized_list.append(
+            raw_num = entry.get("number")
+            clean_id = (
+                int(raw_num)
+                if isinstance(raw_num, (int, str)) and str(raw_num).isdigit()
+                else 0
+            )
+            raw_type = str(
+                entry.get("secret_type_display_name")
+                or entry.get("secret_type")
+                or "Secret Finding"
+            )
+            clean_type = "".join(
+                c for c in raw_type if c.isalnum() or c in (" ", "-", "_")
+            )
+            clean_state = (
+                "OPEN" if str(entry.get("state")).lower() == "open" else "RESOLVED"
+            )
+            clean_date = str(entry.get("created_at") or "").replace("T", " ")[:19]
+            raw_url = str(entry.get("html_url") or "")
+            clean_url = (
+                raw_url
+                if raw_url.startswith("https://github.com/")
+                else "https://github.com"
+            )
+
+            sanitized_summary.append(
                 {
-                    "number": int(raw.get("number") or 0),
-                    "type_name": str(
-                        raw.get("secret_type_display_name")
-                        or raw.get("secret_type")
-                        or "Secret Finding"
-                    ),
-                    "state": str(raw.get("state") or "open"),
-                    "created_at": str(raw.get("created_at") or ""),
-                    "html_url": str(raw.get("html_url") or ""),
+                    "number": clean_id,
+                    "type_name": clean_type,
+                    "state": clean_state,
+                    "created_at": clean_date,
+                    "html_url": clean_url,
                 }
             )
-        return sanitized_list
+        return sanitized_summary
     if status in (401, 403, 404):
-        msg = data.get("message", "Authentication or permission error")
+        msg = raw_records.get("message", "Authentication or permission error")
         print(f"⚠️ Secret Scanning API ({status}): {msg}")
     return []
 

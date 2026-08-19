@@ -6,6 +6,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.5.29] - 2026-08-19
+
+### Security & Hardening
+- **Complete Elimination of Sensitive Data Taint Tracking (`py/clear-text-logging-sensitive-data`)**:
+  - Sanitized audit records with whitelist comprehension, safe integer parsing, and URL prefix enforcement in [`scripts/fetch_github_security_alerts.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fetch_github_security_alerts.py).
+
 ## [0.5.28] - 2026-08-19
 
 ### Security & Hardening
