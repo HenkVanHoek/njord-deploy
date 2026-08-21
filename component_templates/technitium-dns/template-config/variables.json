@@ -1,0 +1,148 @@
+{
+    "variables": [
+        {
+            "default": "5380",
+            "description": "The host port for accessing the Technitium DNS Server web console via HTTP.",
+            "id": "DNS_WEB_CONSOLE_PORT",
+            "label": "DNS Web Console Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "53",
+            "description": "The host port for the standard DNS service over UDP. Typically port 53.",
+            "id": "DNS_UDP_PORT",
+            "label": "DNS UDP Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "53",
+            "description": "The host port for the standard DNS service over TCP. Typically port 53.",
+            "id": "DNS_TCP_PORT",
+            "label": "DNS TCP Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "853",
+            "description": "The host port for the DNS-over-TLS (DoT) service. Typically port 853.",
+            "id": "DNS_DOT_PORT",
+            "label": "DNS-over-TLS Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "443",
+            "description": "The host port for the DNS-over-HTTPS (DoH) service. Typically port 443.",
+            "id": "DNS_DOH_PORT",
+            "label": "DNS-over-HTTPS Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "853",
+            "description": "The host port for the DNS-over-QUIC (DoQ) service. Typically port 853.",
+            "id": "DNS_DOQ_PORT",
+            "label": "DNS-over-QUIC Port",
+            "required": "",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "dns-server.local",
+            "description": "The primary fully qualified domain name used by this DNS Server to identify itself.",
+            "id": "DNS_SERVER_DOMAIN",
+            "label": "DNS Server Domain",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "{{ 'openssl rand -base64 12' | password_hash }}",
+            "description": "The password for the DNS web console admin user. This is set on first run.",
+            "id": "DNS_ADMIN_PASSWORD",
+            "label": "DNS Web Console Admin Password",
+            "required": "",
+            "source": "",
+            "type": "password"
+        },
+        {
+            "default": "true",
+            "description": "Set to 'true' to enable blocking of domain names using Blocked Zone and Block List Zone features.",
+            "id": "DNS_ENABLE_BLOCKING",
+            "label": "Enable Ad/Malware Blocking",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+            "description": "A comma-separated list of URLs for block lists (e.g., hosts files) to be used for ad and malware blocking.",
+            "id": "DNS_BLOCK_LIST_URLS",
+            "label": "Block List URLs",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "1.1.1.1, 8.8.8.8",
+            "description": "A comma-separated list of IP addresses for upstream DNS forwarders (e.g., Cloudflare, Google DNS).",
+            "id": "DNS_FORWARDERS",
+            "label": "Upstream DNS Forwarders",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "Https",
+            "description": "The protocol to use for upstream DNS forwarders. Options: Udp, Tcp, Tls, Https, HttpsJson.",
+            "id": "DNS_FORWARDER_PROTOCOL",
+            "label": "Forwarder Protocol",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "AllowOnlyForPrivateNetworks",
+            "description": "Defines who can use the DNS server for recursive queries. Options: Allow, Deny, AllowOnlyForPrivateNetworks, UseSpecifiedNetworkACL.",
+            "id": "DNS_RECURSION_MODE",
+            "label": "Recursion Mode",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "172.16.0.0/12, 192.168.0.0/16, 10.0.0.0/8",
+            "description": "Comma-separated list of IP addresses or network addresses (CIDR) to allow/deny recursion. Only valid for 'UseSpecifiedNetworkACL' recursion mode. Prefix with '!' to deny.",
+            "id": "DNS_RECURSION_ACL",
+            "label": "Recursion Network ACL",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "30",
+            "description": "Maximum number of days to keep log files. Log files older than this will be deleted automatically. Set to 0 to disable auto-delete.",
+            "id": "DNS_LOG_MAX_DAYS",
+            "label": "Max Log File Days",
+            "required": "",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "false",
+            "description": "Set to 'true' to make the DNS Server prefer IPv6 for querying whenever possible.",
+            "id": "DNS_PREFER_IPV6",
+            "label": "Prefer IPv6 for Queries",
+            "required": "",
+            "source": "",
+            "type": "string"
+        }
+    ]
+}

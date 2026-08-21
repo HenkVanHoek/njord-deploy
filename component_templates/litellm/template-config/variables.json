@@ -92,7 +92,7 @@
             "type": "password"
         },
         {
-            "default": "https://api.hostyourai.com/v1",
+            "default": "https://hostyourai.com/api/v1",
             "description": "The API Base URL for your HostYourAI instance or gateway endpoint.",
             "id": "HOSTYOURAI_API_BASE",
             "label": "HostYourAI API Base URL",

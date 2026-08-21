@@ -4,13 +4,14 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import requests
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, Response, abort, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
 from managers.component_manager import ComponentManager
-from utils.ai_generator import AIGenerator
+from utils.ai_generator import AIGenerator, suggest_unique_component_id
 from utils.resource_utils import get_components_paths
 
 logging.basicConfig(level=logging.INFO)
@@ -67,11 +68,22 @@ def create_app(test_config=None):
     meta_file = str(meta_file_path)
     temp_path = str(templates_path_obj)
 
-    def save_api_key_to_env(key: str, provider: str = "gemini"):
-        """Saves the API key to the local .env file based on the provider."""
+    def save_api_key_to_env(
+        key: Optional[str] = None,
+        provider: str = "gemini",
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
+        """Saves API key, base URL, and/or model to the local .env file."""
         from utils.ai_provider_manager import save_api_key_to_env_file
 
-        save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
+        save_api_key_to_env_file(
+            key=key,
+            provider=provider,
+            base_url=base_url,
+            model=model,
+            project_root=project_root,
+        )
 
     # Initialize the unified ComponentManager
     component_manager = ComponentManager(
@@ -892,6 +904,11 @@ def create_app(test_config=None):
         save_key = data.get("save_key", False)
         base_url = data.get("base_url")
         model = data.get("model")
+        custom_component_id = data.get("component_id")
+        if isinstance(custom_component_id, str):
+            custom_component_id = custom_component_id.strip()
+            if not custom_component_id:
+                custom_component_id = None
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid Git repository URL is required")
@@ -914,6 +931,9 @@ def create_app(test_config=None):
             njorddeploy_meta = component_manager.get_njorddeploy_meta()
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
+            existing_comp_ids = list(
+                component_manager.load_metadata().get("components", {}).keys()
+            )
 
             generator = AIGenerator(
                 api_key=api_key,
@@ -921,18 +941,123 @@ def create_app(test_config=None):
                 base_url=base_url,
                 model=model,
             )
+
+            is_stream = bool(data.get("stream", False))
+            if is_stream:
+                import json as json_mod
+                import queue
+                import threading
+
+                event_queue: queue.Queue = queue.Queue()
+
+                def progress_cb(step_name: str, detail_text: str):
+                    event_queue.put(
+                        {
+                            "type": "progress",
+                            "step": step_name,
+                            "detail": detail_text,
+                        }
+                    )
+
+                def worker():
+                    try:
+                        res = generator.generate_component_data(
+                            repo_url,
+                            custom_instructions,
+                            existing_groups,
+                            custom_component_id=custom_component_id,
+                            progress_callback=progress_cb,
+                            existing_component_ids=existing_comp_ids,
+                        )
+                        k_saved = False
+                        if save_key and (
+                            isinstance(api_key, str)
+                            or isinstance(base_url, str)
+                            or isinstance(model, str)
+                        ):
+                            try:
+                                save_api_key_to_env(
+                                    key=api_key if isinstance(api_key, str) else None,
+                                    provider=provider,
+                                    base_url=(
+                                        base_url if isinstance(base_url, str) else None
+                                    ),
+                                    model=model if isinstance(model, str) else None,
+                                )
+                                k_saved = True
+                            except Exception as ex_k:
+                                logging.error(
+                                    f"Failed to save credentials to .env: {ex_k}"
+                                )
+                        event_queue.put(
+                            {
+                                "type": "result",
+                                "status": "success",
+                                "data": res,
+                                "key_saved": k_saved,
+                            }
+                        )
+                    except Exception as ex_gen:
+                        logging.error(f"AI streaming generation error: {ex_gen}")
+                        event_queue.put(
+                            {
+                                "type": "error",
+                                "error": str(ex_gen),
+                            }
+                        )
+
+                threading.Thread(target=worker, daemon=True).start()
+
+                def sse_generator():
+                    while True:
+                        try:
+                            evt = event_queue.get(timeout=330.0)
+                            yield f"data: {json_mod.dumps(evt)}\n\n"
+                            if evt.get("type") in ("result", "error"):
+                                break
+                        except queue.Empty:
+                            timeout_evt = {
+                                "type": "error",
+                                "error": ("Request timed out waiting for AI response."),
+                            }
+                            yield f"data: {json_mod.dumps(timeout_evt)}\n\n"
+                            break
+
+                return Response(
+                    sse_generator(),
+                    mimetype="text/event-stream",
+                    headers={
+                        "Cache-Control": "no-cache",
+                        "X-Accel-Buffering": "no",
+                    },
+                )
+
             result = generator.generate_component_data(
-                repo_url, custom_instructions, existing_groups
+                repo_url,
+                custom_instructions,
+                existing_groups,
+                custom_component_id=custom_component_id,
+                existing_component_ids=existing_comp_ids,
             )
 
             key_saved = False
-            # Save API key only if generation succeeded (proving key is valid)
-            if isinstance(api_key, str) and save_key:
+            # Save credentials only if generation succeeded
+            # (proving configuration is valid)
+            if save_key and (
+                isinstance(api_key, str)
+                or isinstance(base_url, str)
+                or isinstance(model, str)
+            ):
                 try:
-                    save_api_key_to_env(api_key, provider=provider)
+                    save_api_key_to_env(
+                        key=api_key if isinstance(api_key, str) else None,
+                        provider=provider,
+                        base_url=base_url if isinstance(base_url, str) else None,
+                        model=model if isinstance(model, str) else None,
+                    )
                     key_saved = True
                 except Exception as e:
-                    logging.error(f"Failed to save API key to .env: {e}")
+                    logging.error(f"Failed to save credentials to .env: {e}")
 
             return (
                 jsonify(
@@ -1024,6 +1149,7 @@ def create_app(test_config=None):
         variables = data.get("variables") or []
         config_templates = data.get("config_templates") or {}
 
+        overwrite = data.get("overwrite", False)
         if not component_id or not isinstance(component_id, str):
             abort(400, "A valid component ID is required")
 
@@ -1038,6 +1164,26 @@ def create_app(test_config=None):
         name = metadata.get("name", component_id.capitalize())
 
         try:
+            meta_data = component_manager.load_metadata()
+            components = meta_data.get("components", {})
+            is_existing = component_id in components
+
+            if is_existing and not overwrite:
+                suggested_id = suggest_unique_component_id(
+                    component_id, list(components.keys())
+                )
+                return (
+                    jsonify(
+                        {
+                            "error": f"Component '{component_id}' already exists.",
+                            "code": "component_exists",
+                            "component_id": component_id,
+                            "suggested_id": suggested_id,
+                        }
+                    ),
+                    409,
+                )
+
             # Fallback: Extract docker_service_name from YAML if missing in metadata
             if "docker_service_name" not in metadata and isinstance(
                 docker_compose, str
@@ -1091,8 +1237,15 @@ def create_app(test_config=None):
                         f"Failed to parse compose for service name: {parse_err}"
                     )
 
-            # 1. Create component folder and skeleton
-            component_manager.create_component(component_id, name)
+            # 1. Create or ensure component folder
+            if not is_existing:
+                component_manager.create_component(component_id, name)
+            else:
+                templates_root_path = component_manager.templates_path.resolve()
+                comp_dir = templates_root_path / safe_component_id
+                comp_dir.mkdir(parents=True, exist_ok=True)
+                config_dir = comp_dir / "template-config"
+                config_dir.mkdir(parents=True, exist_ok=True)
 
             # 2. Update compose template content
             if isinstance(docker_compose, str) and docker_compose:

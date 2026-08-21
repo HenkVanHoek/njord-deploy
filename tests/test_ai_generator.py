@@ -4,7 +4,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, patch
 
-from utils.ai_generator import AIGenerator
+from utils.ai_generator import AIGenerator, suggest_unique_component_id
 from utils.ai_generator_engine import AIGeneratorEngine
 
 
@@ -34,6 +34,72 @@ class TestAIGenerator(unittest.TestCase):
         self.assertEqual(result["docker_compose"], "services:")
         self.assertEqual(result["variables"], [])
         mock_generate.assert_called_once()
+
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_component_data_custom_component_id(self, mock_generate):
+        """Tests that explicit custom_component_id is respected."""
+        mock_generate.return_value = (
+            '{"metadata": {"name": "Technitium DNS", "image_name": '
+            '"technitium/dns-server", "description": "DNS server", '
+            '"group": "networking", "has_ui": true, "ui_port_variable": "DNS_PORT"}, '
+            '"docker_compose": "services:\\n  dns:\\n    image: '
+            'technitium/dns-server\\n    ports:\\n      - \\"{{ DNS_PORT }}:5380\\"", '
+            '"variables": [{"id": "DNS_PORT", "label": "Port", '
+            '"type": "port", "default": "5380", "description": "Web port"}]}'
+        )
+
+        repo_url = "https://github.com/TechnitiumSoftware/DnsServer"
+        result = self.generator.generate_component_data(
+            repo_url, custom_component_id="technitium-dns"
+        )
+
+        self.assertEqual(result["id"], "technitium-dns")
+        self.assertEqual(result["metadata"]["name"], "Technitium DNS")
+
+    def test_suggest_unique_component_id(self):
+        """Tests calculating unique non-conflicting component IDs."""
+        existing = ["caddy", "technitium-dns", "technitium-dns-1", "grafana"]
+
+        # If not taken, returns base
+        self.assertEqual(suggest_unique_component_id("nginx", existing), "nginx")
+
+        # If taken, appends -1
+        self.assertEqual(suggest_unique_component_id("caddy", existing), "caddy-1")
+
+        # If -1 is also taken, increments to -2
+        self.assertEqual(
+            suggest_unique_component_id("technitium-dns", existing),
+            "technitium-dns-2",
+        )
+
+        # Handles uppercase and special characters cleanly
+        self.assertEqual(
+            suggest_unique_component_id("Grafana Server!", existing),
+            "grafana-server",
+        )
+
+    @patch("utils.ai_generator_engine.AIGeneratorEngine.generate")
+    def test_generate_data_with_existing_ids_attaches_duplicate_info(
+        self, mock_generate
+    ):
+        """Tests that passing existing_component_ids sets is_duplicate
+        and suggested_id.
+        """
+        mock_generate.return_value = (
+            '{"metadata": {"name": "Caddy", "image_name": "caddy", '
+            '"description": "web server", "group": "reverse_proxy"}, '
+            '"docker_compose": "services:\\n  caddy:\\n    image: caddy\\n", '
+            '"variables": []}'
+        )
+
+        repo_url = "https://github.com/caddyserver/caddy"
+        result = self.generator.generate_component_data(
+            repo_url, existing_component_ids=["caddy", "caddy-1"]
+        )
+
+        self.assertEqual(result["id"], "caddy")
+        self.assertTrue(result["is_duplicate"])
+        self.assertEqual(result["suggested_id"], "caddy-2")
 
     def test_invalid_url_raises_value_error(self):
         """Tests that invalid Git URLs cause a ValueError."""

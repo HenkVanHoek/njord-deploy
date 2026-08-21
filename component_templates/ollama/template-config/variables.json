@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "11434",
+            "description": "The port on the host to expose the Ollama API.",
+            "id": "OLLAMA_PORT",
+            "label": "Ollama API Port",
+            "type": "port"
+        }
+    ]
+}

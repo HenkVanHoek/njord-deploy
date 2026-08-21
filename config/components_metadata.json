@@ -330,6 +330,43 @@
             "traefik_internal_port": null,
             "ui_port_variable": null
         },
+        "dnsserver": {
+            "ai_instructions": "Noem de de component Technitium-Loes",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Technitium DNS Server is an open source authoritative and recursive DNS server for privacy and security. It provides a web console for configuration, supports DNS-over-TLS, DNS-over-HTTPS, DNS-over-QUIC, ad-blocking, and more. The Docker image runs as root by default (user: 0:0) to manage permissions on mounted volumes. It requires access to UDP/TCP port 53 for DNS and port 5380 for the web UI.",
+            "docker_service_name": "dns-server",
+            "group": "dns_blocker",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "docker.io/technitium/dns-server",
+            "last_updated": "2026-08-20T19:46:31.636553+00:00",
+            "name": "Technitium-Loes",
+            "package_id": null,
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "Requires UDP/TCP port 53 and web port 5380. Works in LXC and VM with standard port mappings."
+            },
+            "tags": [
+                "dns",
+                "ad-block",
+                "privacy",
+                "recursive",
+                "authoritative"
+            ],
+            "traefik_internal_port": null,
+            "ui_port_variable": "DNS_WEB_PORT"
+        },
         "docker-jitsi-meet": {
             "conflicts_with": [],
             "depends_on": [],
@@ -1053,28 +1090,88 @@
             "test_status": "tested",
             "traefik_internal_port": null
         },
+        "ollama": {
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Ollama is an open-source, lightweight, and extensible framework for running Large Language Models (LLMs) locally, such as Llama 3, Qwen, Mistral, and DeepSeek.",
+            "docker_service_name": "ollama",
+            "group": "AI & LLM Services",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": false,
+            "image_name": "ollama/ollama",
+            "last_tested": "2026-08-21T08:52:49.017573+00:00",
+            "last_updated": "2026-08-21T08:52:49.017588+00:00",
+            "name": "Ollama LLM Engine",
+            "package_id": "open-webui-ollama",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "AI",
+                "LLM",
+                "Ollama",
+                "Inference",
+                "Local",
+                "GPU"
+            ],
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "open-webui": {
+            "ai_instructions": null,
             "component_version": "main",
             "conflicts_with": [],
             "depends_on": [],
-            "description": "Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes.",
+            "description": "Open WebUI is an extensible, feature-rich, and user-friendly web interface for AI models and LLMs, supporting Ollama and OpenAI-compatible APIs with chat, voice, and RAG capabilities.",
             "docker_service_name": "open-webui",
             "group": "AI & LLM Services",
-            "has_configuration": false,
+            "has_configuration": true,
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/open-webui/open-webui",
-            "last_tested": "2026-08-15T21:42:42.994683+00:00",
-            "name": "Open WebUI with Ollama",
-            "package_id": null,
+            "last_tested": "2026-08-21T08:52:49.022040+00:00",
+            "last_updated": "2026-08-21T08:52:49.022049+00:00",
+            "name": "Open WebUI",
+            "package_id": "open-webui-ollama",
             "project_url": "https://openwebui.com/",
             "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "recommended_cores": 2,
+                "recommended_ram_mb": 8192,
+                "recommended_storage_gb": 20,
+                "storage_type": "persistent"
+            },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
             "tags": [
                 "AI",
                 "LLM",
                 "Ollama",
                 "OpenAI",
-                "Chatbot"
+                "Chatbot",
+                "WebUI"
             ],
             "test_status": "tested",
             "traefik_internal_port": 8080,
@@ -1597,6 +1694,57 @@
             "test_status": "tested",
             "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
         },
+        "technitium-dns": {
+            "ai_instructions": null,
+            "component_version": "latest",
+            "conflicts_with": [
+                "adguard-home",
+                "pi-hole"
+            ],
+            "depends_on": [],
+            "description": "Technitium DNS Server is an open source authoritative and recursive DNS server for privacy & security. It features built-in ad and malware blocking, supports DNS-over-TLS (DoT), DNS-over-HTTPS (DoH), and DNS-over-QUIC (DoQ), and provides a comprehensive web management console.",
+            "docker_service_name": "technitium-dns",
+            "group": "dns_blocker",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "technitium/dns-server",
+            "last_tested": "2026-08-21T07:30:57.816579+00:00",
+            "last_updated": "2026-08-21T10:04:00.000000+00:00",
+            "name": "Technitium DNS Server",
+            "package_id": null,
+            "project_url": "https://technitium.com/dns/",
+            "protocol": "http",
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "recommended_cores": null,
+                "recommended_ram_mb": null,
+                "recommended_storage_gb": null,
+                "storage_type": "persistent"
+            },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "dns",
+                "adblock",
+                "privacy",
+                "security",
+                "network"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 5380,
+            "ui_port_variable": "DNS_WEB_CONSOLE_PORT"
+        },
         "traefik": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1609,7 +1757,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-19T10:54:38.778123+00:00",
+            "last_updated": "2026-08-21T10:08:48.996410+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -1849,6 +1997,11 @@
         "nextcloud-stack": {
             "description": "",
             "name": "Nextcloud Stack",
+            "network_type": "bridge"
+        },
+        "open-webui-ollama": {
+            "description": "Integrated AI chatbot and inference platform combining Open WebUI with the local Ollama LLM engine.",
+            "name": "Open WebUI & Ollama Stack",
             "network_type": "bridge"
         }
     }

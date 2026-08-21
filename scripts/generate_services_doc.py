@@ -84,7 +84,7 @@ def main():
 
     output_path = os.path.join("docs", "SUPPORTED_SERVICES.md")
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+        f.write("\n".join(lines).rstrip() + "\n")
     print(f"Successfully generated {output_path}")
 
 

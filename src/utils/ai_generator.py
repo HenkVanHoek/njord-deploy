@@ -4,11 +4,46 @@ import json
 import logging
 import re
 import urllib.parse
-from typing import Optional
+from typing import Callable, Optional, Union
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+def suggest_unique_component_id(
+    base_id: str, existing_ids: Optional[Union[set[str], list[str]]] = None
+) -> str:
+    """Generates a non-conflicting unique component ID.
+
+    If base_id already exists in existing_ids, increments suffix (-1, -2, ...)
+    until a free identifier is found.
+    """
+    clean_id = re.sub(r"[^a-z0-9-]", "-", (base_id or "").lower()).strip("-")
+    if not clean_id:
+        clean_id = "custom-component"
+
+    if not existing_ids:
+        return clean_id
+
+    existing_set = {str(eid).strip().lower() for eid in existing_ids}
+    if clean_id not in existing_set:
+        return clean_id
+
+    match = re.match(r"^(.*?)-(\d+)$", clean_id)
+    if match:
+        prefix, num_str = match.groups()
+        counter = int(num_str) + 1
+    else:
+        prefix = clean_id
+        counter = 1
+
+    candidate = f"{prefix}-{counter}"
+    while candidate in existing_set:
+        counter += 1
+        candidate = f"{prefix}-{counter}"
+
+    return candidate
 
 
 class AIGenerator:
@@ -31,6 +66,9 @@ class AIGenerator:
         repo_url: str,
         custom_instructions: Optional[str] = None,
         existing_groups: Optional[list[str]] = None,
+        custom_component_id: Optional[str] = None,
+        progress_callback: Optional[Callable[[str, str], None]] = None,
+        existing_component_ids: Optional[list[str]] = None,
     ) -> dict:
         """Analyzes a Git repository and returns structured component configuration.
 
@@ -59,9 +97,20 @@ class AIGenerator:
         repo_name = path_parts[-1]
         owner = path_parts[0] if len(path_parts) > 1 else ""
         repo_path = "/".join(path_parts)
-        component_id = repo_name.lower()
+        repo_display = f"{owner}/{repo_name}" if owner else repo_name
+        raw_repo_id = re.sub(r"[^a-z0-9-]", "-", repo_name.lower()).strip("-")
+        default_component_id = (
+            re.sub(r"[^a-z0-9-]", "-", custom_component_id.strip().lower()).strip("-")
+            if custom_component_id and custom_component_id.strip()
+            else raw_repo_id
+        )
 
         # Fetch README and compose files from the repository
+        if progress_callback:
+            progress_callback(
+                "fetch_repo",
+                f"Fetching documentation and compose files from {repo_display}...",
+            )
         readme_content = self._fetch_repo_file(
             parsed_url.netloc, repo_path, ["README.md", "readme.md", "README"]
         )
@@ -125,6 +174,14 @@ class AIGenerator:
         # Initialize the AIGeneratorEngine
         from utils.ai_generator_engine import AIGeneratorEngine
 
+        prov_label = (self.provider or "AI").upper()
+        model_label = f" ({self.model})" if self.model else ""
+        if progress_callback:
+            progress_callback(
+                "init_llm",
+                f"Connecting to {prov_label}{model_label}...",
+            )
+
         engine = AIGeneratorEngine(
             provider=self.provider,
             api_key=self.api_key,
@@ -139,6 +196,20 @@ class AIGenerator:
 
         while True:
             try:
+                if progress_callback:
+                    if attempt == 0:
+                        progress_callback(
+                            "generate",
+                            "Analyzing repository structure and drafting "
+                            "configuration...",
+                        )
+                    else:
+                        progress_callback(
+                            "generate",
+                            f"Applying corrections and regenerating "
+                            f"(attempt {attempt + 1})...",
+                        )
+
                 # Request structured JSON format
                 text = engine.generate(
                     prompt=messages,
@@ -164,7 +235,17 @@ class AIGenerator:
                     configs_dict = raw_configs
                 data["config_templates"] = configs_dict
 
-                data["id"] = component_id
+                model_id = data.get("id")
+                if custom_component_id and custom_component_id.strip():
+                    data["id"] = default_component_id
+                elif (
+                    model_id
+                    and isinstance(model_id, str)
+                    and re.match(r"^[a-z0-9-]+$", model_id.strip().lower())
+                ):
+                    data["id"] = model_id.strip().lower()
+                else:
+                    data["id"] = default_component_id
 
                 metadata = data.setdefault("metadata", {})
                 if custom_instructions:
@@ -173,6 +254,12 @@ class AIGenerator:
                     metadata["has_configuration"] = True
 
                 # Run security and validation checks
+                if progress_callback:
+                    progress_callback(
+                        "validate",
+                        "Validating security constraints, volumes, "
+                        "and variable schemas...",
+                    )
                 warnings = self._run_security_checks(data)
 
                 # Filter to only fixable structure/variable/syntax warnings
@@ -183,9 +270,21 @@ class AIGenerator:
                 # If no fixable warnings, or we reached max correction attempts
                 if not fixable_warnings or attempt >= max_attempts:
                     data["security_warnings"] = warnings
+                    if existing_component_ids:
+                        cid = data.get("id", "")
+                        data["is_duplicate"] = cid in set(existing_component_ids)
+                        data["suggested_id"] = suggest_unique_component_id(
+                            cid, existing_component_ids
+                        )
                     return data
 
                 attempt += 1
+                if progress_callback:
+                    progress_callback(
+                        "validate",
+                        f"Found {len(fixable_warnings)} issue(s). Applying "
+                        f"self-correction (round {attempt}/{max_attempts})...",
+                    )
                 logger.info(
                     f"AI validation failed with warnings: {fixable_warnings}. "
                     f"Attempting self-correction (attempt "
@@ -218,6 +317,10 @@ class AIGenerator:
                     "Compose YAML template (such as nested double quotes, "
                     "mismatched quotes, or bad indentation), correct the "
                     "formatting to ensure it is valid, parseable YAML.\n"
+                    "5. If a service mounts persistent host volumes or manages "
+                    "system/network daemons (e.g. DNS, database, monitoring), "
+                    'ensure `user: "0:0"` is explicitly set at the service '
+                    "level to prevent Linux file permission errors.\n"
                     "Return the complete corrected JSON configuration "
                     "according to the original schema."
                 )
@@ -276,6 +379,31 @@ class AIGenerator:
                         raise RuntimeError(
                             f"Could not connect to AI API endpoint{url_str}. "
                             "Please check your internet connection and API base URL."
+                        ) from e
+                elif (
+                    "timeout" in err_msg
+                    or "timed out" in err_msg
+                    or "apitimeouterror" in err_msg
+                ):
+                    provider_name = self.provider or "ollama"
+                    base_str = str(self.base_url or "")
+                    if (
+                        provider_name == "ollama"
+                        or "localhost" in base_str
+                        or "192.168." in base_str
+                        or "10." in base_str
+                    ):
+                        raise RuntimeError(
+                            "The local AI model took longer than expected to "
+                            "respond (Request timed out). If the model was cold "
+                            "starting or is large (e.g. 14B), it may still be "
+                            "loading into GPU/VRAM. Please try again in a moment, "
+                            "or increase AI_LOCALHOST_TIMEOUT in .env."
+                        ) from e
+                    else:
+                        raise RuntimeError(
+                            "The AI API request timed out. Please check your "
+                            "network connection and try again."
                         ) from e
                 elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
                     if attempt < max_attempts:
@@ -496,13 +624,18 @@ class AIGenerator:
                         # Check volume mounts
                         volumes = service_conf.get("volumes", [])
                         if isinstance(volumes, list):
+                            target_paths = []
                             for vol in volumes:
                                 host_path = ""
                                 if isinstance(vol, str):
                                     parts = vol.split(":")
                                     host_path = parts[0] if parts else ""
+                                    if len(parts) > 1:
+                                        target_paths.append(parts[1].strip())
                                 elif isinstance(vol, dict):
                                     host_path = vol.get("source", "")
+                                    if vol.get("target"):
+                                        target_paths.append(str(vol.get("target")))
 
                                 if host_path == "/var/run/docker.sock":
                                     warnings.append(
@@ -524,6 +657,33 @@ class AIGenerator:
                                         f"{host_path}"
                                     )
 
+                            if target_paths and all(
+                                "/log" in tp.lower() for tp in target_paths
+                            ):
+                                warnings.append(
+                                    f"Service '{service_name}' only mounts log "
+                                    f"directories ({', '.join(target_paths)}). "
+                                    "You MUST also mount persistent "
+                                    "configuration and data directories "
+                                    "(such as /etc/... or /config or /data) "
+                                    "using '{{ CONFIG_BASE_PATH }}/...'."
+                                )
+
+                        # Check ports for hardcoded mappings
+                        ports = service_conf.get("ports", [])
+                        if isinstance(ports, list):
+                            for port_entry in ports:
+                                if isinstance(port_entry, str) and ":" in port_entry:
+                                    host_p, *_ = port_entry.split(":")
+                                    host_p = host_p.strip()
+                                    if host_p.isdigit():
+                                        warnings.append(
+                                            f"Service '{service_name}' has hardcoded "
+                                            f"host port '{host_p}' in '{port_entry}'. "
+                                            "Exposed host ports must use configurable "
+                                            "Jinja variables (e.g. '{{ VAR_NAME }}')."
+                                        )
+
                         # Check cap_add
                         cap_adds = service_conf.get("cap_add", [])
                         if isinstance(cap_adds, list):
@@ -533,6 +693,34 @@ class AIGenerator:
                                         f"Service '{service_name}' requests "
                                         f"broad capability: {cap}"
                                     )
+
+                        # Check user: "0:0" for services requiring root permissions
+                        user_val = service_conf.get("user")
+                        service_lower = service_name.lower()
+                        image_lower = str(service_conf.get("image", "")).lower()
+                        needs_root = any(
+                            k in service_lower or k in image_lower
+                            for k in [
+                                "dns",
+                                "technitium",
+                                "adguard",
+                                "pihole",
+                                "grafana",
+                                "prometheus",
+                                "influxdb",
+                                "postgres",
+                                "postgresql",
+                                "node-red",
+                                "nodered",
+                            ]
+                        )
+                        if needs_root and str(user_val) != "0:0":
+                            warnings.append(
+                                f"Service '{service_name}' mounts persistent "
+                                "directories but is missing 'user: \"0:0\"'. "
+                                'Set `user: "0:0"` at the service level to '
+                                "prevent volume permission errors on Linux hosts."
+                            )
             except Exception as e:
                 warnings.append(
                     f"Failed to parse Docker Compose for security checks: {e}"

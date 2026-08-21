@@ -50,7 +50,7 @@ class TestEditorAppAPI(unittest.TestCase):
 
         mock_generate.assert_called_once()
         args, kwargs = mock_generate.call_args
-        repo_url, instructions, groups = args
+        repo_url, instructions, groups, *_ = list(args) + [None]
         self.assertEqual(repo_url, "https://github.com/caddyserver/caddy")
         self.assertEqual(instructions, "none")
         self.assertIsInstance(groups, list)
@@ -106,7 +106,7 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertTrue(res_data["key_saved"])
-        mock_open.assert_called_with(unittest.mock.ANY, "w")
+        mock_open.assert_called_with(unittest.mock.ANY, "w", encoding="utf-8")
 
     @patch("builtins.open")
     @patch("editor_app.app.AIGenerator.generate_component_data")
@@ -304,3 +304,173 @@ class TestEditorAppAPI(unittest.TestCase):
         res_data = json.loads(response.data.decode("utf-8"))
         self.assertEqual(res_data["status"], "offline")
         self.assertIn("Could not connect to Ollama", res_data["details"])
+
+    @patch("managers.component_manager.ComponentManager.save_metadata")
+    @patch("managers.component_manager.ComponentManager.update_component_metadata")
+    @patch("managers.component_manager.ComponentManager.update_component_variables")
+    @patch(
+        "managers.component_manager.ComponentManager."
+        "update_component_template_content"
+    )
+    @patch("managers.component_manager.ComponentManager.create_component")
+    @patch("managers.component_manager.ComponentManager.load_metadata")
+    def test_save_ai_component_new_success(
+        self,
+        mock_load,
+        mock_create,
+        mock_update_template,
+        mock_update_vars,
+        mock_update_meta,
+        mock_save_meta,
+    ):
+        """Tests saving a newly generated AI component."""
+        mock_load.return_value = {"components": {}, "_njorddeploy": {}}
+
+        payload = {
+            "id": "technitium-dns",
+            "metadata": {"name": "Technitium DNS Server"},
+            "docker_compose": "services:\n  dns:\n    image: technitium/dns-server\n",
+            "variables": [],
+            "overwrite": False,
+        }
+
+        response = self.client.post(
+            "/api/components/ai",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "created")
+        mock_create.assert_called_once_with("technitium-dns", "Technitium DNS Server")
+
+    @patch("managers.component_manager.ComponentManager.load_metadata")
+    def test_save_ai_component_already_exists_conflict(self, mock_load):
+        """Tests that saving existing component without overwrite returns 409."""
+        mock_load.return_value = {
+            "components": {"dnsserver": {"name": "Technitium-Loes"}}
+        }
+
+        payload = {
+            "id": "dnsserver",
+            "metadata": {"name": "Technitium DNS"},
+            "docker_compose": "services:\n",
+            "variables": [],
+            "overwrite": False,
+        }
+
+        response = self.client.post(
+            "/api/components/ai",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 409)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["code"], "component_exists")
+        self.assertEqual(res_data["suggested_id"], "dnsserver-1")
+
+    @patch("managers.component_manager.ComponentManager.save_metadata")
+    @patch("managers.component_manager.ComponentManager.update_component_metadata")
+    @patch("managers.component_manager.ComponentManager.update_component_variables")
+    @patch(
+        "managers.component_manager.ComponentManager."
+        "update_component_template_content"
+    )
+    @patch("managers.component_manager.ComponentManager.load_metadata")
+    def test_save_ai_component_overwrite_success(
+        self,
+        mock_load,
+        mock_update_template,
+        mock_update_vars,
+        mock_update_meta,
+        mock_save_meta,
+    ):
+        """Tests that saving existing component with overwrite=True succeeds."""
+        mock_load.return_value = {
+            "components": {"dnsserver": {"name": "Technitium-Loes"}},
+            "_njorddeploy": {},
+        }
+
+        payload = {
+            "id": "dnsserver",
+            "metadata": {"name": "Technitium DNS Updated"},
+            "docker_compose": "services:\n  dns:\n    image: technitium/dns-server\n",
+            "variables": [],
+            "overwrite": True,
+        }
+
+        response = self.client.post(
+            "/api/components/ai",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "created")
+        mock_update_template.assert_called_once()
+
+    @patch("utils.ai_generator.AIGenerator.generate_component_data")
+    def test_ai_generate_streaming_success(self, mock_generate):
+        """Tests /api/ai/generate with stream=True yields SSE progress and result."""
+
+        def fake_generate(
+            repo_url,
+            custom_instructions=None,
+            existing_groups=None,
+            custom_component_id=None,
+            progress_callback=None,
+            **kwargs,
+        ):
+            if progress_callback:
+                progress_callback("fetch_repo", "Fetching README...")
+                progress_callback("init_llm", "Connecting to Ollama...")
+                progress_callback("generate", "Drafting compose...")
+                progress_callback("validate", "Validating...")
+            return {
+                "id": "test-comp",
+                "metadata": {"name": "Test Comp"},
+                "docker_compose": "services:\n  test:\n    image: test:latest\n",
+                "variables": [],
+            }
+
+        mock_generate.side_effect = fake_generate
+
+        payload = {
+            "repo_url": "https://github.com/test/repo",
+            "provider": "ollama",
+            "stream": True,
+        }
+
+        response = self.client.post(
+            "/api/ai/generate",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/event-stream")
+        data_text = response.data.decode("utf-8")
+        self.assertIn('"type": "progress"', data_text)
+        self.assertIn('"type": "result"', data_text)
+        self.assertIn('"id": "test-comp"', data_text)
+
+    @patch("utils.ai_generator.AIGenerator.generate_component_data")
+    def test_ai_generate_streaming_error(self, mock_generate):
+        """Tests /api/ai/generate with stream=True handles errors via SSE."""
+        mock_generate.side_effect = RuntimeError("Ollama connection timed out.")
+
+        payload = {
+            "repo_url": "https://github.com/test/repo",
+            "provider": "ollama",
+            "stream": True,
+        }
+
+        response = self.client.post(
+            "/api/ai/generate",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.mimetype, "text/event-stream")
+        data_text = response.data.decode("utf-8")
+        self.assertIn('"type": "error"', data_text)
+        self.assertIn("Ollama connection timed out", data_text)

@@ -32,16 +32,17 @@
       "name": "HostYourAI / Loes (EU)",
       "env_var": "HOSTYOURAI_API_KEY",
       "requires_api_key": true,
-      "default_base_url": "https://api.hostyourai.eu/v1",
+      "default_base_url": "https://hostyourai.com/api/v1",
       "allow_custom_base_url": true,
-      "default_model": "mistral-7b-instruct",
+      "default_model": "deepseek-ai/DeepSeek-V4-Flash",
       "models": [
-        {"value": "mistral-7b-instruct", "text": "Mistral 7B Instruct (Default)"},
-        {"value": "meta-llama-3-8b-instruct", "text": "Meta Llama 3 8B Instruct"},
-        {"value": "mixtral-8x7b-instruct", "text": "Mixtral 8x7B Instruct (Krachtig)"},
+        {"value": "deepseek-ai/DeepSeek-V4-Flash", "text": "DeepSeek V4 Flash (Aanbevolen - Snel)"},
+        {"value": "deepseek-ai/DeepSeek-V4-Pro", "text": "DeepSeek V4 Pro (Krachtig)"},
+        {"value": "moonshotai/Kimi-K3", "text": "Kimi K3 (Agentic / Multimodal)"},
+        {"value": "zai-org/GLM-5.2", "text": "GLM 5.2"},
         {"value": "custom", "text": "Handmatig model invoeren..."}
       ],
-      "help_url": "https://hostyourai.eu",
+      "help_url": "https://hostyourai.com",
       "help_text": "Bekijk alle HostYourAI-modellen op de website"
     },
     "openai": {

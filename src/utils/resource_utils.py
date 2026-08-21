@@ -45,6 +45,33 @@ def seed_user_components_if_needed() -> dict[str, str]:
     except Exception:
         has_templates = False
 
+    # In development mode, auto-sync repository changes to user data dir
+    if not getattr(sys, "frozen", False) and "pytest" not in sys.modules:
+        fallback_meta = resource_path("config/components_metadata.json")
+        fallback_temp = resource_path("component_templates")
+        if fallback_meta.exists():
+            try:
+                user_components_dir.mkdir(parents=True, exist_ok=True)
+                if (
+                    not user_metadata.exists()
+                    or fallback_meta.stat().st_mtime > user_metadata.stat().st_mtime
+                ):
+                    shutil.copy2(fallback_meta, user_metadata)
+                if fallback_temp.exists():
+                    user_templates.mkdir(parents=True, exist_ok=True)
+                    for item in fallback_temp.iterdir():
+                        dest_item = user_templates / item.name
+                        if item.is_dir():
+                            if not dest_item.exists():
+                                shutil.copytree(item, dest_item)
+                            elif item.stat().st_mtime > dest_item.stat().st_mtime:
+                                shutil.rmtree(dest_item)
+                                shutil.copytree(item, dest_item)
+                        elif item.is_file():
+                            shutil.copy2(item, dest_item)
+            except Exception as ex:
+                logger.debug(f"Dev auto-sync to user_components_dir: {ex}")
+
     if user_metadata.exists() and has_templates:
         _LAST_SEED_STATUS = {
             "status": "already_seeded",

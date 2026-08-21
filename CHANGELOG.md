@@ -6,6 +6,23 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-21
+
+### Added
+- **Multi-Provider AI Generator & Local LLM Integration**:
+  - Implemented full support for local LLM inference engines (e.g. **Ollama**) alongside cloud providers (Gemini, OpenAI, HostYourAI) in [`src/utils/ai_provider_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_provider_manager.py) and [`src/utils/ai_generator.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_generator.py).
+  - Validated deterministic metadata and Jinja2 Compose template synthesis across multiple distinct local models via strict mathematical generator rules in [`config/ai_generator_rules.json`](file:///home/hvhoek/PycharmProjects/njord-deploy/config/ai_generator_rules.json).
+  - Added interactive provider and model selection UI in the **Editor App** with real-time test generation and validation feedback.
+- **AI & LLM Services Component Stack**:
+  - Introduced the new `AI & LLM Services` category in [`config/components_metadata.json`](file:///home/hvhoek/PycharmProjects/njord-deploy/config/components_metadata.json).
+  - Added dedicated component templates and variable definitions for `open-webui` (`ghcr.io/open-webui/open-webui`) and `ollama` (`ollama/ollama`) with native `open-webui-ollama` stack grouping.
+- **Technitium DNS Server Component**:
+  - Added official component template for `technitium-dns` (`technitium/dns-server`) with full support for DoH, DoT, DoQ, web console management, and ad/malware blocking.
+
+### Changed
+- **Ansible Remote Temporary Directory Hardening**:
+  - Configured `remote_tmp` to user-isolated `~/.ansible/tmp` in [`ansible.cfg`](file:///home/hvhoek/PycharmProjects/njord-deploy/ansible.cfg), [`ansible/ansible.cfg`](file:///home/hvhoek/PycharmProjects/njord-deploy/ansible/ansible.cfg), and [`src/managers/deployment_manager.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/managers/deployment_manager.py) to eliminate shared `/tmp` permission warnings.
+
 ## [0.5.32] - 2026-08-19
 
 ### Design System & Assets

@@ -7,7 +7,8 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | LiteLLM AI Gateway | LiteLLM is an AI gateway and LLM proxy that unifies access to 100+ Large Language Models (OpenAI, Gemini, Anthropic, Ollama, Azure, Bedrock, HostYourAI) behind a single OpenAI-compatible API format. | [Link](https://github.com/BerriAI/litellm) |
-| Open WebUI with Ollama | Open WebUI is an extensible, feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline. It supports various LLM runners like Ollama and OpenAI-compatible APIs, with built-in inference engine for RAG. This component bundles Open WebUI with Ollama for a complete, self-contained AI solution. Both services run as root (user: 0:0) to ensure proper file permissions for persistent data volumes. | [Link](https://openwebui.com/) |
+| Ollama LLM Engine | Ollama is an open-source, lightweight, and extensible framework for running Large Language Models (LLMs) locally, such as Llama 3, Qwen, Mistral, and DeepSeek. | N/A |
+| Open WebUI | Open WebUI is an extensible, feature-rich, and user-friendly web interface for AI models and LLMs, supporting Ollama and OpenAI-compatible APIs with chat, voice, and RAG capabilities. | [Link](https://openwebui.com/) |
 
 ## DNS Blocker
 
@@ -15,6 +16,8 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | AdGuard Home | AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0). | [Link](https://adguard.com/en/adguard-home/overview.html) |
 | Pi-hole | A network-wide ad and tracker blocker that functions as a DNS sinkhole, protecting all local network devices without requiring client-side software. | [Link](https://pi-hole.net/) |
+| Technitium DNS Server | Technitium DNS Server is an open source authoritative and recursive DNS server for privacy & security. It features built-in ad and malware blocking, supports DNS-over-TLS (DoT), DNS-over-HTTPS (DoH), and DNS-over-QUIC (DoQ), and provides a comprehensive web management console. | [Link](https://technitium.com/dns/) |
+| Technitium-Loes | Technitium DNS Server is an open source authoritative and recursive DNS server for privacy and security. It provides a web console for configuration, supports DNS-over-TLS, DNS-over-HTTPS, DNS-over-QUIC, ad-blocking, and more. The Docker image runs as root by default (user: 0:0) to manage permissions on mounted volumes. It requires access to UDP/TCP port 53 for DNS and port 5380 for the web UI. | N/A |
 
 ## General Components
 

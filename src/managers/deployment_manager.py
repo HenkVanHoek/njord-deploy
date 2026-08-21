@@ -120,7 +120,7 @@ class DeploymentManager:
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
-                    "ansible_remote_tmp": "/tmp/.ansible",  # nosec B108
+                    "ansible_remote_tmp": "~/.ansible/tmp",
                     "local_output_path": output_path,
                     "components_to_clean": mapped_clean,
                     "components_to_restart": mapped_restart,

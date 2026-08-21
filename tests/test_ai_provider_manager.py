@@ -34,8 +34,8 @@ class TestAIProviderManager(unittest.TestCase):
         cfg = get_provider_resolved_config("hostyourai")
         self.assertEqual(cfg["provider"], "hostyourai")
         self.assertEqual(cfg["env_var"], "HOSTYOURAI_API_KEY")
-        self.assertEqual(cfg["base_url"], "https://api.hostyourai.eu/v1")
-        self.assertEqual(cfg["model"], "mistral-7b-instruct")
+        self.assertEqual(cfg["base_url"], "https://hostyourai.com/api/v1")
+        self.assertEqual(cfg["model"], "deepseek-ai/DeepSeek-V4-Flash")
 
     def test_get_provider_resolved_config_anthropic(self):
         """Test resolving default configuration for anthropic provider."""
@@ -56,6 +56,17 @@ class TestAIProviderManager(unittest.TestCase):
         self.assertEqual(cfg["api_key"], "custom_key_123")
         self.assertEqual(cfg["base_url"], "https://custom.hostyourai.com/v1")
         self.assertEqual(cfg["model"], "custom-model")
+
+    def test_get_provider_resolved_config_disallows_custom_base_url(self):
+        """Verify that fixed-endpoint providers ignore arbitrary base_url overrides."""
+        cfg = get_provider_resolved_config(
+            provider="gemini",
+            base_url="https://alien-endpoint.example.com/v1",
+        )
+        self.assertEqual(
+            cfg["base_url"],
+            "https://generativelanguage.googleapis.com/v1beta/openai/",
+        )
 
     def test_get_provider_resolved_config_invalid_provider(self):
         """Test that invalid provider names raise ValueError."""
@@ -93,18 +104,51 @@ class TestAIProviderManager(unittest.TestCase):
             content = env_file.read_text()
             self.assertIn("ANTHROPIC_API_KEY=sk-ant-testkey123\n", content)
 
+    def test_save_ollama_base_url_to_env(self):
+        """Test saving Ollama custom Base URL to .env file."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = Path(temp_dir)
+            env_file = temp_path / ".env"
+            env_file.write_text("SOME_VAR=123\n")
+
+            success = save_api_key_to_env_file(
+                provider="ollama",
+                base_url="http://192.168.178.72:11434/v1",
+                project_root=temp_path,
+            )
+            self.assertTrue(success)
+
+            content = env_file.read_text()
+            self.assertIn("OLLAMA_BASE_URL=http://192.168.178.72:11434/v1\n", content)
+
+    def test_load_ai_providers_registry_injects_env_base_url(self):
+        """Test that configured environment base URLs are injected into registry."""
+        with patch.dict(
+            os.environ, {"OLLAMA_BASE_URL": "http://192.168.178.72:11434/v1"}
+        ):
+            providers = load_ai_providers_registry()
+            self.assertEqual(
+                providers["ollama"].get("configured_base_url"),
+                "http://192.168.178.72:11434/v1",
+            )
+
     def test_get_ai_timeout_local_defaults_and_env(self):
         """Test timeout calculation for localhost and Ollama providers."""
         # Default local timeout when no env vars set
         with patch.dict(os.environ, {}, clear=True):
             timeout = get_ai_timeout("ollama")
-            self.assertEqual(timeout, 120.0)
+            self.assertEqual(timeout, 300.0)
 
-            # Custom URL on localhost
+            # Custom URL on localhost or private LAN IP
             timeout_custom = get_ai_timeout(
                 "custom", base_url="http://127.0.0.1:8000/v1"
             )
-            self.assertEqual(timeout_custom, 120.0)
+            self.assertEqual(timeout_custom, 300.0)
+
+            timeout_lan = get_ai_timeout(
+                "custom", base_url="http://192.168.178.72:11434/v1"
+            )
+            self.assertEqual(timeout_lan, 300.0)
 
         # AI_LOCALHOST_TIMEOUT set
         with patch.dict(os.environ, {"AI_LOCALHOST_TIMEOUT": "150.5"}):
@@ -121,10 +165,10 @@ class TestAIProviderManager(unittest.TestCase):
         # Default remote timeout
         with patch.dict(os.environ, {}, clear=True):
             timeout = get_ai_timeout("openai", base_url="https://api.openai.com/v1")
-            self.assertEqual(timeout, 90.0)
+            self.assertEqual(timeout, 120.0)
 
             timeout_anthropic = get_ai_timeout("anthropic")
-            self.assertEqual(timeout_anthropic, 90.0)
+            self.assertEqual(timeout_anthropic, 120.0)
 
         # AI_TIMEOUT set
         with patch.dict(os.environ, {"AI_TIMEOUT": "110.0"}):

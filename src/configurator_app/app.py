@@ -1791,7 +1791,9 @@ def create_app(test_config=None):
     @flask_app.route("/get-available-software", methods=["POST"])
     def get_available_software():
         try:
-            all_components = component_manager.get_all_components()
+            all_components = component_manager.get_all_components(
+                include_variables=True
+            )
             all_packages = component_manager.get_all_packages()
             return (
                 jsonify(
@@ -1858,7 +1860,9 @@ def create_app(test_config=None):
             if not isinstance(selected_components, list):
                 return jsonify({"error": "Missing or invalid selected_components"}), 400
 
-            all_components_list = component_manager.get_all_components()
+            all_components_list = component_manager.get_all_components(
+                include_variables=True
+            )
             all_components_dict = {comp["id"]: comp for comp in all_components_list}
             components_for_ui = {}
 
@@ -1868,6 +1872,10 @@ def create_app(test_config=None):
                     vars_list = component_data.get("variables") or component_data.get(
                         "required_variables"
                     )
+                    if not vars_list:
+                        vars_list = component_manager.reader.get_component_variables(
+                            component_id
+                        )
                     if vars_list:
                         components_for_ui[component_id] = {
                             "name": component_data.get("name", component_id),
@@ -2306,15 +2314,29 @@ def create_app(test_config=None):
                     "docker ps", lambda x: None, check_exit_code=False
                 )
                 if exit_code_group == 0:
-                    cmd = f"docker logs --tail 200 {container_name}"
+                    cmd = (
+                        f"CID=$(docker ps -a --filter name={container_name} "
+                        f"--format '{{{{.ID}}}}' | head -n 1); "
+                        f'if [ -n "$CID" ]; then docker logs --tail 200 "$CID"; '
+                        f"else docker logs --tail 200 {container_name}; fi"
+                    )
                 else:
                     quoted_password = shlex.quote(password)
                     cmd = (
                         f"echo {quoted_password} | "
-                        f"sudo -S docker logs --tail 200 {container_name}"
+                        f'sudo -S sh -c "CID=\\$(docker ps -a '
+                        f"--filter name={container_name} --format '{{{{.ID}}}}' "
+                        f'| head -n 1); if [ -n \\"\\$CID\\" ]; then '
+                        f'docker logs --tail 200 \\"\\$CID\\"; '
+                        f'else docker logs --tail 200 {container_name}; fi"'
                     )
             else:
-                cmd = f"podman logs --tail 200 {container_name}"
+                cmd = (
+                    f"CID=$(podman ps -a --filter name={container_name} "
+                    f"--format '{{{{.ID}}}}' | head -n 1); "
+                    f'if [ -n "$CID" ]; then podman logs --tail 200 "$CID"; '
+                    f"else podman logs --tail 200 {container_name}; fi"
+                )
 
             log_lines = []
 

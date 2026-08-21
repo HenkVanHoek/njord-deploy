@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-08-21), podman (latest, 2026-08-21); Proxmox VM: docker (latest, 2026-08-21), podman (latest, 2026-08-21)."
+# breaking_changes: "None"
+services:
+  ollama:
+    container_name: njorddeploy-ollama
+    image: "{{ image_name | default('ollama/ollama') }}:{{ component_version | default('latest') }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/ollama/data:/root/.ollama"
+    ports:
+      - "{{ OLLAMA_PORT | default('11434') }}:11434"
+    networks:
+      - njorddeploy_net
+    tty: true
+    restart: unless-stopped
+
+networks:
+  njorddeploy_net:
+    external: true

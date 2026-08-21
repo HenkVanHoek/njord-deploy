@@ -99,6 +99,7 @@ module = [
     "node_scanner",
     "scripts.*",
     "proxmox_gui",
+    "cli.*",
 ]
 ignore_missing_imports = true
 

@@ -901,6 +901,8 @@
             iconClass = "fa-solid fa-database text-danger";
         } else if (lowerId.includes("mariadb") || lowerId.includes("mysql") || lowerId.includes("postgres")) {
             iconClass = "fa-solid fa-database text-primary";
+        } else if (lowerId.includes("litellm") || lowerId.includes("open-webui") || lowerId.includes("ollama") || lowerId.includes("qwen")) {
+            iconClass = "fa-solid fa-robot text-primary";
         }
 
         let matrixBadgeHtml = "";
@@ -930,9 +932,17 @@
         const btnText = isChecked ? '<i class="fa-solid fa-check me-2"></i>Selected' : 'Select';
         const checkedAttr = isChecked ? 'checked' : '';
 
+        const searchKeywords = [
+            component.name || '',
+            component.id || '',
+            component.description || '',
+            groupName || '',
+            ...(Array.isArray(component.tags) ? component.tags : [])
+        ].join(' ').toLowerCase();
+
         return `
             <div class="col">
-                <div class="${cardClass}" style="cursor: pointer; transition: all 0.2s;" data-component-id="${escapedId}" data-group-name="${escapeHTML(groupName)}" data-exclusive="${isExclusive}">
+                <div class="${cardClass}" style="cursor: pointer; transition: all 0.2s;" data-component-id="${escapedId}" data-group-name="${escapeHTML(groupName)}" data-exclusive="${isExclusive}" data-search-text="${escapeHTML(searchKeywords)}">
                     <div class="card-body d-flex flex-column align-items-center text-center p-3">
                         <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
                             <i class="${iconClass} fa-2x"></i>
@@ -997,10 +1007,16 @@
                     const escapedPkgId = escapeHTML(pkgId);
                     const escapedPkgName = escapeHTML(pkg.name);
                     const escapedPkgDesc = escapeHTML(pkg.description || 'A pre-configured stack of services.');
+                    const pkgSearchText = [
+                        pkg.name || '',
+                        pkgId || '',
+                        pkg.description || '',
+                        compNames || ''
+                    ].join(' ').toLowerCase();
 
                     tabContentHTML += `
                         <div class="col">
-                            <div class="card h-100 package-card border-primary" style="cursor: pointer; transition: all 0.2s;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}">
+                            <div class="card h-100 package-card border-primary" style="cursor: pointer; transition: all 0.2s;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}" data-search-text="${escapeHTML(pkgSearchText)}">
                                 <div class="card-body d-flex flex-column align-items-center text-center p-3">
                                     <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
                                         <i class="fa-solid fa-layer-group text-primary fa-2x"></i>
@@ -1033,10 +1049,22 @@
                     iconClass = "fa-solid fa-database";
                 } else if (lowerGroup.includes("productivity")) {
                     iconClass = "fa-solid fa-cubes";
-                } else if (lowerGroup.includes("network")) {
+                } else if (lowerGroup.includes("network") || lowerGroup.includes("dns")) {
                     iconClass = "fa-solid fa-circle-nodes";
                 } else if (lowerGroup.includes("security")) {
                     iconClass = "fa-solid fa-shield-halved";
+                } else if (lowerGroup.includes("ai") || lowerGroup.includes("llm")) {
+                    iconClass = "fa-solid fa-robot";
+                } else if (lowerGroup.includes("media")) {
+                    iconClass = "fa-solid fa-photo-film";
+                } else if (lowerGroup.includes("home") || lowerGroup.includes("iot") || lowerGroup.includes("automation")) {
+                    iconClass = "fa-solid fa-house-signal";
+                } else if (lowerGroup.includes("chat") || lowerGroup.includes("message") || lowerGroup.includes("communication")) {
+                    iconClass = "fa-solid fa-comments";
+                } else if (lowerGroup.includes("system") || lowerGroup.includes("tool") || lowerGroup.includes("utilities")) {
+                    iconClass = "fa-solid fa-toolbox";
+                } else if (lowerGroup.includes("dashboard")) {
+                    iconClass = "fa-solid fa-gauge-high";
                 }
 
                 tabNavHTML += `
@@ -1089,7 +1117,17 @@
 
             wizardBody.innerHTML = `
                 <div class="text-start">
-                    <h2 class="h4 text-center mb-4">Applications Marketplace</h2>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                        <div>
+                            <h2 class="h4 mb-1"><i class="fa-solid fa-store me-2 text-primary"></i>Applications Marketplace</h2>
+                            <p class="text-muted small mb-0">Browse categories or search across all available services and stacks.</p>
+                        </div>
+                        <div class="input-group" style="max-width: 340px;">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="component-search-input" placeholder="Search applications, tags..." autocomplete="off">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="clear-component-search-btn" title="Clear search"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-3 mb-4">
                             <div class="card p-2 border-0 bg-transparent">
@@ -1244,6 +1282,97 @@
             };
 
             updatePackageCheckboxes(); // Run once to set initial state
+
+            // Real-time Marketplace Component Search Logic
+            const searchInput = /** @type {HTMLInputElement} */ (document.getElementById('component-search-input'));
+            const clearSearchBtn = document.getElementById('clear-component-search-btn');
+
+            if (searchInput) {
+                const handleSearch = () => {
+                    const query = searchInput.value.trim().toLowerCase();
+                    if (clearSearchBtn) {
+                        if (query) {
+                            clearSearchBtn.classList.remove('d-none');
+                        } else {
+                            clearSearchBtn.classList.add('d-none');
+                        }
+                    }
+
+                    let firstTabWithMatches = null;
+
+                    document.querySelectorAll('.tab-pane').forEach(tabPane => {
+                        const cols = tabPane.querySelectorAll('.row > .col');
+                        let visibleCount = 0;
+
+                        cols.forEach(col => {
+                            const card = col.querySelector('.component-card, .package-card');
+                            if (!card) return;
+                            const text = (card.getAttribute('data-search-text') || '').toLowerCase();
+                            if (!query || text.includes(query)) {
+                                col.classList.remove('d-none');
+                                visibleCount++;
+                            } else {
+                                col.classList.add('d-none');
+                            }
+                        });
+
+                        // Manage no results placeholder per tab
+                        const existingNoResults = tabPane.querySelector('.no-search-results-msg');
+                        if (query && visibleCount === 0) {
+                            if (!existingNoResults) {
+                                const row = tabPane.querySelector('.row');
+                                if (row) {
+                                    const msgDiv = document.createElement('div');
+                                    msgDiv.className = 'col-12 text-center text-muted py-4 no-search-results-msg';
+                                    msgDiv.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-2"></i>No applications matching "<strong>${escapeHTML(query)}</strong>" in this category.`;
+                                    row.appendChild(msgDiv);
+                                }
+                            }
+                        } else if (existingNoResults) {
+                            existingNoResults.remove();
+                        }
+
+                        // Track count on tab button
+                        const tabBtn = document.querySelector(`button[data-bs-target="#${tabPane.id}"]`);
+                        if (tabBtn) {
+                            const badge = tabBtn.querySelector('.search-match-badge');
+                            if (query) {
+                                if (!badge) {
+                                    const span = document.createElement('span');
+                                    span.className = 'badge rounded-pill bg-primary-subtle text-primary ms-auto search-match-badge';
+                                    span.textContent = String(visibleCount);
+                                    tabBtn.appendChild(span);
+                                } else {
+                                    badge.textContent = String(visibleCount);
+                                }
+                                if (visibleCount > 0 && !firstTabWithMatches) {
+                                    firstTabWithMatches = tabBtn;
+                                }
+                            } else if (badge) {
+                                badge.remove();
+                            }
+                        }
+                    });
+
+                    // If active tab has 0 results and another tab has matches, switch tab
+                    const activeTabPane = document.querySelector('.tab-pane.active');
+                    if (query && activeTabPane) {
+                        const activeVisibleCols = activeTabPane.querySelectorAll('.row > .col:not(.d-none)');
+                        if (activeVisibleCols.length === 0 && firstTabWithMatches) {
+                            bootstrap.Tab.getOrCreateInstance(firstTabWithMatches).show();
+                        }
+                    }
+                };
+
+                searchInput.addEventListener('input', handleSearch);
+                if (clearSearchBtn) {
+                    clearSearchBtn.addEventListener('click', () => {
+                        searchInput.value = '';
+                        handleSearch();
+                        searchInput.focus();
+                    });
+                }
+            }
 
             // Set up action area buttons dynamically with Back navigation
             const actionWrapper = document.createElement('div');

@@ -20,6 +20,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.css">
     <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { display: inline-block; animation: spin 1s linear infinite; }
+        .extra-small { font-size: 0.75rem; }
         body, html { height: 100%; overflow: hidden; }
         .main-container { display: flex; height: 100vh; padding-top: 56px; }
         .sidebar {
@@ -768,6 +771,11 @@
                             <div class="form-text">The official or community Git repository URL (GitHub, GitLab, Gitea, Codeberg, etc.) of the application.</div>
                         </div>
                         <div class="mb-3">
+                            <label for="ai-component-id" class="form-label">Component ID (Optional)</label>
+                            <input type="text" class="form-control" id="ai-component-id" autocomplete="off" placeholder="e.g., technitium-dns (defaults to repository name)">
+                            <div class="form-text">Optional custom identifier. Use lowercase letters, numbers, and hyphens.</div>
+                        </div>
+                        <div class="mb-3">
                             <label for="ai-instructions" class="form-label">Custom Instructions (Optional)</label>
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
@@ -824,8 +832,8 @@
 
                         <div class="form-check mb-3" id="ai-save-key-group">
                             <input class="form-check-input" type="checkbox" id="ai-save-key">
-                            <label class="form-check-label text-secondary small" for="ai-save-key">
-                                Save API key to local .env file
+                            <label class="form-check-label text-secondary small" for="ai-save-key" id="ai-save-key-label">
+                                Save configuration (API key / Base URL) to local .env file
                             </label>
                         </div>
                         <div class="modal-footer px-0 pb-0">
@@ -835,13 +843,63 @@
                     </form>
                 </div>
 
-                <!-- Step 2: Loading State -->
-                <div id="ai-loading-step" class="d-none text-center py-5">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Step 2: Loading State with Live Multi-Step Progress -->
+                <div id="ai-loading-step" class="d-none py-4 px-2">
+                    <div class="text-center mb-4">
+                        <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="fw-bold mb-1" id="ai-loading-title">Generating Component</h5>
+                        <p class="text-muted small mb-0" id="ai-loading-desc">Please wait while the AI analyzes the repository and crafts the configuration.</p>
                     </div>
-                    <h5 class="text-dark">Generating Component...</h5>
-                    <p class="text-muted">Analyzing Git repository and generating configuration files. This may take up to a minute.</p>
+
+                    <!-- Step-by-Step Progress Card -->
+                    <div class="card border-0 bg-light shadow-sm mx-auto" style="max-width: 520px; border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <div class="d-flex flex-column gap-3" id="ai-progress-stepper">
+                                <!-- Step 1: Fetch Repo -->
+                                <div class="d-flex align-items-start gap-3" id="ai-pstep-fetch">
+                                    <div class="badge rounded-circle p-2 bg-primary d-flex align-items-center justify-content-center" id="ai-pstep-fetch-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-arrow-repeat spin" id="ai-pstep-fetch-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-fetch-title">1. Fetching Repository Documentation</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-fetch-desc">Retrieving README and Compose files...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 2: Connect LLM -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-init">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-init-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-init-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-init-title">2. Connecting to AI Model</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-init-desc">Initializing LLM engine and prompt...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 3: Generating Compose & Variables -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-generate">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-generate-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-generate-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-generate-title">3. Drafting Component Architecture</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-generate-desc">Generating Docker Compose template & variables...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 4: Validating Security & Volumes -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-validate">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-validate-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-validate-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-validate-title">4. Validating Security & Volumes</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-validate-desc">Verifying persistent volume paths, permissions & port schemas...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Step 2.5: Error State -->
@@ -889,28 +947,44 @@
                         <div class="tab-pane fade show active" id="ai-tab-meta" role="tabpanel">
                             <div class="row g-3">
                                 <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label fw-bold mb-0" for="ai-preview-id">Component ID</label>
+                                        <span class="badge bg-warning text-dark d-none" id="ai-duplicate-badge">
+                                            <i class="bi bi-exclamation-circle me-1"></i>Already Exists
+                                        </span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="ai-preview-id" required>
+                                        <button class="btn btn-outline-primary d-none" type="button" id="ai-use-suggested-id-btn" title="Click to use auto-suggested unique ID">
+                                            <i class="bi bi-magic me-1"></i>Use <span id="ai-suggested-id-label"></span>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Unique lowercase identifier (e.g., technitium-dns).</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-name">Name</label>
-                                    <input type="text" class="form-control" id="ai-preview-name" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-name" required>
+                                    <div class="form-text">Human-readable service title.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-group">Group</label>
-                                    <input type="text" class="form-control" id="ai-preview-group" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-group">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-package">Package</label>
-                                    <input type="text" class="form-control" id="ai-preview-package" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-package">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold" for="ai-preview-desc">Description</label>
-                                    <textarea class="form-control" id="ai-preview-desc" rows="2" readonly></textarea>
+                                    <textarea class="form-control" id="ai-preview-desc" rows="2"></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-image">Docker Image</label>
-                                    <input type="text" class="form-control" id="ai-preview-image" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-image">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-conflicts">Conflicts With</label>
-                                    <input type="text" class="form-control" id="ai-preview-conflicts" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-conflicts">
                                 </div>
                             </div>
                         </div>
@@ -943,9 +1017,17 @@
                             <textarea class="form-control font-monospace" id="ai-preview-config-content" rows="10" readonly style="font-size: 0.85rem; background-color: #f8f9fa;" aria-label="Configuration file content"></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer px-0 pb-0 mt-3">
-                        <button type="button" class="btn btn-secondary" id="ai-back-btn">Back</button>
-                        <button type="button" class="btn btn-success" id="ai-save-btn">Accept and Create</button>
+                    <div class="modal-footer px-0 pb-0 mt-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ai-preview-overwrite">
+                            <label class="form-check-label text-muted small" for="ai-preview-overwrite">
+                                Overwrite if component already exists
+                            </label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary" id="ai-back-btn">Back</button>
+                            <button type="button" class="btn btn-success" id="ai-save-btn">Accept and Save</button>
+                        </div>
                     </div>
                 </div>
             </div>

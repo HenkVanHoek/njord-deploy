@@ -53,7 +53,7 @@ The AI generator supports multiple AI providers with per-provider API key storag
 
 - **Google Gemini**: Uses `GEMINI_API_KEY`. Endpoint is fixed to Google's official OpenAI-compatible API (`https://generativelanguage.googleapis.com/v1beta/openai/`). Recommended model: `gemini-2.5-flash`.
   * *Architecture Note:* Google officially maintains this OpenAI-compatible layer alongside their native SDK (`google-genai` / Interactions API) to enable cross-provider interoperability. NjordDeploy deliberately routes Gemini through this endpoint so that a single unified client ([AIGeneratorEngine](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/ai_generator_engine.py)) services Ollama, HostYourAI, OpenAI, and Gemini without fragmented SDK dependencies or separate code paths.
-- **HostYourAI / Loes (EU)**: Uses `HOSTYOURAI_API_KEY`. Default base URL is `https://api.hostyourai.eu/v1` (configurable via `HOSTYOURAI_BASE_URL` or UI). Default model: `mistral-7b-instruct`.
+- **HostYourAI / Loes (EU)**: Uses `HOSTYOURAI_API_KEY`. Default base URL is `https://hostyourai.com/api/v1` (configurable via `HOSTYOURAI_BASE_URL` or UI). Default model: `deepseek-ai/DeepSeek-V4-Flash`.
 - **OpenAI**: Uses `OPENAI_API_KEY`. Endpoint is fixed to `https://api.openai.com/v1`. Recommended model: `gpt-4o-mini`.
 - **Anthropic Claude**: Uses `ANTHROPIC_API_KEY`. Routed via Anthropic's Messages REST API (`https://api.anthropic.com/v1/messages`). Recommended model: `claude-3-5-sonnet-20241022`.
 - **Ollama (Local LLM)**: Uses local endpoint (default `http://localhost:11434/v1`, configurable via `OLLAMA_BASE_URL`). Recommended model: `qwen2.5-coder:14b-instruct-q4_K_M`.

@@ -1088,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = new bootstrap.Modal(modalElement);
         const form = document.getElementById('ai-generator-form');
         const repoUrlInput = document.getElementById('ai-repo-url');
+        const componentIdInput = document.getElementById('ai-component-id');
         const instructionsInput = document.getElementById('ai-instructions');
         const packageSelect = document.getElementById('ai-package-id');
         const apiKeyInput = document.getElementById('ai-api-key');
@@ -1115,12 +1116,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveBtn = document.getElementById('ai-save-btn');
 
         // Preview fields
+        const previewId = document.getElementById('ai-preview-id');
         const previewName = document.getElementById('ai-preview-name');
         const previewGroup = document.getElementById('ai-preview-group');
         const previewPackage = document.getElementById('ai-preview-package');
         const previewDesc = document.getElementById('ai-preview-desc');
         const previewImage = document.getElementById('ai-preview-image');
         const previewConflicts = document.getElementById('ai-preview-conflicts');
+        const previewOverwrite = document.getElementById('ai-preview-overwrite');
         const previewCompose = document.getElementById('ai-preview-compose');
         const previewVarsBody = document.getElementById('ai-preview-vars-body');
         const previewConfigSelector = document.getElementById('ai-preview-config-selector');
@@ -1165,7 +1168,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const checkStatus = async () => {
             const provider = providerSelect.value;
-            const baseUrl = baseUrlInput.value.trim();
+            const pInfo = aiProvidersRegistry[provider] || {};
+            const baseUrl = pInfo.allow_custom_base_url ? baseUrlInput.value.trim() : '';
 
             statusContainer.classList.remove('d-none');
             statusBadge.className = 'badge bg-secondary';
@@ -1236,8 +1240,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelSelect.appendChild(el);
             });
 
-            // Set default model
-            if (provider === 'ollama' && modelsList.length > 0) {
+            // Restore saved model or fallback to default
+            const savedModel = localStorage.getItem(`njord_ai_model_${provider}`);
+            if (savedModel) {
+                const hasOption = options.some(opt => opt.value === savedModel);
+                if (hasOption) {
+                    modelSelect.value = savedModel;
+                } else {
+                    modelSelect.value = 'custom';
+                    modelCustomInput.value = savedModel;
+                }
+            } else if (pInfo.configured_model) {
+                const hasOption = options.some(opt => opt.value === pInfo.configured_model);
+                if (hasOption) {
+                    modelSelect.value = pInfo.configured_model;
+                } else {
+                    modelSelect.value = 'custom';
+                    modelCustomInput.value = pInfo.configured_model;
+                }
+            } else if (provider === 'ollama' && modelsList.length > 0) {
                 const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
                 modelSelect.value = qwenModel || modelsList[0];
             } else if (pInfo.default_model) {
@@ -1254,16 +1275,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const handleModelSelectChange = () => {
+            const provider = providerSelect.value;
             if (modelSelect.value === 'custom') {
                 modelCustomGroup.classList.remove('d-none');
                 modelCustomInput.required = true;
+                if (modelCustomInput.value.trim() && provider) {
+                    localStorage.setItem(`njord_ai_model_${provider}`, modelCustomInput.value.trim());
+                }
             } else {
                 modelCustomGroup.classList.add('d-none');
                 modelCustomInput.required = false;
+                if (modelSelect.value && provider) {
+                    localStorage.setItem(`njord_ai_model_${provider}`, modelSelect.value);
+                }
             }
         };
 
         modelSelect.addEventListener('change', handleModelSelectChange);
+        modelCustomInput.addEventListener('input', () => {
+            const provider = providerSelect.value;
+            if (provider && modelCustomInput.value.trim()) {
+                localStorage.setItem(`njord_ai_model_${provider}`, modelCustomInput.value.trim());
+            }
+        });
 
         const updateProviderFields = () => {
             const provider = providerSelect.value;
@@ -1293,9 +1327,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pInfo.allow_custom_base_url) {
                 baseUrlGroup.classList.remove('d-none');
                 baseUrlInput.placeholder = pInfo.default_base_url || 'http://localhost:11434/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = pInfo.default_base_url || '';
-                }
+                const savedUrl = localStorage.getItem(`njord_ai_base_url_${provider}`);
+                baseUrlInput.value = savedUrl || pInfo.configured_base_url || pInfo.default_base_url || '';
+            } else {
+                baseUrlInput.value = '';
             }
 
             if (provider === 'custom') {
@@ -1316,9 +1351,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (providerSelect.value) {
                 localStorage.setItem('njord_ai_provider', providerSelect.value);
             }
+            apiKeyInput.value = '';
+            const saveKeyCheckbox = document.getElementById('ai-save-key');
+            if (saveKeyCheckbox) {
+                saveKeyCheckbox.checked = false;
+            }
             updateProviderFields();
         });
-        baseUrlInput.addEventListener('change', checkStatus);
+
+        baseUrlInput.addEventListener('input', () => {
+            const provider = providerSelect.value;
+            if (provider && baseUrlInput.value.trim()) {
+                localStorage.setItem(`njord_ai_base_url_${provider}`, baseUrlInput.value.trim());
+            }
+        });
+
+        baseUrlInput.addEventListener('change', () => {
+            const provider = providerSelect.value;
+            if (provider && baseUrlInput.value.trim()) {
+                localStorage.setItem(`njord_ai_base_url_${provider}`, baseUrlInput.value.trim());
+            }
+            checkStatus();
+        });
 
         createAiBtn.addEventListener('click', async () => {
             const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
@@ -1326,6 +1380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (savedProvider && providerSelect.querySelector(`option[value="${savedProvider}"]`)) {
                 providerSelect.value = savedProvider;
             }
+            updateProviderFields();
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
@@ -1352,25 +1407,90 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.show();
         });
 
+        function setStepState(stepId, state, detailText) {
+            const stepEl = document.getElementById(`ai-pstep-${stepId}`);
+            const badgeEl = document.getElementById(`ai-pstep-${stepId}-badge`);
+            const iconEl = document.getElementById(`ai-pstep-${stepId}-icon`);
+            const descEl = document.getElementById(`ai-pstep-${stepId}-desc`);
+
+            if (!stepEl || !badgeEl || !iconEl) return;
+
+            if (detailText && descEl) {
+                descEl.textContent = detailText;
+            }
+
+            if (state === 'active') {
+                stepEl.classList.remove('opacity-50', 'text-muted');
+                badgeEl.className = 'badge rounded-circle p-2 bg-primary d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-arrow-repeat spin';
+            } else if (state === 'done') {
+                stepEl.classList.remove('opacity-50', 'text-muted');
+                badgeEl.className = 'badge rounded-circle p-2 bg-success text-white d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-check-circle-fill';
+            } else if (state === 'pending') {
+                stepEl.classList.add('opacity-50');
+                badgeEl.className = 'badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-circle';
+            }
+        }
+
+        function updateAIProgress(currentStep, detail) {
+            const order = ['fetch', 'init', 'generate', 'validate'];
+            let mappedKey = currentStep;
+            if (currentStep === 'fetch_repo') mappedKey = 'fetch';
+            if (currentStep === 'init_llm') mappedKey = 'init';
+
+            let foundCurrent = false;
+            for (const k of order) {
+                if (k === mappedKey) {
+                    setStepState(k, 'active', detail);
+                    foundCurrent = true;
+                } else if (!foundCurrent) {
+                    setStepState(k, 'done');
+                } else {
+                    setStepState(k, 'pending');
+                }
+            }
+        }
+
+        function resetAIProgress() {
+            setStepState('fetch', 'active', 'Retrieving README and Compose files...');
+            setStepState('init', 'pending', 'Waiting to initialize LLM engine...');
+            setStepState('generate', 'pending', 'Drafting Docker Compose template & variables...');
+            setStepState('validate', 'pending', 'Verifying persistent volume paths, permissions & ports...');
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const repoUrl = repoUrlInput.value.trim();
+            const componentId = componentIdInput ? componentIdInput.value.trim() : '';
             const instructions = instructionsInput.value.trim();
             const apiKey = apiKeyInput.value.trim();
             const saveKeyCheckbox = document.getElementById('ai-save-key');
             const saveKey = saveKeyCheckbox ? saveKeyCheckbox.checked : false;
 
             const provider = providerSelect.value;
-            const baseUrl = baseUrlInput.value.trim();
+            const pInfo = aiProvidersRegistry[provider] || {};
+            const baseUrl = pInfo.allow_custom_base_url ? baseUrlInput.value.trim() : '';
             let modelOverride = modelSelect.value;
             if (provider === 'custom' || modelSelect.value === 'custom') {
                 modelOverride = modelCustomInput.value.trim();
             }
 
+            resetAIProgress();
             inputStep.classList.add('d-none');
             loadingStep.classList.remove('d-none');
             const warningsContainer = document.getElementById('ai-warnings-container');
             if (warningsContainer) warningsContainer.classList.add('d-none');
+
+            let errorTitle = 'AI Generation Failed';
+            let errorMsg = 'Failed to communicate with AI API.';
 
             try {
                 const response = await fetch('/api/ai/generate', {
@@ -1378,19 +1498,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         repo_url: repoUrl,
+                        component_id: componentId,
                         custom_instructions: instructions,
                         api_key: apiKey,
                         save_key: saveKey,
                         provider: provider,
                         base_url: baseUrl,
-                        model: modelOverride
+                        model: modelOverride,
+                        stream: true
                     })
                 });
 
                 if (!response.ok) {
-                    let errorTitle = 'AI Generation Failed';
-                    let errorMsg = `Request failed with status ${response.status}`;
-
+                    errorMsg = `Request failed with status ${response.status}`;
                     try {
                         const errorData = await response.json();
                         if (errorData.error) {
@@ -1400,47 +1520,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (e) {
                         // ignore non-json errors
                     }
-
-                    loadingStep.classList.add('d-none');
-                    const errorStep = document.getElementById('ai-error-step');
-                    const errorTitleEl = document.getElementById('ai-error-title');
-                    const errorMsgEl = document.getElementById('ai-error-msg');
-
-                    if (errorStep && errorTitleEl && errorMsgEl) {
-                        errorTitleEl.textContent = errorTitle;
-                        errorMsgEl.textContent = errorMsg;
-
-                        const retryBtn = document.getElementById('ai-error-retry-btn');
-                        const cancelBtn = document.getElementById('ai-error-cancel-btn');
-
-                        const newRetryBtn = retryBtn.cloneNode(true);
-                        retryBtn.parentNode.replaceChild(newRetryBtn, retryBtn);
-
-                        const newCancelBtn = cancelBtn.cloneNode(true);
-                        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-                        newRetryBtn.addEventListener('click', () => {
-                            errorStep.classList.add('d-none');
-                            form.requestSubmit();
-                        });
-
-                        newCancelBtn.addEventListener('click', () => {
-                            errorStep.classList.add('d-none');
-                            inputStep.classList.remove('d-none');
-                        });
-
-                        errorStep.classList.remove('d-none');
-                    } else {
-                        showAlert(`${errorTitle}: ${errorMsg}`, 'danger');
-                        inputStep.classList.remove('d-none');
-                    }
-                    return;
+                    throw new Error(errorMsg);
                 }
 
-                const result = await response.json();
-                generatedData = result.data;
+                // Process Server-Sent Events stream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let resultPayload = null;
 
-                // Inject the selected package ID into the generated metadata
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // keep trailing partial line
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('data:')) {
+                            const jsonStr = trimmed.slice(5).trim();
+                            if (!jsonStr) continue;
+                            try {
+                                const evt = JSON.parse(jsonStr);
+                                if (evt.type === 'progress') {
+                                    updateAIProgress(evt.step, evt.detail);
+                                } else if (evt.type === 'result') {
+                                    resultPayload = evt;
+                                } else if (evt.type === 'error') {
+                                    errorMsg = evt.error || 'AI generation failed';
+                                    throw new Error(errorMsg);
+                                }
+                            } catch (pErr) {
+                                if (pErr.message && pErr.message === errorMsg) {
+                                    throw pErr;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!resultPayload || !resultPayload.data) {
+                    throw new Error(errorMsg || 'No component data received from AI generator.');
+                }
+
+                ['fetch', 'init', 'generate', 'validate'].forEach(k => setStepState(k, 'done'));
+                generatedData = resultPayload.data;
+
                 // Inject the selected package ID into the generated metadata
                 if (generatedData && packageSelect) {
                     if (!generatedData.metadata) {
@@ -1457,22 +1584,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (formText) {
                         formText.textContent = 'The configured GEMINI_API_KEY from the .env file will be used if this is left blank.';
                     }
-                    if (result.key_saved) {
-                        showAlert('Gemini API key successfully saved to .env file.', 'success');
+                    if (resultPayload.key_saved) {
+                        showAlert('API key successfully saved to .env file.', 'success');
                     }
                 }
 
                 // Populate preview UI
                 const meta = (generatedData && generatedData.metadata) || generatedData || {};
-                previewName.value = meta.name || '';
-                previewGroup.value = meta.group || '';
+                if (previewId) {
+                    previewId.value = generatedData.id || '';
+                }
+
+                const duplicateBadge = document.getElementById('ai-duplicate-badge');
+                const suggestedIdBtn = document.getElementById('ai-use-suggested-id-btn');
+                const suggestedIdLabel = document.getElementById('ai-suggested-id-label');
+
+                if (generatedData && generatedData.is_duplicate && generatedData.suggested_id) {
+                    if (duplicateBadge) duplicateBadge.classList.remove('d-none');
+                    if (suggestedIdBtn && suggestedIdLabel) {
+                        suggestedIdLabel.textContent = generatedData.suggested_id;
+                        suggestedIdBtn.classList.remove('d-none');
+                        suggestedIdBtn.onclick = () => {
+                            if (previewId) previewId.value = generatedData.suggested_id;
+                            generatedData.id = generatedData.suggested_id;
+                            suggestedIdBtn.classList.add('d-none');
+                            if (duplicateBadge) duplicateBadge.classList.add('d-none');
+                            showAlert(`Component ID updated to '${generatedData.suggested_id}'.`, 'info');
+                        };
+                    }
+                } else {
+                    if (duplicateBadge) duplicateBadge.classList.add('d-none');
+                    if (suggestedIdBtn) suggestedIdBtn.classList.add('d-none');
+                }
+                if (previewName) {
+                    previewName.value = meta.name || '';
+                }
+                if (previewGroup) {
+                    previewGroup.value = meta.group || '';
+                }
                 if (previewPackage) {
                     previewPackage.value = meta.package_id || 'None (General)';
                 }
-                previewDesc.value = meta.description || '';
-                previewImage.value = meta.image_name || '';
-                previewConflicts.value = (meta.conflicts_with || []).join(', ');
-                previewCompose.value = generatedData.docker_compose || '';
+                if (previewDesc) {
+                    previewDesc.value = meta.description || '';
+                }
+                if (previewImage) {
+                    previewImage.value = meta.image_name || '';
+                }
+                if (previewConflicts) {
+                    previewConflicts.value = (meta.conflicts_with || []).join(', ');
+                }
+                if (previewCompose) {
+                    previewCompose.value = generatedData.docker_compose || '';
+                }
+                if (previewOverwrite) {
+                    previewOverwrite.checked = false;
+                }
 
                 // Render security/validation warnings
                 const warningsContainer = document.getElementById('ai-warnings-container');
@@ -1530,9 +1697,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewStep.classList.remove('d-none');
 
             } catch (err) {
-                showAlert(`AI Generation failed: ${err.message}`, 'danger');
                 loadingStep.classList.add('d-none');
-                inputStep.classList.remove('d-none');
+                const errorStep = document.getElementById('ai-error-step');
+                const errorTitleEl = document.getElementById('ai-error-title');
+                const errorMsgEl = document.getElementById('ai-error-msg');
+
+                if (errorStep && errorTitleEl && errorMsgEl) {
+                    errorTitleEl.textContent = errorTitle || 'AI Generation Failed';
+                    errorMsgEl.textContent = err.message || errorMsg;
+
+                    const retryBtn = document.getElementById('ai-error-retry-btn');
+                    const cancelBtn = document.getElementById('ai-error-cancel-btn');
+
+                    const newRetryBtn = retryBtn.cloneNode(true);
+                    retryBtn.parentNode.replaceChild(newRetryBtn, retryBtn);
+
+                    const newCancelBtn = cancelBtn.cloneNode(true);
+                    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                    newRetryBtn.addEventListener('click', () => {
+                        errorStep.classList.add('d-none');
+                        form.requestSubmit();
+                    });
+
+                    newCancelBtn.addEventListener('click', () => {
+                        errorStep.classList.add('d-none');
+                        inputStep.classList.remove('d-none');
+                    });
+
+                    errorStep.classList.remove('d-none');
+                } else {
+                    showAlert(`AI Generation failed: ${err.message}`, 'danger');
+                    inputStep.classList.remove('d-none');
+                }
             }
         });
 
@@ -1552,13 +1749,20 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', async () => {
             if (!generatedData) return;
             try {
+                const finalId = (previewId ? previewId.value.trim().toLowerCase() : '') || generatedData.id;
+                if (!finalId) {
+                    showAlert('A valid Component ID is required.', 'danger');
+                    return;
+                }
+                generatedData.id = finalId;
+
                 // Ensure a clean metadata structure exists before saving
                 if (!generatedData.metadata || Object.keys(generatedData.metadata).length === 0) {
                     generatedData.metadata = {
-                        name: generatedData.name || '',
-                        description: generatedData.description || '',
-                        group: generatedData.group || '',
-                        image_name: generatedData.image_name || '',
+                        name: (previewName ? previewName.value.trim() : '') || generatedData.name || '',
+                        description: (previewDesc ? previewDesc.value.trim() : '') || generatedData.description || '',
+                        group: (previewGroup ? previewGroup.value.trim() : '') || generatedData.group || '',
+                        image_name: (previewImage ? previewImage.value.trim() : '') || generatedData.image_name || '',
                         package_id: generatedData.package_id || null,
                         tags: generatedData.tags || [],
                         resource_profile: generatedData.resource_profile || {},
@@ -1570,15 +1774,68 @@ document.addEventListener('DOMContentLoaded', () => {
                         ui_port_variable: generatedData.ui_port_variable || null,
                         traefik_internal_port: generatedData.traefik_internal_port || null
                     };
+                } else {
+                    if (previewName && previewName.value.trim()) {
+                        generatedData.metadata.name = previewName.value.trim();
+                    }
+                    if (previewGroup && previewGroup.value.trim()) {
+                        generatedData.metadata.group = previewGroup.value.trim();
+                    }
+                    if (previewDesc) {
+                        generatedData.metadata.description = previewDesc.value.trim();
+                    }
+                    if (previewImage && previewImage.value.trim()) {
+                        generatedData.metadata.image_name = previewImage.value.trim();
+                    }
                 }
 
-                await fetchJson('/api/components/ai', {
+                const overwrite = previewOverwrite ? previewOverwrite.checked : false;
+                generatedData.overwrite = overwrite;
+
+                const response = await fetch('/api/components/ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(generatedData)
                 });
 
-                showAlert(`Component '${generatedData.metadata.name}' created successfully!`, 'success');
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    if (response.status === 409 && errData.code === 'component_exists') {
+                        const suggested = errData.suggested_id || `${finalId}-1`;
+                        const confirmChoice = confirm(
+                            `Component '${finalId}' already exists in your library.\n\n` +
+                            `• Click [OK] to save as suggested unique ID: '${suggested}'\n` +
+                            `• Click [Cancel] if you want to overwrite '${finalId}' instead.`
+                        );
+                        if (confirmChoice) {
+                            if (previewId) previewId.value = suggested;
+                            generatedData.id = suggested;
+                            generatedData.overwrite = false;
+                            await fetchJson('/api/components/ai', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(generatedData)
+                            });
+                        } else {
+                            const confirmOverwrite = confirm(`Are you sure you want to OVERWRITE the existing component '${finalId}'?`);
+                            if (confirmOverwrite) {
+                                if (previewOverwrite) previewOverwrite.checked = true;
+                                generatedData.overwrite = true;
+                                await fetchJson('/api/components/ai', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(generatedData)
+                                });
+                            } else {
+                                return;
+                            }
+                        }
+                    } else {
+                        throw new Error(errData.error || `HTTP error ${response.status}`);
+                    }
+                }
+
+                showAlert(`Component '${generatedData.metadata.name}' saved successfully!`, 'success');
                 modal.hide();
                 await loadComponents();
                 await loadComponentDetails(generatedData.id, false);

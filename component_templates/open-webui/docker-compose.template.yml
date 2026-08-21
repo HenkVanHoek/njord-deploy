@@ -1,30 +1,18 @@
 # status: "tested"
 # last_tested_version: "main"
-# platform_notes: "Tested on Proxmox LXC: docker (main, 2026-08-15), podman (24.04, 2026-08-15); Proxmox VM: docker (main, 2026-08-15), podman (main, 2026-08-15)."
-# breaking_changes: none
+# platform_notes: "Tested on Proxmox LXC: docker (main, 2026-08-21), podman (main, 2026-08-21); Proxmox VM: docker (main, 2026-08-21), podman (main, 2026-08-21)."
+# breaking_changes: "None"
 services:
-  ollama:
-    container_name: njorddeploy-ollama
-    image: ollama/ollama:{{ OLLAMA_VERSION | default('latest') }}
-    volumes:
-      - "{{ CONFIG_BASE_PATH }}/ollama/data:/root/.ollama"
-    networks:
-      - njorddeploy_net
-    tty: true
-    restart: unless-stopped
-
   open-webui:
     container_name: njorddeploy-open-webui
     image: "{{ image_name | default('ghcr.io/open-webui/open-webui') }}:{{ component_version | default('main') }}"
     volumes:
       - "{{ CONFIG_BASE_PATH }}/open-webui/data:/app/backend/data"
-    depends_on:
-      - ollama
     ports:
-      - "{{ OPEN_WEBUI_PORT | default('8080') }}:8080"
+      - "{{ OPEN_WEBUI_PORT | default('3000') }}:8080"
     environment:
-      - "OLLAMA_BASE_URL=http://ollama:11434"
-      - "WEBUI_SECRET_KEY={{ WEBUI_SECRET_KEY | default('njorddeploy_secret_key') }}"
+      - "OLLAMA_BASE_URL={{ OLLAMA_BASE_URL | default('http://ollama:11434') }}"
+      - "WEBUI_SECRET_KEY={{ WEBUI_SECRET_KEY | default('njorddeploy_secret_key_openwebui_2026') }}"
       - "OPENAI_API_KEY={{ OPENAI_API_KEY | default('') }}"
     networks:
       - njorddeploy_net

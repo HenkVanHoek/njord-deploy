@@ -2719,7 +2719,7 @@ def main():
 
     output_path = os.path.join("docs", "SUPPORTED_SERVICES.md")
     with open(output_path, "w", encoding="utf-8") as f:
-        f.write("\n".join(lines) + "\n")
+        f.write("\n".join(lines).rstrip() + "\n")
     print(f"Successfully generated {output_path}")
 
 
@@ -13184,7 +13184,9 @@ def create_app(test_config=None):
     @flask_app.route("/get-available-software", methods=["POST"])
     def get_available_software():
         try:
-            all_components = component_manager.get_all_components()
+            all_components = component_manager.get_all_components(
+                include_variables=True
+            )
             all_packages = component_manager.get_all_packages()
             return (
                 jsonify(
@@ -13251,7 +13253,9 @@ def create_app(test_config=None):
             if not isinstance(selected_components, list):
                 return jsonify({"error": "Missing or invalid selected_components"}), 400
 
-            all_components_list = component_manager.get_all_components()
+            all_components_list = component_manager.get_all_components(
+                include_variables=True
+            )
             all_components_dict = {comp["id"]: comp for comp in all_components_list}
             components_for_ui = {}
 
@@ -13261,6 +13265,10 @@ def create_app(test_config=None):
                     vars_list = component_data.get("variables") or component_data.get(
                         "required_variables"
                     )
+                    if not vars_list:
+                        vars_list = component_manager.reader.get_component_variables(
+                            component_id
+                        )
                     if vars_list:
                         components_for_ui[component_id] = {
                             "name": component_data.get("name", component_id),
@@ -13699,15 +13707,29 @@ def create_app(test_config=None):
                     "docker ps", lambda x: None, check_exit_code=False
                 )
                 if exit_code_group == 0:
-                    cmd = f"docker logs --tail 200 {container_name}"
+                    cmd = (
+                        f"CID=$(docker ps -a --filter name={container_name} "
+                        f"--format '{{{{.ID}}}}' | head -n 1); "
+                        f'if [ -n "$CID" ]; then docker logs --tail 200 "$CID"; '
+                        f"else docker logs --tail 200 {container_name}; fi"
+                    )
                 else:
                     quoted_password = shlex.quote(password)
                     cmd = (
                         f"echo {quoted_password} | "
-                        f"sudo -S docker logs --tail 200 {container_name}"
+                        f'sudo -S sh -c "CID=\\$(docker ps -a '
+                        f"--filter name={container_name} --format '{{{{.ID}}}}' "
+                        f'| head -n 1); if [ -n \\"\\$CID\\" ]; then '
+                        f'docker logs --tail 200 \\"\\$CID\\"; '
+                        f'else docker logs --tail 200 {container_name}; fi"'
                     )
             else:
-                cmd = f"podman logs --tail 200 {container_name}"
+                cmd = (
+                    f"CID=$(podman ps -a --filter name={container_name} "
+                    f"--format '{{{{.ID}}}}' | head -n 1); "
+                    f'if [ -n "$CID" ]; then podman logs --tail 200 "$CID"; '
+                    f"else podman logs --tail 200 {container_name}; fi"
+                )
 
             log_lines = []
 
@@ -16937,6 +16959,8 @@ html[data-theme="light"] .modal .card {
             iconClass = "fa-solid fa-database text-danger";
         } else if (lowerId.includes("mariadb") || lowerId.includes("mysql") || lowerId.includes("postgres")) {
             iconClass = "fa-solid fa-database text-primary";
+        } else if (lowerId.includes("litellm") || lowerId.includes("open-webui") || lowerId.includes("ollama") || lowerId.includes("qwen")) {
+            iconClass = "fa-solid fa-robot text-primary";
         }
 
         let matrixBadgeHtml = "";
@@ -16966,9 +16990,17 @@ html[data-theme="light"] .modal .card {
         const btnText = isChecked ? '<i class="fa-solid fa-check me-2"></i>Selected' : 'Select';
         const checkedAttr = isChecked ? 'checked' : '';
 
+        const searchKeywords = [
+            component.name || '',
+            component.id || '',
+            component.description || '',
+            groupName || '',
+            ...(Array.isArray(component.tags) ? component.tags : [])
+        ].join(' ').toLowerCase();
+
         return `
             <div class="col">
-                <div class="${cardClass}" style="cursor: pointer; transition: all 0.2s;" data-component-id="${escapedId}" data-group-name="${escapeHTML(groupName)}" data-exclusive="${isExclusive}">
+                <div class="${cardClass}" style="cursor: pointer; transition: all 0.2s;" data-component-id="${escapedId}" data-group-name="${escapeHTML(groupName)}" data-exclusive="${isExclusive}" data-search-text="${escapeHTML(searchKeywords)}">
                     <div class="card-body d-flex flex-column align-items-center text-center p-3">
                         <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
                             <i class="${iconClass} fa-2x"></i>
@@ -17033,10 +17065,16 @@ html[data-theme="light"] .modal .card {
                     const escapedPkgId = escapeHTML(pkgId);
                     const escapedPkgName = escapeHTML(pkg.name);
                     const escapedPkgDesc = escapeHTML(pkg.description || 'A pre-configured stack of services.');
+                    const pkgSearchText = [
+                        pkg.name || '',
+                        pkgId || '',
+                        pkg.description || '',
+                        compNames || ''
+                    ].join(' ').toLowerCase();
 
                     tabContentHTML += `
                         <div class="col">
-                            <div class="card h-100 package-card border-primary" style="cursor: pointer; transition: all 0.2s;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}">
+                            <div class="card h-100 package-card border-primary" style="cursor: pointer; transition: all 0.2s;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}" data-search-text="${escapeHTML(pkgSearchText)}">
                                 <div class="card-body d-flex flex-column align-items-center text-center p-3">
                                     <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
                                         <i class="fa-solid fa-layer-group text-primary fa-2x"></i>
@@ -17069,10 +17107,22 @@ html[data-theme="light"] .modal .card {
                     iconClass = "fa-solid fa-database";
                 } else if (lowerGroup.includes("productivity")) {
                     iconClass = "fa-solid fa-cubes";
-                } else if (lowerGroup.includes("network")) {
+                } else if (lowerGroup.includes("network") || lowerGroup.includes("dns")) {
                     iconClass = "fa-solid fa-circle-nodes";
                 } else if (lowerGroup.includes("security")) {
                     iconClass = "fa-solid fa-shield-halved";
+                } else if (lowerGroup.includes("ai") || lowerGroup.includes("llm")) {
+                    iconClass = "fa-solid fa-robot";
+                } else if (lowerGroup.includes("media")) {
+                    iconClass = "fa-solid fa-photo-film";
+                } else if (lowerGroup.includes("home") || lowerGroup.includes("iot") || lowerGroup.includes("automation")) {
+                    iconClass = "fa-solid fa-house-signal";
+                } else if (lowerGroup.includes("chat") || lowerGroup.includes("message") || lowerGroup.includes("communication")) {
+                    iconClass = "fa-solid fa-comments";
+                } else if (lowerGroup.includes("system") || lowerGroup.includes("tool") || lowerGroup.includes("utilities")) {
+                    iconClass = "fa-solid fa-toolbox";
+                } else if (lowerGroup.includes("dashboard")) {
+                    iconClass = "fa-solid fa-gauge-high";
                 }
 
                 tabNavHTML += `
@@ -17125,7 +17175,17 @@ html[data-theme="light"] .modal .card {
 
             wizardBody.innerHTML = `
                 <div class="text-start">
-                    <h2 class="h4 text-center mb-4">Applications Marketplace</h2>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+                        <div>
+                            <h2 class="h4 mb-1"><i class="fa-solid fa-store me-2 text-primary"></i>Applications Marketplace</h2>
+                            <p class="text-muted small mb-0">Browse categories or search across all available services and stacks.</p>
+                        </div>
+                        <div class="input-group" style="max-width: 340px;">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0" id="component-search-input" placeholder="Search applications, tags..." autocomplete="off">
+                            <button class="btn btn-outline-secondary d-none" type="button" id="clear-component-search-btn" title="Clear search"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
                     <div class="row">
                         <div class="col-md-3 mb-4">
                             <div class="card p-2 border-0 bg-transparent">
@@ -17280,6 +17340,97 @@ html[data-theme="light"] .modal .card {
             };
 
             updatePackageCheckboxes(); // Run once to set initial state
+
+            // Real-time Marketplace Component Search Logic
+            const searchInput = /** @type {HTMLInputElement} */ (document.getElementById('component-search-input'));
+            const clearSearchBtn = document.getElementById('clear-component-search-btn');
+
+            if (searchInput) {
+                const handleSearch = () => {
+                    const query = searchInput.value.trim().toLowerCase();
+                    if (clearSearchBtn) {
+                        if (query) {
+                            clearSearchBtn.classList.remove('d-none');
+                        } else {
+                            clearSearchBtn.classList.add('d-none');
+                        }
+                    }
+
+                    let firstTabWithMatches = null;
+
+                    document.querySelectorAll('.tab-pane').forEach(tabPane => {
+                        const cols = tabPane.querySelectorAll('.row > .col');
+                        let visibleCount = 0;
+
+                        cols.forEach(col => {
+                            const card = col.querySelector('.component-card, .package-card');
+                            if (!card) return;
+                            const text = (card.getAttribute('data-search-text') || '').toLowerCase();
+                            if (!query || text.includes(query)) {
+                                col.classList.remove('d-none');
+                                visibleCount++;
+                            } else {
+                                col.classList.add('d-none');
+                            }
+                        });
+
+                        // Manage no results placeholder per tab
+                        const existingNoResults = tabPane.querySelector('.no-search-results-msg');
+                        if (query && visibleCount === 0) {
+                            if (!existingNoResults) {
+                                const row = tabPane.querySelector('.row');
+                                if (row) {
+                                    const msgDiv = document.createElement('div');
+                                    msgDiv.className = 'col-12 text-center text-muted py-4 no-search-results-msg';
+                                    msgDiv.innerHTML = `<i class="fa-solid fa-filter-circle-xmark me-2"></i>No applications matching "<strong>${escapeHTML(query)}</strong>" in this category.`;
+                                    row.appendChild(msgDiv);
+                                }
+                            }
+                        } else if (existingNoResults) {
+                            existingNoResults.remove();
+                        }
+
+                        // Track count on tab button
+                        const tabBtn = document.querySelector(`button[data-bs-target="#${tabPane.id}"]`);
+                        if (tabBtn) {
+                            const badge = tabBtn.querySelector('.search-match-badge');
+                            if (query) {
+                                if (!badge) {
+                                    const span = document.createElement('span');
+                                    span.className = 'badge rounded-pill bg-primary-subtle text-primary ms-auto search-match-badge';
+                                    span.textContent = String(visibleCount);
+                                    tabBtn.appendChild(span);
+                                } else {
+                                    badge.textContent = String(visibleCount);
+                                }
+                                if (visibleCount > 0 && !firstTabWithMatches) {
+                                    firstTabWithMatches = tabBtn;
+                                }
+                            } else if (badge) {
+                                badge.remove();
+                            }
+                        }
+                    });
+
+                    // If active tab has 0 results and another tab has matches, switch tab
+                    const activeTabPane = document.querySelector('.tab-pane.active');
+                    if (query && activeTabPane) {
+                        const activeVisibleCols = activeTabPane.querySelectorAll('.row > .col:not(.d-none)');
+                        if (activeVisibleCols.length === 0 && firstTabWithMatches) {
+                            bootstrap.Tab.getOrCreateInstance(firstTabWithMatches).show();
+                        }
+                    }
+                };
+
+                searchInput.addEventListener('input', handleSearch);
+                if (clearSearchBtn) {
+                    clearSearchBtn.addEventListener('click', () => {
+                        searchInput.value = '';
+                        handleSearch();
+                        searchInput.focus();
+                    });
+                }
+            }
 
             // Set up action area buttons dynamically with Back navigation
             const actionWrapper = document.createElement('div');
@@ -22345,13 +22496,14 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Optional
 
 import requests
-from flask import Flask, abort, jsonify, render_template, request
+from flask import Flask, Response, abort, jsonify, render_template, request
 from werkzeug.utils import secure_filename
 
 from managers.component_manager import ComponentManager
-from utils.ai_generator import AIGenerator
+from utils.ai_generator import AIGenerator, suggest_unique_component_id
 from utils.resource_utils import get_components_paths
 
 logging.basicConfig(level=logging.INFO)
@@ -22408,11 +22560,22 @@ def create_app(test_config=None):
     meta_file = str(meta_file_path)
     temp_path = str(templates_path_obj)
 
-    def save_api_key_to_env(key: str, provider: str = "gemini"):
-        """Saves the API key to the local .env file based on the provider."""
+    def save_api_key_to_env(
+        key: Optional[str] = None,
+        provider: str = "gemini",
+        base_url: Optional[str] = None,
+        model: Optional[str] = None,
+    ):
+        """Saves API key, base URL, and/or model to the local .env file."""
         from utils.ai_provider_manager import save_api_key_to_env_file
 
-        save_api_key_to_env_file(key=key, provider=provider, project_root=project_root)
+        save_api_key_to_env_file(
+            key=key,
+            provider=provider,
+            base_url=base_url,
+            model=model,
+            project_root=project_root,
+        )
 
     # Initialize the unified ComponentManager
     component_manager = ComponentManager(
@@ -23233,6 +23396,11 @@ def create_app(test_config=None):
         save_key = data.get("save_key", False)
         base_url = data.get("base_url")
         model = data.get("model")
+        custom_component_id = data.get("component_id")
+        if isinstance(custom_component_id, str):
+            custom_component_id = custom_component_id.strip()
+            if not custom_component_id:
+                custom_component_id = None
 
         if not repo_url or not isinstance(repo_url, str):
             abort(400, "A valid Git repository URL is required")
@@ -23255,6 +23423,9 @@ def create_app(test_config=None):
             njorddeploy_meta = component_manager.get_njorddeploy_meta()
             group_rules = njorddeploy_meta.get("group_rules", {})
             existing_groups = list(group_rules.keys())
+            existing_comp_ids = list(
+                component_manager.load_metadata().get("components", {}).keys()
+            )
 
             generator = AIGenerator(
                 api_key=api_key,
@@ -23262,18 +23433,123 @@ def create_app(test_config=None):
                 base_url=base_url,
                 model=model,
             )
+
+            is_stream = bool(data.get("stream", False))
+            if is_stream:
+                import json as json_mod
+                import queue
+                import threading
+
+                event_queue: queue.Queue = queue.Queue()
+
+                def progress_cb(step_name: str, detail_text: str):
+                    event_queue.put(
+                        {
+                            "type": "progress",
+                            "step": step_name,
+                            "detail": detail_text,
+                        }
+                    )
+
+                def worker():
+                    try:
+                        res = generator.generate_component_data(
+                            repo_url,
+                            custom_instructions,
+                            existing_groups,
+                            custom_component_id=custom_component_id,
+                            progress_callback=progress_cb,
+                            existing_component_ids=existing_comp_ids,
+                        )
+                        k_saved = False
+                        if save_key and (
+                            isinstance(api_key, str)
+                            or isinstance(base_url, str)
+                            or isinstance(model, str)
+                        ):
+                            try:
+                                save_api_key_to_env(
+                                    key=api_key if isinstance(api_key, str) else None,
+                                    provider=provider,
+                                    base_url=(
+                                        base_url if isinstance(base_url, str) else None
+                                    ),
+                                    model=model if isinstance(model, str) else None,
+                                )
+                                k_saved = True
+                            except Exception as ex_k:
+                                logging.error(
+                                    f"Failed to save credentials to .env: {ex_k}"
+                                )
+                        event_queue.put(
+                            {
+                                "type": "result",
+                                "status": "success",
+                                "data": res,
+                                "key_saved": k_saved,
+                            }
+                        )
+                    except Exception as ex_gen:
+                        logging.error(f"AI streaming generation error: {ex_gen}")
+                        event_queue.put(
+                            {
+                                "type": "error",
+                                "error": str(ex_gen),
+                            }
+                        )
+
+                threading.Thread(target=worker, daemon=True).start()
+
+                def sse_generator():
+                    while True:
+                        try:
+                            evt = event_queue.get(timeout=330.0)
+                            yield f"data: {json_mod.dumps(evt)}\n\n"
+                            if evt.get("type") in ("result", "error"):
+                                break
+                        except queue.Empty:
+                            timeout_evt = {
+                                "type": "error",
+                                "error": ("Request timed out waiting for AI response."),
+                            }
+                            yield f"data: {json_mod.dumps(timeout_evt)}\n\n"
+                            break
+
+                return Response(
+                    sse_generator(),
+                    mimetype="text/event-stream",
+                    headers={
+                        "Cache-Control": "no-cache",
+                        "X-Accel-Buffering": "no",
+                    },
+                )
+
             result = generator.generate_component_data(
-                repo_url, custom_instructions, existing_groups
+                repo_url,
+                custom_instructions,
+                existing_groups,
+                custom_component_id=custom_component_id,
+                existing_component_ids=existing_comp_ids,
             )
 
             key_saved = False
-            # Save API key only if generation succeeded (proving key is valid)
-            if isinstance(api_key, str) and save_key:
+            # Save credentials only if generation succeeded
+            # (proving configuration is valid)
+            if save_key and (
+                isinstance(api_key, str)
+                or isinstance(base_url, str)
+                or isinstance(model, str)
+            ):
                 try:
-                    save_api_key_to_env(api_key, provider=provider)
+                    save_api_key_to_env(
+                        key=api_key if isinstance(api_key, str) else None,
+                        provider=provider,
+                        base_url=base_url if isinstance(base_url, str) else None,
+                        model=model if isinstance(model, str) else None,
+                    )
                     key_saved = True
                 except Exception as e:
-                    logging.error(f"Failed to save API key to .env: {e}")
+                    logging.error(f"Failed to save credentials to .env: {e}")
 
             return (
                 jsonify(
@@ -23365,6 +23641,7 @@ def create_app(test_config=None):
         variables = data.get("variables") or []
         config_templates = data.get("config_templates") or {}
 
+        overwrite = data.get("overwrite", False)
         if not component_id or not isinstance(component_id, str):
             abort(400, "A valid component ID is required")
 
@@ -23379,6 +23656,26 @@ def create_app(test_config=None):
         name = metadata.get("name", component_id.capitalize())
 
         try:
+            meta_data = component_manager.load_metadata()
+            components = meta_data.get("components", {})
+            is_existing = component_id in components
+
+            if is_existing and not overwrite:
+                suggested_id = suggest_unique_component_id(
+                    component_id, list(components.keys())
+                )
+                return (
+                    jsonify(
+                        {
+                            "error": f"Component '{component_id}' already exists.",
+                            "code": "component_exists",
+                            "component_id": component_id,
+                            "suggested_id": suggested_id,
+                        }
+                    ),
+                    409,
+                )
+
             # Fallback: Extract docker_service_name from YAML if missing in metadata
             if "docker_service_name" not in metadata and isinstance(
                 docker_compose, str
@@ -23432,8 +23729,15 @@ def create_app(test_config=None):
                         f"Failed to parse compose for service name: {parse_err}"
                     )
 
-            # 1. Create component folder and skeleton
-            component_manager.create_component(component_id, name)
+            # 1. Create or ensure component folder
+            if not is_existing:
+                component_manager.create_component(component_id, name)
+            else:
+                templates_root_path = component_manager.templates_path.resolve()
+                comp_dir = templates_root_path / safe_component_id
+                comp_dir.mkdir(parents=True, exist_ok=True)
+                config_dir = comp_dir / "template-config"
+                config_dir.mkdir(parents=True, exist_ok=True)
 
             # 2. Update compose template content
             if isinstance(docker_compose, str) and docker_compose:
@@ -25259,6 +25563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const modal = new bootstrap.Modal(modalElement);
         const form = document.getElementById('ai-generator-form');
         const repoUrlInput = document.getElementById('ai-repo-url');
+        const componentIdInput = document.getElementById('ai-component-id');
         const instructionsInput = document.getElementById('ai-instructions');
         const packageSelect = document.getElementById('ai-package-id');
         const apiKeyInput = document.getElementById('ai-api-key');
@@ -25286,12 +25591,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const saveBtn = document.getElementById('ai-save-btn');
 
         // Preview fields
+        const previewId = document.getElementById('ai-preview-id');
         const previewName = document.getElementById('ai-preview-name');
         const previewGroup = document.getElementById('ai-preview-group');
         const previewPackage = document.getElementById('ai-preview-package');
         const previewDesc = document.getElementById('ai-preview-desc');
         const previewImage = document.getElementById('ai-preview-image');
         const previewConflicts = document.getElementById('ai-preview-conflicts');
+        const previewOverwrite = document.getElementById('ai-preview-overwrite');
         const previewCompose = document.getElementById('ai-preview-compose');
         const previewVarsBody = document.getElementById('ai-preview-vars-body');
         const previewConfigSelector = document.getElementById('ai-preview-config-selector');
@@ -25336,7 +25643,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const checkStatus = async () => {
             const provider = providerSelect.value;
-            const baseUrl = baseUrlInput.value.trim();
+            const pInfo = aiProvidersRegistry[provider] || {};
+            const baseUrl = pInfo.allow_custom_base_url ? baseUrlInput.value.trim() : '';
 
             statusContainer.classList.remove('d-none');
             statusBadge.className = 'badge bg-secondary';
@@ -25407,8 +25715,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 modelSelect.appendChild(el);
             });
 
-            // Set default model
-            if (provider === 'ollama' && modelsList.length > 0) {
+            // Restore saved model or fallback to default
+            const savedModel = localStorage.getItem(`njord_ai_model_${provider}`);
+            if (savedModel) {
+                const hasOption = options.some(opt => opt.value === savedModel);
+                if (hasOption) {
+                    modelSelect.value = savedModel;
+                } else {
+                    modelSelect.value = 'custom';
+                    modelCustomInput.value = savedModel;
+                }
+            } else if (pInfo.configured_model) {
+                const hasOption = options.some(opt => opt.value === pInfo.configured_model);
+                if (hasOption) {
+                    modelSelect.value = pInfo.configured_model;
+                } else {
+                    modelSelect.value = 'custom';
+                    modelCustomInput.value = pInfo.configured_model;
+                }
+            } else if (provider === 'ollama' && modelsList.length > 0) {
                 const qwenModel = modelsList.find(m => m.includes('qwen2.5-coder'));
                 modelSelect.value = qwenModel || modelsList[0];
             } else if (pInfo.default_model) {
@@ -25425,16 +25750,29 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const handleModelSelectChange = () => {
+            const provider = providerSelect.value;
             if (modelSelect.value === 'custom') {
                 modelCustomGroup.classList.remove('d-none');
                 modelCustomInput.required = true;
+                if (modelCustomInput.value.trim() && provider) {
+                    localStorage.setItem(`njord_ai_model_${provider}`, modelCustomInput.value.trim());
+                }
             } else {
                 modelCustomGroup.classList.add('d-none');
                 modelCustomInput.required = false;
+                if (modelSelect.value && provider) {
+                    localStorage.setItem(`njord_ai_model_${provider}`, modelSelect.value);
+                }
             }
         };
 
         modelSelect.addEventListener('change', handleModelSelectChange);
+        modelCustomInput.addEventListener('input', () => {
+            const provider = providerSelect.value;
+            if (provider && modelCustomInput.value.trim()) {
+                localStorage.setItem(`njord_ai_model_${provider}`, modelCustomInput.value.trim());
+            }
+        });
 
         const updateProviderFields = () => {
             const provider = providerSelect.value;
@@ -25464,9 +25802,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (pInfo.allow_custom_base_url) {
                 baseUrlGroup.classList.remove('d-none');
                 baseUrlInput.placeholder = pInfo.default_base_url || 'http://localhost:11434/v1';
-                if (!baseUrlInput.value) {
-                    baseUrlInput.value = pInfo.default_base_url || '';
-                }
+                const savedUrl = localStorage.getItem(`njord_ai_base_url_${provider}`);
+                baseUrlInput.value = savedUrl || pInfo.configured_base_url || pInfo.default_base_url || '';
+            } else {
+                baseUrlInput.value = '';
             }
 
             if (provider === 'custom') {
@@ -25487,9 +25826,28 @@ document.addEventListener('DOMContentLoaded', () => {
             if (providerSelect.value) {
                 localStorage.setItem('njord_ai_provider', providerSelect.value);
             }
+            apiKeyInput.value = '';
+            const saveKeyCheckbox = document.getElementById('ai-save-key');
+            if (saveKeyCheckbox) {
+                saveKeyCheckbox.checked = false;
+            }
             updateProviderFields();
         });
-        baseUrlInput.addEventListener('change', checkStatus);
+
+        baseUrlInput.addEventListener('input', () => {
+            const provider = providerSelect.value;
+            if (provider && baseUrlInput.value.trim()) {
+                localStorage.setItem(`njord_ai_base_url_${provider}`, baseUrlInput.value.trim());
+            }
+        });
+
+        baseUrlInput.addEventListener('change', () => {
+            const provider = providerSelect.value;
+            if (provider && baseUrlInput.value.trim()) {
+                localStorage.setItem(`njord_ai_base_url_${provider}`, baseUrlInput.value.trim());
+            }
+            checkStatus();
+        });
 
         createAiBtn.addEventListener('click', async () => {
             const savedProvider = localStorage.getItem('njord_ai_provider') || providerSelect.value;
@@ -25497,6 +25855,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (savedProvider && providerSelect.querySelector(`option[value="${savedProvider}"]`)) {
                 providerSelect.value = savedProvider;
             }
+            updateProviderFields();
             inputStep.classList.remove('d-none');
             loadingStep.classList.add('d-none');
             previewStep.classList.add('d-none');
@@ -25523,25 +25882,90 @@ document.addEventListener('DOMContentLoaded', () => {
             modal.show();
         });
 
+        function setStepState(stepId, state, detailText) {
+            const stepEl = document.getElementById(`ai-pstep-${stepId}`);
+            const badgeEl = document.getElementById(`ai-pstep-${stepId}-badge`);
+            const iconEl = document.getElementById(`ai-pstep-${stepId}-icon`);
+            const descEl = document.getElementById(`ai-pstep-${stepId}-desc`);
+
+            if (!stepEl || !badgeEl || !iconEl) return;
+
+            if (detailText && descEl) {
+                descEl.textContent = detailText;
+            }
+
+            if (state === 'active') {
+                stepEl.classList.remove('opacity-50', 'text-muted');
+                badgeEl.className = 'badge rounded-circle p-2 bg-primary d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-arrow-repeat spin';
+            } else if (state === 'done') {
+                stepEl.classList.remove('opacity-50', 'text-muted');
+                badgeEl.className = 'badge rounded-circle p-2 bg-success text-white d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-check-circle-fill';
+            } else if (state === 'pending') {
+                stepEl.classList.add('opacity-50');
+                badgeEl.className = 'badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center';
+                badgeEl.style.width = '32px';
+                badgeEl.style.height = '32px';
+                iconEl.className = 'bi bi-circle';
+            }
+        }
+
+        function updateAIProgress(currentStep, detail) {
+            const order = ['fetch', 'init', 'generate', 'validate'];
+            let mappedKey = currentStep;
+            if (currentStep === 'fetch_repo') mappedKey = 'fetch';
+            if (currentStep === 'init_llm') mappedKey = 'init';
+
+            let foundCurrent = false;
+            for (const k of order) {
+                if (k === mappedKey) {
+                    setStepState(k, 'active', detail);
+                    foundCurrent = true;
+                } else if (!foundCurrent) {
+                    setStepState(k, 'done');
+                } else {
+                    setStepState(k, 'pending');
+                }
+            }
+        }
+
+        function resetAIProgress() {
+            setStepState('fetch', 'active', 'Retrieving README and Compose files...');
+            setStepState('init', 'pending', 'Waiting to initialize LLM engine...');
+            setStepState('generate', 'pending', 'Drafting Docker Compose template & variables...');
+            setStepState('validate', 'pending', 'Verifying persistent volume paths, permissions & ports...');
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
             const repoUrl = repoUrlInput.value.trim();
+            const componentId = componentIdInput ? componentIdInput.value.trim() : '';
             const instructions = instructionsInput.value.trim();
             const apiKey = apiKeyInput.value.trim();
             const saveKeyCheckbox = document.getElementById('ai-save-key');
             const saveKey = saveKeyCheckbox ? saveKeyCheckbox.checked : false;
 
             const provider = providerSelect.value;
-            const baseUrl = baseUrlInput.value.trim();
+            const pInfo = aiProvidersRegistry[provider] || {};
+            const baseUrl = pInfo.allow_custom_base_url ? baseUrlInput.value.trim() : '';
             let modelOverride = modelSelect.value;
             if (provider === 'custom' || modelSelect.value === 'custom') {
                 modelOverride = modelCustomInput.value.trim();
             }
 
+            resetAIProgress();
             inputStep.classList.add('d-none');
             loadingStep.classList.remove('d-none');
             const warningsContainer = document.getElementById('ai-warnings-container');
             if (warningsContainer) warningsContainer.classList.add('d-none');
+
+            let errorTitle = 'AI Generation Failed';
+            let errorMsg = 'Failed to communicate with AI API.';
 
             try {
                 const response = await fetch('/api/ai/generate', {
@@ -25549,19 +25973,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         repo_url: repoUrl,
+                        component_id: componentId,
                         custom_instructions: instructions,
                         api_key: apiKey,
                         save_key: saveKey,
                         provider: provider,
                         base_url: baseUrl,
-                        model: modelOverride
+                        model: modelOverride,
+                        stream: true
                     })
                 });
 
                 if (!response.ok) {
-                    let errorTitle = 'AI Generation Failed';
-                    let errorMsg = `Request failed with status ${response.status}`;
-
+                    errorMsg = `Request failed with status ${response.status}`;
                     try {
                         const errorData = await response.json();
                         if (errorData.error) {
@@ -25571,47 +25995,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (e) {
                         // ignore non-json errors
                     }
-
-                    loadingStep.classList.add('d-none');
-                    const errorStep = document.getElementById('ai-error-step');
-                    const errorTitleEl = document.getElementById('ai-error-title');
-                    const errorMsgEl = document.getElementById('ai-error-msg');
-
-                    if (errorStep && errorTitleEl && errorMsgEl) {
-                        errorTitleEl.textContent = errorTitle;
-                        errorMsgEl.textContent = errorMsg;
-
-                        const retryBtn = document.getElementById('ai-error-retry-btn');
-                        const cancelBtn = document.getElementById('ai-error-cancel-btn');
-
-                        const newRetryBtn = retryBtn.cloneNode(true);
-                        retryBtn.parentNode.replaceChild(newRetryBtn, retryBtn);
-
-                        const newCancelBtn = cancelBtn.cloneNode(true);
-                        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
-
-                        newRetryBtn.addEventListener('click', () => {
-                            errorStep.classList.add('d-none');
-                            form.requestSubmit();
-                        });
-
-                        newCancelBtn.addEventListener('click', () => {
-                            errorStep.classList.add('d-none');
-                            inputStep.classList.remove('d-none');
-                        });
-
-                        errorStep.classList.remove('d-none');
-                    } else {
-                        showAlert(`${errorTitle}: ${errorMsg}`, 'danger');
-                        inputStep.classList.remove('d-none');
-                    }
-                    return;
+                    throw new Error(errorMsg);
                 }
 
-                const result = await response.json();
-                generatedData = result.data;
+                // Process Server-Sent Events stream
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let resultPayload = null;
 
-                // Inject the selected package ID into the generated metadata
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop(); // keep trailing partial line
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('data:')) {
+                            const jsonStr = trimmed.slice(5).trim();
+                            if (!jsonStr) continue;
+                            try {
+                                const evt = JSON.parse(jsonStr);
+                                if (evt.type === 'progress') {
+                                    updateAIProgress(evt.step, evt.detail);
+                                } else if (evt.type === 'result') {
+                                    resultPayload = evt;
+                                } else if (evt.type === 'error') {
+                                    errorMsg = evt.error || 'AI generation failed';
+                                    throw new Error(errorMsg);
+                                }
+                            } catch (pErr) {
+                                if (pErr.message && pErr.message === errorMsg) {
+                                    throw pErr;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!resultPayload || !resultPayload.data) {
+                    throw new Error(errorMsg || 'No component data received from AI generator.');
+                }
+
+                ['fetch', 'init', 'generate', 'validate'].forEach(k => setStepState(k, 'done'));
+                generatedData = resultPayload.data;
+
                 // Inject the selected package ID into the generated metadata
                 if (generatedData && packageSelect) {
                     if (!generatedData.metadata) {
@@ -25628,22 +26059,62 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (formText) {
                         formText.textContent = 'The configured GEMINI_API_KEY from the .env file will be used if this is left blank.';
                     }
-                    if (result.key_saved) {
-                        showAlert('Gemini API key successfully saved to .env file.', 'success');
+                    if (resultPayload.key_saved) {
+                        showAlert('API key successfully saved to .env file.', 'success');
                     }
                 }
 
                 // Populate preview UI
                 const meta = (generatedData && generatedData.metadata) || generatedData || {};
-                previewName.value = meta.name || '';
-                previewGroup.value = meta.group || '';
+                if (previewId) {
+                    previewId.value = generatedData.id || '';
+                }
+
+                const duplicateBadge = document.getElementById('ai-duplicate-badge');
+                const suggestedIdBtn = document.getElementById('ai-use-suggested-id-btn');
+                const suggestedIdLabel = document.getElementById('ai-suggested-id-label');
+
+                if (generatedData && generatedData.is_duplicate && generatedData.suggested_id) {
+                    if (duplicateBadge) duplicateBadge.classList.remove('d-none');
+                    if (suggestedIdBtn && suggestedIdLabel) {
+                        suggestedIdLabel.textContent = generatedData.suggested_id;
+                        suggestedIdBtn.classList.remove('d-none');
+                        suggestedIdBtn.onclick = () => {
+                            if (previewId) previewId.value = generatedData.suggested_id;
+                            generatedData.id = generatedData.suggested_id;
+                            suggestedIdBtn.classList.add('d-none');
+                            if (duplicateBadge) duplicateBadge.classList.add('d-none');
+                            showAlert(`Component ID updated to '${generatedData.suggested_id}'.`, 'info');
+                        };
+                    }
+                } else {
+                    if (duplicateBadge) duplicateBadge.classList.add('d-none');
+                    if (suggestedIdBtn) suggestedIdBtn.classList.add('d-none');
+                }
+                if (previewName) {
+                    previewName.value = meta.name || '';
+                }
+                if (previewGroup) {
+                    previewGroup.value = meta.group || '';
+                }
                 if (previewPackage) {
                     previewPackage.value = meta.package_id || 'None (General)';
                 }
-                previewDesc.value = meta.description || '';
-                previewImage.value = meta.image_name || '';
-                previewConflicts.value = (meta.conflicts_with || []).join(', ');
-                previewCompose.value = generatedData.docker_compose || '';
+                if (previewDesc) {
+                    previewDesc.value = meta.description || '';
+                }
+                if (previewImage) {
+                    previewImage.value = meta.image_name || '';
+                }
+                if (previewConflicts) {
+                    previewConflicts.value = (meta.conflicts_with || []).join(', ');
+                }
+                if (previewCompose) {
+                    previewCompose.value = generatedData.docker_compose || '';
+                }
+                if (previewOverwrite) {
+                    previewOverwrite.checked = false;
+                }
 
                 // Render security/validation warnings
                 const warningsContainer = document.getElementById('ai-warnings-container');
@@ -25701,9 +26172,39 @@ document.addEventListener('DOMContentLoaded', () => {
                 previewStep.classList.remove('d-none');
 
             } catch (err) {
-                showAlert(`AI Generation failed: ${err.message}`, 'danger');
                 loadingStep.classList.add('d-none');
-                inputStep.classList.remove('d-none');
+                const errorStep = document.getElementById('ai-error-step');
+                const errorTitleEl = document.getElementById('ai-error-title');
+                const errorMsgEl = document.getElementById('ai-error-msg');
+
+                if (errorStep && errorTitleEl && errorMsgEl) {
+                    errorTitleEl.textContent = errorTitle || 'AI Generation Failed';
+                    errorMsgEl.textContent = err.message || errorMsg;
+
+                    const retryBtn = document.getElementById('ai-error-retry-btn');
+                    const cancelBtn = document.getElementById('ai-error-cancel-btn');
+
+                    const newRetryBtn = retryBtn.cloneNode(true);
+                    retryBtn.parentNode.replaceChild(newRetryBtn, retryBtn);
+
+                    const newCancelBtn = cancelBtn.cloneNode(true);
+                    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+                    newRetryBtn.addEventListener('click', () => {
+                        errorStep.classList.add('d-none');
+                        form.requestSubmit();
+                    });
+
+                    newCancelBtn.addEventListener('click', () => {
+                        errorStep.classList.add('d-none');
+                        inputStep.classList.remove('d-none');
+                    });
+
+                    errorStep.classList.remove('d-none');
+                } else {
+                    showAlert(`AI Generation failed: ${err.message}`, 'danger');
+                    inputStep.classList.remove('d-none');
+                }
             }
         });
 
@@ -25723,13 +26224,20 @@ document.addEventListener('DOMContentLoaded', () => {
         saveBtn.addEventListener('click', async () => {
             if (!generatedData) return;
             try {
+                const finalId = (previewId ? previewId.value.trim().toLowerCase() : '') || generatedData.id;
+                if (!finalId) {
+                    showAlert('A valid Component ID is required.', 'danger');
+                    return;
+                }
+                generatedData.id = finalId;
+
                 // Ensure a clean metadata structure exists before saving
                 if (!generatedData.metadata || Object.keys(generatedData.metadata).length === 0) {
                     generatedData.metadata = {
-                        name: generatedData.name || '',
-                        description: generatedData.description || '',
-                        group: generatedData.group || '',
-                        image_name: generatedData.image_name || '',
+                        name: (previewName ? previewName.value.trim() : '') || generatedData.name || '',
+                        description: (previewDesc ? previewDesc.value.trim() : '') || generatedData.description || '',
+                        group: (previewGroup ? previewGroup.value.trim() : '') || generatedData.group || '',
+                        image_name: (previewImage ? previewImage.value.trim() : '') || generatedData.image_name || '',
                         package_id: generatedData.package_id || null,
                         tags: generatedData.tags || [],
                         resource_profile: generatedData.resource_profile || {},
@@ -25741,15 +26249,68 @@ document.addEventListener('DOMContentLoaded', () => {
                         ui_port_variable: generatedData.ui_port_variable || null,
                         traefik_internal_port: generatedData.traefik_internal_port || null
                     };
+                } else {
+                    if (previewName && previewName.value.trim()) {
+                        generatedData.metadata.name = previewName.value.trim();
+                    }
+                    if (previewGroup && previewGroup.value.trim()) {
+                        generatedData.metadata.group = previewGroup.value.trim();
+                    }
+                    if (previewDesc) {
+                        generatedData.metadata.description = previewDesc.value.trim();
+                    }
+                    if (previewImage && previewImage.value.trim()) {
+                        generatedData.metadata.image_name = previewImage.value.trim();
+                    }
                 }
 
-                await fetchJson('/api/components/ai', {
+                const overwrite = previewOverwrite ? previewOverwrite.checked : false;
+                generatedData.overwrite = overwrite;
+
+                const response = await fetch('/api/components/ai', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(generatedData)
                 });
 
-                showAlert(`Component '${generatedData.metadata.name}' created successfully!`, 'success');
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    if (response.status === 409 && errData.code === 'component_exists') {
+                        const suggested = errData.suggested_id || `${finalId}-1`;
+                        const confirmChoice = confirm(
+                            `Component '${finalId}' already exists in your library.\n\n` +
+                            `• Click [OK] to save as suggested unique ID: '${suggested}'\n` +
+                            `• Click [Cancel] if you want to overwrite '${finalId}' instead.`
+                        );
+                        if (confirmChoice) {
+                            if (previewId) previewId.value = suggested;
+                            generatedData.id = suggested;
+                            generatedData.overwrite = false;
+                            await fetchJson('/api/components/ai', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(generatedData)
+                            });
+                        } else {
+                            const confirmOverwrite = confirm(`Are you sure you want to OVERWRITE the existing component '${finalId}'?`);
+                            if (confirmOverwrite) {
+                                if (previewOverwrite) previewOverwrite.checked = true;
+                                generatedData.overwrite = true;
+                                await fetchJson('/api/components/ai', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify(generatedData)
+                                });
+                            } else {
+                                return;
+                            }
+                        }
+                    } else {
+                        throw new Error(errData.error || `HTTP error ${response.status}`);
+                    }
+                }
+
+                showAlert(`Component '${generatedData.metadata.name}' saved successfully!`, 'success');
                 modal.hide();
                 await loadComponents();
                 await loadComponentDetails(generatedData.id, false);
@@ -28212,6 +28773,9 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/solarized.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/merge/merge.min.css">
     <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .spin { display: inline-block; animation: spin 1s linear infinite; }
+        .extra-small { font-size: 0.75rem; }
         body, html { height: 100%; overflow: hidden; }
         .main-container { display: flex; height: 100vh; padding-top: 56px; }
         .sidebar {
@@ -28960,6 +29524,11 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <div class="form-text">The official or community Git repository URL (GitHub, GitLab, Gitea, Codeberg, etc.) of the application.</div>
                         </div>
                         <div class="mb-3">
+                            <label for="ai-component-id" class="form-label">Component ID (Optional)</label>
+                            <input type="text" class="form-control" id="ai-component-id" autocomplete="off" placeholder="e.g., technitium-dns (defaults to repository name)">
+                            <div class="form-text">Optional custom identifier. Use lowercase letters, numbers, and hyphens.</div>
+                        </div>
+                        <div class="mb-3">
                             <label for="ai-instructions" class="form-label">Custom Instructions (Optional)</label>
                             <textarea class="form-control" id="ai-instructions" rows="3" placeholder="e.g., expose HTTP port 8080 instead of 80, add custom configuration file..."></textarea>
                         </div>
@@ -29016,8 +29585,8 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
 
                         <div class="form-check mb-3" id="ai-save-key-group">
                             <input class="form-check-input" type="checkbox" id="ai-save-key">
-                            <label class="form-check-label text-secondary small" for="ai-save-key">
-                                Save API key to local .env file
+                            <label class="form-check-label text-secondary small" for="ai-save-key" id="ai-save-key-label">
+                                Save configuration (API key / Base URL) to local .env file
                             </label>
                         </div>
                         <div class="modal-footer px-0 pb-0">
@@ -29027,13 +29596,63 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                     </form>
                 </div>
 
-                <!-- Step 2: Loading State -->
-                <div id="ai-loading-step" class="d-none text-center py-5">
-                    <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Step 2: Loading State with Live Multi-Step Progress -->
+                <div id="ai-loading-step" class="d-none py-4 px-2">
+                    <div class="text-center mb-4">
+                        <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <h5 class="fw-bold mb-1" id="ai-loading-title">Generating Component</h5>
+                        <p class="text-muted small mb-0" id="ai-loading-desc">Please wait while the AI analyzes the repository and crafts the configuration.</p>
                     </div>
-                    <h5 class="text-dark">Generating Component...</h5>
-                    <p class="text-muted">Analyzing Git repository and generating configuration files. This may take up to a minute.</p>
+
+                    <!-- Step-by-Step Progress Card -->
+                    <div class="card border-0 bg-light shadow-sm mx-auto" style="max-width: 520px; border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <div class="d-flex flex-column gap-3" id="ai-progress-stepper">
+                                <!-- Step 1: Fetch Repo -->
+                                <div class="d-flex align-items-start gap-3" id="ai-pstep-fetch">
+                                    <div class="badge rounded-circle p-2 bg-primary d-flex align-items-center justify-content-center" id="ai-pstep-fetch-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-arrow-repeat spin" id="ai-pstep-fetch-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-fetch-title">1. Fetching Repository Documentation</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-fetch-desc">Retrieving README and Compose files...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 2: Connect LLM -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-init">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-init-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-init-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-init-title">2. Connecting to AI Model</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-init-desc">Initializing LLM engine and prompt...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 3: Generating Compose & Variables -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-generate">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-generate-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-generate-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-generate-title">3. Drafting Component Architecture</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-generate-desc">Generating Docker Compose template & variables...</div>
+                                    </div>
+                                </div>
+                                <!-- Step 4: Validating Security & Volumes -->
+                                <div class="d-flex align-items-start gap-3 opacity-50" id="ai-pstep-validate">
+                                    <div class="badge rounded-circle p-2 bg-secondary d-flex align-items-center justify-content-center" id="ai-pstep-validate-badge" style="width: 32px; height: 32px;">
+                                        <i class="bi bi-circle" id="ai-pstep-validate-icon"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="fw-bold small text-dark" id="ai-pstep-validate-title">4. Validating Security & Volumes</div>
+                                        <div class="text-muted extra-small" id="ai-pstep-validate-desc">Verifying persistent volume paths, permissions & port schemas...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Step 2.5: Error State -->
@@ -29081,28 +29700,44 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                         <div class="tab-pane fade show active" id="ai-tab-meta" role="tabpanel">
                             <div class="row g-3">
                                 <div class="col-md-6">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label fw-bold mb-0" for="ai-preview-id">Component ID</label>
+                                        <span class="badge bg-warning text-dark d-none" id="ai-duplicate-badge">
+                                            <i class="bi bi-exclamation-circle me-1"></i>Already Exists
+                                        </span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="ai-preview-id" required>
+                                        <button class="btn btn-outline-primary d-none" type="button" id="ai-use-suggested-id-btn" title="Click to use auto-suggested unique ID">
+                                            <i class="bi bi-magic me-1"></i>Use <span id="ai-suggested-id-label"></span>
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Unique lowercase identifier (e.g., technitium-dns).</div>
+                                </div>
+                                <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-name">Name</label>
-                                    <input type="text" class="form-control" id="ai-preview-name" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-name" required>
+                                    <div class="form-text">Human-readable service title.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-group">Group</label>
-                                    <input type="text" class="form-control" id="ai-preview-group" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-group">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-package">Package</label>
-                                    <input type="text" class="form-control" id="ai-preview-package" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-package">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold" for="ai-preview-desc">Description</label>
-                                    <textarea class="form-control" id="ai-preview-desc" rows="2" readonly></textarea>
+                                    <textarea class="form-control" id="ai-preview-desc" rows="2"></textarea>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-image">Docker Image</label>
-                                    <input type="text" class="form-control" id="ai-preview-image" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-image">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold" for="ai-preview-conflicts">Conflicts With</label>
-                                    <input type="text" class="form-control" id="ai-preview-conflicts" readonly>
+                                    <input type="text" class="form-control" id="ai-preview-conflicts">
                                 </div>
                             </div>
                         </div>
@@ -29135,9 +29770,17 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
                             <textarea class="form-control font-monospace" id="ai-preview-config-content" rows="10" readonly style="font-size: 0.85rem; background-color: #f8f9fa;" aria-label="Configuration file content"></textarea>
                         </div>
                     </div>
-                    <div class="modal-footer px-0 pb-0 mt-3">
-                        <button type="button" class="btn btn-secondary" id="ai-back-btn">Back</button>
-                        <button type="button" class="btn btn-success" id="ai-save-btn">Accept and Create</button>
+                    <div class="modal-footer px-0 pb-0 mt-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="ai-preview-overwrite">
+                            <label class="form-check-label text-muted small" for="ai-preview-overwrite">
+                                Overwrite if component already exists
+                            </label>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-secondary" id="ai-back-btn">Back</button>
+                            <button type="button" class="btn btn-success" id="ai-save-btn">Accept and Save</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -31785,7 +32428,7 @@ class DeploymentManager:
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
-                    "ansible_remote_tmp": "/tmp/.ansible",  # nosec B108
+                    "ansible_remote_tmp": "~/.ansible/tmp",
                     "local_output_path": output_path,
                     "components_to_clean": mapped_clean,
                     "components_to_restart": mapped_restart,
@@ -34745,11 +35388,46 @@ import json
 import logging
 import re
 import urllib.parse
-from typing import Optional
+from typing import Callable, Optional, Union
 
 import requests
 
 logger = logging.getLogger(__name__)
+
+
+def suggest_unique_component_id(
+    base_id: str, existing_ids: Optional[Union[set[str], list[str]]] = None
+) -> str:
+    """Generates a non-conflicting unique component ID.
+
+    If base_id already exists in existing_ids, increments suffix (-1, -2, ...)
+    until a free identifier is found.
+    """
+    clean_id = re.sub(r"[^a-z0-9-]", "-", (base_id or "").lower()).strip("-")
+    if not clean_id:
+        clean_id = "custom-component"
+
+    if not existing_ids:
+        return clean_id
+
+    existing_set = {str(eid).strip().lower() for eid in existing_ids}
+    if clean_id not in existing_set:
+        return clean_id
+
+    match = re.match(r"^(.*?)-(\d+)$", clean_id)
+    if match:
+        prefix, num_str = match.groups()
+        counter = int(num_str) + 1
+    else:
+        prefix = clean_id
+        counter = 1
+
+    candidate = f"{prefix}-{counter}"
+    while candidate in existing_set:
+        counter += 1
+        candidate = f"{prefix}-{counter}"
+
+    return candidate
 
 
 class AIGenerator:
@@ -34772,6 +35450,9 @@ class AIGenerator:
         repo_url: str,
         custom_instructions: Optional[str] = None,
         existing_groups: Optional[list[str]] = None,
+        custom_component_id: Optional[str] = None,
+        progress_callback: Optional[Callable[[str, str], None]] = None,
+        existing_component_ids: Optional[list[str]] = None,
     ) -> dict:
         """Analyzes a Git repository and returns structured component configuration.
 
@@ -34800,9 +35481,20 @@ class AIGenerator:
         repo_name = path_parts[-1]
         owner = path_parts[0] if len(path_parts) > 1 else ""
         repo_path = "/".join(path_parts)
-        component_id = repo_name.lower()
+        repo_display = f"{owner}/{repo_name}" if owner else repo_name
+        raw_repo_id = re.sub(r"[^a-z0-9-]", "-", repo_name.lower()).strip("-")
+        default_component_id = (
+            re.sub(r"[^a-z0-9-]", "-", custom_component_id.strip().lower()).strip("-")
+            if custom_component_id and custom_component_id.strip()
+            else raw_repo_id
+        )
 
         # Fetch README and compose files from the repository
+        if progress_callback:
+            progress_callback(
+                "fetch_repo",
+                f"Fetching documentation and compose files from {repo_display}...",
+            )
         readme_content = self._fetch_repo_file(
             parsed_url.netloc, repo_path, ["README.md", "readme.md", "README"]
         )
@@ -34866,6 +35558,14 @@ class AIGenerator:
         # Initialize the AIGeneratorEngine
         from utils.ai_generator_engine import AIGeneratorEngine
 
+        prov_label = (self.provider or "AI").upper()
+        model_label = f" ({self.model})" if self.model else ""
+        if progress_callback:
+            progress_callback(
+                "init_llm",
+                f"Connecting to {prov_label}{model_label}...",
+            )
+
         engine = AIGeneratorEngine(
             provider=self.provider,
             api_key=self.api_key,
@@ -34880,6 +35580,20 @@ class AIGenerator:
 
         while True:
             try:
+                if progress_callback:
+                    if attempt == 0:
+                        progress_callback(
+                            "generate",
+                            "Analyzing repository structure and drafting "
+                            "configuration...",
+                        )
+                    else:
+                        progress_callback(
+                            "generate",
+                            f"Applying corrections and regenerating "
+                            f"(attempt {attempt + 1})...",
+                        )
+
                 # Request structured JSON format
                 text = engine.generate(
                     prompt=messages,
@@ -34905,7 +35619,17 @@ class AIGenerator:
                     configs_dict = raw_configs
                 data["config_templates"] = configs_dict
 
-                data["id"] = component_id
+                model_id = data.get("id")
+                if custom_component_id and custom_component_id.strip():
+                    data["id"] = default_component_id
+                elif (
+                    model_id
+                    and isinstance(model_id, str)
+                    and re.match(r"^[a-z0-9-]+$", model_id.strip().lower())
+                ):
+                    data["id"] = model_id.strip().lower()
+                else:
+                    data["id"] = default_component_id
 
                 metadata = data.setdefault("metadata", {})
                 if custom_instructions:
@@ -34914,6 +35638,12 @@ class AIGenerator:
                     metadata["has_configuration"] = True
 
                 # Run security and validation checks
+                if progress_callback:
+                    progress_callback(
+                        "validate",
+                        "Validating security constraints, volumes, "
+                        "and variable schemas...",
+                    )
                 warnings = self._run_security_checks(data)
 
                 # Filter to only fixable structure/variable/syntax warnings
@@ -34924,9 +35654,21 @@ class AIGenerator:
                 # If no fixable warnings, or we reached max correction attempts
                 if not fixable_warnings or attempt >= max_attempts:
                     data["security_warnings"] = warnings
+                    if existing_component_ids:
+                        cid = data.get("id", "")
+                        data["is_duplicate"] = cid in set(existing_component_ids)
+                        data["suggested_id"] = suggest_unique_component_id(
+                            cid, existing_component_ids
+                        )
                     return data
 
                 attempt += 1
+                if progress_callback:
+                    progress_callback(
+                        "validate",
+                        f"Found {len(fixable_warnings)} issue(s). Applying "
+                        f"self-correction (round {attempt}/{max_attempts})...",
+                    )
                 logger.info(
                     f"AI validation failed with warnings: {fixable_warnings}. "
                     f"Attempting self-correction (attempt "
@@ -34959,6 +35701,10 @@ class AIGenerator:
                     "Compose YAML template (such as nested double quotes, "
                     "mismatched quotes, or bad indentation), correct the "
                     "formatting to ensure it is valid, parseable YAML.\n"
+                    "5. If a service mounts persistent host volumes or manages "
+                    "system/network daemons (e.g. DNS, database, monitoring), "
+                    'ensure `user: "0:0"` is explicitly set at the service '
+                    "level to prevent Linux file permission errors.\n"
                     "Return the complete corrected JSON configuration "
                     "according to the original schema."
                 )
@@ -35017,6 +35763,31 @@ class AIGenerator:
                         raise RuntimeError(
                             f"Could not connect to AI API endpoint{url_str}. "
                             "Please check your internet connection and API base URL."
+                        ) from e
+                elif (
+                    "timeout" in err_msg
+                    or "timed out" in err_msg
+                    or "apitimeouterror" in err_msg
+                ):
+                    provider_name = self.provider or "ollama"
+                    base_str = str(self.base_url or "")
+                    if (
+                        provider_name == "ollama"
+                        or "localhost" in base_str
+                        or "192.168." in base_str
+                        or "10." in base_str
+                    ):
+                        raise RuntimeError(
+                            "The local AI model took longer than expected to "
+                            "respond (Request timed out). If the model was cold "
+                            "starting or is large (e.g. 14B), it may still be "
+                            "loading into GPU/VRAM. Please try again in a moment, "
+                            "or increase AI_LOCALHOST_TIMEOUT in .env."
+                        ) from e
+                    else:
+                        raise RuntimeError(
+                            "The AI API request timed out. Please check your "
+                            "network connection and try again."
                         ) from e
                 elif isinstance(e, (json.JSONDecodeError, KeyError, ValueError)):
                     if attempt < max_attempts:
@@ -35237,13 +36008,18 @@ class AIGenerator:
                         # Check volume mounts
                         volumes = service_conf.get("volumes", [])
                         if isinstance(volumes, list):
+                            target_paths = []
                             for vol in volumes:
                                 host_path = ""
                                 if isinstance(vol, str):
                                     parts = vol.split(":")
                                     host_path = parts[0] if parts else ""
+                                    if len(parts) > 1:
+                                        target_paths.append(parts[1].strip())
                                 elif isinstance(vol, dict):
                                     host_path = vol.get("source", "")
+                                    if vol.get("target"):
+                                        target_paths.append(str(vol.get("target")))
 
                                 if host_path == "/var/run/docker.sock":
                                     warnings.append(
@@ -35265,6 +36041,33 @@ class AIGenerator:
                                         f"{host_path}"
                                     )
 
+                            if target_paths and all(
+                                "/log" in tp.lower() for tp in target_paths
+                            ):
+                                warnings.append(
+                                    f"Service '{service_name}' only mounts log "
+                                    f"directories ({', '.join(target_paths)}). "
+                                    "You MUST also mount persistent "
+                                    "configuration and data directories "
+                                    "(such as /etc/... or /config or /data) "
+                                    "using '{{ CONFIG_BASE_PATH }}/...'."
+                                )
+
+                        # Check ports for hardcoded mappings
+                        ports = service_conf.get("ports", [])
+                        if isinstance(ports, list):
+                            for port_entry in ports:
+                                if isinstance(port_entry, str) and ":" in port_entry:
+                                    host_p, *_ = port_entry.split(":")
+                                    host_p = host_p.strip()
+                                    if host_p.isdigit():
+                                        warnings.append(
+                                            f"Service '{service_name}' has hardcoded "
+                                            f"host port '{host_p}' in '{port_entry}'. "
+                                            "Exposed host ports must use configurable "
+                                            "Jinja variables (e.g. '{{ VAR_NAME }}')."
+                                        )
+
                         # Check cap_add
                         cap_adds = service_conf.get("cap_add", [])
                         if isinstance(cap_adds, list):
@@ -35274,6 +36077,34 @@ class AIGenerator:
                                         f"Service '{service_name}' requests "
                                         f"broad capability: {cap}"
                                     )
+
+                        # Check user: "0:0" for services requiring root permissions
+                        user_val = service_conf.get("user")
+                        service_lower = service_name.lower()
+                        image_lower = str(service_conf.get("image", "")).lower()
+                        needs_root = any(
+                            k in service_lower or k in image_lower
+                            for k in [
+                                "dns",
+                                "technitium",
+                                "adguard",
+                                "pihole",
+                                "grafana",
+                                "prometheus",
+                                "influxdb",
+                                "postgres",
+                                "postgresql",
+                                "node-red",
+                                "nodered",
+                            ]
+                        )
+                        if needs_root and str(user_val) != "0:0":
+                            warnings.append(
+                                f"Service '{service_name}' mounts persistent "
+                                "directories but is missing 'user: \"0:0\"'. "
+                                'Set `user: "0:0"` at the service level to '
+                                "prevent volume permission errors on Linux hosts."
+                            )
             except Exception as e:
                 warnings.append(
                     f"Failed to parse Docker Compose for security checks: {e}"
@@ -35644,9 +36475,9 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "name": "HostYourAI / Loes (EU)",
         "env_var": "HOSTYOURAI_API_KEY",
         "requires_api_key": True,
-        "default_base_url": "https://api.hostyourai.eu/v1",
+        "default_base_url": "https://hostyourai.com/api/v1",
         "allow_custom_base_url": True,
-        "default_model": "mistral-7b-instruct",
+        "default_model": "deepseek-ai/DeepSeek-V4-Flash",
         "models": [],
     },
     "openai": {
@@ -35694,14 +36525,28 @@ def _parse_float_or_none(val: Optional[str]) -> Optional[float]:
 def get_ai_timeout(provider: str, base_url: Optional[str] = None) -> float:
     """Calculates timeout in seconds based on provider locality and env vars.
 
-    - Local providers (Ollama, localhost / 127.0.0.1):
-      Reads AI_LOCALHOST_TIMEOUT (default 120.0s), with fallback to
+    - Local / private LAN providers (Ollama, localhost, 127.0.0.1, LAN IPs):
+      Reads AI_LOCALHOST_TIMEOUT (default 300.0s / 5 minutes), with fallback to
       AI_TIMEOUT / AI_TIME_OUT.
     - Cloud/remote providers (HostYourAI, OpenAI, Gemini, Anthropic, etc.):
-      Reads AI_TIMEOUT or AI_TIME_OUT (default 90.0s).
+      Reads AI_TIMEOUT or AI_TIME_OUT (default 120.0s).
     """
     url_str = (base_url or "").lower()
-    is_local = provider == "ollama" or "localhost" in url_str or "127.0.0.1" in url_str
+    is_local = (
+        provider == "ollama"
+        or "localhost" in url_str
+        or "127.0.0.1" in url_str
+        or "192.168." in url_str
+        or "10." in url_str
+        or "172.16." in url_str
+        or "172.17." in url_str
+        or "172.18." in url_str
+        or "172.19." in url_str
+        or "172.2" in url_str
+        or "172.30." in url_str
+        or "172.31." in url_str
+        or ".local" in url_str
+    )
 
     if is_local:
         timeout = _parse_float_or_none(os.getenv("AI_LOCALHOST_TIMEOUT"))
@@ -35713,7 +36558,7 @@ def get_ai_timeout(provider: str, base_url: Optional[str] = None) -> float:
         )
         if fallback is not None:
             return fallback
-        return 120.0
+        return 300.0
 
     # Remote / cloud provider
     remote_timeout = _parse_float_or_none(
@@ -35721,7 +36566,7 @@ def get_ai_timeout(provider: str, base_url: Optional[str] = None) -> float:
     )
     if remote_timeout is not None:
         return remote_timeout
-    return 90.0
+    return 120.0
 
 
 def get_providers_json_path() -> Path:
@@ -35736,15 +36581,35 @@ def load_ai_providers_registry() -> Dict[str, Any]:
     json_path = get_providers_json_path()
     if not json_path.exists():
         logger.warning(f"AI providers config file not found at {json_path}")
-        return DEFAULT_PROVIDERS_REGISTRY
+        providers = DEFAULT_PROVIDERS_REGISTRY
+    else:
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                providers = data.get("providers", DEFAULT_PROVIDERS_REGISTRY)
+        except Exception as e:
+            logger.error(f"Failed to load AI providers registry: {e}")
+            providers = DEFAULT_PROVIDERS_REGISTRY
 
-    try:
-        with open(json_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            return data.get("providers", DEFAULT_PROVIDERS_REGISTRY)
-    except Exception as e:
-        logger.error(f"Failed to load AI providers registry: {e}")
-        return DEFAULT_PROVIDERS_REGISTRY
+    # Inject configured environment base URLs and models if present
+    for p_key, p_def in providers.items():
+        if isinstance(p_def, dict):
+            if p_def.get("allow_custom_base_url"):
+                base_var = f"{p_key.upper()}_BASE_URL"
+                if p_key == "custom":
+                    base_var = "CUSTOM_AI_BASE_URL"
+                env_base = os.getenv(base_var)
+                if env_base:
+                    p_def["configured_base_url"] = env_base
+
+            model_var = f"{p_key.upper()}_MODEL"
+            if p_key == "custom":
+                model_var = "CUSTOM_AI_MODEL"
+            env_model = os.getenv(model_var)
+            if env_model:
+                p_def["configured_model"] = env_model
+
+    return providers
 
 
 def get_provider_resolved_config(
@@ -35774,8 +36639,13 @@ def get_provider_resolved_config(
         resolved_api_key = os.getenv(f"{provider.upper()}_API_KEY", "")
 
     # Determine Base URL
-    resolved_base_url = base_url
-    if not resolved_base_url:
+    resolved_base_url: Optional[str] = None
+    allow_custom_url = provider_def.get("allow_custom_base_url", False)
+    if allow_custom_url and base_url:
+        resolved_base_url = base_url
+    elif not allow_custom_url:
+        resolved_base_url = provider_def.get("default_base_url")
+    else:
         if env_var and f"{provider.upper()}_BASE_URL" in os.environ:
             resolved_base_url = os.getenv(f"{provider.upper()}_BASE_URL")
         elif provider == "ollama" and os.getenv("OLLAMA_BASE_URL"):
@@ -35786,7 +36656,7 @@ def get_provider_resolved_config(
             resolved_base_url = provider_def.get("default_base_url")
 
     # Determine Model
-    resolved_model = model
+    resolved_model: Optional[str] = model
     if not resolved_model:
         if provider == "ollama" and os.getenv("OLLAMA_MODEL"):
             resolved_model = os.getenv("OLLAMA_MODEL")
@@ -35804,45 +36674,75 @@ def get_provider_resolved_config(
     }
 
 
+def _set_env_key_value(lines: list[str], key: str, value: str) -> list[str]:
+    """Helper to update or append a key=value pair in .env file lines."""
+    written = False
+    new_lines = list(lines)
+    for i, line in enumerate(new_lines):
+        if line.strip().startswith(f"{key}="):
+            new_lines[i] = f"{key}={value}\n"
+            written = True
+            break
+    if not written:
+        if new_lines and not new_lines[-1].endswith("\n"):
+            new_lines.append("\n")
+        new_lines.append(f"{key}={value}\n")
+    return new_lines
+
+
 def save_api_key_to_env_file(
-    key: str, provider: str = "gemini", project_root: Optional[Path] = None
+    key: Optional[str] = None,
+    provider: str = "gemini",
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+    project_root: Optional[Path] = None,
 ) -> bool:
-    """Saves the API key to the local .env file using provider's env_var."""
+    """Saves API key, base URL, and/or model name to the local .env file."""
     registry = load_ai_providers_registry()
     provider_def = registry.get(provider, {})
     var_name = provider_def.get("env_var")
-
-    if not var_name:
-        logger.warning(f"No env_var defined for provider '{provider}'. Key not saved.")
-        return False
 
     if not project_root:
         project_root = Path(__file__).resolve().parent.parent.parent
 
     env_path = project_root / ".env"
-    lines = []
-    key_written = False
-
+    lines: list[str] = []
     if env_path.exists():
-        with open(env_path, "r") as f:
+        with open(env_path, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
-        for i, line in enumerate(lines):
-            if line.strip().startswith(f"{var_name}="):
-                lines[i] = f"{var_name}={key}\n"
-                key_written = True
-                break
+    saved_something = False
 
-    if not key_written:
-        if lines and not lines[-1].endswith("\n"):
-            lines.append("\n")
-        lines.append(f"{var_name}={key}\n")
+    # Save API key if provided and provider has env_var
+    if key and var_name:
+        lines = _set_env_key_value(lines, var_name, key)
+        os.environ[var_name] = key
+        saved_something = True
 
-    with open(env_path, "w") as f:
-        f.writelines(lines)
+    # Save base_url if provided and provider allows custom base URL
+    if base_url and provider_def.get("allow_custom_base_url"):
+        base_var = f"{provider.upper()}_BASE_URL"
+        if provider == "custom":
+            base_var = "CUSTOM_AI_BASE_URL"
+        lines = _set_env_key_value(lines, base_var, base_url)
+        os.environ[base_var] = base_url
+        saved_something = True
 
-    os.environ[var_name] = key
-    return True
+    # Save model if provided
+    if model:
+        model_var = f"{provider.upper()}_MODEL"
+        if provider == "custom":
+            model_var = "CUSTOM_AI_MODEL"
+        lines = _set_env_key_value(lines, model_var, model)
+        os.environ[model_var] = model
+        saved_something = True
+
+    if saved_something:
+        with open(env_path, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+        return True
+
+    return False
 
 --- FILE: src/utils/auth_utils.py ---
 # src/utils/auth_utils.py
@@ -37016,6 +37916,33 @@ def seed_user_components_if_needed() -> dict[str, str]:
         has_templates = user_templates.exists() and any(user_templates.iterdir())
     except Exception:
         has_templates = False
+
+    # In development mode, auto-sync repository changes to user data dir
+    if not getattr(sys, "frozen", False) and "pytest" not in sys.modules:
+        fallback_meta = resource_path("config/components_metadata.json")
+        fallback_temp = resource_path("component_templates")
+        if fallback_meta.exists():
+            try:
+                user_components_dir.mkdir(parents=True, exist_ok=True)
+                if (
+                    not user_metadata.exists()
+                    or fallback_meta.stat().st_mtime > user_metadata.stat().st_mtime
+                ):
+                    shutil.copy2(fallback_meta, user_metadata)
+                if fallback_temp.exists():
+                    user_templates.mkdir(parents=True, exist_ok=True)
+                    for item in fallback_temp.iterdir():
+                        dest_item = user_templates / item.name
+                        if item.is_dir():
+                            if not dest_item.exists():
+                                shutil.copytree(item, dest_item)
+                            elif item.stat().st_mtime > dest_item.stat().st_mtime:
+                                shutil.rmtree(dest_item)
+                                shutil.copytree(item, dest_item)
+                        elif item.is_file():
+                            shutil.copy2(item, dest_item)
+            except Exception as ex:
+                logger.debug(f"Dev auto-sync to user_components_dir: {ex}")
 
     if user_metadata.exists() and has_templates:
         _LAST_SEED_STATUS = {
