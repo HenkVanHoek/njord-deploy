@@ -304,6 +304,9 @@ def create_app(test_config=None):
 
         docs = {}
         for doc_name, filename in [
+            ("Beginner's Quick Start", "docs/GETTING_STARTED_FOR_BEGINNERS.md"),
+            ("Configurator Feature Tour", "docs/CONFIGURATOR_FEATURE_GUIDE.md"),
+            ("Editor Feature Tour", "docs/EDITOR_FEATURE_GUIDE.md"),
             ("Introduction", "README.md"),
             ("REST API Reference", "docs/API_REFERENCE.md"),
             ("User & Network Guide", "docs/USER_GUIDE.md"),

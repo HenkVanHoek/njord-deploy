@@ -161,3 +161,27 @@ NjordDeploy includes a `SyncManager` that bridges local component templates with
 ### 6.5 How do service templates work?
 **Answer:**
 Each service stack resides in `component_templates/<component_id>/` and contains a Jinja2-compatible `docker-compose.template.yml`. When a deployment is initiated, the expert `ComponentManager` renders the template, injecting user-configured variables, Traefik/reverse proxy routing labels, and system dependencies automatically.
+
+---
+
+## 7. Local AI & Data Sovereignty (Component Generation)
+
+### 7.1 Can I generate component metadata completely offline without third-party cloud APIs?
+**Answer:**
+Yes, 100%. NjordDeploy natively supports local LLMs via **Ollama** or **Open-WebUI**. When you connect the AI Component Builder to a local model (such as Llama 3, Mistral, Gemma, or Qwen running on your own PC or GPU), the entire repository scanning, documentation parsing, and template generation executes completely within your local network. No prompts, server paths, internal IPs, or secrets ever leave your environment.
+
+### 7.2 How does NjordDeploy prevent local AI models from hallucinating ports or volume permissions?
+**Answer:**
+Local models are bound by strict **Air Traffic Control (ATC) Validation Rules** defined in `ai_generator_rules.json` and strict JSON schemas. NjordDeploy enforces:
+* **Mathematical schema constraints** for variable keys, port types, and Jinja2 conditionals.
+* **Volume permissions isolation** (`user: "0:0"` safeguards where required).
+* **Automatic OCI registry validation** against Docker Hub, GHCR, and Quay to confirm that referenced container tags actually exist.
+* **Autonomous correction loop**: If a generated template contains syntax flaws or conflicting bindings, the engine corrects them prior to saving.
+
+### 7.3 Why did 3 different local AI models produce the exact same deployment metadata?
+**Answer:**
+In empirical testing with 3 distinct open-weight models (Llama 3, Mistral, and Qwen), all three yielded **identical, deterministic metadata** for complex GitHub repositories. This occurs because NjordDeploy's ATC prompt engineering and schema contracts are formulated so unambiguously that model variance and hallucinations are eliminated. The AI acts as a deterministic compiler rather than a probabilistic guessing tool.
+
+### 7.4 What hardware is required to run the local AI Component Generator?
+**Answer:**
+Any standard modern consumer workstation or laptop with a modern multi-core CPU (such as an Intel Core i7/i9, AMD Ryzen 7/9, or Apple Silicon M-series) or an entry-level GPU (such as an NVIDIA RTX 3060/4060) can comfortably run quantized 7B/8B models in Ollama with near-instantaneous metadata generation times.

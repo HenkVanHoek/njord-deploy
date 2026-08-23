@@ -38,6 +38,15 @@ The sync manager, defined in [sync_manager.py](file:///home/hvhoek/PycharmProjec
 
 The component editor includes an AI assistant that automatically bootstraps new components from any Git repository URL across all major hosting platforms and self-hosted instances.
 
+![NjordDeploy Editor AI Generator Demo](images/njorddeploy-editor-demo-loop.gif)
+
+### Key Capabilities at a Glance:
+* **1-Click Git Ingestion:** Paste any public Git URL (`GitHub`, `GitLab`, `Forgejo`, `Codeberg`).
+* **Name & ID Customization:** Automatically avoids naming collisions by allowing custom component IDs (e.g. `immich-custom`).
+* **European Sovereign AI:** Powered by **HostYourAI / Loes (EU)** for GDPR-compliant, privacy-first AI component generation, as well as Google Gemini, Ollama, and OpenAI.
+* **Live Stepper & Deep Context:** Multi-step pipeline fetches repository documentation, inspects Docker Compose files, drafts variables, and verifies non-root persistent volume paths.
+* **Full Editor Integration:** Instantly loads the synthesized component into the visual Editor for review and deployment.
+
 ### Supported Git Hosting Platforms & Repositories
 
 The generator supports direct URL ingestion from:

@@ -4,6 +4,15 @@
 
 Welcome to Njord-Deploy! This project provides a user-friendly system to deploy and manage a suite of self-hosted services on a Raspberry Pi (or any Linux-based system) using Docker. Our goal is to make self-hosting powerful, accessible, and easy to maintain.
 
+<div align="center">
+  <a href="docs/GETTING_STARTED_FOR_BEGINNERS.md">
+    <img src="docs/images/njorddeploy-demo-loop.gif" alt="NjordDeploy 5-Step Workflow Demo" width="850" style="border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.15);" />
+  </a>
+  <p>
+    <strong>🐣 New to self-hosting?</strong> Check out our <strong><a href="docs/GETTING_STARTED_FOR_BEGINNERS.md">Beginner's Guide (Quick Start for Dummies)</a></strong> to get up and running in 5 minutes!
+  </p>
+</div>
+
 ## 🌟 Key Features
 
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
@@ -13,7 +22,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 - **Dual Container Engine Support (Docker & Rootless Podman)**: Universal container engine abstraction supporting both standard Docker and rootless Podman environments with automated low-port kernel configuration and user lingering.
 - **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
 - **Component Editor**: A powerful web-based developer tool for creating, testing, and managing all components in the NjordDeploy ecosystem.
-- **AI-Assisted Component Generator**: Bootstrap new services in seconds from any public Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, or self-hosted Git instances**) using multi-provider AI (local Ollama, Google Gemini, OpenAI, or HostYourAI) with automatic context enrichment, validation checks, and self-correction.
+- **AI-Assisted Component Generator**: Bootstrap new services in seconds from any public Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket, or self-hosted Git instances**) powered by **HostYourAI / Loes (EU Sovereign Cloud)**, local Ollama, Google Gemini, or OpenAI with automatic context enrichment, validation checks, and self-correction (see [Developer AI Guide & Demo](docs/DEVELOPER_AI_AND_SYNC_GUIDE.md#2-ai-assisted-component-generator-multi-provider--multi-forge-git-support)).
 - **Volume Backup & Disaster Recovery**: Point-in-time state backups for all managed persistent volumes and configurations with transactional pause, SHA-256 verification, single-click restoration, and target filesystem auto-detection.
 
 ## 🏛️ How It Works

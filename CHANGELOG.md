@@ -6,6 +6,21 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+### Added
+- **Automated Visual Demo Loops & Beginners' Quick Start Guide**:
+  - Implemented automated Playwright and Pillow generator script ([`scripts/generate_demo_loop.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/generate_demo_loop.py)) capturing all 5 steps of the guided deployment wizard into lightweight animated GIF (`njorddeploy-demo-loop.gif`, 422 KB) and WebP formats.
+  - Created didactically simplified beginner onboarding guide ([`docs/GETTING_STARTED_FOR_BEGINNERS.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/GETTING_STARTED_FOR_BEGINNERS.md)) featuring demo visuals, 3 essentials, and FAQ.
+  - Integrated demo banner and beginners' guide directly into [`README.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/README.md) and the configurator's `/help` documentation route.
+- **Component Editor AI Generator Demo Loop & Loes Promotion**:
+  - Built automated Playwright generator script ([`scripts/generate_editor_demo_loop.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/generate_editor_demo_loop.py)) demonstrating Git ingestion, custom component ID naming disambiguation, and automated multi-step verification featuring **HostYourAI / Loes (EU Sovereign Cloud)** and `immich-app/immich`.
+  - Added dedicated animated loop (`njorddeploy-editor-demo-loop.gif`, 572 KB) and visual walkthrough to [`docs/DEVELOPER_AI_AND_SYNC_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/DEVELOPER_AI_AND_SYNC_GUIDE.md).
+- **Comprehensive Visual Feature Guides & Slideshow Tours**:
+  - Implemented [`scripts/generate_editor_feature_slideshow.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/generate_editor_feature_slideshow.py) and [`scripts/generate_configurator_feature_slideshow.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/generate_configurator_feature_slideshow.py) generating continuous 8-slide animated feature tours.
+  - Created [`docs/EDITOR_FEATURE_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/EDITOR_FEATURE_GUIDE.md) and [`docs/CONFIGURATOR_FEATURE_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/CONFIGURATOR_FEATURE_GUIDE.md).
+  - Integrated both feature guides into the running application's `/help` navigation menu.
+- **Agentic Skills for Automated Asset Regeneration**:
+  - Added 4 dedicated skills in `.agents/skills/`: `configurator-demo-loop`, `editor-demo-loop`, `configurator-feature-slideshow`, and `editor-feature-slideshow`.
+
 ## [0.6.0] - 2026-08-21
 
 ### Added

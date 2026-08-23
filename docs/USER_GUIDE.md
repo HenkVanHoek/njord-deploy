@@ -2,6 +2,10 @@
 
 This guide provides instructions for discovering target machines, configuring network connections, and setting up SSH key authentication for self-hosting services with NjordDeploy.
 
+> [!TIP]
+> **Are you new to self-hosting or looking for a fast 5-minute overview?**
+> Check out the **[Beginner's Guide (Quick Start for Dummies)](GETTING_STARTED_FOR_BEGINNERS.md)** for a simple, visual step-by-step tutorial.
+
 ---
 
 ## 1. Network Discovery Methods
