@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8099",
+            "description": "Web UI port.",
+            "id": "FOCALBOARD_WEB_PORT",
+            "label": "Focalboard Web Port",
+            "type": "port"
+        }
+    ]
+}

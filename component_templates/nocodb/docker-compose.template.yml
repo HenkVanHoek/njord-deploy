@@ -1,0 +1,22 @@
+# status: "tested"
+# last_tested_version: "1.22.22"
+# platform_notes: "Tested on Proxmox LXC: docker (24.14.0, 2026-08-29), podman (1.22.22, 2026-08-29); Proxmox VM: docker (24.14.0, 2026-08-29), podman (24.14.0, 2026-08-29)."
+# breaking_changes: none
+services:
+  nocodb:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-nocodb
+    restart: unless-stopped
+    ports:
+      - "{{ NOCODB_WEB_PORT }}:8080"
+    environment:
+      - "NC_DB=sqlite3:////usr/app/data/noco.db"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/nocodb/data:/usr/app/data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

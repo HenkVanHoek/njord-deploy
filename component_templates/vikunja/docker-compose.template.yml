@@ -1,0 +1,27 @@
+# status: "tested"
+# last_tested_version: "2.5.0"
+# platform_notes: "Tested on Proxmox LXC: docker (2.5.0, 2026-08-29), podman (2.5.0, 2026-08-29); Proxmox VM: docker (2.5.0, 2026-08-29), podman (stable, 2026-08-29)."
+# breaking_changes: none
+services:
+  vikunja:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-vikunja
+    restart: unless-stopped
+    ports:
+      - "{{ VIKUNJA_WEB_PORT }}:3456"
+    environment:
+      - "VIKUNJA_DATABASE_TYPE=sqlite"
+      - "VIKUNJA_DATABASE_PATH=/app/vikunja/db/vikunja.db"
+      - "VIKUNJA_SERVICE_SECRET={{ VIKUNJA_JWT_SECRET }}"
+      - "VIKUNJA_SERVICE_JWTSECRET={{ VIKUNJA_JWT_SECRET }}"
+      - "VIKUNJA_SERVICE_PUBLICURL=http://{{ PISelfhosting_HOST_IP | default('localhost') }}:{{ VIKUNJA_WEB_PORT }}/"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/vikunja/files:/app/vikunja/files"
+      - "{{ CONFIG_BASE_PATH }}/vikunja/db:/app/vikunja/db"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "9283",
+            "description": "Web UI port.",
+            "id": "GROCY_WEB_PORT",
+            "label": "Grocy Web Port",
+            "type": "port"
+        }
+    ]
+}

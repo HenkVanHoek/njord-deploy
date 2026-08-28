@@ -82,7 +82,11 @@
             "syncthing",
             "changedetection",
             "shlink",
-            "gotify"
+            "gotify",
+            "vikunja",
+            "nocodb",
+            "grocy",
+            "focalboard"
         ],
         "default_group": "general",
         "global_variables": [
@@ -119,7 +123,8 @@
             "Management",
             "Storage",
             "Monitoring",
-            "News & Media"
+            "News & Media",
+            "Development"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -145,6 +150,10 @@
             "Developer": {
                 "is_exclusive": false,
                 "name": "Developer"
+            },
+            "Development": {
+                "is_exclusive": false,
+                "name": "Development"
             },
             "Home Automation": {
                 "is_exclusive": false,
@@ -613,6 +622,26 @@
             "test_status": "tested",
             "ui_port_variable": null
         },
+        "focalboard": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Open source, multilingual project management and personal task board alternative to Trello, Notion, and Asana.",
+            "docker_service_name": "focalboard",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "mattermost/focalboard",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:55:07.337933+00:00",
+            "last_updated": "2026-08-28T22:39:11.712991+00:00",
+            "name": "Focalboard",
+            "port": 8099,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "freshrss": {
             "category": "News & Media",
             "conflicts_with": [],
@@ -812,6 +841,26 @@
                     "type": "password"
                 }
             ]
+        },
+        "grocy": {
+            "category": "Utilities",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "ERP beyond your fridge - self-hosted grocery, household management and inventory solution.",
+            "docker_service_name": "grocy",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "lscr.io/linuxserver/grocy",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:55:46.579736+00:00",
+            "last_updated": "2026-08-28T22:39:11.677397+00:00",
+            "name": "Grocy",
+            "port": 9283,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "headscale": {
             "ai_instructions": "Self-hosted open source Tailscale control server. Image headscale/headscale:latest. Command: headscale serve. Web/API port HEADSCALE_WEB_PORT: 9080 (container port 8080). Config template config.yaml at /etc/headscale/config.yaml. Data volume /var/lib/headscale. user: \"0:0\". Group: Utilities.",
@@ -1554,6 +1603,26 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": "PISELFHOSTING_SERVICE_MAINTENANCE_WEB_PORT"
+        },
+        "nocodb": {
+            "category": "Development",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Open Source Airtable Alternative that turns any SQL database into a smart spreadsheet.",
+            "docker_service_name": "nocodb",
+            "group": "Development",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "nocodb/nocodb",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:56:33.244869+00:00",
+            "last_updated": "2026-08-28T22:39:11.651073+00:00",
+            "name": "NocoDB",
+            "port": 8098,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "notify-push": {
             "conflicts_with": [],
@@ -2496,7 +2565,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-28T22:38:11.807733+00:00",
+            "last_updated": "2026-08-28T22:58:05.084891+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -2684,6 +2753,26 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null
+        },
+        "vikunja": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "The to-do app to organize your life with Kanban boards, Gantt charts, lists and table views.",
+            "docker_service_name": "vikunja",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "vikunja/vikunja",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:57:06.313938+00:00",
+            "last_updated": "2026-08-28T22:39:11.603183+00:00",
+            "name": "Vikunja",
+            "port": 3456,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "voicebox": {
             "component_version": "latest",

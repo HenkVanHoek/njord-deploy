@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8098",
+            "description": "Web UI port.",
+            "id": "NOCODB_WEB_PORT",
+            "label": "NocoDB Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,23 @@
+# status: "tested"
+# last_tested_version: "v4.7.0-ls338"
+# platform_notes: "Tested on Proxmox LXC: docker (v4.7.0-ls338, 2026-08-29), podman (v4.7.0-ls338, 2026-08-29); Proxmox VM: docker (v4.7.0-ls338, 2026-08-29), podman (v4.7.0-ls338, 2026-08-29)."
+# breaking_changes: none
+services:
+  grocy:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-grocy
+    restart: unless-stopped
+    environment:
+      - "PUID=1000"
+      - "PGID=1000"
+      - "TZ=Europe/Amsterdam"
+    ports:
+      - "{{ GROCY_WEB_PORT }}:80"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/grocy/config:/config"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

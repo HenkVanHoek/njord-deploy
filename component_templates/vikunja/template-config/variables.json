@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "3456",
+            "description": "Web UI port.",
+            "id": "VIKUNJA_WEB_PORT",
+            "label": "Vikunja Web Port",
+            "type": "port"
+        },
+        {
+            "default": "vikunja_secret_jwt_token_12345",
+            "description": "Secret key for signing authentication tokens.",
+            "id": "VIKUNJA_JWT_SECRET",
+            "label": "Vikunja JWT Secret",
+            "type": "password"
+        }
+    ]
+}
