@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8095",
+            "description": "Web dashboard and hub port.",
+            "id": "BESZEL_WEB_PORT",
+            "label": "Beszel Web Port",
+            "type": "port"
+        }
+    ]
+}

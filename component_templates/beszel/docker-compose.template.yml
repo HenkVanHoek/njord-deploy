@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "0.18.8"
+# platform_notes: "Tested on Proxmox LXC: docker (0.18.8, 2026-08-28), podman (0.18.8, 2026-08-28); Proxmox VM: docker (0.18.8, 2026-08-28), podman (0.18.8, 2026-08-28)."
+# breaking_changes: none
+services:
+  beszel:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-beszel
+    restart: unless-stopped
+    ports:
+      - "{{ BESZEL_WEB_PORT }}:8090"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/beszel/data:/beszel_data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,31 @@
+# status: "tested"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-08-28), podman (stable, 2026-08-28); Proxmox VM: docker (stable, 2026-08-28), podman (stable, 2026-08-28)."
+# breaking_changes: none
+services:
+  gitea:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-gitea
+    restart: unless-stopped
+    environment:
+      - "USER_UID=1000"
+      - "USER_GID=1000"
+      - "GITEA__database__DB_TYPE=sqlite3"
+      - "GITEA__database__PATH=/data/gitea/gitea.db"
+      - "GITEA__server__DOMAIN={{ HOST_IP }}"
+      - "GITEA__server__SSH_PORT={{ GITEA_SSH_PORT }}"
+      - "GITEA__server__ROOT_URL=http://{{ HOST_IP }}:{{ GITEA_WEB_PORT }}/"
+      - "GITEA__server__HTTP_PORT=3000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/gitea/data:/data"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    ports:
+      - "{{ GITEA_WEB_PORT }}:3000"
+      - "{{ GITEA_SSH_PORT }}:22"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

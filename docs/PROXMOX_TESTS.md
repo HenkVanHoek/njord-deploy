@@ -1,20 +1,20 @@
-# Proxmox Automated Component Testing Report - navidrome,calibre-web,kavita,romm
+# Proxmox Automated Component Testing Report - gitea,dockge,minio,beszel
 
-**Run Timestamp:** 2026-08-28 23:20:36
+**Run Timestamp:** 2026-08-28 23:44:26
 **Execution Profile:** `MATRIX (2 envs)` | **Total Tested:** 8 | **Passed:** 8 | **Skipped:** 0 | **Failed:** 0
 
 ## Results Table
 
 | Date / Time | Component ID | Target | Engine | VM ID | IP Address | Deployment | Containers | HTTP | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-08-28 23:13:27 | `calibre-web` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:14:06 | `kavita` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:14:57 | `navidrome` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:15:30 | `romm` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
-| 2026-08-28 23:17:30 | `calibre-web` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:18:11 | `kavita` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:19:10 | `navidrome` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | OK | **✅ PASS** |
-| 2026-08-28 23:19:44 | `romm` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:38:55 | `beszel` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:39:21 | `dockge` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:39:58 | `gitea` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:40:29 | `minio` | `LXC` | `DOCKER` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:41:46 | `beszel` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:42:17 | `dockge` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:43:05 | `gitea` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
+| 2026-08-28 23:43:45 | `minio` | `LXC` | `PODMAN` | 104 | 192.168.178.199 | success | Running | N/A | **✅ PASS** |
 
 ## Details & Failures
 

@@ -70,7 +70,11 @@
             "navidrome",
             "calibre-web",
             "kavita",
-            "romm"
+            "romm",
+            "gitea",
+            "dockge",
+            "minio",
+            "beszel"
         ],
         "default_group": "general",
         "global_variables": [
@@ -102,7 +106,11 @@
             "Utilities",
             "Productivity",
             "Media Servers",
-            "Media"
+            "Media",
+            "Developer",
+            "Management",
+            "Storage",
+            "Monitoring"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -125,9 +133,17 @@
                 "is_exclusive": false,
                 "name": "Communications"
             },
+            "Developer": {
+                "is_exclusive": false,
+                "name": "Developer"
+            },
             "Home Automation": {
                 "is_exclusive": false,
                 "name": "Home Automation"
+            },
+            "Management": {
+                "is_exclusive": false,
+                "name": "Management"
             },
             "Media": {
                 "is_exclusive": false,
@@ -145,6 +161,10 @@
                 "is_exclusive": false,
                 "name": "Messaging"
             },
+            "Monitoring": {
+                "is_exclusive": false,
+                "name": "Monitoring"
+            },
             "Productivity": {
                 "is_exclusive": false,
                 "name": "Productivity"
@@ -156,6 +176,10 @@
             "Smart Home & IoT": {
                 "is_exclusive": false,
                 "name": "Smart Home & Iot"
+            },
+            "Storage": {
+                "is_exclusive": false,
+                "name": "Storage"
             },
             "System Tools": {
                 "is_exclusive": false,
@@ -335,6 +359,26 @@
             "test_status": "tested",
             "ui_port_variable": "AUDIOBOOKSHELF_PORT"
         },
+        "beszel": {
+            "category": "Monitoring",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Lightweight server monitoring hub with historical resource metrics and alerts.",
+            "docker_service_name": "beszel",
+            "group": "Monitoring",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "henrygd/beszel",
+            "is_agent": false,
+            "last_tested": "2026-08-28T21:42:17.616595+00:00",
+            "last_updated": "2026-08-28T21:27:43.488689+00:00",
+            "name": "Beszel",
+            "port": 8095,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "caddy": {
             "component_version": "latest",
             "config_templates": {
@@ -468,6 +512,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": "JITSI_HTTPS_PORT"
         },
+        "dockge": {
+            "category": "Management",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A fancy, easy-to-use and reactive self-hosted docker compose stack-oriented manager by LouisLam.",
+            "docker_service_name": "dockge",
+            "group": "Management",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "louislam/dockge",
+            "is_agent": false,
+            "last_tested": "2026-08-28T21:43:05.163696+00:00",
+            "last_updated": "2026-08-28T21:27:43.428803+00:00",
+            "name": "Dockge",
+            "port": 5001,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "filebrowser": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -526,6 +590,26 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null
+        },
+        "gitea": {
+            "category": "Developer",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A painless, self-hosted Git service written in Go with repository management, code review, issues, and wikis.",
+            "docker_service_name": "gitea",
+            "group": "Developer",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "gitea/gitea",
+            "is_agent": false,
+            "last_tested": "2026-08-28T21:43:45.021785+00:00",
+            "last_updated": "2026-08-28T21:27:43.400680+00:00",
+            "name": "Gitea",
+            "port": 3000,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "gitlab": {
             "component_version": "latest",
@@ -1126,6 +1210,26 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "MICROBIN_PORT"
+        },
+        "minio": {
+            "category": "Storage",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "High-performance, S3-compatible enterprise object storage system.",
+            "docker_service_name": "minio",
+            "group": "Storage",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "minio/minio",
+            "is_agent": false,
+            "last_tested": "2026-08-28T21:44:22.568530+00:00",
+            "last_updated": "2026-08-28T21:27:43.468904+00:00",
+            "name": "MinIO S3 Storage",
+            "port": 9001,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "n8n": {
             "component_version": "latest",
@@ -2239,7 +2343,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-28T21:24:47.256688+00:00",
+            "last_updated": "2026-08-28T21:45:24.962127+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",

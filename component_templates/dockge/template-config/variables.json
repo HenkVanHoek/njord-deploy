@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5001",
+            "description": "Port for the Dockge web interface.",
+            "id": "DOCKGE_WEB_PORT",
+            "label": "Dockge Web Port",
+            "type": "port"
+        }
+    ]
+}

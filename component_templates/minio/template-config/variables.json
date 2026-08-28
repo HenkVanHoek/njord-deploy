@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "9000",
+            "description": "S3 API communication port.",
+            "id": "MINIO_API_PORT",
+            "label": "MinIO API Port",
+            "type": "port"
+        },
+        {
+            "default": "9001",
+            "description": "Web administration console port.",
+            "id": "MINIO_CONSOLE_PORT",
+            "label": "MinIO Console Port",
+            "type": "port"
+        },
+        {
+            "default": "minioadmin",
+            "description": "Root admin username.",
+            "id": "MINIO_ROOT_USER",
+            "label": "Root Username",
+            "type": "text"
+        },
+        {
+            "default": "minioadmin_secure_123",
+            "description": "Root admin password (minimum 8 characters).",
+            "id": "MINIO_ROOT_PASSWORD",
+            "label": "Root Password",
+            "type": "password"
+        }
+    ]
+}

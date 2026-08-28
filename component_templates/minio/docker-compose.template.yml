@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "RELEASE.2025-09-07T16-13-09Z"
+# platform_notes: "Tested on Proxmox LXC: docker (RELEASE.2025-09-07T16-13-09Z, 2026-08-28), podman (RELEASE.2025-09-07T16-13-09Z, 2026-08-28); Proxmox VM: docker (RELEASE.2025-09-07T16-13-09Z, 2026-08-28), podman (RELEASE.2025-09-07T16-13-09Z, 2026-08-28)."
+# breaking_changes: none
+services:
+  minio:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-minio
+    restart: unless-stopped
+    command: "server /data --console-address ':9001'"
+    environment:
+      - "MINIO_ROOT_USER={{ MINIO_ROOT_USER }}"
+      - "MINIO_ROOT_PASSWORD={{ MINIO_ROOT_PASSWORD }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/minio/data:/data"
+    ports:
+      - "{{ MINIO_API_PORT }}:9000"
+      - "{{ MINIO_CONSOLE_PORT }}:9001"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

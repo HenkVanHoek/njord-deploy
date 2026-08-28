@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "Port for the Gitea web interface.",
+            "id": "GITEA_WEB_PORT",
+            "label": "Gitea Web Port",
+            "type": "port"
+        },
+        {
+            "default": "2222",
+            "description": "Port for Git operations over SSH.",
+            "id": "GITEA_SSH_PORT",
+            "label": "Gitea SSH Port",
+            "type": "port"
+        },
+        {
+            "default": "127.0.0.1",
+            "description": "IP address or domain name of the host.",
+            "id": "HOST_IP",
+            "label": "Host IP / Domain",
+            "type": "text"
+        }
+    ]
+}

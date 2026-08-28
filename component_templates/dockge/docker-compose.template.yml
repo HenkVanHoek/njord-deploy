@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "22.14.0"
+# platform_notes: "Tested on Proxmox LXC: docker (22.14.0, 2026-08-28), podman (22.14.0, 2026-08-28); Proxmox VM: docker (22.14.0, 2026-08-28), podman (22.14.0, 2026-08-28)."
+# breaking_changes: none
+services:
+  dockge:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-dockge
+    restart: unless-stopped
+    ports:
+      - "{{ DOCKGE_WEB_PORT }}:5001"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "{{ CONFIG_BASE_PATH }}/dockge/data:/app/data"
+      - "{{ CONFIG_BASE_PATH }}/dockge/stacks:/opt/stacks"
+    environment:
+      - "DOCKGE_STACKS_DIR=/opt/stacks"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
