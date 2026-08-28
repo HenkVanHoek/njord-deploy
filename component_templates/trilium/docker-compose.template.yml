@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "v0.95.0"
+# platform_notes: "Tested on Proxmox LXC: docker (v0.95.0, 2026-08-29), podman (v0.95.0, 2026-08-29); Proxmox VM: docker (v0.95.0, 2026-08-29), podman (v0.95.0, 2026-08-29)."
+# breaking_changes: none
+services:
+  trilium:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-trilium
+    restart: unless-stopped
+    ports:
+      - "{{ TRILIUM_WEB_PORT }}:8080"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/trilium/data:/home/node/trilium-data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

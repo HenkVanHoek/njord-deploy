@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-08-29), podman (stable, 2026-08-29); Proxmox VM: docker (stable, 2026-08-29), podman (stable, 2026-08-29)."
+# breaking_changes: none
+services:
+  memos:
+    image: "{{ image_name }}:stable"
+    container_name: njorddeploy-memos
+    restart: unless-stopped
+    ports:
+      - "{{ MEMOS_WEB_PORT }}:5230"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/memos/data:/var/opt/memos"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5230",
+            "description": "Port for the Memos web interface.",
+            "id": "MEMOS_WEB_PORT",
+            "label": "Memos Web Port",
+            "type": "port"
+        }
+    ]
+}

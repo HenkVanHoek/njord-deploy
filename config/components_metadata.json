@@ -74,7 +74,11 @@
             "gitea",
             "dockge",
             "minio",
-            "beszel"
+            "beszel",
+            "freshrss",
+            "memos",
+            "trilium",
+            "flatnotes"
         ],
         "default_group": "general",
         "global_variables": [
@@ -110,7 +114,8 @@
             "Developer",
             "Management",
             "Storage",
-            "Monitoring"
+            "Monitoring",
+            "News & Media"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -164,6 +169,10 @@
             "Monitoring": {
                 "is_exclusive": false,
                 "name": "Monitoring"
+            },
+            "News & Media": {
+                "is_exclusive": false,
+                "name": "News & Media"
             },
             "Productivity": {
                 "is_exclusive": false,
@@ -559,6 +568,46 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "FILEBROWSER_WEB_PORT"
+        },
+        "flatnotes": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A self-hosted, database-less flat-file markdown note taking web app with fast search and wikilinks.",
+            "docker_service_name": "flatnotes",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "dullage/flatnotes",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:17:10.928898+00:00",
+            "last_updated": "2026-08-28T21:49:43.286782+00:00",
+            "name": "Flatnotes",
+            "port": 8088,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
+        "freshrss": {
+            "category": "News & Media",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A free, self-hostable aggregator for RSS and Atom feeds with responsive web interface and multi-user support.",
+            "docker_service_name": "freshrss",
+            "group": "News & Media",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "freshrss/freshrss",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:17:44.972161+00:00",
+            "last_updated": "2026-08-28T21:49:43.209898+00:00",
+            "name": "FreshRSS",
+            "port": 8086,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "frigate": {
             "component_version": "stable",
@@ -1177,6 +1226,26 @@
             "test_status": "tested",
             "traefik_internal_port": 9000,
             "ui_port_variable": "MEALIE_WEB_PORT"
+        },
+        "memos": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "stable",
+            "depends_on": [],
+            "description": "A privacy-first, lightweight note-taking service with markdown support and social timeline view.",
+            "docker_service_name": "memos",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "neosmemo/memos",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:18:16.856757+00:00",
+            "last_updated": "2026-08-28T21:49:43.236309+00:00",
+            "name": "Memos",
+            "port": 5230,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "microbin": {
             "conflicts_with": [],
@@ -2343,7 +2412,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-28T21:45:24.962127+00:00",
+            "last_updated": "2026-08-28T22:19:53.741371+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -2368,6 +2437,26 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "TRAEFIK_WEB_PORT"
+        },
+        "trilium": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Hierarchical note taking application with focus on building large personal knowledge bases.",
+            "docker_service_name": "trilium",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "triliumnext/notes",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:18:54.130499+00:00",
+            "last_updated": "2026-08-28T21:49:43.258605+00:00",
+            "name": "Trilium Next",
+            "port": 8087,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "umami": {
             "component_version": "postgresql-latest",

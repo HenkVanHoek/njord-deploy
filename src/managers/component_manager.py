@@ -566,8 +566,10 @@ class ComponentManager:
         has_traefik_support = component_details.get("has_traefik_support", False)
         context["has_traefik_support"] = has_traefik_support
         context["component_id"] = component_id
-        context["component_version"] = component_details.get(
-            "component_version", "latest"
+        context["component_version"] = (
+            component_details.get("component_version")
+            or component_details.get("default_version")
+            or "latest"
         )
         context["image_name"] = component_details.get("image_name", "")
 

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8087",
+            "description": "Port for the Trilium web interface.",
+            "id": "TRILIUM_WEB_PORT",
+            "label": "Trilium Web Port",
+            "type": "port"
+        }
+    ]
+}

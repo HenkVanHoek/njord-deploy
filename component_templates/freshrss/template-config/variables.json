@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "8086",
+            "description": "Port for the FreshRSS web interface.",
+            "id": "FRESHRSS_WEB_PORT",
+            "label": "FreshRSS Web Port",
+            "type": "port"
+        },
+        {
+            "default": "Europe/Amsterdam",
+            "description": "Container timezone.",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}

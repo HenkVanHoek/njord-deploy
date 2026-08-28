@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "8088",
+            "description": "Port for the Flatnotes web interface.",
+            "id": "FLATNOTES_WEB_PORT",
+            "label": "Flatnotes Web Port",
+            "type": "port"
+        },
+        {
+            "default": "flatnotes_secure_secret_key_123",
+            "description": "Secret key for authentication sessions.",
+            "id": "FLATNOTES_SECRET_KEY",
+            "label": "Flatnotes Secret Key",
+            "type": "password"
+        }
+    ]
+}
