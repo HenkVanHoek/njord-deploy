@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "8085",
+            "description": "The port for the Calibre-Web user interface.",
+            "id": "CALIBRE_WEB_PORT",
+            "label": "Calibre-Web Web Port",
+            "type": "port"
+        },
+        {
+            "default": "0",
+            "description": "User ID for the container. Set to 0 for root or your user ID for restricted permissions.",
+            "id": "PUID",
+            "label": "User ID (PUID)",
+            "type": "text"
+        },
+        {
+            "default": "0",
+            "description": "Group ID for the container. Set to 0 for root or your group ID for restricted permissions.",
+            "id": "PGID",
+            "label": "Group ID (PGID)",
+            "type": "text"
+        },
+        {
+            "default": "UTC",
+            "description": "Specify the timezone for the container, e.g., Europe/London, America/New_York.",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}

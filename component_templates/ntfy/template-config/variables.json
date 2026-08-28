@@ -1,0 +1,39 @@
+{
+    "variables": [
+        {
+            "default": "8077",
+            "description": "The host port for the ntfy web interface and API.",
+            "id": "NTFY_WEB_PORT",
+            "label": "ntfy Web Port",
+            "type": "port"
+        },
+        {
+            "default": "UTC",
+            "description": "Set the container timezone (e.g., Europe/London, America/New_York).",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        },
+        {
+            "default": "http://localhost:8077",
+            "description": "The base URL for ntfy, used for generating links in notifications. Change 'localhost' to your server's IP address or domain name, and '8077' to the actual host port if different.",
+            "id": "NTFY_BASE_URL",
+            "label": "ntfy Base URL",
+            "type": "text"
+        },
+        {
+            "default": "/var/cache/ntfy/cache.db",
+            "description": "Path to the ntfy cache database file within the container. This should typically point inside the mounted cache volume.",
+            "id": "NTFY_CACHE_FILE",
+            "label": "ntfy Cache File Path",
+            "type": "text"
+        },
+        {
+            "default": "/var/cache/ntfy/attachments",
+            "description": "Path to the directory for storing attachment caches within the container. This should typically point inside the mounted cache volume.",
+            "id": "NTFY_ATTACHMENT_CACHE_DIR",
+            "label": "ntfy Attachment Cache Directory",
+            "type": "text"
+        }
+    ]
+}

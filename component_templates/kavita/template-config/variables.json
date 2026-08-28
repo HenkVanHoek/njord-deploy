@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "5000",
+            "description": "The port Kavita's web interface will be accessible on from your host.",
+            "id": "KAVITA_WEB_PORT",
+            "label": "Kavita Web Port",
+            "type": "port"
+        },
+        {
+            "default": "UTC",
+            "description": "Specify the timezone for the container (e.g., Europe/London, America/New_York). This affects timestamps within the application.",
+            "id": "KAVITA_TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}

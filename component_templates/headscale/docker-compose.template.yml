@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-08-28), podman (stable, 2026-08-28); Proxmox VM: docker (stable, 2026-08-28), podman (stable, 2026-08-28)."
+# breaking_changes: none
+services:
+  headscale:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-headscale
+    command: serve
+    ports:
+      - "{{ HEADSCALE_WEB_PORT }}:8080"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/headscale/data:/var/lib/headscale"
+      - "{{ DATA_ROOT }}/headscale/config.yaml:/etc/headscale/config.yaml:ro"
+    environment:
+      - "HEADSCALE_CONFIG=/etc/headscale/config.yaml"
+      - "TZ={{ TZ }}"
+      - "HEADSCALE_SERVER_URL=http://{{ HOST_IP }}:{{ HEADSCALE_WEB_PORT }}"
+    networks:
+      - njorddeploy_net
+    user: "0:0"
+networks:
+  njorddeploy_net:
+    external: true

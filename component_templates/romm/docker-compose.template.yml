@@ -1,0 +1,46 @@
+# status: "tested"
+# last_tested_version: "11.8.9"
+# platform_notes: "Tested on Proxmox LXC: docker ({{version}}, 2026-08-28), podman (11.8.9, 2026-08-28); Proxmox VM: docker ({{version}}, 2026-08-28), podman ({{version}}, 2026-08-28)."
+# breaking_changes: none
+services:
+  romm:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-romm
+    restart: unless-stopped
+    environment:
+      - "ROMM_AUTH_SECRET_KEY={{ ROMM_AUTH_SECRET_KEY }}"
+      - "DB_HOST=njorddeploy-romm-db"
+      - "DB_NAME=romm"
+      - "DB_USER=romm_user"
+      - "DB_PASSWD={{ ROMM_DB_PASSWORD }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/romm/resources:/romm/resources"
+      - "{{ CONFIG_BASE_PATH }}/romm/library:/romm/library"
+      - "{{ CONFIG_BASE_PATH }}/romm/assets:/romm/assets"
+      - "{{ CONFIG_BASE_PATH }}/romm/config:/romm/config"
+    ports:
+      - "{{ ROMM_WEB_PORT }}:8080"
+    depends_on:
+      - romm-db
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+  romm-db:
+    image: mariadb:11
+    container_name: njorddeploy-romm-db
+    restart: unless-stopped
+    environment:
+      - "MARIADB_ROOT_PASSWORD={{ ROMM_DB_PASSWORD }}"
+      - "MARIADB_DATABASE=romm"
+      - "MARIADB_USER=romm_user"
+      - "MARIADB_PASSWORD={{ ROMM_DB_PASSWORD }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/romm/mysql:/var/lib/mysql"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

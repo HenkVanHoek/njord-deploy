@@ -1,0 +1,52 @@
+# status: "tested"
+# last_tested_version: "22.04"
+# platform_notes: "Tested on Proxmox LXC: docker (2023-12-01-preview, 2026-08-28), podman (22.04, 2026-08-28); Proxmox VM: docker (2023-12-01-preview, 2026-08-28), podman (2023-12-01-preview, 2026-08-28)."
+# breaking_changes: none
+services:
+  librechat:
+    container_name: njorddeploy-librechat
+    image: "{{ image_name }}:{{ component_version }}"
+    restart: always
+    user: "0:0"
+    ports:
+      - "{{ LIBRECHAT_WEB_PORT }}:3080"
+    environment:
+      - "HOST=0.0.0.0"
+      - "PORT=3080"
+      - "MONGO_URI=mongodb://njorddeploy-librechat-mongodb:27017/LibreChat"
+      - "JWT_SECRET={{ JWT_SECRET }}"
+      - "JWT_REFRESH_TOKEN_SECRET={{ JWT_REFRESH_TOKEN_SECRET }}"
+      - "CREDS_KEY={{ CREDS_KEY }}"
+      - "CREDS_IV={{ CREDS_IV }}"
+      - "OPENAI_API_KEY={{ OPENAI_API_KEY }}"
+      - "ANTHROPIC_API_KEY={{ ANTHROPIC_API_KEY }}"
+      - "GOOGLE_API_KEY={{ GOOGLE_API_KEY }}"
+      - "AZURE_OPENAI_API_KEY={{ AZURE_OPENAI_API_KEY }}"
+      - "AZURE_OPENAI_ENDPOINT={{ AZURE_OPENAI_ENDPOINT }}"
+      - "AZURE_OPENAI_API_VERSION={{ AZURE_OPENAI_API_VERSION }}"
+      - "CUSTOM_ENDPOINTS={{ CUSTOM_ENDPOINTS }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/librechat/data:/app/data"
+      - "{{ CONFIG_BASE_PATH }}/librechat/images:/app/client/public/images"
+      - "{{ CONFIG_BASE_PATH }}/librechat/uploads:/app/uploads"
+      - "{{ CONFIG_BASE_PATH }}/librechat/logs:/app/logs"
+      - "{{ CONFIG_BASE_PATH }}/librechat/skill:/app/skill"
+    depends_on:
+      - librechat-mongodb
+    networks:
+      - njorddeploy_net
+
+  librechat-mongodb:
+    container_name: njorddeploy-librechat-mongodb
+    image: mongo:6.0
+    restart: always
+    user: "0:0"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/librechat/mongodb:/data/db"
+    command: mongod --noauth
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

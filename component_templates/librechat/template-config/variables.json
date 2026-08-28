@@ -1,0 +1,88 @@
+{
+    "variables": [
+        {
+            "default": "3080",
+            "description": "Port for the LibreChat web interface.",
+            "id": "LIBRECHAT_WEB_PORT",
+            "label": "LibreChat Web Port",
+            "type": "port"
+        },
+        {
+            "default": "q8g+R6s5t7v9w0x1y2z3a4b5c6d7e8f9g0h1i2j3k4l5m6n7o8p=",
+            "description": "Secret key for JSON Web Token (JWT) authentication.",
+            "id": "JWT_SECRET",
+            "label": "JWT Secret",
+            "type": "password"
+        },
+        {
+            "default": "r9h+S7t6u8v0w1x2y3z4a5b6c7d8e9f0g1h2i3j4k5l6m7n8q=",
+            "description": "Secret key for JSON Web Token (JWT) refresh tokens.",
+            "id": "JWT_REFRESH_TOKEN_SECRET",
+            "label": "JWT Refresh Token Secret",
+            "type": "password"
+        },
+        {
+            "default": "f34be427ebb29de8d88c107a71546019685ed8b241d8f2ed00c3f39708323511",
+            "description": "Key for encrypting user credentials (64 hex chars).",
+            "id": "CREDS_KEY",
+            "label": "Credentials Encryption Key",
+            "type": "password"
+        },
+        {
+            "default": "e28e9323f46fbf8dc61f6305a4ecb38b",
+            "description": "Initialization Vector for encrypting user credentials (32 hex chars).",
+            "id": "CREDS_IV",
+            "label": "Credentials Encryption IV",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your OpenAI API key for accessing OpenAI models.",
+            "id": "OPENAI_API_KEY",
+            "label": "OpenAI API Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your Anthropic API key for accessing Claude models.",
+            "id": "ANTHROPIC_API_KEY",
+            "label": "Anthropic API Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your Google API key for accessing Google models (e.g., Gemini).",
+            "id": "GOOGLE_API_KEY",
+            "label": "Google API Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your Azure OpenAI API key.",
+            "id": "AZURE_OPENAI_API_KEY",
+            "label": "Azure OpenAI API Key",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Your Azure OpenAI endpoint URL.",
+            "id": "AZURE_OPENAI_ENDPOINT",
+            "label": "Azure OpenAI Endpoint",
+            "type": "text"
+        },
+        {
+            "default": "2023-12-01-preview",
+            "description": "API version for Azure OpenAI.",
+            "id": "AZURE_OPENAI_API_VERSION",
+            "label": "Azure OpenAI API Version",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "JSON string for custom OpenAI-compatible API endpoints. Example: '[{\"baseURL\":\"http://localhost:11434/v1\",\"name\":\"Ollama\",\"apiKey\":\"\"}]'",
+            "id": "CUSTOM_ENDPOINTS",
+            "label": "Custom AI Endpoints (JSON)",
+            "type": "text"
+        }
+    ]
+}

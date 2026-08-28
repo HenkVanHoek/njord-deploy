@@ -1,0 +1,53 @@
+{
+    "variables": [
+        {
+            "default": "8000",
+            "description": "The external HTTP port for accessing the Plausible web UI.",
+            "id": "PLAUSIBLE_WEB_PORT",
+            "label": "Plausible Web Port",
+            "type": "port"
+        },
+        {
+            "default": "http://localhost:8000",
+            "description": "The domain or URL where Plausible will be accessed (e.g. http://192.168.1.50:8000 or https://analytics.example.com).",
+            "id": "PLAUSIBLE_BASE_URL",
+            "label": "Plausible Base URL",
+            "type": "text"
+        },
+        {
+            "default": "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3",
+            "description": "A 64+ character random string used for session encryption (generate with V8OoCXdxEwZXASKz5/rGF1TCSIG3Os9Z5/gTA0H8l8gg0OxVJdbqCO+XTxNsu/vM).",
+            "id": "PLAUSIBLE_SECRET_KEY_BASE",
+            "label": "Plausible Secret Key Base",
+            "type": "password"
+        },
+        {
+            "default": "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
+            "description": "A 32-byte Base64-encoded key for encrypting 2FA TOTP secrets (generate with mpPzJaVW0iIkfPcqQu2ND2PFVb4RE74ORVdOAqDYUlw=).",
+            "id": "PLAUSIBLE_TOTP_VAULT_KEY",
+            "label": "TOTP Vault Key",
+            "type": "password"
+        },
+        {
+            "default": "plausible_db",
+            "description": "The PostgreSQL database name for Plausible.",
+            "id": "POSTGRES_DB",
+            "label": "PostgreSQL Database Name",
+            "type": "text"
+        },
+        {
+            "default": "postgres",
+            "description": "The PostgreSQL user for Plausible.",
+            "id": "POSTGRES_USER",
+            "label": "PostgreSQL User",
+            "type": "text"
+        },
+        {
+            "default": "plausible_secure_postgres_pass",
+            "description": "The PostgreSQL password for Plausible.",
+            "id": "POSTGRES_PASSWORD",
+            "label": "PostgreSQL Password",
+            "type": "password"
+        }
+    ]
+}

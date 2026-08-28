@@ -1,0 +1,58 @@
+# status: "tested"
+# last_tested_version: "7.4.11"
+# platform_notes: "Tested on Proxmox LXC: docker (3.1.0, 2026-08-28), podman (7.4.11, 2026-08-28); Proxmox VM: docker (3.1.0, 2026-08-28), podman (3.1.0, 2026-08-28)."
+# breaking_changes: none
+services:
+  paperless-ngx:
+    container_name: njorddeploy-paperless-ngx
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ PAPERLESS_WEB_PORT }}:8000"
+    environment:
+      - "PAPERLESS_REDIS=redis://njorddeploy-paperless-broker:6379"
+      - "PAPERLESS_DBHOST=njorddeploy-paperless-db"
+      - "PAPERLESS_DBNAME={{ PAPERLESS_DBNAME }}"
+      - "PAPERLESS_DBUSER={{ PAPERLESS_DBUSER }}"
+      - "PAPERLESS_DBPASS={{ PAPERLESS_DBPASS }}"
+      - "PAPERLESS_SECRET_KEY={{ PAPERLESS_SECRET_KEY }}"
+      - "PAPERLESS_URL=http://localhost:8000"
+      - "USERMAP_UID={{ USERMAP_UID }}"
+      - "USERMAP_GID={{ USERMAP_GID }}"
+      - "TZ={{ TZ }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/data:/usr/src/paperless/data"
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/media:/usr/src/paperless/media"
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/export:/usr/src/paperless/export"
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/consume:/usr/src/paperless/consume"
+    depends_on:
+      - paperless-broker
+      - paperless-db
+    networks:
+      - njorddeploy_net
+    user: "0:0"
+
+  paperless-broker:
+    container_name: njorddeploy-paperless-broker
+    image: redis:7-alpine
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/redisdata:/data"
+    networks:
+      - njorddeploy_net
+    user: "0:0"
+
+  paperless-db:
+    container_name: njorddeploy-paperless-db
+    image: postgres:16-alpine
+    environment:
+      - "POSTGRES_USER={{ PAPERLESS_DBUSER }}"
+      - "POSTGRES_PASSWORD={{ PAPERLESS_DBPASS }}"
+      - "POSTGRES_DB={{ PAPERLESS_DBNAME }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/paperless-ngx/pgdata:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+    user: "0:0"
+
+networks:
+  njorddeploy_net:
+    external: true

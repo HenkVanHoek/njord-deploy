@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "The port on which IT Tools will be accessible.",
+            "id": "IT_TOOLS_WEB_PORT",
+            "label": "IT Tools Web Port",
+            "type": "port"
+        }
+    ]
+}

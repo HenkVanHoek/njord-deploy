@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "9080",
+            "description": "The external port for Headscale's web UI and API.",
+            "id": "HEADSCALE_WEB_PORT",
+            "label": "Headscale Web/API Port",
+            "type": "port"
+        },
+        {
+            "default": "127.0.0.1",
+            "description": "The IP address or domain name where Headscale is externally accessible. Used for the server_url in the configuration.",
+            "id": "HOST_IP",
+            "label": "Host IP Address",
+            "type": "text"
+        },
+        {
+            "default": "Etc/UTC",
+            "description": "Specify the timezone for the container (e.g., Europe/London, America/New_York).",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}

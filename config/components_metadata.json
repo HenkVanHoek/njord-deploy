@@ -1,49 +1,76 @@
 {
     "_njorddeploy": {
         "components_order": [
-            "pi-hole",
+            "adguard-home",
+            "adminer",
             "audiobookshelf",
             "caddy",
-            "nginx-proxy-manager",
-            "traefik",
             "conduit",
-            "lora-service",
-            "octoprint",
-            "prosody",
             "docker-jitsi-meet",
             "filebrowser",
-            "njorddeploy-service-maintenance",
-            "portainer",
-            "uptime-kuma",
             "frigate",
-            "homeassistant",
-            "scrypted",
-            "unifi-controller",
-            "zigbee2mqtt",
             "gitlab",
+            "gluetun",
+            "grafana",
             "heimdall",
             "homarr",
+            "homeassistant",
+            "homepage",
             "homer",
-            "organizr",
+            "immich",
             "jellyfin",
-            "qbittorrent",
-            "radarr",
-            "sabnzbd",
-            "sonarr",
+            "litellm",
+            "lora-service",
             "microbin",
+            "n8n",
             "nextcloud",
             "nextcloud-db",
             "nextcloud-db-dumper",
             "nextcloud-redis",
+            "nginx-proxy-manager",
+            "njorddeploy-service-maintenance",
             "notify-push",
-            "pish-fluffychat-web",
-            "stirling-pdf",
-            "unbound",
-            "vaultwarden",
-            "web-notepad",
-            "adminer",
+            "octoprint",
+            "ollama",
+            "open-webui",
+            "organizr",
             "phpmyadmin",
-            "litellm"
+            "pi-hole",
+            "pish-fluffychat-web",
+            "plausible",
+            "portainer",
+            "prometheus",
+            "prosody",
+            "prowlarr",
+            "qbittorrent",
+            "radarr",
+            "sabnzbd",
+            "scrypted",
+            "semaphore",
+            "sonarr",
+            "stirling-pdf",
+            "technitium-dns",
+            "traefik",
+            "umami",
+            "unbound",
+            "unifi-controller",
+            "uptime-kuma",
+            "vaultwarden",
+            "voicebox",
+            "web-notepad",
+            "zigbee2mqtt",
+            "it-tools",
+            "actual-budget",
+            "mealie",
+            "paperless-ngx",
+            "librechat",
+            "searxng",
+            "headscale",
+            "ntfy",
+            "navidrome",
+            "calibre-web",
+            "kavita",
+            "romm"
         ],
         "default_group": "general",
         "global_variables": [
@@ -74,7 +101,8 @@
             "Communications",
             "Utilities",
             "Productivity",
-            "Media Servers"
+            "Media Servers",
+            "Media"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -100,6 +128,10 @@
             "Home Automation": {
                 "is_exclusive": false,
                 "name": "Home Automation"
+            },
+            "Media": {
+                "is_exclusive": false,
+                "name": "Media"
             },
             "Media Servers": {
                 "is_exclusive": false,
@@ -168,6 +200,42 @@
         }
     },
     "components": {
+        "actual-budget": {
+            "ai_instructions": "Privacy-first personal finance and envelope budgeting app. Image actualbudget/actual-server:latest. Port ACTUAL_BUDGET_WEB_PORT: 5006 (container port 5006). Volume actual_data:/data. Group: Productivity.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Privacy-first personal finance and envelope budgeting app. It is 100% free and open-source, written in NodeJS, it has a synchronization element so that all your changes can move between devices without any heavy lifting. The application stores its data in the /data volume.",
+            "docker_service_name": "actual-budget",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "actualbudget/actual-server",
+            "last_tested": "2026-08-28T20:05:51.390797+00:00",
+            "last_updated": "2026-08-28T19:44:41.429589+00:00",
+            "name": "Actual Budget",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "finance",
+                "budgeting",
+                "personal finance"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": null,
+            "ui_port_variable": "ACTUAL_BUDGET_WEB_PORT"
+        },
         "adguard-home": {
             "component_version": "latest",
             "conflicts_with": [
@@ -302,6 +370,43 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": null
+        },
+        "calibre-web": {
+            "ai_instructions": "Web app for browsing, reading and downloading eBooks. Image linuxserver/calibre-web:latest on port CALIBRE_WEB_PORT: 8085 (container port 8083). Volumes for /config and /books. Environment: PUID=0, PGID=0, TZ=UTC, DOCKER_MODS=linuxserver/mods:universal-calibre. user: \"0:0\". Group: Media.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Web app for browsing, reading and downloading eBooks.",
+            "docker_service_name": "calibre-web",
+            "group": "Media Stack",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "linuxserver/calibre-web",
+            "last_tested": "2026-08-28T21:18:11.885393+00:00",
+            "last_updated": "2026-08-28T21:01:50.729364+00:00",
+            "name": "Calibre-Web",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "ebooks",
+                "library",
+                "calibre",
+                "media"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": null,
+            "ui_port_variable": "CALIBRE_WEB_PORT"
         },
         "conduit": {
             "component_version": "latest",
@@ -531,6 +636,46 @@
                 }
             ]
         },
+        "headscale": {
+            "ai_instructions": "Self-hosted open source Tailscale control server. Image headscale/headscale:latest. Command: headscale serve. Web/API port HEADSCALE_WEB_PORT: 9080 (container port 8080). Config template config.yaml at /etc/headscale/config.yaml. Data volume /var/lib/headscale. user: \"0:0\". Group: Utilities.",
+            "component_version": "latest",
+            "config_templates": {
+                "config.yaml": "headscale/config.yaml"
+            },
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "An open source, self-hosted implementation of the Tailscale control server, providing a private network for your devices.",
+            "docker_service_name": "headscale",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "headscale/headscale",
+            "last_tested": "2026-08-28T20:54:47.071868+00:00",
+            "last_updated": "2026-08-28T20:14:32.445095+00:00",
+            "name": "Headscale",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "tailscale",
+                "vpn",
+                "wireguard",
+                "network"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 8080,
+            "ui_port_variable": "HEADSCALE_WEB_PORT"
+        },
         "heimdall": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -716,6 +861,43 @@
             "traefik_internal_port": 8080,
             "ui_port_variable": "IMMICH_WEB_PORT"
         },
+        "it-tools": {
+            "ai_instructions": "Useful web tools for developers and sysadmins. Container image corentinth/it-tools:latest. Web port 8080 (IT_TOOLS_WEB_PORT: 8080). Group: Productivity.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Useful web tools for developers and sysadmins.",
+            "docker_service_name": "it-tools",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "corentinth/it-tools",
+            "last_tested": "2026-08-28T20:06:28.780440+00:00",
+            "last_updated": "2026-08-28T19:44:22.639052+00:00",
+            "name": "IT Tools",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "tools",
+                "developer",
+                "sysadmin",
+                "utility"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": null,
+            "ui_port_variable": "IT_TOOLS_WEB_PORT"
+        },
         "jellyfin": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -743,6 +925,87 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "JELLYFIN_WEB_PORT"
+        },
+        "kavita": {
+            "ai_instructions": "Self-hosted digital library for Manga, Comics, and Books. Image kareadita/kavita:latest on port KAVITA_WEB_PORT: 5000 (container port 5000). Volumes for /kavita/config, /manga, /comics, /books. Environment: TZ=UTC. user: \"0:0\". Group: Media.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Kavita is a fast, feature rich, cross platform reading server. Built with a focus for being a full solution for all your reading needs. Setup your own server and share your reading collection with your friends and family! The container runs as root (user: 0:0) to ensure proper file permissions for mounted volumes.",
+            "docker_service_name": "kavita",
+            "group": "Media Servers",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/kareadita/kavita",
+            "last_tested": "2026-08-28T21:19:10.321313+00:00",
+            "last_updated": "2026-08-28T21:02:14.674871+00:00",
+            "name": "Kavita",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "media",
+                "manga",
+                "comics",
+                "books",
+                "reader",
+                "library"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 5000,
+            "ui_port_variable": "KAVITA_WEB_PORT"
+        },
+        "librechat": {
+            "ai_instructions": "Multi-model AI chat platform. LibreChat web app (ghcr.io/danny-avila/librechat:latest) on port LIBRECHAT_WEB_PORT: 3080 (container port 3080). MongoDB backend (mongo:6.0) as librechat-mongodb on port 27017. Required env: MONGO_URI=mongodb://njorddeploy-librechat-mongodb:27017/LibreChat, PORT=3080, HOST=0.0.0.0, JWT_SECRET, JWT_REFRESH_TOKEN_SECRET, CREDS_KEY, CREDS_IV. Persistent volume for MongoDB data. user: \"0:0\" for volume permissions. Group: AI.",
+            "component_version": "latest",
+            "config_templates": {
+                "env": "librechat/env"
+            },
+            "conflicts_with": [],
+            "depends_on": [
+                "librechat-mongodb"
+            ],
+            "description": "LibreChat is a self-hosted AI chat platform that unifies all major AI providers in a single, privacy-focused interface. It features AI Agents, Code Interpreter, custom actions, conversation search, and enterprise-ready multi-user authentication. The service runs as root (user: 0:0) to manage volume permissions.",
+            "docker_service_name": "librechat",
+            "group": "AI & LLM Services",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/danny-avila/librechat",
+            "last_tested": "2026-08-28T20:56:32.447026+00:00",
+            "last_updated": "2026-08-28T20:12:57.281568+00:00",
+            "name": "LibreChat",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "ai",
+                "llm",
+                "chat",
+                "chatbot"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 3080,
+            "ui_port_variable": "LIBRECHAT_WEB_PORT"
         },
         "litellm": {
             "ai_instructions": "Make sure to include hostyourai along with gemini and ollama.",
@@ -794,6 +1057,43 @@
             "tags": [],
             "traefik_internal_port": null
         },
+        "mealie": {
+            "ai_instructions": "Self-hosted recipe manager and meal planner. Image ghcr.io/mealie-recipes/mealie:latest. Port MEALIE_WEB_PORT: 9925 (container port 9000). Volume /app/data/. Group: Productivity.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "A self-hosted recipe manager, meal planner, and shopping list with a RestAPI backend and a reactive frontend built in Vue for a pleasant user experience for the whole family. Easily add recipes into your database by providing the URL and Mealie will automatically import the relevant data, or add a family recipe with the UI editor. The Mealie Docker image often supports PUID/PGID environment variables for file ownership within the container, even if the container runs as root.",
+            "docker_service_name": "mealie",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/mealie-recipes/mealie",
+            "last_tested": "2026-08-28T20:07:26.520649+00:00",
+            "last_updated": "2026-08-28T19:45:16.183889+00:00",
+            "name": "Mealie",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "recipe",
+                "meal planner",
+                "shopping list",
+                "food"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 9000,
+            "ui_port_variable": "MEALIE_WEB_PORT"
+        },
         "microbin": {
             "conflicts_with": [],
             "depends_on": [],
@@ -844,6 +1144,43 @@
             "protocol": "http",
             "test_status": "tested",
             "ui_port_variable": "N8N_WEB_PORT"
+        },
+        "navidrome": {
+            "ai_instructions": "Modern music streaming server and audio player. Image deluan/navidrome:latest on port NAVIDROME_WEB_PORT: 4533 (container port 4533). Volumes for /data and /music:ro. Environment: ND_SCANSCHEDULE=1h, ND_LOGLEVEL=info, ND_SESSIONTIMEOUT=24h, ND_BASEURL=\"\". user: \"0:0\". Group: Media.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your music collection from any browser or mobile device. It's like your personal Spotify! The container runs as root (user: 0:0) to ensure proper file permissions for mounted volumes.",
+            "docker_service_name": "navidrome",
+            "group": "Media Servers",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "deluan/navidrome",
+            "last_tested": "2026-08-28T21:19:44.479834+00:00",
+            "last_updated": "2026-08-28T21:01:26.850475+00:00",
+            "name": "Navidrome Music Server",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "music",
+                "streaming",
+                "audio",
+                "subsonic"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": null,
+            "ui_port_variable": "NAVIDROME_WEB_PORT"
         },
         "nextcloud": {
             "component_version": "latest",
@@ -1030,6 +1367,45 @@
             "test_status": "tested",
             "traefik_internal_port": null
         },
+        "ntfy": {
+            "ai_instructions": "HTTP-based pub-sub notification service. Image binwiederhier/ntfy:latest. Command: serve. Port NTFY_WEB_PORT: 8077 (container port 80). Environment: NTFY_BASE_URL=http://localhost:8077, NTFY_CACHE_FILE=/var/cache/ntfy/cache.db, NTFY_ATTACHMENT_CACHE_DIR=/var/cache/ntfy/attachments. Volumes for cache and etc. user: \"0:0\". Group: Utilities.",
+            "component_version": "latest",
+            "config_templates": {
+                "server.yml": "ntfy/server.yml"
+            },
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "ntfy (pronounced 'notify') is a simple HTTP-based pub-sub notification service. With ntfy, you can send notifications to your phone or desktop via scripts from any computer, without having to sign up or pay any fees. It runs as root (0:0) to manage file permissions on mounted volumes.",
+            "docker_service_name": "ntfy",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "binwiederhier/ntfy",
+            "last_tested": "2026-08-28T20:57:10.422970+00:00",
+            "last_updated": "2026-08-28T20:15:12.997261+00:00",
+            "name": "ntfy",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "notifications",
+                "pub-sub",
+                "messaging"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 80,
+            "ui_port_variable": "NTFY_WEB_PORT"
+        },
         "octoprint": {
             "conflicts_with": [],
             "depends_on": [],
@@ -1166,6 +1542,46 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null
+        },
+        "paperless-ngx": {
+            "ai_instructions": "Multi-container document management and OCR stack. Main service ghcr.io/paperless-ngx/paperless-ngx:latest (njorddeploy-paperless-ngx) on port PAPERLESS_WEB_PORT: 8000. Broker redis:7-alpine (njorddeploy-paperless-broker). Database postgres:16-alpine (njorddeploy-paperless-db). Required env: PAPERLESS_REDIS=redis://njorddeploy-paperless-broker:6379, PAPERLESS_DBHOST=njorddeploy-paperless-db, PAPERLESS_DBNAME=paperless, PAPERLESS_DBUSER=paperless, PAPERLESS_DBPASS, PAPERLESS_SECRET_KEY (random secret), PAPERLESS_URL=http://localhost:8000, USERMAP_UID=0, USERMAP_GID=0. Volumes for data, media, export, consume. Group: Productivity.",
+            "component_version": "latest",
+            "conflicts_with": [],
+            "depends_on": [
+                "njorddeploy-paperless-broker",
+                "njorddeploy-paperless-db"
+            ],
+            "description": "A document management system that transforms your physical documents into a searchable online archive so you can keep, well, less paper. It automatically imports, tags, and archives your scanned documents.",
+            "docker_service_name": "paperless-ngx",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/paperless-ngx/paperless-ngx",
+            "last_tested": "2026-08-28T20:09:12.222349+00:00",
+            "last_updated": "2026-08-28T19:45:56.526977+00:00",
+            "name": "Paperless-ngx",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "document management",
+                "ocr",
+                "archive",
+                "productivity"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 8000,
+            "ui_port_variable": "PAPERLESS_WEB_PORT"
         },
         "phpmyadmin": {
             "component_version": "latest",
@@ -1317,6 +1733,48 @@
                     "type": "string"
                 }
             ]
+        },
+        "plausible": {
+            "component_version": "v3.2.1",
+            "config_templates": {
+                "default-profile-low-resources-overrides.xml": "plausible/default-profile-low-resources-overrides.xml",
+                "ipv4-only.xml": "plausible/ipv4-only.xml",
+                "logs.xml": "plausible/logs.xml",
+                "low-resources.xml": "plausible/low-resources.xml"
+            },
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Plausible is a lightweight, open-source and privacy-friendly Google Analytics alternative without cookies and fully compliant with GDPR, CCPA and PECR.",
+            "docker_service_name": "plausible",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "ghcr.io/plausible/community-edition",
+            "last_tested": "2026-08-28T19:39:40.148202+00:00",
+            "last_updated": "2026-08-28T18:34:00.804685+00:00",
+            "name": "Plausible Analytics",
+            "project_url": "https://plausible.io/",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "Requires CPU with SSE 4.2 or NEON instruction set for ClickHouse. At least 2 GB RAM recommended."
+            },
+            "tags": [
+                "analytics",
+                "privacy",
+                "web-analytics",
+                "self-hosted"
+            ],
+            "test_status": "tested",
+            "ui_port_variable": "PLAUSIBLE_WEB_PORT"
         },
         "portainer": {
             "component_version": "lts",
@@ -1511,6 +1969,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": "RADARR_WEB_PORT"
         },
+        "romm": {
+            "category": "Media",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A web-based retro ROMs manager and player for managing your game library.",
+            "docker_service_name": "romm",
+            "group": "Media",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "ghcr.io/zurdi15/romm",
+            "is_agent": false,
+            "last_tested": "2026-08-28T21:20:29.761651+00:00",
+            "last_updated": "2026-08-28T21:02:47.786884+00:00",
+            "name": "RomM",
+            "port": 8090,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "sabnzbd": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1565,6 +2043,47 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null
+        },
+        "searxng": {
+            "ai_instructions": "Privacy-respecting metasearch engine. Service searxng (searxng/searxng:latest) on port SEARXNG_WEB_PORT: 8888 (container port 8080). Service searxng-redis (redis:7-alpine). Environment: SEARXNG_BASE_URL=http://localhost:8888, SEARXNG_SECRET, SEARXNG_REDIS_URL=redis://njorddeploy-searxng-redis:6379/0. Config volume /etc/searxng for settings.yml. user: \"0:0\". Group: Utilities.",
+            "component_version": "latest",
+            "config_templates": {
+                "settings.yml": "searxng/settings.yml"
+            },
+            "conflicts_with": [],
+            "depends_on": [
+                "searxng-redis"
+            ],
+            "description": "Privacy-respecting metasearch engine.",
+            "docker_service_name": "searxng",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "searxng/searxng",
+            "last_tested": "2026-08-28T20:57:49.757708+00:00",
+            "last_updated": "2026-08-28T20:13:36.779122+00:00",
+            "name": "SearXNG",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "search",
+                "privacy",
+                "metasearch"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": null,
+            "ui_port_variable": "SEARXNG_WEB_PORT"
         },
         "semaphore": {
             "component_version": "latest",
@@ -1720,7 +2239,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-23T13:24:55.442132+00:00",
+            "last_updated": "2026-08-28T21:24:47.256688+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -1745,6 +2264,42 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "TRAEFIK_WEB_PORT"
+        },
+        "umami": {
+            "component_version": "postgresql-latest",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Umami is an open-source, privacy-focused alternative to Google Analytics. It provides lightweight web analytics without collecting personal data or using tracking cookies.",
+            "docker_service_name": "umami",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "has_ui": true,
+            "image_name": "ghcr.io/umami-software/umami",
+            "last_tested": "2026-08-28T19:40:43.885838+00:00",
+            "last_updated": "2026-08-28T17:58:29.747914+00:00",
+            "name": "Umami Analytics",
+            "project_url": "https://umami.is/",
+            "protocol": "http",
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "analytics",
+                "privacy",
+                "web-analytics",
+                "self-hosted"
+            ],
+            "test_status": "tested",
+            "ui_port_variable": "UMAMI_WEB_PORT"
         },
         "unbound": {
             "component_version": "latest",

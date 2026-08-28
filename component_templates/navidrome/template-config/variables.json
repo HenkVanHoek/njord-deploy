@@ -1,0 +1,39 @@
+{
+    "variables": [
+        {
+            "default": "4533",
+            "description": "The port to access the Navidrome web interface.",
+            "id": "NAVIDROME_WEB_PORT",
+            "label": "Navidrome Web Port",
+            "type": "port"
+        },
+        {
+            "default": "1h",
+            "description": "How often Navidrome should scan your music library for changes (e.g., 1h, 24h, 1m).",
+            "id": "ND_SCANSCHEDULE",
+            "label": "Scan Schedule",
+            "type": "text"
+        },
+        {
+            "default": "info",
+            "description": "The logging level for Navidrome (e.g., debug, info, warn, error).",
+            "id": "ND_LOGLEVEL",
+            "label": "Log Level",
+            "type": "text"
+        },
+        {
+            "default": "24h",
+            "description": "How long a user session remains active (e.g., 24h, 7d).",
+            "id": "ND_SESSIONTIMEOUT",
+            "label": "Session Timeout",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "If Navidrome is behind a reverse proxy, set the base URL (e.g., /navidrome). Leave empty if not using a subpath.",
+            "id": "ND_BASEURL",
+            "label": "Base URL",
+            "type": "text"
+        }
+    ]
+}

@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "0.63.2"
+# platform_notes: "Tested on Proxmox LXC: docker (0.63.2, 2026-08-28), podman (0.63.2, 2026-08-28); Proxmox VM: docker (0.63.2, 2026-08-28), podman (0.63.2, 2026-08-28)."
+# breaking_changes: none
+services:
+  navidrome:
+    container_name: njorddeploy-navidrome
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ NAVIDROME_WEB_PORT }}:4533"
+    environment:
+      - "ND_SCANSCHEDULE={{ ND_SCANSCHEDULE }}"
+      - "ND_LOGLEVEL={{ ND_LOGLEVEL }}"
+      - "ND_SESSIONTIMEOUT={{ ND_SESSIONTIMEOUT }}"
+      - "ND_BASEURL={{ ND_BASEURL }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/navidrome/data:/data"
+      - "{{ CONFIG_BASE_PATH }}/navidrome/music:/music:ro"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

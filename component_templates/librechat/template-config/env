@@ -1,0 +1,49 @@
+# LibreChat Environment Variables
+# For more configuration options, refer to the official LibreChat documentation.
+
+# Core Application Settings
+HOST=0.0.0.0
+PORT=3080
+
+# MongoDB Connection (managed by NjordDeploy)
+MONGO_URI=mongodb://njorddeploy-librechat-mongodb:27017/LibreChat
+
+# Security Secrets (NjordDeploy variables - passed directly to Docker Compose environment)
+# JWT_SECRET="{{ JWT_SECRET }}"
+# JWT_REFRESH_TOKEN_SECRET="{{ JWT_REFRESH_TOKEN_SECRET }}"
+# CREDS_KEY="{{ CREDS_KEY }}"
+# CREDS_IV="{{ CREDS_IV }}"
+
+# AI Provider API Keys (NjordDeploy variables - passed directly to Docker Compose environment)
+# Uncomment and set your API keys as needed if not using NjordDeploy variables directly.
+# OPENAI_API_KEY="{{ OPENAI_API_KEY }}"
+# ANTHROPIC_API_KEY="{{ ANTHROPIC_API_KEY }}"
+# GOOGLE_API_KEY="{{ GOOGLE_API_KEY }}"
+
+# Azure OpenAI Configuration (NjordDeploy variables - passed directly to Docker Compose environment)
+# AZURE_OPENAI_API_KEY="{{ AZURE_OPENAI_API_KEY }}"
+# AZURE_OPENAI_ENDPOINT="{{ AZURE_OPENAI_ENDPOINT }}"
+# AZURE_OPENAI_API_VERSION="{{ AZURE_OPENAI_API_VERSION }}"
+
+# Custom AI Endpoints (NjordDeploy variables - passed directly to Docker Compose environment)
+# Provide a JSON string for custom OpenAI-compatible API endpoints.
+# Example for Ollama:
+# CUSTOM_ENDPOINTS='[{"baseURL":"http://host.docker.internal:11434/v1","name":"Ollama","apiKey":""}]'
+# CUSTOM_ENDPOINTS="{{ CUSTOM_ENDPOINTS }}"
+
+# Proxy Settings (uncomment and configure if needed)
+# PROXY=
+# HTTP_PROXY=
+# HTTPS_PROXY=
+# NO_PROXY=localhost,127.0.0.1,::1,mongodb,chat-mongodb,meilisearch,chat-meilisearch,rag_api,vectordb,host.docker.internal
+# http_proxy=
+# https_proxy=
+# no_proxy=localhost,127.0.0.1,::1,mongodb,chat-mongodb,meilisearch,chat-meilisearch,rag_api,vectordb,host.docker.internal
+
+# Other common settings (uncomment and adjust as needed)
+# MEILI_HOST=http://meilisearch:7700
+# RAG_PORT=8000
+# RAG_API_URL=http://rag_api:${RAG_PORT:-8000}
+# LIBRECHAT_TEMP_CREDENTIALS_PATH=/app/data/.env.temp
+# ADMIN_PANEL_SESSION_SECRET=
+# MEILI_MASTER_KEY=

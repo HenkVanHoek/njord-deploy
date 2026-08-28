@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-08-28), podman (stable, 2026-08-28); Proxmox VM: docker (stable, 2026-08-28), podman (stable, 2026-08-28)."
+# breaking_changes: none
+services:
+  kavita:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-kavita
+    ports:
+      - "{{ KAVITA_WEB_PORT }}:5000"
+    environment:
+      - "TZ={{ KAVITA_TZ }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/kavita/config:/kavita/config"
+      - "{{ CONFIG_BASE_PATH }}/kavita/manga:/manga"
+      - "{{ CONFIG_BASE_PATH }}/kavita/comics:/comics"
+      - "{{ CONFIG_BASE_PATH }}/kavita/books:/books"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

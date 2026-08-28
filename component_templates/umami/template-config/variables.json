@@ -1,0 +1,39 @@
+{
+    "variables": [
+        {
+            "default": "3000",
+            "description": "The external port for accessing the Umami web interface.",
+            "id": "UMAMI_WEB_PORT",
+            "label": "Umami Web Port",
+            "type": "port"
+        },
+        {
+            "default": "umami",
+            "description": "The database name for Umami.",
+            "id": "POSTGRES_DB",
+            "label": "PostgreSQL Database Name",
+            "type": "text"
+        },
+        {
+            "default": "umami",
+            "description": "The database user for Umami.",
+            "id": "POSTGRES_USER",
+            "label": "PostgreSQL Username",
+            "type": "text"
+        },
+        {
+            "default": "umami_secure_db_pass",
+            "description": "The database password for the Umami database user.",
+            "id": "POSTGRES_PASSWORD",
+            "label": "PostgreSQL Password",
+            "type": "password"
+        },
+        {
+            "default": "random_umami_secret_salt_32_chars_min",
+            "description": "A random salt string used by Umami for session encryption.",
+            "id": "UMAMI_APP_SECRET",
+            "label": "Umami Application Secret",
+            "type": "password"
+        }
+    ]
+}

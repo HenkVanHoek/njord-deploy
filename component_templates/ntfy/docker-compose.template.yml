@@ -1,0 +1,28 @@
+# status: "tested"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-08-28), podman (stable, 2026-08-28); Proxmox VM: docker (stable, 2026-08-28), podman (stable, 2026-08-28)."
+# breaking_changes: none
+services:
+  ntfy:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-ntfy
+    command:
+      - serve
+    environment:
+      - "TZ={{ TZ }}"
+      - "NTFY_BASE_URL={{ NTFY_BASE_URL }}"
+      - "NTFY_CACHE_FILE={{ NTFY_CACHE_FILE }}"
+      - "NTFY_ATTACHMENT_CACHE_DIR={{ NTFY_ATTACHMENT_CACHE_DIR }}"
+    user: "0:0"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/ntfy/cache:/var/cache/ntfy"
+      - "{{ DATA_ROOT }}/ntfy/server.yml:/etc/ntfy/server.yml:ro"
+    ports:
+      - "{{ NTFY_WEB_PORT }}:80"
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

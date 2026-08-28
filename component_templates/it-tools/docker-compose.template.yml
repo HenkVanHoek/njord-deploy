@@ -1,0 +1,17 @@
+# status: "tested"
+# last_tested_version: "1.26.2"
+# platform_notes: "Tested on Proxmox LXC: docker (1.26.2, 2026-08-28), podman (1.26.2, 2026-08-28); Proxmox VM: docker (1.26.2, 2026-08-28), podman (1.26.2, 2026-08-28)."
+# breaking_changes: none
+services:
+  it-tools:
+    container_name: njorddeploy-it-tools
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ IT_TOOLS_WEB_PORT }}:80"
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

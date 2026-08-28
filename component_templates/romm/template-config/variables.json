@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8090",
+            "description": "Port for the RomM web interface.",
+            "id": "ROMM_WEB_PORT",
+            "label": "RomM Web Port",
+            "type": "port"
+        },
+        {
+            "default": "f47ac10b58cc4372a5670e02b2c3d4e5",
+            "description": "Secret key for authentication (32-character string).",
+            "id": "ROMM_AUTH_SECRET_KEY",
+            "label": "Auth Secret Key",
+            "type": "password"
+        },
+        {
+            "default": "romm_db_secure_pass_123",
+            "description": "Password for MariaDB romm database.",
+            "id": "ROMM_DB_PASSWORD",
+            "label": "Database Password",
+            "type": "password"
+        }
+    ]
+}

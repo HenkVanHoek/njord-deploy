@@ -1,0 +1,59 @@
+# status: "tested"
+# last_tested_version: "16.15"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.2.1, 2026-08-28), podman (16.15, 2026-08-28); Proxmox VM: docker (v3.2.1, 2026-08-28), podman (v3.2.1, 2026-08-28)."
+# breaking_changes: "None"
+services:
+  plausible:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-plausible
+    restart: unless-stopped
+    command: sh -c "until /entrypoint.sh db createdb; do echo 'Waiting for databases to be ready...'; sleep 3; done && /entrypoint.sh db migrate && /entrypoint.sh run"
+    depends_on:
+      - njorddeploy-plausible-db
+      - njorddeploy-plausible-events-db
+    ports:
+      - "{{ PLAUSIBLE_WEB_PORT }}:8000"
+    environment:
+      - "BASE_URL={{ PLAUSIBLE_BASE_URL }}"
+      - "SECRET_KEY_BASE={{ PLAUSIBLE_SECRET_KEY_BASE }}"
+      - "TOTP_VAULT_KEY={{ PLAUSIBLE_TOTP_VAULT_KEY }}"
+      - "DATABASE_URL=postgres://{{ POSTGRES_USER }}:{{ POSTGRES_PASSWORD }}@njorddeploy-plausible-db:5432/{{ POSTGRES_DB }}"
+      - "CLICKHOUSE_DATABASE_URL=http://njorddeploy-plausible-events-db:8123/plausible_events_db"
+      - "HTTP_PORT=8000"
+    networks:
+      - njorddeploy_net
+
+  njorddeploy-plausible-db:
+    image: postgres:16-alpine
+    container_name: njorddeploy-plausible-db
+    restart: unless-stopped
+    user: "0:0"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/plausible/db-data:/var/lib/postgresql/data"
+    environment:
+      - "POSTGRES_DB={{ POSTGRES_DB }}"
+      - "POSTGRES_USER={{ POSTGRES_USER }}"
+      - "POSTGRES_PASSWORD={{ POSTGRES_PASSWORD }}"
+    networks:
+      - njorddeploy_net
+
+  njorddeploy-plausible-events-db:
+    image: clickhouse/clickhouse-server:24.12-alpine
+    container_name: njorddeploy-plausible-events-db
+    restart: unless-stopped
+    user: "0:0"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/plausible/event-data:/var/lib/clickhouse"
+      - "{{ CONFIG_BASE_PATH }}/plausible/event-logs:/var/log/clickhouse-server"
+      - "{{ DATA_ROOT }}/plausible/logs.xml:/etc/clickhouse-server/config.d/logs.xml:ro"
+      - "{{ DATA_ROOT }}/plausible/ipv4-only.xml:/etc/clickhouse-server/config.d/ipv4-only.xml:ro"
+      - "{{ DATA_ROOT }}/plausible/low-resources.xml:/etc/clickhouse-server/config.d/low-resources.xml:ro"
+      - "{{ DATA_ROOT }}/plausible/default-profile-low-resources-overrides.xml:/etc/clickhouse-server/users.d/default-profile-low-resources-overrides.xml:ro"
+    environment:
+      - "CLICKHOUSE_SKIP_USER_SETUP=1"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

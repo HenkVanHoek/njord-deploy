@@ -1,0 +1,35 @@
+# status: "tested"
+# last_tested_version: "7.4.11"
+# platform_notes: "Tested on Proxmox LXC: docker (2026.8.28-a30b2d474, 2026-08-28), podman (7.4.11, 2026-08-28); Proxmox VM: docker (2026.8.28-a30b2d474, 2026-08-28), podman (2026.8.28-a30b2d474, 2026-08-28)."
+# breaking_changes: none
+services:
+  searxng:
+    container_name: njorddeploy-searxng
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ SEARXNG_WEB_PORT }}:8080"
+    environment:
+      - "SEARXNG_BASE_URL=http://{{ SEARXNG_WEB_PORT }}"
+      - "SEARXNG_SECRET_KEY={{ SEARXNG_SECRET }}"
+      - "SEARXNG_REDIS_URL=redis://njorddeploy-searxng-redis:6379/0"
+    volumes:
+      - "{{ DATA_ROOT }}/searxng/settings.yml:/etc/searxng/settings.yml:ro"
+    networks:
+      - njorddeploy_net
+    user: "0:0"
+    depends_on:
+      - searxng-redis
+    restart: unless-stopped
+
+  searxng-redis:
+    container_name: njorddeploy-searxng-redis
+    image: redis:7-alpine
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/searxng/redis-data:/data"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+
+networks:
+  njorddeploy_net:
+    external: true

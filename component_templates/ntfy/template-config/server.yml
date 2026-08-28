@@ -1,0 +1,25 @@
+# ntfy server configuration file
+# For more options, see https://ntfy.sh/docs/install/#configuration
+
+# Listen on HTTP port 80 inside the container
+listen-http: ":80"
+
+# Uncomment and configure if you want to enable authentication
+# auth-file: /etc/ntfy/user.db
+# auth-default-access: deny-all
+# auth-default-publish-access: deny-all
+# auth-default-subscribe-access: deny-all
+# auth-topic-access:
+#   "my-secret-topic":
+#     - user: "user1"
+#       publish: "yes"
+#       subscribe: "yes"
+#   "another-topic":
+#     - user: "user2"
+#       publish: "yes"
+#       subscribe: "yes"
+
+# The following settings are managed via environment variables for easier configuration:
+# base-url: "{{ NTFY_BASE_URL }}"
+# cache-file: "{{ NTFY_CACHE_FILE }}"
+# attachment-cache-dir: "{{ NTFY_ATTACHMENT_CACHE_DIR }}"

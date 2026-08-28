@@ -235,7 +235,43 @@ input[type="password"]::placeholder {
 .form-control:focus, input[type="text"]:focus, input[type="password"]:focus {
     border-color: var(--brand-blue) !important;
     box-shadow: 0 0 10px rgba(0, 176, 255, 0.35) !important;
-    background-color: rgba(15, 23, 42, 0.8) !important;
+    background-color: var(--input-bg) !important;
+    color: var(--input-color) !important;
+}
+
+html[data-theme="dark"] .form-control:focus,
+html[data-theme="futuristic-dark"] .form-control:focus,
+html[data-theme="dark"] input[type="text"]:focus,
+html[data-theme="futuristic-dark"] input[type="text"]:focus,
+html[data-theme="dark"] input[type="password"]:focus,
+html[data-theme="futuristic-dark"] input[type="password"]:focus {
+    background-color: rgba(15, 23, 42, 0.85) !important;
+    color: #f8fafc !important;
+}
+
+html[data-theme="light"] .form-control:focus,
+html[data-theme="light"] input[type="text"]:focus,
+html[data-theme="light"] input[type="password"]:focus {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+html[data-theme="high-contrast-dark"] .form-control:focus,
+html[data-theme="high-contrast-dark"] input[type="text"]:focus,
+html[data-theme="high-contrast-dark"] input[type="password"]:focus {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+}
+
+html[data-theme="high-contrast-light"] .form-control:focus,
+html[data-theme="high-contrast-light"] input[type="text"]:focus,
+html[data-theme="high-contrast-light"] input[type="password"]:focus {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border-color: #000000 !important;
 }
 
 /* 4. Neon Buttons & Overrides */

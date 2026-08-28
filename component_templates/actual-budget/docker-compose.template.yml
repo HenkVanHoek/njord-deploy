@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "22.23.2"
+# platform_notes: "Tested on Proxmox LXC: docker (22.23.2, 2026-08-28), podman (22.23.2, 2026-08-28); Proxmox VM: docker (22.23.2, 2026-08-28), podman (22.23.2, 2026-08-28)."
+# breaking_changes: none
+services:
+  actual-budget:
+    container_name: njorddeploy-actual-budget
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ ACTUAL_BUDGET_WEB_PORT }}:5006"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/actual-budget/data:/data"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+    user: "0:0"
+
+networks:
+  njorddeploy_net:
+    external: true

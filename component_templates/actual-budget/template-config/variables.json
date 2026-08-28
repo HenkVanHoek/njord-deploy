@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5006",
+            "description": "The port on which Actual Budget's web interface will be accessible.",
+            "id": "ACTUAL_BUDGET_WEB_PORT",
+            "label": "Actual Budget Web Port",
+            "type": "port"
+        }
+    ]
+}

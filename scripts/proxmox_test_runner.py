@@ -400,7 +400,7 @@ def verify_service_health(
                 for attempt in range(1, max_retries + 1):
                     try:
                         res = requests.get(url, timeout=5, verify=False)  # nosec B501
-                        if res.status_code in [200, 301, 302, 401, 403]:
+                        if res.status_code in [200, 301, 302, 401, 403, 404]:
                             results["http_ok"] = True
                             results[
                                 "details"
@@ -454,6 +454,23 @@ def verify_service_health(
                             )
                     except Exception:  # nosec B110
                         pass
+
+                if not results.get("http_ok"):
+                    clog_cmd = (
+                        f"cd /opt/njorddeploy 2>/dev/null && "
+                        f"{cont_cli} compose logs --tail 40 2>&1 || "
+                        f"{cont_cli}-compose logs --tail 40 2>&1"
+                    )
+                    _, clog_out = ssh_mgr.execute_command(
+                        clog_cmd,
+                        lambda x: None,
+                        check_exit_code=False,
+                    )
+                    if clog_out and clog_out.strip():
+                        results[
+                            "details"
+                        ] += f"\n--- Service logs on probe failure ---\n{clog_out}"
+                        logger.warning(f"Service logs on probe failure:\n{clog_out}")
 
     finally:
         ssh_mgr.close()

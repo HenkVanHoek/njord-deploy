@@ -1,0 +1,26 @@
+# status: "tested"
+# last_tested_version: "v3.24.0"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.24.0, 2026-08-28), podman (v3.24.0, 2026-08-28); Proxmox VM: docker (v3.24.0, 2026-08-28), podman (v3.24.0, 2026-08-28)."
+# breaking_changes: none
+services:
+  mealie:
+    container_name: njorddeploy-mealie
+    image: "{{ image_name }}:{{ component_version }}"
+    ports:
+      - "{{ MEALIE_WEB_PORT }}:9000"
+    environment:
+      - "TZ={{ TZ }}"
+      - "PUID={{ PUID }}"
+      - "PGID={{ PGID }}"
+      - "MEALIE_DATA_DIR=/app/data"
+      - "MEALIE_PORT=9000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/mealie/data:/app/data"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+    user: "0:0"
+
+networks:
+  njorddeploy_net:
+    external: true

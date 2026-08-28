@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "0.6.27-ls398"
+# platform_notes: "Tested on Proxmox LXC: docker (0.6.27-ls398, 2026-08-28), podman (0.6.27-ls398, 2026-08-28); Proxmox VM: docker (0.6.27-ls398, 2026-08-28), podman (0.6.27-ls398, 2026-08-28)."
+# breaking_changes: none
+services:
+  calibre-web:
+    container_name: njorddeploy-calibre-web
+    image: "{{ image_name }}:{{ component_version }}"
+    environment:
+      - "PUID={{ PUID }}"
+      - "PGID={{ PGID }}"
+      - "TZ={{ TZ }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/calibre-web/config:/config"
+      - "{{ CONFIG_BASE_PATH }}/calibre-web/books:/books"
+    ports:
+      - "{{ CALIBRE_WEB_PORT }}:8083"
+    user: "0:0"
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

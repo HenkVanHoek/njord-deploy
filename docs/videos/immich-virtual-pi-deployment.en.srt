@@ -1,0 +1,23 @@
+1
+00:00:00,200 --> 00:00:07,360
+Welcome to NjordDeploy. Let's start an automated discovery scan to locate nodes on our network.
+
+2
+00:00:14,360 --> 00:00:24,480
+Virtual Pi 5 discovered at 192.168.1.185. Entering SSH credentials for verification.
+
+3
+00:00:31,300 --> 00:00:39,620
+Hardware verified: 8 gigabytes of RAM and 64 gigabytes of storage. Ready for the software catalog.
+
+4
+00:00:45,840 --> 00:00:52,980
+Under Media Servers, selecting Immich: complete photo suite with AI recognition and PostgreSQL.
+
+5
+00:01:10,690 --> 00:01:17,610
+Deployment complete! All four microservices are deployed via Docker and verified healthy.
+
+6
+00:01:19,480 --> 00:01:25,160
+Launch the Immich Web UI instantly with one click on port 2283.

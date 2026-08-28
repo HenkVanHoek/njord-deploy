@@ -1,0 +1,32 @@
+{
+    "variables": [
+        {
+            "default": "9925",
+            "description": "The external port for accessing the Mealie web interface.",
+            "id": "MEALIE_WEB_PORT",
+            "label": "Mealie Web Port",
+            "type": "port"
+        },
+        {
+            "default": "1000",
+            "description": "User ID for the Mealie container. Used by the application internally for file ownership. Set to match the owner of the mounted volume for best permissions.",
+            "id": "PUID",
+            "label": "User ID (PUID)",
+            "type": "text"
+        },
+        {
+            "default": "1000",
+            "description": "Group ID for the Mealie container. Used by the application internally for file ownership. Set to match the group of the mounted volume for best permissions.",
+            "id": "PGID",
+            "label": "Group ID (PGID)",
+            "type": "text"
+        },
+        {
+            "default": "Etc/UTC",
+            "description": "Specify the timezone for the Mealie container (e.g., 'America/New_York', 'Etc/UTC').",
+            "id": "TZ",
+            "label": "Timezone",
+            "type": "text"
+        }
+    ]
+}
