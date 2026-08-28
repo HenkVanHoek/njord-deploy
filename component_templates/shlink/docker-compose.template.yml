@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "5.1.5"
+# platform_notes: "Tested on Proxmox LXC: docker (5.1.5, 2026-08-29), podman (5.1.5, 2026-08-29); Proxmox VM: docker (5.1.5, 2026-08-29), podman (5.1.5, 2026-08-29)."
+# breaking_changes: none
+services:
+  shlink:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-shlink
+    restart: unless-stopped
+    environment:
+      - "DEFAULT_DOMAIN={{ PISelfhosting_HOST_IP | default('localhost') }}:{{ SHLINK_WEB_PORT }}"
+      - "IS_HTTPS_ENABLED=false"
+      - "INITIAL_API_KEY={{ SHLINK_INITIAL_API_KEY }}"
+      - "DB_DRIVER=sqlite"
+    ports:
+      - "{{ SHLINK_WEB_PORT }}:8080"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/shlink/data:/etc/shlink/data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

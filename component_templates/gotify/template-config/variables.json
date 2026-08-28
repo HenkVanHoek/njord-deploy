@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8097",
+            "description": "Web UI and WebSocket port.",
+            "id": "GOTIFY_WEB_PORT",
+            "label": "Gotify Web Port",
+            "type": "port"
+        },
+        {
+            "default": "admin",
+            "description": "Admin username.",
+            "id": "GOTIFY_DEFAULT_USER",
+            "label": "Gotify Default User",
+            "type": "text"
+        },
+        {
+            "default": "gotify_admin_pass_123",
+            "description": "Admin password.",
+            "id": "GOTIFY_DEFAULT_PASS",
+            "label": "Gotify Default Password",
+            "type": "password"
+        }
+    ]
+}

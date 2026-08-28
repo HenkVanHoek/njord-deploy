@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "8089",
+            "description": "Web port for Shlink server.",
+            "id": "SHLINK_WEB_PORT",
+            "label": "Shlink Web Port",
+            "type": "port"
+        },
+        {
+            "default": "shlink_master_api_key_123",
+            "description": "Initial API key for administrative access.",
+            "id": "SHLINK_INITIAL_API_KEY",
+            "label": "Shlink Initial API Key",
+            "type": "password"
+        }
+    ]
+}

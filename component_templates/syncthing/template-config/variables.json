@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "8384",
+            "description": "Web GUI port.",
+            "id": "SYNCTHING_WEB_PORT",
+            "label": "Syncthing Web Port",
+            "type": "port"
+        },
+        {
+            "default": "22000",
+            "description": "Listening port for sync traffic.",
+            "id": "SYNCTHING_PORT",
+            "label": "Syncthing Sync Port",
+            "type": "port"
+        }
+    ]
+}

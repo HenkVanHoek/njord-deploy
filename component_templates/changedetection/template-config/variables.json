@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5002",
+            "description": "Web UI port.",
+            "id": "CHANGEDETECTION_WEB_PORT",
+            "label": "ChangeDetection Web Port",
+            "type": "port"
+        }
+    ]
+}

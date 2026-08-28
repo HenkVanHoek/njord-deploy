@@ -1,0 +1,23 @@
+# status: "tested"
+# last_tested_version: "3.1.0"
+# platform_notes: "Tested on Proxmox LXC: docker (3.1.0, 2026-08-29), podman (3.1.0, 2026-08-29); Proxmox VM: docker (3.1.0, 2026-08-29), podman (3.1.0, 2026-08-29)."
+# breaking_changes: none
+services:
+  gotify:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-gotify
+    restart: unless-stopped
+    environment:
+      - "GOTIFY_DEFAULTUSER_NAME={{ GOTIFY_DEFAULT_USER }}"
+      - "GOTIFY_DEFAULTUSER_PASS={{ GOTIFY_DEFAULT_PASS }}"
+    ports:
+      - "{{ GOTIFY_WEB_PORT }}:80"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/gotify/data:/app/data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

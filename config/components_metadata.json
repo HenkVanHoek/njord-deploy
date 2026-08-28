@@ -78,7 +78,11 @@
             "freshrss",
             "memos",
             "trilium",
-            "flatnotes"
+            "flatnotes",
+            "syncthing",
+            "changedetection",
+            "shlink",
+            "gotify"
         ],
         "default_group": "general",
         "global_variables": [
@@ -461,6 +465,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": "CALIBRE_WEB_PORT"
         },
+        "changedetection": {
+            "category": "Utilities",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Self-hosted website change detection, website monitor, restock alerts and notification service.",
+            "docker_service_name": "changedetection",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "ghcr.io/dgtlmoon/changedetection.io",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:35:08.971144+00:00",
+            "last_updated": "2026-08-28T22:20:39.694164+00:00",
+            "name": "ChangeDetection.io",
+            "port": 5002,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "conduit": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -708,6 +732,26 @@
                 "security"
             ],
             "traefik_internal_port": null,
+            "ui_port_variable": null
+        },
+        "gotify": {
+            "category": "Communication",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "A simple server for sending and receiving messages in real-time per web socket with push notifications.",
+            "docker_service_name": "gotify",
+            "group": "Communication",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "gotify/server",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:35:48.177581+00:00",
+            "last_updated": "2026-08-28T22:20:39.753991+00:00",
+            "name": "Gotify",
+            "port": 8097,
+            "requires_root": false,
+            "test_status": "tested",
             "ui_port_variable": null
         },
         "grafana": {
@@ -2290,6 +2334,26 @@
             "test_status": "tested",
             "ui_port_variable": "SEMAPHORE_PORT"
         },
+        "shlink": {
+            "category": "Utilities",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Self-hosted URL shortener with REST API, rich statistics and QR code generation.",
+            "docker_service_name": "shlink",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "shlinkio/shlink",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:36:30.733313+00:00",
+            "last_updated": "2026-08-28T22:20:39.726993+00:00",
+            "name": "Shlink",
+            "port": 8089,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "sonarr": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -2348,6 +2412,26 @@
             ],
             "test_status": "tested",
             "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
+        },
+        "syncthing": {
+            "category": "Storage",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Open Source Continuous File Synchronization program that synchronizes files between two or more computers in real time.",
+            "docker_service_name": "syncthing",
+            "group": "Storage",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "syncthing/syncthing",
+            "is_agent": false,
+            "last_tested": "2026-08-28T22:37:12.200090+00:00",
+            "last_updated": "2026-08-28T22:20:39.656981+00:00",
+            "name": "Syncthing",
+            "port": 8384,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "technitium-dns": {
             "ai_instructions": null,
@@ -2412,7 +2496,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-28T22:19:53.741371+00:00",
+            "last_updated": "2026-08-28T22:38:11.807733+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",

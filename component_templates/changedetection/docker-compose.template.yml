@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "0.55.8"
+# platform_notes: "Tested on Proxmox LXC: docker (0.55.8, 2026-08-29), podman (0.55.8, 2026-08-29); Proxmox VM: docker (0.55.8, 2026-08-29), podman (0.55.8, 2026-08-29)."
+# breaking_changes: none
+services:
+  changedetection:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-changedetection
+    restart: unless-stopped
+    ports:
+      - "{{ CHANGEDETECTION_WEB_PORT }}:5000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/changedetection/data:/datastore"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
