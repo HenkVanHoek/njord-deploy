@@ -1287,7 +1287,12 @@ def create_app(test_config=None):
                 metadata["has_configuration"] = True
 
             # 5. Update master metadata JSON
-            component_manager.update_component_metadata(component_id, metadata)
+            try:
+                component_manager.update_component_metadata(component_id, metadata)
+            except KeyError:
+                current_meta = component_manager.load_metadata()
+                current_meta.setdefault("components", {})[component_id] = metadata
+                component_manager.save_metadata()
 
             # 6. Update components_order in _njorddeploy
             meta_data = component_manager.load_metadata()

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8765",
+            "description": "Web UI port.",
+            "id": "SPEEDTEST_WEB_PORT",
+            "label": "Speedtest Tracker Web Port",
+            "type": "port"
+        }
+    ]
+}

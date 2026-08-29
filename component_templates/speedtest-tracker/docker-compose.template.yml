@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "v1.15.0-ls169"
+# platform_notes: "Tested on Proxmox LXC: docker (v1.15.0-ls169, 2026-08-29), podman (v1.15.0-ls169, 2026-08-29); Proxmox VM: docker (v1.15.0-ls169, 2026-08-29), podman (v1.15.0-ls169, 2026-08-29)."
+# breaking_changes: none
+services:
+  speedtest-tracker:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-speedtest-tracker
+    restart: unless-stopped
+    environment:
+      - "PUID=1000"
+      - "PGID=1000"
+      - "TZ=Europe/Amsterdam"
+      - "APP_KEY=base64:J8e0Kz+z56fG0B/1Y76LqQ+2n9NqK48x/5H9mH7vV4A="
+    ports:
+      - "{{ SPEEDTEST_WEB_PORT }}:80"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/speedtest-tracker/config:/config"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

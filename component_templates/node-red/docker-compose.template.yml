@@ -1,0 +1,22 @@
+# status: "tested"
+# last_tested_version: "5.0.4"
+# platform_notes: "Tested on Proxmox LXC: docker (5.0.4, 2026-08-29), podman (5.0.4, 2026-08-29); Proxmox VM: docker (5.0.4, 2026-08-29), podman (stable, 2026-08-29)."
+# breaking_changes: none
+services:
+  node-red:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-node-red
+    restart: unless-stopped
+    environment:
+      - "TZ=Europe/Amsterdam"
+    ports:
+      - "{{ NODERED_WEB_PORT }}:1880"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/node-red/data:/data"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

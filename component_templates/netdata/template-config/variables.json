@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "19999",
+            "description": "Web UI dashboard port.",
+            "id": "NETDATA_WEB_PORT",
+            "label": "Netdata Web Port",
+            "type": "port"
+        }
+    ]
+}

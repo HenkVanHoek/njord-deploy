@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "1880",
+            "description": "Web UI and flow editor port.",
+            "id": "NODERED_WEB_PORT",
+            "label": "Node-RED Web Port",
+            "type": "port"
+        }
+    ]
+}

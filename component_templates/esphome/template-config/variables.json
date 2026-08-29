@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "6052",
+            "description": "Dashboard Web UI port.",
+            "id": "ESPHOME_WEB_PORT",
+            "label": "ESPHome Web Port",
+            "type": "port"
+        }
+    ]
+}

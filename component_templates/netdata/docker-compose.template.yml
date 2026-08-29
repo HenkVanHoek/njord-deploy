@@ -1,0 +1,22 @@
+# status: "tested"
+# last_tested_version: "nightly"
+# platform_notes: "Tested on Proxmox LXC: docker (nightly, 2026-08-29), podman (nightly, 2026-08-29); Proxmox VM: docker (nightly, 2026-08-29), podman (nightly, 2026-08-29)."
+# breaking_changes: none
+services:
+  netdata:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-netdata
+    restart: unless-stopped
+    hostname: njorddeploy-node
+    ports:
+      - "{{ NETDATA_WEB_PORT }}:19999"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/netdata/config:/etc/netdata"
+      - "{{ CONFIG_BASE_PATH }}/netdata/lib:/var/lib/netdata"
+      - "{{ CONFIG_BASE_PATH }}/netdata/cache:/var/cache/netdata"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

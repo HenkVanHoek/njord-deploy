@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "1883",
+            "description": "MQTT protocol port.",
+            "id": "MOSQUITTO_MQTT_PORT",
+            "label": "Mosquitto MQTT Port",
+            "type": "port"
+        }
+    ]
+}

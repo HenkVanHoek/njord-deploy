@@ -90,8 +90,12 @@
             "jellyseerr",
             "bazarr",
             "lidarr",
-            "readarr",
-            "tautulli"
+            "tautulli",
+            "node-red",
+            "mosquitto",
+            "netdata",
+            "speedtest-tracker",
+            "esphome"
         ],
         "default_group": "general",
         "global_variables": [
@@ -129,7 +133,8 @@
             "Storage",
             "Monitoring",
             "News & Media",
-            "Development"
+            "Development",
+            "Smart Home"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -199,6 +204,10 @@
             "Security & Utilities": {
                 "is_exclusive": false,
                 "name": "Security & Utilities"
+            },
+            "Smart Home": {
+                "is_exclusive": false,
+                "name": "Smart Home"
             },
             "Smart Home & IoT": {
                 "is_exclusive": false,
@@ -595,6 +604,26 @@
             "last_updated": "2026-08-28T21:27:43.428803+00:00",
             "name": "Dockge",
             "port": 5001,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
+        "esphome": {
+            "category": "Smart Home & IoT",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "System to control your ESP8266 and ESP32 boards by simple and powerful configuration files and control them remotely.",
+            "docker_service_name": "esphome",
+            "group": "Smart Home",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "esphome/esphome",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:08:28.620356+00:00",
+            "last_updated": "2026-08-29T01:50:14.036636+00:00",
+            "name": "ESPHome",
+            "port": 6052,
             "requires_root": false,
             "test_status": "tested",
             "ui_port_variable": null
@@ -1513,6 +1542,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": "NAVIDROME_WEB_PORT"
         },
+        "netdata": {
+            "category": "Monitoring",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Real-time performance and health monitoring for systems, hardware, containers, and applications.",
+            "docker_service_name": "netdata",
+            "group": "Monitoring",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "netdata/netdata",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:09:11.476229+00:00",
+            "last_updated": "2026-08-29T01:50:13.963767+00:00",
+            "name": "Netdata",
+            "port": 19999,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "nextcloud": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -1685,6 +1734,26 @@
             "last_updated": "2026-08-28T22:39:11.651073+00:00",
             "name": "NocoDB",
             "port": 8098,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
+        "node-red": {
+            "category": "Smart Home & IoT",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Low-code programming for event-driven applications, connecting hardware devices, APIs and online services.",
+            "docker_service_name": "node-red",
+            "group": "Smart Home",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "nodered/node-red",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:09:57.554897+00:00",
+            "last_updated": "2026-08-29T01:50:13.922748+00:00",
+            "name": "Node-RED",
+            "port": 1880,
             "requires_root": false,
             "test_status": "tested",
             "ui_port_variable": null
@@ -2320,24 +2389,6 @@
             "traefik_internal_port": null,
             "ui_port_variable": "RADARR_WEB_PORT"
         },
-        "readarr": {
-            "category": "Media",
-            "conflicts_with": [],
-            "default_version": "develop",
-            "depends_on": [],
-            "description": "Book and audiobook collection manager for Usenet and BitTorrent users.",
-            "docker_service_name": "readarr",
-            "group": "Media",
-            "has_configuration": true,
-            "has_ui": false,
-            "image_name": "lscr.io/linuxserver/readarr",
-            "is_agent": false,
-            "last_updated": "2026-08-28T22:58:35.035945+00:00",
-            "name": "Readarr",
-            "port": 8787,
-            "requires_root": false,
-            "ui_port_variable": null
-        },
         "romm": {
             "category": "Media",
             "conflicts_with": [],
@@ -2534,6 +2585,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": "SONARR_WEB_PORT"
         },
+        "speedtest-tracker": {
+            "category": "Utilities",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Self-hosted internet speedtest tracker that runs speedtests periodically and visualizes latency and bandwidth.",
+            "docker_service_name": "speedtest-tracker",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "lscr.io/linuxserver/speedtest-tracker",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:10:45.637149+00:00",
+            "last_updated": "2026-08-29T01:50:14.014348+00:00",
+            "name": "Speedtest Tracker",
+            "port": 8765,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "stirling-pdf": {
             "conflicts_with": [],
             "depends_on": [],
@@ -2668,7 +2739,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-29T01:49:19.491150+00:00",
+            "last_updated": "2026-08-29T02:13:00.409907+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
