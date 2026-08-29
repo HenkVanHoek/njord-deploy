@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8083",
+            "description": "Web UI port.",
+            "id": "CYBERCHEF_WEB_PORT",
+            "label": "CyberChef Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -95,7 +95,13 @@
             "mosquitto",
             "netdata",
             "speedtest-tracker",
-            "esphome"
+            "esphome",
+            "drawio",
+            "excalidraw",
+            "cyberchef",
+            "wallabag",
+            "woodpecker-ci",
+            "pgadmin4"
         ],
         "default_group": "general",
         "global_variables": [
@@ -134,7 +140,9 @@
             "Monitoring",
             "News & Media",
             "Development",
-            "Smart Home"
+            "Smart Home",
+            "Developer Tools",
+            "Database Management"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -157,9 +165,17 @@
                 "is_exclusive": false,
                 "name": "Communications"
             },
+            "Database Management": {
+                "is_exclusive": false,
+                "name": "Database Management"
+            },
             "Developer": {
                 "is_exclusive": false,
                 "name": "Developer"
+            },
+            "Developer Tools": {
+                "is_exclusive": false,
+                "name": "Developer Tools"
             },
             "Development": {
                 "is_exclusive": false,
@@ -555,6 +571,26 @@
             "traefik_internal_port": null,
             "ui_port_variable": null
         },
+        "cyberchef": {
+            "category": "Utilities",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "The Cyber Swiss Army Knife - a web app for encryption, encoding, compression, and data analysis.",
+            "docker_service_name": "cyberchef",
+            "group": "Utilities",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "mpepping/cyberchef",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:35:14.402150+00:00",
+            "last_updated": "2026-08-29T02:14:12.641485+00:00",
+            "name": "CyberChef",
+            "port": 8083,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "docker-jitsi-meet": {
             "conflicts_with": [],
             "depends_on": [],
@@ -608,6 +644,26 @@
             "test_status": "tested",
             "ui_port_variable": null
         },
+        "drawio": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Security-first diagramming application for creating architecture diagrams, flowcharts, and mind maps.",
+            "docker_service_name": "drawio",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "jgraph/drawio",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:35:59.060093+00:00",
+            "last_updated": "2026-08-29T02:14:12.578527+00:00",
+            "name": "Draw.io",
+            "port": 8082,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "esphome": {
             "category": "Smart Home & IoT",
             "conflicts_with": [],
@@ -624,6 +680,26 @@
             "last_updated": "2026-08-29T01:50:14.036636+00:00",
             "name": "ESPHome",
             "port": 6052,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
+        "excalidraw": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Virtual collaborative whiteboard for sketching diagrams with a hand-drawn, paper-like feel.",
+            "docker_service_name": "excalidraw",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "excalidraw/excalidraw",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:36:40.031399+00:00",
+            "last_updated": "2026-08-29T02:14:12.610915+00:00",
+            "name": "Excalidraw",
+            "port": 8081,
             "requires_root": false,
             "test_status": "tested",
             "ui_port_variable": null
@@ -2003,6 +2079,26 @@
             "traefik_internal_port": 8000,
             "ui_port_variable": "PAPERLESS_WEB_PORT"
         },
+        "pgadmin4": {
+            "category": "Database Management",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Comprehensive open source administration and management tool for PostgreSQL databases.",
+            "docker_service_name": "pgadmin4",
+            "group": "Database Management",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "dpage/pgadmin4",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:37:22.106238+00:00",
+            "last_updated": "2026-08-29T02:14:26.912710+00:00",
+            "name": "pgAdmin 4",
+            "port": 5050,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "phpmyadmin": {
             "component_version": "latest",
             "config_templates": {
@@ -2739,7 +2835,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-29T02:13:00.409907+00:00",
+            "last_updated": "2026-08-29T02:40:01.464571+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -2980,6 +3076,26 @@
             "test_status": "tested",
             "ui_port_variable": "VOICEBOX_WEB_PORT"
         },
+        "wallabag": {
+            "category": "Productivity",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Self-hosted application for saving web pages and articles to read later on any device.",
+            "docker_service_name": "wallabag",
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "wallabag/wallabag",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:38:10.670974+00:00",
+            "last_updated": "2026-08-29T02:14:12.694087+00:00",
+            "name": "Wallabag",
+            "port": 8085,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
+        },
         "web-notepad": {
             "component_version": "latest",
             "conflicts_with": [],
@@ -3007,6 +3123,26 @@
             "test_status": "tested",
             "traefik_internal_port": null,
             "ui_port_variable": "WEB_NOTEPAD_WEB_PORT"
+        },
+        "woodpecker-ci": {
+            "category": "Developer Tools",
+            "conflicts_with": [],
+            "default_version": "v3",
+            "depends_on": [],
+            "description": "Simple yet powerful community-driven continuous integration engine with container-native pipelines.",
+            "docker_service_name": "woodpecker-ci",
+            "group": "Developer Tools",
+            "has_configuration": true,
+            "has_ui": false,
+            "image_name": "woodpeckerci/woodpecker-server",
+            "is_agent": false,
+            "last_tested": "2026-08-29T02:38:55.780714+00:00",
+            "last_updated": "2026-08-29T02:20:10.001893+00:00",
+            "name": "Woodpecker CI",
+            "port": 9005,
+            "requires_root": false,
+            "test_status": "tested",
+            "ui_port_variable": null
         },
         "zigbee2mqtt": {
             "component_version": "latest",

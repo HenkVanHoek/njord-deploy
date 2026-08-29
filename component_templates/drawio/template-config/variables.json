@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8082",
+            "description": "Web UI port.",
+            "id": "DRAWIO_WEB_PORT",
+            "label": "Draw.io Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8081",
+            "description": "Web UI port.",
+            "id": "EXCALIDRAW_WEB_PORT",
+            "label": "Excalidraw Web Port",
+            "type": "port"
+        }
+    ]
+}

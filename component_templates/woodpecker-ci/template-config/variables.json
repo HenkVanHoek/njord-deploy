@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "9005",
+            "description": "Web UI dashboard port.",
+            "id": "WOODPECKER_WEB_PORT",
+            "label": "Woodpecker CI Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "3.14.6"
+# platform_notes: "Tested on Proxmox LXC: docker (3.14.6, 2026-08-29), podman (3.14.6, 2026-08-29); Proxmox VM: docker (3.14.6, 2026-08-29), podman (3.14.6, 2026-08-29)."
+# breaking_changes: none
+services:
+  pgadmin4:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-pgadmin4
+    restart: unless-stopped
+    environment:
+      - "PGADMIN_DEFAULT_EMAIL=admin@njorddeploy.com"
+      - "PGADMIN_DEFAULT_PASSWORD=njorddeployadmin"
+      - "PGADMIN_LISTEN_PORT=5050"
+    ports:
+      - "{{ PGADMIN_WEB_PORT }}:5050"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/pgadmin4:/var/lib/pgadmin"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

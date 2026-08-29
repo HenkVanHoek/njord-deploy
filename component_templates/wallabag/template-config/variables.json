@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8085",
+            "description": "Web UI port.",
+            "id": "WALLABAG_WEB_PORT",
+            "label": "Wallabag Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+# status: "tested"
+# last_tested_version: "1.30.4-alpine"
+# platform_notes: "Tested on Proxmox LXC: docker (1.30.4-alpine, 2026-08-29), podman (1.30.4-alpine, 2026-08-29); Proxmox VM: docker (1.30.4-alpine, 2026-08-29), podman (1.30.4-alpine, 2026-08-29)."
+# breaking_changes: none
+services:
+  cyberchef:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-cyberchef
+    restart: unless-stopped
+    ports:
+      - "{{ CYBERCHEF_WEB_PORT }}:8000"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5050",
+            "description": "Web UI dashboard port.",
+            "id": "PGADMIN_WEB_PORT",
+            "label": "pgAdmin Web Port",
+            "type": "port"
+        }
+    ]
+}

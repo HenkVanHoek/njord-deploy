@@ -1,0 +1,17 @@
+# status: "tested"
+# last_tested_version: "0.8.10"
+# platform_notes: "Tested on Proxmox LXC: docker (1.27.5, 2026-08-29), podman (0.8.10, 2026-08-29); Proxmox VM: docker (1.27.5, 2026-08-29), podman (1.27.5, 2026-08-29)."
+# breaking_changes: none
+services:
+  excalidraw:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-excalidraw
+    restart: unless-stopped
+    ports:
+      - "{{ EXCALIDRAW_WEB_PORT }}:80"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
