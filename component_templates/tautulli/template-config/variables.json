@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8181",
+            "description": "Web UI port.",
+            "id": "TAUTULLI_WEB_PORT",
+            "label": "Tautulli Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8686",
+            "description": "Web UI port.",
+            "id": "LIDARR_WEB_PORT",
+            "label": "Lidarr Web Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "5055",
+            "description": "Web UI port.",
+            "id": "JELLYSEERR_WEB_PORT",
+            "label": "Jellyseerr Web Port",
+            "type": "port"
+        }
+    ]
+}

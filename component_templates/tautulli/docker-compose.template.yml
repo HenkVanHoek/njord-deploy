@@ -1,0 +1,24 @@
+# status: "tested"
+# last_tested_version: "v2.18.1-ls242"
+# platform_notes: "Tested on Proxmox LXC: docker (v2.18.1-ls242, 2026-08-29), podman (v2.18.1-ls242, 2026-08-29); Proxmox VM: docker (v2.18.1-ls242, 2026-08-29), podman (stable, 2026-08-29)."
+# breaking_changes: none
+services:
+  tautulli:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-tautulli
+    restart: unless-stopped
+    environment:
+      - "PUID=1000"
+      - "PGID=1000"
+      - "TZ=Europe/Amsterdam"
+    ports:
+      - "{{ TAUTULLI_WEB_PORT }}:8181"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/tautulli/config:/config"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

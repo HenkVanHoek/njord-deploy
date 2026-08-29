@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "3.1.0.4875-ls40"
+# platform_notes: "Tested on Proxmox LXC: docker (3.1.0.4875-ls40, 2026-08-29), podman (3.1.0.4875-ls40, 2026-08-29); Proxmox VM: docker (3.1.0.4875-ls40, 2026-08-29), podman (3.1.0.4875-ls40, 2026-08-29)."
+# breaking_changes: none
+services:
+  lidarr:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-lidarr
+    restart: unless-stopped
+    environment:
+      - "PUID=1000"
+      - "PGID=1000"
+      - "TZ=Europe/Amsterdam"
+    ports:
+      - "{{ LIDARR_WEB_PORT }}:8686"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/lidarr/config:/config"
+      - "{{ CONFIG_BASE_PATH }}/media:/media"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "v1.6.0-ls361"
+# platform_notes: "Tested on Proxmox LXC: docker (v1.6.0-ls361, 2026-08-29), podman (v1.6.0-ls361, 2026-08-29); Proxmox VM: docker (v1.6.0-ls361, 2026-08-29), podman (v1.6.0-ls361, 2026-08-29)."
+# breaking_changes: none
+services:
+  bazarr:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-bazarr
+    restart: unless-stopped
+    environment:
+      - "PUID=1000"
+      - "PGID=1000"
+      - "TZ=Europe/Amsterdam"
+    ports:
+      - "{{ BAZARR_WEB_PORT }}:6767"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/bazarr/config:/config"
+      - "{{ CONFIG_BASE_PATH }}/media:/media"
+    user: "0:0"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

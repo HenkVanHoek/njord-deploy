@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "6767",
+            "description": "Web UI port.",
+            "id": "BAZARR_WEB_PORT",
+            "label": "Bazarr Web Port",
+            "type": "port"
+        }
+    ]
+}
