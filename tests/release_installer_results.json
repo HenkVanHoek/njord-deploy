@@ -1,0 +1,212 @@
+[
+  {
+    "timestamp": "20260829_081535",
+    "date": "2026-08-29 08:15:35",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_081637",
+    "date": "2026-08-29 08:16:37",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_081645",
+    "date": "2026-08-29 08:16:45",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_081657",
+    "date": "2026-08-29 08:16:57",
+    "tag": "Local Build",
+    "total": 1,
+    "passed": 1,
+    "failed": 0,
+    "results": [
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "SKIPPED (Informational): macOS VM template not configured on Proxmox. macOS binaries are verified natively via GitHub Actions macos-latest runners. (To enable local Proxmox testing, configure OSX-KVM and set RELEASE_TEST_MACOS_TEMPLATE in .env)."
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_084456",
+    "date": "2026-08-29 08:44:56",
+    "tag": "v0.6.0",
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      },
+      {
+        "target": "Debian 12 (LXC)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_084903",
+    "date": "2026-08-29 08:49:03",
+    "tag": "Local Build",
+    "total": 3,
+    "passed": 0,
+    "failed": 3,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      },
+      {
+        "target": "Debian 12 (LXC)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": false,
+        "details": "HTTP interface verification failed on port 5001."
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_085231",
+    "date": "2026-08-29 08:52:31",
+    "tag": "Local Build",
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Debian VM Test Passed successfully."
+      },
+      {
+        "target": "Debian 12 (LXC)",
+        "success": true,
+        "details": "Debian LXC Test Passed successfully."
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Ubuntu LXC Test Passed successfully."
+      }
+    ]
+  },
+  {
+    "timestamp": "20260829_085245",
+    "date": "2026-08-29 08:52:45",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  }
+]
