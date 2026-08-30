@@ -260,11 +260,28 @@ def map_analysis_to_report_errors(analysis_results: dict, target_ip: str) -> lis
 
 def create_app(test_config=None):
     """Factory function to create and configure the Flask application."""
-    # Load environment variables from the .env file at the project root.
+    # Load environment variables from .env
     from dotenv import load_dotenv
 
-    project_root = Path(__file__).resolve().parent.parent.parent
-    load_dotenv(dotenv_path=project_root / ".env")
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        loaded = False
+        candidates = [
+            exe_dir / ".env",
+            Path.cwd() / ".env",
+            Path(os.environ.get("NJORD_DATA_DIR", "/var/lib/njorddeploy")) / ".env",
+            Path("/opt/njorddeploy/.env"),
+        ]
+        for env_candidate in candidates:
+            if env_candidate.exists():
+                load_dotenv(dotenv_path=env_candidate, override=True)
+                loaded = True
+                break
+        if not loaded:
+            load_dotenv()
+    else:
+        project_root = Path(__file__).resolve().parent.parent.parent
+        load_dotenv(dotenv_path=project_root / ".env")
 
     if getattr(sys, "frozen", False):
         bundle_dir = Path(sys._MEIPASS)
@@ -769,8 +786,8 @@ def create_app(test_config=None):
         interval = data.get("interval", request.args.get("interval", "monthly"))
         price_id = data.get("price_id", request.args.get("price_id"))
 
-        success_url = request.host_url.rstrip("/") + "/settings?billing=success"
-        cancel_url = request.host_url.rstrip("/") + "/settings?billing=cancel"
+        success_url = request.host_url.rstrip("/") + "/?billing=success"
+        cancel_url = request.host_url.rstrip("/") + "/?billing=cancel"
 
         checkout_url, err = billing_mgr.create_checkout_session(
             user_id, success_url, cancel_url, interval=interval, price_id=price_id
@@ -787,7 +804,7 @@ def create_app(test_config=None):
         user = db_mgr.get_user_by_username(user_name) if user_name else None
         user_id = user["id"] if user else 1
 
-        return_url = request.host_url.rstrip("/") + "/settings"
+        return_url = request.host_url.rstrip("/") + "/?billing=portal_return"
         portal_url, err = billing_mgr.create_customer_portal_session(
             user_id, return_url
         )

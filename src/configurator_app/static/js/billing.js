@@ -30,6 +30,20 @@ document.addEventListener("DOMContentLoaded", () => {
             await openStripePortal(btn);
         });
     });
+
+    // 4. Handle return from Stripe Checkout / Portal
+    const urlParams = new URLSearchParams(window.location.search);
+    const billingStatus = urlParams.get("billing");
+    if (billingStatus === "success") {
+        alert("🎉 Gefeliciteerd! Je bent succesvol geüpgraded naar NjordDeploy Pro!");
+        // Clean URL query params without reloading
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    } else if (billingStatus === "cancel") {
+        console.log("Stripe Checkout cancelled by user.");
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+    }
 });
 
 /**

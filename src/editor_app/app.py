@@ -44,11 +44,28 @@ logging.basicConfig(level=logging.INFO)
 
 def create_app(test_config=None):
     """Application factory for the Developer Editor."""
-    # Load environment variables from the .env file at the project root.
+    # Load environment variables from .env
     from dotenv import load_dotenv
 
-    project_root = Path(__file__).parent.parent.parent
-    load_dotenv(dotenv_path=project_root / ".env")
+    if getattr(sys, "frozen", False):
+        exe_dir = Path(sys.executable).parent
+        loaded = False
+        candidates = [
+            exe_dir / ".env",
+            Path.cwd() / ".env",
+            Path(os.environ.get("NJORD_DATA_DIR", "/var/lib/njorddeploy")) / ".env",
+            Path("/opt/njorddeploy/.env"),
+        ]
+        for env_candidate in candidates:
+            if env_candidate.exists():
+                load_dotenv(dotenv_path=env_candidate, override=True)
+                loaded = True
+                break
+        if not loaded:
+            load_dotenv()
+    else:
+        project_root = Path(__file__).parent.parent.parent
+        load_dotenv(dotenv_path=project_root / ".env")
 
     if getattr(sys, "frozen", False):
         bundle_dir = Path(sys._MEIPASS)
