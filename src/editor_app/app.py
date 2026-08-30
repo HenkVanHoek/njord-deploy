@@ -7,11 +7,36 @@ from pathlib import Path
 from typing import Optional
 
 import requests
-from flask import Flask, Response, abort, jsonify, render_template, request
+from flask import (
+    Flask,
+    Response,
+    abort,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.utils import secure_filename
 
 from managers.component_manager import ComponentManager
 from utils.ai_generator import AIGenerator, suggest_unique_component_id
+from utils.auth_utils import (
+    GLOBAL_RATE_LIMITER,
+    extract_api_key_from_request,
+    get_client_ip,
+    get_or_create_secret_key,
+    hash_password,
+    is_admin_configured,
+    is_api_request,
+    is_auth_enabled,
+    save_auth_config,
+    validate_password_strength,
+    validate_username,
+    verify_api_key,
+    verify_credentials,
+)
 from utils.resource_utils import get_components_paths
 
 logging.basicConfig(level=logging.INFO)
@@ -43,6 +68,24 @@ def create_app(test_config=None):
 
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     app.jinja_env.auto_reload = True
+
+    app.secret_key = get_or_create_secret_key()
+    app.config["SESSION_COOKIE_HTTPONLY"] = True
+    app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    app.config["SESSION_COOKIE_NAME"] = "njord_session"
+    if os.environ.get("NJORD_COOKIE_SECURE", "").lower() in ("true", "1"):
+        app.config["SESSION_COOKIE_SECURE"] = True
+
+    from jinja2 import ChoiceLoader, FileSystemLoader
+
+    configurator_tpl = project_root / "src" / "configurator_app" / "templates"
+    if configurator_tpl.exists() and app.jinja_loader:
+        app.jinja_loader = ChoiceLoader(
+            [
+                app.jinja_loader,
+                FileSystemLoader(str(configurator_tpl)),
+            ]
+        )
 
     # Crucial for testing: apply the test_config
     if test_config:
@@ -96,6 +139,206 @@ def create_app(test_config=None):
         local_metadata_path=meta_file_path,
         local_templates_path=templates_path_obj,
     )
+
+    @app.before_request
+    def enforce_authentication():
+        """
+        Global request filter enforcing authentication across all endpoints.
+        Whitelists health checks, static assets, and setup/login flows.
+        """
+        if request.path.startswith("/static/"):
+            return None
+
+        public_routes = {
+            "/login",
+            "/api/login",
+            "/logout",
+            "/api/logout",
+            "/setup",
+            "/api/setup",
+        }
+        if request.path in public_routes:
+            return None
+
+        if app.config.get("AUTH_ENABLED") is False or not is_auth_enabled():
+            return None
+
+        if not is_admin_configured():
+            if is_api_request():
+                return (
+                    jsonify(
+                        {
+                            "error": "Setup required",
+                            "setup_required": True,
+                            "message": (
+                                "NjordDeploy initial administrator setup is required."
+                            ),
+                        }
+                    ),
+                    401,
+                )
+            return redirect(url_for("setup_wizard"))
+
+        if session.get("logged_in") and session.get("user"):
+            return None
+
+        token = extract_api_key_from_request(request)
+        if token and verify_api_key(token):
+            return None
+
+        if is_api_request():
+            return (
+                jsonify(
+                    {
+                        "error": "Unauthorized",
+                        "message": (
+                            "Authentication required. Provide a valid session or "
+                            "API key via X-Njord-API-Key header."
+                        ),
+                    }
+                ),
+                401,
+            )
+
+        next_url = request.full_path if request.method == "GET" else "/"
+        return redirect(url_for("login_page", next=next_url))
+
+    @app.route("/setup", methods=["GET"])
+    def setup_wizard():
+        if is_admin_configured():
+            if session.get("logged_in"):
+                return redirect(url_for("index"))
+            return redirect(url_for("login_page"))
+        return render_template("setup.html")
+
+    @app.route("/setup", methods=["POST"])
+    @app.route("/api/setup", methods=["POST"])
+    def process_setup():
+        if is_admin_configured():
+            return (
+                jsonify(
+                    {
+                        "error": "Setup already completed",
+                        "message": "NjordDeploy administrator is already configured.",
+                    }
+                ),
+                403,
+            )
+
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+        confirm_password = str(data.get("confirm_password", ""))
+
+        valid_user, user_err = validate_username(username)
+        if not valid_user:
+            return jsonify({"error": user_err or "Invalid username"}), 400
+
+        valid_pass, pass_err = validate_password_strength(password)
+        if not valid_pass:
+            return jsonify({"error": pass_err or "Weak password"}), 400
+
+        if confirm_password and password != confirm_password:
+            return jsonify({"error": "Passwords do not match."}), 400
+
+        pw_hash = hash_password(password)
+        auth_data = save_auth_config(username=username, password_hash=pw_hash)
+
+        session.clear()
+        session["user"] = username
+        session["logged_in"] = True
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Administrator account configured successfully.",
+                    "api_key": auth_data.get("api_key"),
+                    "redirect": "/",
+                }
+            ),
+            200,
+        )
+
+    @app.route("/login", methods=["GET"])
+    def login_page():
+        if not is_admin_configured() and is_auth_enabled():
+            return redirect(url_for("setup_wizard"))
+        if session.get("logged_in") and session.get("user"):
+            next_url = request.args.get("next") or url_for("index")
+            return redirect(next_url)
+        return render_template("login.html")
+
+    @app.route("/login", methods=["POST"])
+    @app.route("/api/login", methods=["POST"])
+    def process_login():
+        client_ip = get_client_ip(request)
+        is_limited, retry_after = GLOBAL_RATE_LIMITER.is_rate_limited(client_ip)
+        if is_limited:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Too many failed login attempts. "
+                            f"Please try again in {retry_after} seconds."
+                        ),
+                        "retry_after": retry_after,
+                    }
+                ),
+                429,
+            )
+
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+
+        if not username or not password:
+            return jsonify({"error": "Username and password are required."}), 400
+
+        if not verify_credentials(username, password):
+            GLOBAL_RATE_LIMITER.record_failure(client_ip)
+            return jsonify({"error": "Invalid username or password."}), 401
+
+        GLOBAL_RATE_LIMITER.record_success(client_ip)
+        session.clear()
+        session["user"] = username
+        session["logged_in"] = True
+
+        next_url = request.args.get("next") or "/"
+        return (
+            jsonify(
+                {
+                    "status": "authenticated",
+                    "user": username,
+                    "redirect": next_url,
+                }
+            ),
+            200,
+        )
+
+    @app.route("/logout", methods=["GET", "POST"])
+    @app.route("/api/logout", methods=["POST"])
+    def logout():
+        session.clear()
+        if is_api_request():
+            return jsonify({"status": "logged_out"}), 200
+        return redirect(url_for("login_page"))
+
+    @app.route("/api/auth/status", methods=["GET"])
+    def auth_status():
+        return (
+            jsonify(
+                {
+                    "authenticated": bool(
+                        session.get("logged_in") and session.get("user")
+                    ),
+                    "user": session.get("user"),
+                    "auth_enabled": is_auth_enabled(),
+                    "admin_configured": is_admin_configured(),
+                }
+            ),
+            200,
+        )
 
     @app.route("/api/sync/status", methods=["GET"])
     def sync_status():

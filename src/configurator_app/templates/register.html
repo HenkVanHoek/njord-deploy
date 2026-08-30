@@ -1,0 +1,194 @@
+<!-- src/configurator_app/templates/register.html -->
+<!DOCTYPE html>
+<html lang="en" data-theme="futuristic-dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - NjordDeploy Cloud</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/configurator.css') }}?v=1.0">
+    <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--dark-bg-start, #0a1128) 0%, var(--dark-bg-end, #02040a) 100%);
+            padding: 20px;
+        }
+        .auth-card {
+            background-color: var(--glass-bg, rgba(15, 23, 42, 0.75));
+            border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.12));
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(0, 176, 255, 0.2);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 460px;
+        }
+        .form-control {
+            background-color: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f8fafc;
+        }
+        .form-control:focus {
+            background-color: rgba(15, 23, 42, 0.9);
+            border-color: var(--brand-blue, #00b0ff);
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(0, 176, 255, 0.35);
+        }
+        .input-group-text {
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #94a3b8;
+        }
+        .brand-glow {
+            filter: drop-shadow(0 0 18px rgba(0, 176, 255, 0.45));
+        }
+    </style>
+</head>
+<body>
+
+<div class="auth-card p-4 p-md-5">
+    <div class="text-center mb-4">
+        <img src="{{ url_for('static', filename='images/njorddeploy-icon192x192.png') }}"
+             alt="NjordDeploy Logo"
+             width="64"
+             height="64"
+             class="brand-glow rounded mb-3">
+        <h2 class="h4 fw-bold text-white mb-1">Join NjordDeploy Cloud</h2>
+        <p class="text-muted small">Manage your home servers, Raspberry Pis & VPS nodes from one central hub.</p>
+    </div>
+
+    <div id="register-alert" class="alert d-none shadow-sm mb-4" role="alert"></div>
+
+    <form id="njord-register-form">
+        <div class="mb-3">
+            <label for="reg-username" class="form-label small fw-bold text-light">
+                <i class="fa-solid fa-user me-1 text-primary"></i> Username
+            </label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                <input type="text"
+                       class="form-control"
+                       id="reg-username"
+                       name="username"
+                       required
+                       autocomplete="username"
+                       placeholder="e.g. johndoe"
+                       autofocus>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="reg-email" class="form-label small fw-bold text-light">
+                <i class="fa-solid fa-envelope me-1 text-primary"></i> Email Address (Optional)
+            </label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+                <input type="email"
+                       class="form-control"
+                       id="reg-email"
+                       name="email"
+                       autocomplete="email"
+                       placeholder="john@example.com">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label for="reg-password" class="form-label small fw-bold text-light">
+                <i class="fa-solid fa-lock me-1 text-primary"></i> Password
+            </label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+                <input type="password"
+                       class="form-control"
+                       id="reg-password"
+                       name="password"
+                       required
+                       autocomplete="new-password"
+                       placeholder="Min. 8 characters">
+                <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="reg-password">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
+            <div class="form-text extra-small text-muted mt-1">
+                Includes Free Tier: Up to 2 self-hosted nodes and unlimited container deployments.
+            </div>
+        </div>
+
+        <button type="submit" id="reg-submit-btn" class="btn btn-primary w-100 py-2 fw-bold shadow">
+            <i class="fa-solid fa-user-plus me-2"></i> Create Free Account
+        </button>
+    </form>
+
+    <div class="text-center mt-4 pt-3 border-top border-secondary border-opacity-25">
+        <span class="text-muted small">Already have an account? </span>
+        <a href="/login" class="text-primary fw-bold small text-decoration-none">Sign In</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("njord-register-form");
+    const alertBox = document.getElementById("register-alert");
+    const submitBtn = document.getElementById("reg-submit-btn");
+
+    // Toggle password visibility
+    document.querySelectorAll(".toggle-password-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            if (input) {
+                const isPass = input.type === "password";
+                input.type = isPass ? "text" : "password";
+                btn.innerHTML = isPass ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+            }
+        });
+    });
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        alertBox.className = "alert d-none";
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Creating Account...';
+
+        const payload = {
+            username: document.getElementById("reg-username").value.trim(),
+            email: document.getElementById("reg-email").value.trim(),
+            password: document.getElementById("reg-password").value
+        };
+
+        try {
+            const resp = await fetch("/api/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+
+            if (resp.ok && data.status === "success") {
+                alertBox.className = "alert alert-success shadow-sm mb-4";
+                alertBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Account created! Redirecting...';
+                setTimeout(() => { window.location.href = data.redirect || "/"; }, 800);
+            } else {
+                alertBox.className = "alert alert-danger shadow-sm mb-4";
+                alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i> ${data.error || "Registration failed."}`;
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-user-plus me-2"></i> Create Free Account';
+            }
+        } catch (err) {
+            alertBox.className = "alert alert-danger shadow-sm mb-4";
+            alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-2"></i> Network error: ${err.message}`;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fa-solid fa-user-plus me-2"></i> Create Free Account';
+        }
+    });
+});
+</script>
+</body>
+</html>

@@ -7,9 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from appdirs import user_data_dir
-
-from utils.resource_utils import resource_path
+from utils.resource_utils import get_ssh_key_path, resource_path
 
 try:
     import ansible_runner
@@ -133,8 +131,7 @@ class DeploymentManager:
                     f"INFO: Using container engine: {active_engine.upper()}"
                 )
 
-                app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
-                key_file = app_data_dir / "id_ed25519_njorddeploy"
+                key_file = get_ssh_key_path()
                 if key_file.exists():
                     extravars["ansible_ssh_private_key_file"] = str(key_file)
                 # Add password if we have it from the UI,

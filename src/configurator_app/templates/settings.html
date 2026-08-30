@@ -84,6 +84,23 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
+                {% if session.get('user') %}
+                <li class="nav-item">
+                    <a class="nav-link" href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" title="Manage Subscription, Payment Methods & Invoices">
+                        <i class="fa-solid fa-credit-card me-1 text-info"></i> Billing
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center me-2">
+                    <span class="user-badge-nav shadow-sm" title="Logged in as {{ session.get('user') }}">
+                        <i class="fa-solid fa-user-shield me-1"></i> {{ session.get('user') }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/logout" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
                 <li class="nav-item"><a class="nav-link" href="/"><i class="fa-solid fa-arrow-left me-1"></i> Back to Wizard</a></li>
             </ul>
         </div>
@@ -103,6 +120,11 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing-pane" type="button" role="tab">
+                        <i class="fa-solid fa-credit-card me-2"></i> Subscription &amp; Billing
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link fw-bold" id="raw-tab" data-bs-toggle="tab" data-bs-target="#raw-pane" type="button" role="tab">
                         <i class="fa-solid fa-code me-2"></i> Edit Raw .env File
                     </button>
@@ -116,6 +138,88 @@
                 <!-- Form Configuration Pane -->
                 <div class="tab-pane fade show active" id="form-pane" role="tabpanel" aria-labelledby="form-tab">
                     <form id="settings-form" class="row g-4">
+
+                        <!-- Section: Authentication & API Security -->
+                        <div class="col-12">
+                            <div class="card settings-card bg-light border-0 shadow-sm">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title text-primary mb-0">
+                                            <i class="fa-solid fa-shield-halved me-2"></i> Authentication &amp; API Token Security
+                                        </h5>
+                                        {% if auth_info.get('auth_enabled') %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                                            <i class="fa-solid fa-lock me-1"></i> Protected (Server / Auth Mode)
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary-subtle text-dark border border-secondary-subtle px-3 py-2">
+                                            <i class="fa-solid fa-lock-open me-1"></i> Standalone Desktop Mode
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="text-muted small mb-4">
+                                        Manage your administrator credentials and headless REST API Bearer tokens for secure CLI and remote orchestration.
+                                    </p>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">Administrator Username</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                                <input type="text" class="form-control" value="{{ auth_info.get('username', 'admin') }}" readonly>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <label class="form-label small fw-bold">Headless REST API Key</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="fa-solid fa-key"></i></span>
+                                                <input type="password" class="form-control font-monospace small" id="settings-api-key-input" value="{{ auth_info.get('api_key', '') }}" readonly>
+                                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="settings-api-key-input" title="Show/Hide API Key">
+                                                    <i class="fa-solid fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-outline-primary btn-copy-token" type="button" data-target="settings-api-key-input" title="Copy to Clipboard">
+                                                    <i class="fa-solid fa-copy me-1"></i> Copy
+                                                </button>
+                                                <button class="btn btn-outline-warning" type="button" id="btn-regenerate-token" title="Generate New Key">
+                                                    <i class="fa-solid fa-arrows-rotate me-1"></i> Regenerate
+                                                </button>
+                                            </div>
+                                            <div class="form-text small mt-1">
+                                                Use via <code>X-Njord-API-Key: &lt;token&gt;</code> or <code>Authorization: Bearer &lt;token&gt;</code>.
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mt-3">
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#changePasswordCollapse" aria-expanded="false">
+                                                <i class="fa-solid fa-key me-1"></i> Change Administrator Password...
+                                            </button>
+                                            <div class="collapse mt-3" id="changePasswordCollapse">
+                                                <div class="card p-3 border border-secondary border-opacity-25 bg-dark bg-opacity-25 rounded">
+                                                    <h6 class="fw-bold small text-light mb-3">Update Administrator Password</h6>
+                                                    <div class="row g-3">
+                                                        <div class="col-md-4">
+                                                            <label for="change-curr-pass" class="form-label extra-small fw-bold text-muted">Current Password</label>
+                                                            <input type="password" class="form-control form-control-sm" id="change-curr-pass" placeholder="Current password">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="change-new-pass" class="form-label extra-small fw-bold text-muted">New Password (min 8 chars)</label>
+                                                            <input type="password" class="form-control form-control-sm" id="change-new-pass" placeholder="New password">
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label for="change-conf-pass" class="form-label extra-small fw-bold text-muted">Confirm New Password</label>
+                                                            <input type="password" class="form-control form-control-sm" id="change-conf-pass" placeholder="Confirm password">
+                                                        </div>
+                                                        <div class="col-12 text-end">
+                                                            <button class="btn btn-sm btn-primary" type="button" id="btn-save-new-password">
+                                                                <i class="fa-solid fa-check me-1"></i> Update Password
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Section: Container Engine & Runtime -->
                         <div class="col-md-6">
@@ -408,6 +512,65 @@
                     </form>
                 </div>
 
+                <!-- Subscription & Stripe Billing Pane -->
+                <div class="tab-pane fade" id="billing-pane" role="tabpanel" aria-labelledby="billing-tab">
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <div class="card settings-card bg-light border-0 shadow-sm">
+                                <div class="card-body p-4">
+                                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                                        <h5 class="card-title text-primary mb-0">
+                                            <i class="fa-solid fa-gem me-2"></i> Subscription &amp; Stripe Customer Portal
+                                        </h5>
+                                        <a href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">
+                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Stripe Customer Portal
+                                        </a>
+                                    </div>
+                                    <p class="text-muted small mb-4">
+                                        Manage your active plan, download historical invoices, update payment methods (iDEAL, SEPA, Creditcard, Wero), or upgrade to NjordDeploy Pro.
+                                    </p>
+
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="p-4 rounded border bg-body-secondary h-100 shadow-sm">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="fw-bold mb-0 text-body">Free Community Tier</h6>
+                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">Included</span>
+                                                </div>
+                                                <p class="small text-muted mb-3">Ideal for personal homelabs and sovereign self-hosting beginners.</p>
+                                                <ul class="small list-unstyled mb-0">
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Up to 2 self-hosted server nodes</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100+ Curated component catalog</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100% Local AI &amp; Docker / Rootless Podman</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Autonomous AI self-healing diagnostics</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="p-4 rounded border border-primary border-opacity-50 bg-primary-subtle h-100 shadow-sm">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <h6 class="fw-bold mb-0 text-primary">NjordDeploy Pro</h6>
+                                                    <span class="badge bg-primary text-white">€5 / mnd of €50 / jr</span>
+                                                </div>
+                                                <p class="small text-muted mb-3">For multi-node server fleets, automated encrypted backups &amp; priority alerts.</p>
+                                                <ul class="small list-unstyled mb-3">
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> <strong>Unlimited</strong> server nodes &amp; VPS instances</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Automated encrypted S3 cloud backups</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Priority CVE security advisory notifications</li>
+                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Direct priority support</li>
+                                                </ul>
+                                                <a href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">
+                                                    <i class="fa-solid fa-credit-card me-1"></i> Manage in Stripe Portal
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Raw Textarea Pane -->
                 <div class="tab-pane fade" id="raw-pane" role="tabpanel" aria-labelledby="raw-tab">
                     <div class="mb-3">
@@ -573,5 +736,6 @@
         });
     });
 </script>
+<script src="{{ url_for('static', filename='js/auth.js') }}?v=1.0"></script>
 </body>
 </html>

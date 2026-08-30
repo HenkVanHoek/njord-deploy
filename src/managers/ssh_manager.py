@@ -1,5 +1,5 @@
-# src/managers/ssh_manager.py
 import logging
+import os
 import select
 from pathlib import Path
 from typing import Callable, Optional, Tuple
@@ -46,13 +46,25 @@ class SSHManager:
         self.sftp: Optional[SFTPClient] = None
 
         # Determine the local path for the SSH private key
-        app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
-        app_data_dir.mkdir(parents=True, exist_ok=True)
-        self.key_file = app_data_dir / "id_ed25519_njorddeploy"
+        custom_key = os.environ.get("NJORD_SSH_KEY_PATH")
+        if custom_key:
+            self.key_file = Path(custom_key).resolve()
+        elif os.environ.get("NJORD_DATA_DIR"):
+            data_dir = Path(os.environ["NJORD_DATA_DIR"]).resolve()
+            self.key_file = data_dir / "id_ed25519_njorddeploy"
+        else:
+            app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+            self.key_file = app_data_dir / "id_ed25519_njorddeploy"
+        self.key_file.parent.mkdir(parents=True, exist_ok=True)
 
     def get_ssh_key(self) -> Ed25519Key:
         """Retrieves the active SSH key."""
         return self._get_or_create_key()
+
+    def get_public_key_string(self) -> str:
+        """Retrieves the OpenSSH formatted public key string."""
+        key = self._get_or_create_key()
+        return f"{key.get_name()} {key.get_base64()}"
 
     def _get_or_create_key(self) -> Ed25519Key:
         """Retrieves an existing Ed25519 key or generates a new one."""

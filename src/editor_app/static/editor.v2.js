@@ -1528,10 +1528,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const decoder = new TextDecoder('utf-8');
                 let buffer = '';
                 let resultPayload = null;
+                let doneReading = false;
 
-                while (true) {
+                while (!doneReading) {
                     const { done, value } = await reader.read();
-                    if (done) break;
+                    if (done) {
+                        doneReading = true;
+                        break;
+                    }
                     buffer += decoder.decode(value, { stream: true });
 
                     const lines = buffer.split('\n');

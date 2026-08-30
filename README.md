@@ -15,6 +15,7 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 ## 🌟 Key Features
 
+- **24/7 Persistent Self-Hosted Service Daemon**: Run NjordDeploy continuously on your home server, mini-PC, Raspberry Pi, or Proxmox VM (via Docker Compose or native Linux systemd) with automated persistent SSH key management and live healthchecks (see [Self-Hosted Service Guide](docs/SELF_HOSTED_SERVICE_GUIDE.md)).
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
 - **Headless REST API & Agentic DevOps**: Full programmatic control for CI/CD pipelines, Homelab orchestration, and AI coding agents (like Antigravity/Agy). Automate end-to-end deployments, Proxmox LXC provisioning, pre-flight safety analysis, and log evaluation via clean REST endpoints (see [API Reference](docs/API_REFERENCE.md)).
 - **Interactive Swagger UI & OpenAPI 3.0**: Explore, test, and inspect all REST API endpoints directly in your browser at `http://localhost:5001/api/docs` or consume the machine-readable OpenAPI schema at `/api/openapi.json`. Supports dark and light theme switching.
@@ -27,9 +28,10 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 ## 🏛️ How It Works
 
-NjordDeploy provides a **dual-interface architecture**:
-1. **Interactive Web Wizard (Configurator)**: End-users download a standalone release executable and interact with a guided web UI (`http://localhost:5001`) for automatic network scanning, component selection, variable customization, and real-time deployment log streaming.
-2. **Headless REST Engine & Interactive Swagger UI**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API or exploring the interactive Swagger UI (`http://localhost:5001/api/docs`) to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
+NjordDeploy provides a **multi-mode architecture**:
+1. **Interactive Web Wizard (Standalone Desktop Mode)**: End-users download a standalone release executable and interact with a guided web UI (`http://localhost:5001`) for automatic network scanning, component selection, variable customization, and real-time deployment log streaming.
+2. **24/7 Self-Hosted Daemon Mode**: Homelab administrators host NjordDeploy 24/7 in Docker Compose or native systemd on a server/VM with persistent state, continuous SSH key access, and automated health monitoring (`/api/health`).
+3. **Headless REST Engine & Interactive Swagger UI**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API or exploring the interactive Swagger UI (`http://localhost:5001/api/docs`) to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
 
 ## 📋 System Requirements
 
@@ -88,6 +90,8 @@ Behavior during deployment
 
 ## 🚀 Quick Start Guide
 
+### Mode A: Standalone Desktop Application
+
 1. **Download the Release Zip**: Go to the [GitHub Releases page](https://github.com/HenkVanHoek/njord-deploy/releases) and download the release package for your operating system (`NjordDeploy-Linux.zip`, `NjordDeploy-macOS.zip`, or `NjordDeploy-Windows.zip`).
 2. **Unzip & Launch**: Unzip the package to a local folder. You will find three standalone executables:
    - **`NjordDeployConfigurator`** (`.exe` on Windows): The end-user application for device discovery, service selection, and deployment (runs on `http://localhost:5001`).
@@ -97,9 +101,40 @@ Behavior during deployment
 3. **Configure & Automate**: Your default web browser will open automatically to `http://localhost:5001`. Follow the on-screen wizard to discover your device, select services, and customize your configuration. Or navigate to `http://localhost:5001/api/docs` to inspect and test the interactive Swagger REST API.
 4. **Deploy**: Confirm your selections to generate Docker Compose files and deploy services to your target host with a live browser log.
 
-### One-Time Setup for Linux Users
+### Mode B: 24/7 Persistent Self-Hosted Service Daemon
 
-If you are running the installer on a `Linux desktop`, you must perform a one-time setup to grant the scanner the necessary network permissions. Replace `your_username` with your actual Linux username.
+Run NjordDeploy continuously on your home server, mini-PC, or Proxmox VM:
+
+- **Via Docker Compose:**
+  ```bash
+  docker compose up -d
+  curl -s http://localhost:5001/api/health
+  ```
+- **Via Native Linux Systemd:**
+  ```bash
+  sudo ./scripts/install_systemd_service.sh install
+  sudo ./scripts/install_systemd_service.sh status
+  ```
+
+For full persistent SSH key setup, reverse proxy integration, and environment options, see the **[24/7 Self-Hosted Service Guide](docs/SELF_HOSTED_SERVICE_GUIDE.md)**.
+
+### 🔐 Security, First-Run Setup & API Tokens
+
+When deployed as a persistent service on a public or local server (`deploy.njorddeploy.com`), NjordDeploy provides enterprise-grade authentication and token security:
+
+1. **First-Run Setup Wizard (`/setup`)**: On fresh installations in server mode, all non-public requests automatically redirect to an intuitive onboarding wizard to create the primary administrator account (minimum 8-character password hashed with PBKDF2:SHA256 / Argon2).
+2. **Session Security (`/login` & `/logout`)**: Protected with secure `HttpOnly`, `SameSite=Lax` cookies, session expiration, and sliding-window brute-force rate limiting (max 5 failed attempts per 5 minutes per IP returning HTTP 429).
+3. **Headless REST API Bearer Tokens**: For automation scripts, CI/CD, and external agents, provide your API token via `X-Njord-API-Key: <token>` or `Authorization: Bearer <token>` to bypass browser sessions.
+4. **Environment Variables**:
+   - `NJORD_SERVER_MODE=true`: Enables production server mode and strict authentication enforcement.
+   - `NJORD_AUTH_ENABLED=true`: Force-enables authentication across all endpoints.
+   - `NJORD_SECRET_KEY`: Custom Flask session signing key (auto-generated and persisted in `0o600` `.secret_key` if unset).
+   - `NJORD_API_KEY`: Custom master headless API key (auto-generated if unset).
+   - `NJORD_ADMIN_USER` & `NJORD_ADMIN_PASSWORD` / `NJORD_ADMIN_HASH`: Pre-seed administrator credentials in automated environments without interactive `/setup`.
+
+### One-Time Setup for Linux Desktop Users
+
+If you are running the standalone desktop installer on a `Linux desktop`, grant the scanner permission to perform network discovery:
 
     echo "your_username ALL=(ALL) NOPASSWD: /usr/bin/nmap" | sudo tee /etc/sudoers.d/99-njorddeploy
     sudo chmod 0440 /etc/sudoers.d/99-njorddeploy

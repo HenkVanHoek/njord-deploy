@@ -330,12 +330,9 @@ class NodeScanner:
         if not is_port_open(ip_address, 22):
             return None, f"SSH port 22 is not open on {ip_address}."
 
-        from pathlib import Path
+        from utils.resource_utils import get_ssh_key_path
 
-        from appdirs import user_data_dir
-
-        app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
-        key_file = app_data_dir / "id_ed25519_njorddeploy"
+        key_file = get_ssh_key_path()
 
         result = None
         if key_file.exists():

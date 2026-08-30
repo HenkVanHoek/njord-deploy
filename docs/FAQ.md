@@ -4,19 +4,25 @@
 
 ## 1. Concept & Comparison (Orientation Phase)
 
-### 1.1 What is NjordDeploy and what problem does it solve?
+### 1.1 Why the name "NjordDeploy"?
 **Answer:**
-NjordDeploy is a lightweight, metadata-driven deployment orchestrator for self-hosting Docker services on local or remote Linux servers (such as Raspberry Pi, Proxmox LXC/VMs, or standard Debian/Ubuntu systems). It removes the friction of manually writing `docker-compose.yml` files, handling reverse proxies, configuring network ports, and managing environment variables, while maintaining total control without heavy background server daemons.
+In Norse mythology, **Njörðr (Njord)** is the god of the sea, seafaring, navigation, wind, and calm/safe harbors (originating from his mythical harbor realm *Nóatún*, meaning "ships' haven").
 
-### 1.2 How does NjordDeploy differ from all-in-one platforms like CasaOS, Umbrel, Portainer, or Cosmos Cloud?
-**Answer:**
-* **No Server-Side Agent or Overhead:** Most platforms require heavy background daemons and web servers running continuously on the target device, consuming precious RAM and CPU. NjordDeploy operates purely as a remote configurator over SSH; once deployed, only standard Docker containers run on your target server.
-* **Non-Invasive & Standardized:** All deployed services use standard Docker Compose stacks. If you ever stop using NjordDeploy, your containers and standard configuration files continue to work normally with standard Docker CLI commands.
-* **Modular Metadata Architecture:** Service stacks are rendered on demand using verified templates with built-in port conflict detection and automated reverse-proxy (Traefik/Caddy) routing.
+In modern DevOps and container orchestration, applications and infrastructure are metaphorically treated as cargo shipping containers and vessels (just like *Docker*, *Kubernetes* [Helmsman], *Helm*, and *Portainer*). Just as Njord calms rough seas and steers seafarers safely into their home port, **NjordDeploy** acts as your sovereign navigator—guiding your container stacks, networking, and persistent data safely into the calm harbor of your own private home server, 100% free from cloud lock-in.
 
-### 1.3 Which specific self-hosted services are currently supported by NjordDeploy?
+### 1.2 What is NjordDeploy and what problem does it solve?
 **Answer:**
-NjordDeploy provides a curated catalog of over 46+ modular services across multiple domains:
+NjordDeploy is a lightweight, metadata-driven deployment orchestrator for self-hosting Docker and Rootless Podman services on local or remote Linux servers (such as Raspberry Pi, Orange Pi, Proxmox LXC/VMs, or standard Debian/Ubuntu systems). It removes the friction of manually writing `docker-compose.yml` files, handling reverse proxies, configuring network ports, and managing environment variables, while maintaining total control without heavy background server daemons.
+
+### 1.3 How does NjordDeploy differ from all-in-one platforms like CasaOS, Umbrel, Portainer, or Cosmos Cloud?
+**Answer:**
+* **No Server-Side Agent or Overhead:** Most platforms require heavy background daemons and web servers running continuously on the target device, consuming precious RAM and CPU. NjordDeploy operates purely as a remote configurator over SSH; once deployed, only standard Docker or Podman containers run on your target server.
+* **Non-Invasive & Standardized:** All deployed services use standard Docker Compose stacks. If you ever stop using NjordDeploy, your containers and standard configuration files continue to work normally with standard CLI commands.
+* **Modular Metadata Architecture:** Service stacks are rendered on demand using verified templates with built-in port conflict detection and automated reverse-proxy (Traefik/Caddy/NPM) routing.
+
+### 1.4 Which specific self-hosted services are currently supported by NjordDeploy?
+**Answer:**
+NjordDeploy provides a curated catalog of over 100+ modular services across multiple domains:
 * **AI & Voice Studios:** Open WebUI with Ollama, Voicebox (AI voice cloning & TTS/STT), n8n (AI agents & automation).
 * **DNS & Privacy:** AdGuard Home, Pi-hole, Unbound DNS.
 * **Smart Home & IoT:** Home Assistant, Zigbee2MQTT, Frigate (AI Object Detection NVR), Scrypted, UniFi Controller, OctoPrint, LoRa Letterbox Notifier.
@@ -38,6 +44,10 @@ NjordDeploy is **100% local, self-contained, and privacy-first**. All discovery 
 ### 1.6 Is NjordDeploy free and open source?
 **Answer:**
 Yes. NjordDeploy is open-source software built for the self-hosting and homelab community.
+
+### 1.7 Can I run NjordDeploy as a 24/7 persistent background daemon/service on my home server?
+**Answer:**
+Yes! While NjordDeploy provides standalone desktop executables for workstations, it can also run as a **24/7 persistent daemon** on your Raspberry Pi, server, or Proxmox VM. You can deploy it using **Docker Compose** (`docker compose up -d`) or as a native Linux **systemd service** (`sudo ./scripts/install_systemd_service.sh install`). In service mode, it exposes the Web UI on port `5001`, provides a live healthcheck endpoint (`/api/health`), automatically persists SSH keys in `/var/lib/njorddeploy`, and exposes the full Headless OpenAPI REST API for continuous homelab automation. See the **[Self-Hosted Service Guide](SELF_HOSTED_SERVICE_GUIDE.md)** for detailed instructions.
 
 ---
 

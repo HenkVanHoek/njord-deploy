@@ -121,6 +121,23 @@
                 <li class="nav-item"><a class="nav-link" href="https://njorddeploy.com" target="_blank"><i class="fa-solid fa-globe me-1"></i> Website</a></li>
                 <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njorddeploy/wiki" target="_blank"><i class="fa-solid fa-book-open me-1"></i> Wiki</a></li>
                 <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njord-deploy" target="_blank"><i class="fa-brands fa-github me-1"></i> GitHub</a></li>
+                {% if session.get('user') %}
+                <li class="nav-item">
+                    <a class="nav-link" href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" title="Manage Subscription, Payment Methods & Invoices">
+                        <i class="fa-solid fa-credit-card me-1 text-info"></i> Billing
+                    </a>
+                </li>
+                <li class="nav-item d-flex align-items-center ms-lg-1 me-1">
+                    <span class="user-badge-nav shadow-sm" title="Logged in as {{ session.get('user') }}">
+                        <i class="fa-solid fa-user-shield me-1"></i> {{ session.get('user') }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/logout" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                    </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
     </div>

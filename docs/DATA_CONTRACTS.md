@@ -335,9 +335,42 @@ before a component can be uploaded to the remote repository.
 # breaking_changes: <free text or "none">
 ```
 
-| Header Field           | Required | Description                                                                                          |
-|------------------------|----------|------------------------------------------------------------------------------------------------------|
-| `status`               | Yes      | The test status of the component. Recommended values: `untested`, `tested`, `stable`, `deprecated`. |
-| `last_tested_version`  | Yes      | The Docker image version last successfully tested (e.g., `"2.3.1"` or `"none"`).                    |
-| `platform_notes`       | Yes      | Notes on platform compatibility (e.g., `"ARM64 only"` or `"none"`).                                 |
 | `breaking_changes`     | Yes      | Description of any breaking changes relative to the previous version, or `"none"`.                  |
+
+---
+
+## Authentication & API Token Contracts
+
+### Admin Configuration Store (`NJORD_DATA_DIR/auth.json`)
+
+The `auth.json` file securely persists administrator credentials and generated API tokens with strict `0o600` file permissions.
+
+```json
+{
+  "username": "admin",
+  "password_hash": "pbkdf2:sha256:600000$...",
+  "api_key": "njord_sec_4f9a7...",
+  "created_at": "2026-08-29T18:00:00+00:00",
+  "updated_at": "2026-08-29T18:00:00+00:00"
+}
+```
+
+| Property        | Type     | Required | Description                                                                                 |
+|-----------------|----------|----------|---------------------------------------------------------------------------------------------|
+| `username`      | `string` | Yes      | Administrator username (minimum 3 characters, alphanumeric/dash/underscore).                |
+| `password_hash` | `string` | Yes      | Cryptographic PBKDF2:SHA256, Scrypt, or Argon2 password hash.                               |
+| `api_key`       | `string` | Yes      | Secure 64-char token prefixed with `njord_sec_` for headless REST API and CLI access.       |
+| `created_at`    | `string` | Yes      | ISO 8601 creation timestamp.                                                                |
+| `updated_at`    | `string` | Yes      | ISO 8601 last update timestamp.                                                             |
+
+### Security Environment Variables
+
+| Variable              | Default               | Description                                                                                     |
+|-----------------------|-----------------------|-------------------------------------------------------------------------------------------------|
+| `NJORD_SERVER_MODE`   | `false` (desktop)     | When `true` (default in `run_service.py`), strictly enforces setup onboarding and login routes. |
+| `NJORD_AUTH_ENABLED`  | auto                  | Force enables (`true`) or disables (`false`) authentication.                                    |
+| `NJORD_SECRET_KEY`    | auto-generated        | 32-byte hexadecimal key for signing Flask session cookies (stored in `.secret_key`).          |
+| `NJORD_API_KEY`       | auto-generated        | Pre-configured master API key for headless CI/CD and automation scripts.                        |
+| `NJORD_ADMIN_USER`    | `""`                  | Headless pre-seeded administrator username (bypasses interactive `/setup`).                      |
+| `NJORD_ADMIN_PASSWORD`| `""`                  | Headless pre-seeded administrator plaintext password (hashed on startup).                       |
+| `NJORD_ADMIN_HASH`    | `""`                  | Headless pre-seeded administrator password hash (PBKDF2, Argon2, or Scrypt).                   |

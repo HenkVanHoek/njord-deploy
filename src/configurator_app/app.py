@@ -10,19 +10,53 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from appdirs import user_data_dir
-from flask import Flask, Response, jsonify, render_template, request, session
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 from werkzeug.utils import secure_filename
 
 from configurator_app.openapi import get_openapi_spec
+from managers.agent_manager import AgentManager
 from managers.backup_manager import BackupManager
+from managers.billing_manager import BillingManager
 from managers.component_manager import ComponentManager
+from managers.database_manager import DatabaseManager
 from managers.deployment_evaluator import evaluate_deployment
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
 from managers.ssh_manager import SSHManager
 from node_scanner import NodeScanner, get_tailscale_status
-from utils.resource_utils import get_components_paths, seed_user_components_if_needed
+from utils.auth_utils import (
+    GLOBAL_RATE_LIMITER,
+    extract_api_key_from_request,
+    generate_api_key,
+    get_client_ip,
+    get_or_create_secret_key,
+    hash_password,
+    is_admin_configured,
+    is_api_request,
+    is_auth_enabled,
+    load_auth_config,
+    save_auth_config,
+    validate_password_strength,
+    validate_username,
+    verify_api_key,
+    verify_credentials,
+)
+from utils.resource_utils import (
+    get_app_data_dir,
+    get_components_paths,
+    get_project_version,
+    is_server_mode,
+    seed_user_components_if_needed,
+)
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -249,13 +283,16 @@ def create_app(test_config=None):
     else:
         flask_app = Flask(__name__, static_folder="static", static_url_path="/static")
 
+    flask_app.secret_key = get_or_create_secret_key()
+    flask_app.config["SESSION_COOKIE_HTTPONLY"] = True
+    flask_app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+    flask_app.config["SESSION_COOKIE_NAME"] = "njord_session"
+    if os.environ.get("NJORD_COOKIE_SECURE", "").lower() in ("true", "1"):
+        flask_app.config["SESSION_COOKIE_SECURE"] = True
+
     # Apply testing configuration if provided
     if test_config:
         flask_app.config.update(test_config)
-
-    flask_app.secret_key = os.environ.get(
-        "FLASK_SECRET_KEY", "a-default-secret-key-for-development"
-    )
 
     seed_user_components_if_needed()
     metadata_path_obj, templates_path_obj = get_components_paths()
@@ -266,14 +303,534 @@ def create_app(test_config=None):
         metadata_file_path=metadata_path, templates_path=templates_path
     )
 
-    app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+    app_data_dir = get_app_data_dir()
     output_dir = app_data_dir / "output"
 
     setup_manager = SetupManager(component_manager.reader, output_dir=output_dir)
     deployment_manager = DeploymentManager(component_manager=component_manager)
+    db_mgr = DatabaseManager.get_instance()
+    billing_mgr = BillingManager(db=db_mgr)
+    agent_mgr = AgentManager(db=db_mgr)
 
     flask_app.deployment_tasks = {}
     flask_app.map_analysis_to_report_errors = map_analysis_to_report_errors
+
+    @flask_app.before_request
+    def enforce_authentication():
+        """
+        Global request filter enforcing authentication across all endpoints.
+        Whitelists health checks, static assets, and setup/login flows.
+        """
+        if request.path.startswith("/static/"):
+            return None
+
+        public_routes = {
+            "/health",
+            "/api/health",
+            "/api/v1/health",
+            "/login",
+            "/api/login",
+            "/logout",
+            "/api/logout",
+            "/setup",
+            "/api/setup",
+            "/register",
+            "/api/register",
+            "/install-agent",
+            "/install-agent.sh",
+            "/api/agent/install",
+            "/api/agent/heartbeat",
+            "/api/stripe/webhook",
+            "/api/first-run-status",
+        }
+        if request.path in public_routes:
+            return None
+
+        # Check if auth is disabled in test_config or environment
+        if flask_app.config.get("AUTH_ENABLED") is False or not is_auth_enabled():
+            return None
+
+        # If admin is not configured, require first-run setup
+        if not is_admin_configured():
+            if is_api_request():
+                return (
+                    jsonify(
+                        {
+                            "error": "Setup required",
+                            "setup_required": True,
+                            "message": (
+                                "NjordDeploy initial administrator setup "
+                                "is required."
+                            ),
+                        }
+                    ),
+                    401,
+                )
+            return redirect(url_for("setup_wizard"))
+
+        # Check active session
+        if session.get("logged_in") and session.get("user"):
+            return None
+
+        # Check API Token / Bearer Key
+        api_token = extract_api_key_from_request(request)
+        if api_token and verify_api_key(api_token):
+            return None
+
+        # Unauthorized request
+        if is_api_request():
+            return (
+                jsonify(
+                    {
+                        "error": "Unauthorized",
+                        "message": (
+                            "Authentication required. Provide a valid session or "
+                            "API key via X-Njord-API-Key header."
+                        ),
+                    }
+                ),
+                401,
+            )
+
+        next_url = request.full_path if request.method == "GET" else "/"
+        return redirect(url_for("login_page", next=next_url))
+
+    @flask_app.route("/setup", methods=["GET"])
+    def setup_wizard():
+        """Renders the first-run onboarding setup wizard."""
+        if is_admin_configured():
+            if session.get("logged_in"):
+                return redirect(url_for("index"))
+            return redirect(url_for("login_page"))
+        return render_template("setup.html")
+
+    @flask_app.route("/setup", methods=["POST"])
+    @flask_app.route("/api/setup", methods=["POST"])
+    def process_setup():
+        """Initializes the administrator account on first run."""
+        if is_admin_configured():
+            return (
+                jsonify(
+                    {
+                        "error": "Setup already completed",
+                        "message": "NjordDeploy administrator is already configured.",
+                    }
+                ),
+                403,
+            )
+
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+        confirm_password = str(data.get("confirm_password", ""))
+
+        valid_user, user_err = validate_username(username)
+        if not valid_user:
+            return jsonify({"error": user_err or "Invalid username"}), 400
+
+        valid_pass, pass_err = validate_password_strength(password)
+        if not valid_pass:
+            return jsonify({"error": pass_err or "Weak password"}), 400
+
+        if confirm_password and password != confirm_password:
+            return jsonify({"error": "Passwords do not match."}), 400
+
+        pw_hash = hash_password(password)
+        auth_data = save_auth_config(username=username, password_hash=pw_hash)
+
+        session.clear()
+        session["user"] = username
+        session["logged_in"] = True
+        session["login_time"] = time.time()
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Administrator account configured successfully.",
+                    "api_key": auth_data.get("api_key"),
+                    "redirect": "/",
+                }
+            ),
+            200,
+        )
+
+    @flask_app.route("/login", methods=["GET"])
+    def login_page():
+        """Renders the login page."""
+        if not is_admin_configured() and is_auth_enabled():
+            return redirect(url_for("setup_wizard"))
+        if session.get("logged_in") and session.get("user"):
+            next_url = request.args.get("next") or url_for("index")
+            return redirect(next_url)
+        return render_template("login.html")
+
+    @flask_app.route("/login", methods=["POST"])
+    @flask_app.route("/api/login", methods=["POST"])
+    def process_login():
+        """Authenticates user credentials and establishes a session."""
+        client_ip = get_client_ip(request)
+        is_limited, retry_after = GLOBAL_RATE_LIMITER.is_rate_limited(client_ip)
+        if is_limited:
+            return (
+                jsonify(
+                    {
+                        "error": (
+                            "Too many failed login attempts. "
+                            f"Please try again in {retry_after} seconds."
+                        ),
+                        "retry_after": retry_after,
+                    }
+                ),
+                429,
+            )
+
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+
+        if not username or not password:
+            return (
+                jsonify({"error": "Username and password are required."}),
+                400,
+            )
+
+        if not verify_credentials(username, password):
+            GLOBAL_RATE_LIMITER.record_failure(client_ip)
+            return jsonify({"error": "Invalid username or password."}), 401
+
+        GLOBAL_RATE_LIMITER.record_success(client_ip)
+        session.clear()
+        session["user"] = username
+        session["logged_in"] = True
+        session["login_time"] = time.time()
+
+        next_url = request.args.get("next") or "/"
+        return (
+            jsonify(
+                {
+                    "status": "authenticated",
+                    "user": username,
+                    "redirect": next_url,
+                }
+            ),
+            200,
+        )
+
+    @flask_app.route("/logout", methods=["GET", "POST"])
+    @flask_app.route("/api/logout", methods=["POST"])
+    def logout():
+        """Logs out the current user and terminates session."""
+        session.clear()
+        if is_api_request():
+            return jsonify({"status": "logged_out"}), 200
+        return redirect(url_for("login_page"))
+
+    @flask_app.route("/api/auth/status", methods=["GET"])
+    def auth_status():
+        """Returns the current authentication and configuration status."""
+        return (
+            jsonify(
+                {
+                    "authenticated": bool(
+                        session.get("logged_in") and session.get("user")
+                    ),
+                    "user": session.get("user"),
+                    "auth_enabled": is_auth_enabled(),
+                    "admin_configured": is_admin_configured(),
+                }
+            ),
+            200,
+        )
+
+    @flask_app.route("/api/auth/regenerate-api-key", methods=["POST"])
+    def regenerate_api_key_route():
+        """Regenerates the REST API token for the administrator."""
+        if is_auth_enabled():
+            if not (session.get("logged_in") and session.get("user")):
+                token = extract_api_key_from_request(request)
+                if not token or not verify_api_key(token):
+                    return jsonify({"error": "Unauthorized"}), 401
+
+        config = load_auth_config()
+        if not config:
+            return jsonify({"error": "Administrator not configured."}), 400
+
+        new_key = generate_api_key()
+        save_auth_config(
+            username=config["username"],
+            password_hash=config["password_hash"],
+            api_key=new_key,
+        )
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "API key successfully regenerated.",
+                    "api_key": new_key,
+                }
+            ),
+            200,
+        )
+
+    @flask_app.route("/api/auth/change-password", methods=["POST"])
+    def change_password_route():
+        """Updates the administrator password."""
+        if is_auth_enabled():
+            if not (session.get("logged_in") and session.get("user")):
+                return jsonify({"error": "Unauthorized"}), 401
+
+        data = request.get_json(silent=True) or {}
+        current_pw = str(data.get("current_password", ""))
+        new_pw = str(data.get("new_password", ""))
+        confirm_pw = str(data.get("confirm_password", ""))
+
+        config = load_auth_config()
+        if not config:
+            return jsonify({"error": "Administrator not configured."}), 400
+
+        username = config["username"]
+        if not verify_credentials(username, current_pw):
+            return jsonify({"error": "Current password is incorrect."}), 400
+
+        valid_pass, pass_err = validate_password_strength(new_pw)
+        if not valid_pass:
+            return jsonify({"error": pass_err or "Weak new password."}), 400
+
+        if confirm_pw and new_pw != confirm_pw:
+            return jsonify({"error": "New passwords do not match."}), 400
+
+        new_hash = hash_password(new_pw)
+        save_auth_config(username=username, password_hash=new_hash)
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Password changed successfully.",
+                }
+            ),
+            200,
+        )
+
+    # --------------------------------------------------------------------------
+    # SaaS & Multi-Tenancy Routes
+    # --------------------------------------------------------------------------
+
+    @flask_app.route("/register", methods=["GET"])
+    def register_page():
+        """Renders the user registration page."""
+        if session.get("logged_in") and session.get("user"):
+            return redirect(url_for("index"))
+        return render_template("register.html")
+
+    @flask_app.route("/register", methods=["POST"])
+    @flask_app.route("/api/register", methods=["POST"])
+    def process_registration():
+        """Registers a new tenant user with a Free tier plan."""
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+        email = str(data.get("email", "")).strip() or None
+
+        valid_user, user_err = validate_username(username)
+        if not valid_user:
+            return jsonify({"error": user_err or "Invalid username"}), 400
+
+        valid_pass, pass_err = validate_password_strength(password)
+        if not valid_pass:
+            return jsonify({"error": pass_err or "Weak password"}), 400
+
+        if db_mgr.get_user_by_username(username):
+            return jsonify({"error": "Username already taken."}), 409
+
+        if email and db_mgr.get_user_by_email(email):
+            return jsonify({"error": "Email address already registered."}), 409
+
+        pw_hash = hash_password(password)
+        api_key = generate_api_key()
+        new_user = db_mgr.create_user(
+            username=username,
+            password_hash=pw_hash,
+            email=email,
+            role="user",
+            plan="free",
+            api_key=api_key,
+        )
+
+        session.clear()
+        session["user"] = username
+        session["user_id"] = new_user["id"]
+        session["role"] = "user"
+        session["plan"] = "free"
+        session["logged_in"] = True
+        session["login_time"] = time.time()
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "message": "Account created successfully.",
+                    "user": username,
+                    "plan": "free",
+                    "redirect": "/",
+                }
+            ),
+            201,
+        )
+
+    @flask_app.route("/api/servers", methods=["GET"])
+    def list_user_servers():
+        """Lists servers/nodes belonging to the logged-in user."""
+        user_name = session.get("user")
+        user = db_mgr.get_user_by_username(user_name) if user_name else None
+        user_id = user["id"] if user else 1
+        servers = db_mgr.list_servers_for_user(user_id)
+        return jsonify({"status": "success", "servers": servers})
+
+    @flask_app.route("/api/servers/add", methods=["POST"])
+    def add_user_server():
+        """Registers a new server node and generates the Agent install command."""
+        user_name = session.get("user")
+        user = db_mgr.get_user_by_username(user_name) if user_name else None
+        user_id = user["id"] if user else 1
+
+        can_add, err = billing_mgr.can_user_add_server(user_id)
+        if not can_add:
+            return jsonify({"error": err, "upgrade_required": True}), 403
+
+        data = request.get_json(silent=True) or request.form.to_dict() or {}
+        name = str(data.get("name", "")).strip() or "My Server"
+        conn_type = str(data.get("connection_type", "agent"))
+        ip = str(data.get("ip", "")).strip() or None
+
+        server = agent_mgr.register_node(
+            user_id=user_id, server_name=name, connection_type=conn_type, ip=ip
+        )
+        hub_url = request.host_url.rstrip("/")
+        install_cmd = agent_mgr.generate_install_command(server["agent_token"], hub_url)
+
+        return (
+            jsonify(
+                {
+                    "status": "success",
+                    "server": server,
+                    "install_command": install_cmd,
+                }
+            ),
+            201,
+        )
+
+    @flask_app.route("/install-agent", methods=["GET"])
+    @flask_app.route("/install-agent.sh", methods=["GET"])
+    @flask_app.route("/api/agent/install", methods=["GET"])
+    def download_agent_installer():
+        """Serves the dynamic node agent bash installer script."""
+        hub_url = request.host_url.rstrip("/")
+        token = request.args.get("token", "")
+        script = agent_mgr.generate_install_script(hub_url=hub_url, agent_token=token)
+        return Response(script, mimetype="text/x-shellscript")
+
+    @flask_app.route("/api/agent/heartbeat", methods=["POST"])
+    def agent_heartbeat():
+        """Receives heartbeat telemetry from a connected node agent."""
+        token = request.headers.get("X-Njord-Agent-Token") or request.args.get("token")
+        if not token:
+            return jsonify({"error": "Missing agent token"}), 401
+
+        data = request.get_json(silent=True) or {}
+        client_ip = get_client_ip(request)
+        success, msg = agent_mgr.process_heartbeat(token, data, client_ip)
+        if not success:
+            return jsonify({"error": msg}), 401
+
+        return jsonify({"status": "acknowledged", "message": msg})
+
+    # --------------------------------------------------------------------------
+    # Stripe Billing Endpoints
+    # --------------------------------------------------------------------------
+
+    @flask_app.route("/api/billing/status", methods=["GET"])
+    def billing_status():
+        """Returns plan info and server quota for the current user."""
+        user_name = session.get("user")
+        user = db_mgr.get_user_by_username(user_name) if user_name else None
+        user_id = user["id"] if user else 1
+        info = billing_mgr.get_user_plan_info(user_id)
+        return jsonify({"status": "success", "billing": info})
+
+    @flask_app.route("/api/billing/checkout", methods=["POST"])
+    def start_checkout():
+        """Creates a Stripe Checkout Session to upgrade to Pro (Monthly or Yearly)."""
+        user_name = session.get("user")
+        user = db_mgr.get_user_by_username(user_name) if user_name else None
+        user_id = user["id"] if user else 1
+
+        data = request.get_json(silent=True) or {}
+        interval = data.get("interval", request.args.get("interval", "monthly"))
+        price_id = data.get("price_id", request.args.get("price_id"))
+
+        success_url = request.host_url.rstrip("/") + "/settings?billing=success"
+        cancel_url = request.host_url.rstrip("/") + "/settings?billing=cancel"
+
+        checkout_url, err = billing_mgr.create_checkout_session(
+            user_id, success_url, cancel_url, interval=interval, price_id=price_id
+        )
+        if err or not checkout_url:
+            return jsonify({"error": err or "Could not create checkout session"}), 400
+
+        return jsonify({"status": "success", "checkout_url": checkout_url})
+
+    @flask_app.route("/api/billing/portal", methods=["POST"])
+    def start_portal():
+        """Creates a Stripe Customer Portal session."""
+        user_name = session.get("user")
+        user = db_mgr.get_user_by_username(user_name) if user_name else None
+        user_id = user["id"] if user else 1
+
+        return_url = request.host_url.rstrip("/") + "/settings"
+        portal_url, err = billing_mgr.create_customer_portal_session(
+            user_id, return_url
+        )
+        if err or not portal_url:
+            return jsonify({"error": err or "Could not open billing portal"}), 400
+
+        return jsonify({"status": "success", "portal_url": portal_url})
+
+    @flask_app.route("/api/v1/billing/webhook", methods=["POST"])
+    @flask_app.route("/api/billing/webhook", methods=["POST"])
+    @flask_app.route("/api/stripe/webhook", methods=["POST"])
+    def stripe_webhook():
+        """Inbound webhook handler for Stripe events."""
+        payload = request.get_data()
+        sig_header = request.headers.get("Stripe-Signature", "")
+        success, msg = billing_mgr.handle_webhook_event(payload, sig_header)
+        if not success:
+            return jsonify({"error": msg}), 400
+        return jsonify({"status": "processed", "message": msg})
+
+    @flask_app.route("/health", methods=["GET"])
+    @flask_app.route("/api/health", methods=["GET"])
+    @flask_app.route("/api/v1/health", methods=["GET"])
+    def health_check():
+        """Returns health status, active mode, and catalog size for NjordDeploy."""
+        from datetime import timezone
+
+        mode = "service" if is_server_mode() else "standalone"
+        all_components = component_manager.reader.get_all_components()
+        catalog_count = len(all_components) if isinstance(all_components, dict) else 0
+
+        return (
+            jsonify(
+                {
+                    "status": "ok",
+                    "version": get_project_version(),
+                    "mode": mode,
+                    "services_catalog": catalog_count,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
+            200,
+        )
 
     @flask_app.route("/", methods=["GET"])
     def index():
@@ -348,8 +905,19 @@ def create_app(test_config=None):
                 val = val.strip().strip("\"'")
                 env_vars[key] = val
 
+        auth_config = load_auth_config() or {}
+        auth_info = {
+            "auth_enabled": is_auth_enabled(),
+            "admin_configured": is_admin_configured(),
+            "username": auth_config.get("username", "admin"),
+            "api_key": auth_config.get("api_key", ""),
+        }
+
         return render_template(
-            "settings.html", env_vars=env_vars, raw_content=raw_content
+            "settings.html",
+            env_vars=env_vars,
+            raw_content=raw_content,
+            auth_info=auth_info,
         )
 
     @flask_app.route("/api/settings", methods=["POST"])
@@ -1839,17 +2407,24 @@ def create_app(test_config=None):
                 if group_id in components_by_group_id:
                     display_name = id_to_name_map.get(group_id, group_id)
                     is_exclusive = id_to_exclusive_map.get(group_id, False)
-                    groups_to_components[display_name] = {
-                        "is_exclusive": is_exclusive,
-                        "components": components_by_group_id.pop(group_id),
-                    }
+                    comps = components_by_group_id.pop(group_id)
+                    if display_name in groups_to_components:
+                        groups_to_components[display_name]["components"].extend(comps)
+                    else:
+                        groups_to_components[display_name] = {
+                            "is_exclusive": is_exclusive,
+                            "components": comps,
+                        }
             for group_id, comp_list in sorted(components_by_group_id.items()):
                 display_name = id_to_name_map.get(group_id, group_id)
                 is_exclusive = id_to_exclusive_map.get(group_id, False)
-                groups_to_components[display_name] = {
-                    "is_exclusive": is_exclusive,
-                    "components": comp_list,
-                }
+                if display_name in groups_to_components:
+                    groups_to_components[display_name]["components"].extend(comp_list)
+                else:
+                    groups_to_components[display_name] = {
+                        "is_exclusive": is_exclusive,
+                        "components": comp_list,
+                    }
             return jsonify({"groups": groups_to_components}), 200
         except Exception as e:
             logging.error(f"Failed to get software groups: {e}", exc_info=True)
@@ -2402,7 +2977,7 @@ def create_app(test_config=None):
             if not clean_dir:
                 return jsonify({"error": "Invalid output directory"}), 400
 
-            base_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
+            base_dir = get_app_data_dir().resolve()
             target_path = (base_dir / clean_dir).resolve()
 
             if not target_path.is_relative_to(base_dir):
@@ -2714,10 +3289,7 @@ def create_app(test_config=None):
                 "project_config_dir"
             ) or request.args.get("stack_dir")
 
-            staging_dir = (
-                Path(user_data_dir("NjordDeploy", "NjordDeploy")).resolve()
-                / "backups_download"
-            )
+            staging_dir = get_app_data_dir().resolve() / "backups_download"
             staging_dir.mkdir(parents=True, exist_ok=True)
             local_target = (staging_dir / clean_name).resolve()
 

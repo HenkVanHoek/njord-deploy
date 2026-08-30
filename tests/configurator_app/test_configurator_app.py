@@ -405,3 +405,53 @@ class ConfiguratorAppTestCase(unittest.TestCase):
         data = json.loads(response.data)
         self.assertEqual(data["status"], "GREEN")
         self.assertIn("summary", data)
+
+    def test_get_software_groups_success(self):
+        """Test GET /get-software-groups returns organized groups."""
+        self.mock_manager.get_all_components.return_value = [
+            {"id": "caddy", "name": "Caddy", "group": "Reverse Proxy"},
+            {"id": "adguard-home", "name": "AdGuard", "group": "DNS & Ad Blocking"},
+        ]
+        self.mock_manager.get_njorddeploy_meta.return_value = {
+            "group_order": ["Reverse Proxy", "DNS & Ad Blocking"],
+            "group_rules": {
+                "Reverse Proxy": {"name": "Reverse Proxy", "is_exclusive": True},
+                "DNS & Ad Blocking": {
+                    "name": "DNS & Ad Blocking",
+                    "is_exclusive": True,
+                },
+            },
+        }
+
+        response = self.client.get("/get-software-groups")
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn("groups", data)
+        self.assertIn("Reverse Proxy", data["groups"])
+        self.assertIn("DNS & Ad Blocking", data["groups"])
+        self.assertTrue(data["groups"]["Reverse Proxy"]["is_exclusive"])
+        (comp_id,) = data["groups"]["Reverse Proxy"]["components"]
+        self.assertEqual(comp_id, "caddy")
+
+    def test_get_software_groups_merges_duplicate_display_names(self):
+        """Test that get_software_groups merges components if display names collide."""
+        self.mock_manager.get_all_components.return_value = [
+            {"id": "comp_a", "name": "Comp A", "group": "grp_one"},
+            {"id": "comp_b", "name": "Comp B", "group": "grp_two"},
+        ]
+        self.mock_manager.get_njorddeploy_meta.return_value = {
+            "group_order": ["grp_one", "grp_two"],
+            "group_rules": {
+                "grp_one": {"name": "Shared Name", "is_exclusive": False},
+                "grp_two": {"name": "Shared Name", "is_exclusive": False},
+            },
+        }
+
+        response = self.client.get("/get-software-groups")
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data)
+        self.assertIn("groups", data)
+        self.assertIn("Shared Name", data["groups"])
+        self.assertEqual(len(data["groups"]["Shared Name"]["components"]), 2)
+        self.assertIn("comp_a", data["groups"]["Shared Name"]["components"])
+        self.assertIn("comp_b", data["groups"]["Shared Name"]["components"])

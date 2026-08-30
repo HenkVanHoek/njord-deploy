@@ -45,6 +45,12 @@ class OpenApiTestCase(unittest.TestCase):
         self.assertIn("/api/backup/discover-compose", spec["paths"])
         self.assertIn("/api/backup/inspect", spec["paths"])
         self.assertIn("/api/backup/create", spec["paths"])
+        self.assertIn("/api/setup", spec["paths"])
+        self.assertIn("/api/login", spec["paths"])
+        self.assertIn("components", spec)
+        self.assertIn("securitySchemes", spec["components"])
+        self.assertIn("ApiKeyAuth", spec["components"]["securitySchemes"])
+        self.assertIn("BearerAuth", spec["components"]["securitySchemes"])
 
     def test_api_openapi_json_endpoint(self):
         """Verify that GET /api/openapi.json returns 200 OK and valid JSON."""

@@ -46,7 +46,7 @@ logging.basicConfig(
 logger = logging.getLogger("update_operational_vm")
 
 DEFAULT_TARGET_IP = "192.168.178.40"
-DEFAULT_TARGET_USER = "pivm"
+DEFAULT_TARGET_USER = "hvhoek"
 DEFAULT_VMID = 140
 OBSIDIAN_LOG_DIR = Path(
     "/home/hvhoek/Nextcloud/Henks Geheugen/Projecten/Njord-deploy/Logboek"
@@ -282,6 +282,7 @@ def update_operational_environment(
         logger.info("Verifying application endpoints...")
         endpoints = {
             "Configurator (5001)": f"http://{target_ip}:5001/",
+            "REST API Health (5001)": f"http://{target_ip}:5001/api/health",
             "Component Editor (5000)": f"http://{target_ip}:5000/",
             "Proxmox Test Suite (5050)": f"http://{target_ip}:5050/",
         }

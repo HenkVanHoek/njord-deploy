@@ -73,8 +73,42 @@ def get_openapi_spec() -> Dict[str, Any]:
                     "for NjordDeploy-managed services"
                 ),
             },
+            {
+                "name": "Authentication & Security",
+                "description": (
+                    "First-run onboarding setup, credentials, session auth, "
+                    "and REST API key tokens"
+                ),
+            },
         ],
         "paths": {
+            "/api/health": {
+                "get": {
+                    "tags": ["Engine & Settings"],
+                    "summary": "Service health check and metrics",
+                    "description": (
+                        "Returns service health status, application version, "
+                        "operational mode (standalone or service), and "
+                        "total registered services."
+                    ),
+                    "responses": {
+                        "200": {
+                            "description": "NjordDeploy service is healthy.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "status": "ok",
+                                        "version": "0.6.0",
+                                        "mode": "service",
+                                        "services_catalog": 85,
+                                        "timestamp": "2026-08-29T14:38:00+00:00",
+                                    }
+                                }
+                            },
+                        }
+                    },
+                }
+            },
             "/api/components": {
                 "get": {
                     "tags": ["Components & Metadata"],
@@ -798,5 +832,135 @@ def get_openapi_spec() -> Dict[str, Any]:
                     },
                 }
             },
+            "/api/setup": {
+                "post": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "First-run administrator account initialization",
+                    "description": (
+                        "Initializes primary admin username and password. "
+                        "Locks permanently once completed."
+                    ),
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "username": "admin",
+                                    "password": "StrongPassword123!",
+                                    "confirm_password": "StrongPassword123!",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {"description": "Admin account initialized."},
+                        "400": {"description": "Validation error."},
+                        "403": {"description": "Setup already completed."},
+                    },
+                }
+            },
+            "/api/login": {
+                "post": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "Authenticate user credentials",
+                    "description": (
+                        "Validates administrator password and establishes session."
+                    ),
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "username": "admin",
+                                    "password": "StrongPassword123!",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {"description": "Authenticated successfully."},
+                        "401": {"description": "Invalid credentials."},
+                        "429": {"description": "Rate limited."},
+                    },
+                }
+            },
+            "/api/logout": {
+                "post": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "Sign out and terminate session",
+                    "responses": {"200": {"description": "Logged out successfully."}},
+                }
+            },
+            "/api/auth/status": {
+                "get": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "Retrieve session and authentication status",
+                    "responses": {
+                        "200": {
+                            "description": "Auth status information.",
+                            "content": {
+                                "application/json": {
+                                    "example": {
+                                        "authenticated": True,
+                                        "user": "admin",
+                                        "auth_enabled": True,
+                                        "admin_configured": True,
+                                    }
+                                }
+                            },
+                        }
+                    },
+                }
+            },
+            "/api/auth/regenerate-api-key": {
+                "post": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "Regenerate headless REST API token",
+                    "security": [{"ApiKeyAuth": []}, {"BearerAuth": []}],
+                    "responses": {
+                        "200": {"description": "API token regenerated."},
+                        "401": {"description": "Unauthorized."},
+                    },
+                }
+            },
+            "/api/auth/change-password": {
+                "post": {
+                    "tags": ["Authentication & Security"],
+                    "summary": "Update administrator password",
+                    "security": [{"ApiKeyAuth": []}, {"BearerAuth": []}],
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "current_password": "OldPassword123!",
+                                    "new_password": "NewPassword123!",
+                                    "confirm_password": "NewPassword123!",
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {"description": "Password updated."},
+                        "400": {"description": "Validation failed."},
+                        "401": {"description": "Unauthorized."},
+                    },
+                }
+            },
+        },
+        "components": {
+            "securitySchemes": {
+                "ApiKeyAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "X-Njord-API-Key",
+                    "description": "API Key header authentication.",
+                },
+                "BearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "description": "Bearer token authentication.",
+                },
+            }
         },
     }

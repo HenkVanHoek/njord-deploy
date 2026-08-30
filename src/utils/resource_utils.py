@@ -16,6 +16,49 @@ def get_last_seed_status() -> dict[str, str]:
     return dict(_LAST_SEED_STATUS)
 
 
+def get_app_data_dir() -> Path:
+    """
+    Returns the application data directory.
+    Respects NJORD_DATA_DIR environment variable if provided,
+    falling back to user_data_dir("NjordDeploy", "NjordDeploy").
+    """
+    import os
+
+    from appdirs import user_data_dir
+
+    custom_dir = os.environ.get("NJORD_DATA_DIR")
+    if custom_dir:
+        return Path(custom_dir).resolve()
+    return Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+
+
+def get_ssh_key_path() -> Path:
+    """
+    Returns the path to the SSH private key used by NjordDeploy.
+    Respects NJORD_SSH_KEY_PATH if set, else defaults to id_ed25519_njorddeploy
+    in the application data directory.
+    """
+    import os
+
+    custom_key = os.environ.get("NJORD_SSH_KEY_PATH")
+    if custom_key:
+        return Path(custom_key).resolve()
+    return get_app_data_dir() / "id_ed25519_njorddeploy"
+
+
+def is_server_mode() -> bool:
+    """Returns True if NjordDeploy is configured to run in 24/7 server mode."""
+    import os
+
+    return os.environ.get("NJORD_SERVER_MODE", "").lower() in (
+        "true",
+        "1",
+        "yes",
+        "service",
+        "daemon",
+    )
+
+
 def seed_user_components_if_needed() -> dict[str, str]:
     """
     Ensures local user data components directory is seeded with the latest
@@ -25,8 +68,6 @@ def seed_user_components_if_needed() -> dict[str, str]:
     import os
     import shutil
 
-    from appdirs import user_data_dir
-
     if os.environ.get("PI_SELFHOSTING_COMPONENTS_DIR"):
         _LAST_SEED_STATUS = {
             "status": "already_seeded",
@@ -34,7 +75,7 @@ def seed_user_components_if_needed() -> dict[str, str]:
         }
         return _LAST_SEED_STATUS
 
-    app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+    app_data_dir = get_app_data_dir()
     user_components_dir = app_data_dir / "components"
     user_metadata = user_components_dir / "components_metadata.json"
     user_templates = user_components_dir / "component_templates"
@@ -199,10 +240,10 @@ def get_components_paths() -> tuple[Path, Path]:
     """
     import os
 
-    from appdirs import user_data_dir
-
     # 1. Check environment variable override
-    env_dir = os.environ.get("PI_SELFHOSTING_COMPONENTS_DIR")
+    env_dir = os.environ.get("NJORD_COMPONENTS_DIR") or os.environ.get(
+        "PI_SELFHOSTING_COMPONENTS_DIR"
+    )
     if env_dir:
         components_dir = Path(env_dir).resolve()
         return (
@@ -211,7 +252,7 @@ def get_components_paths() -> tuple[Path, Path]:
         )
 
     # 2. Check user data directory
-    app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+    app_data_dir = get_app_data_dir()
     user_components_dir = app_data_dir / "components"
     user_metadata = user_components_dir / "components_metadata.json"
     user_templates = user_components_dir / "component_templates"

@@ -14,15 +14,17 @@ import uuid
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from appdirs import user_data_dir
-
-from configurator_app.app import get_components_paths, seed_user_components_if_needed
 from managers.backup_manager import BackupManager
 from managers.component_manager import ComponentManager
 from managers.deployment_manager import DeploymentManager
 from managers.setup_manager import SetupManager
 from managers.ssh_manager import SSHManager
 from utils.container_engine import get_configured_engine
+from utils.resource_utils import (
+    get_app_data_dir,
+    get_components_paths,
+    seed_user_components_if_needed,
+)
 
 logger = logging.getLogger("njorddeploy_cli")
 
@@ -40,7 +42,7 @@ class NjordCliRunner:
         self.component_mgr = ComponentManager(
             metadata_file_path=metadata_path, templates_path=templates_path
         )
-        app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+        app_data_dir = get_app_data_dir()
         output_dir = app_data_dir / "output"
         self.setup_mgr = SetupManager(self.component_mgr.reader, output_dir=output_dir)
         self.deployment_mgr = DeploymentManager(component_manager=self.component_mgr)

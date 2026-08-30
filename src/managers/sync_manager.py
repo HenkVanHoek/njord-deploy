@@ -26,7 +26,10 @@ class SyncManager:
         self.local_metadata_path = local_metadata_path
         self.local_templates_path = local_templates_path
 
-        app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
+        if os.environ.get("NJORD_DATA_DIR"):
+            app_data_dir = Path(os.environ["NJORD_DATA_DIR"]).resolve()
+        else:
+            app_data_dir = Path(user_data_dir("NjordDeploy", "NjordDeploy"))
         self.cache_dir = app_data_dir / "remote_components_cache"
         self.cache_metadata_path = self.cache_dir / "components_metadata.json"
         self.cache_templates_path = self.cache_dir / "component_templates"
