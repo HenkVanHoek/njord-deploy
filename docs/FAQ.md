@@ -41,12 +41,14 @@ Yes. NjordDeploy includes dedicated AI components such as **Open WebUI bundled w
 **Answer:**
 NjordDeploy is **100% local, self-contained, and privacy-first**. All discovery scans, credential handling, template rendering, and deployments execute directly from your control machine to your target device over local network or encrypted SSH/WireGuard/Tailscale tunnels. No telemetry, metadata, or user credentials ever leave your infrastructure.
 
-### 1.6 Is NjordDeploy free for self-hosters?
+### 1.6 What license does NjordDeploy use and is it free for self-hosters?
 **Answer:**
-**Yes, absolutely!**
-* **Free Community Tier:** Every self-hoster and homelab user can use NjordDeploy **100% free forever** for up to **2 connected servers / SBC devices** (e.g. 1 Raspberry Pi + 1 Homelab server/mini-PC). It includes access to all 100 components, unlimited container deployments, local volume backups, and full multi-tenant workspace isolation without requiring a credit card.
+**Yes, absolutely!** NjordDeploy is licensed under the **[Business Source License 1.1 (BSL-1.1)](https://github.com/HenkVanHoek/njord-deploy/blob/main/LICENSE)**.
+* **Free Community Tier:** Every self-hoster, homelab enthusiast, student, and non-commercial user can use NjordDeploy **100% free forever** for up to **2 connected servers / SBC devices** per self-hosted instance (e.g. 1 Raspberry Pi + 1 Homelab mini-PC). It includes access to all 100 components, unlimited container deployments, local volume backups, and full multi-tenant workspace isolation without requiring a credit card.
+* **Standalone Desktop Mode:** Running the offline standalone desktop executable locally is completely free with no node limits.
+* **Commercial Protection:** Hosting or distributing NjordDeploy as a commercial deployment platform (SaaS) or competing managed service to third parties requires an explicit commercial license agreement from the author.
 * **Pro Tier (€5/month or €50/year):** For power users, organizations, and homelabbers managing more than 2 server nodes, NjordDeploy Pro unlocks unlimited connected servers, automated cloud off-site backups, and priority CVE security advisory alerts.
-* **Standalone Desktop Mode:** If running the standalone offline desktop executable locally, there are no node limits.
+* **Automatic Open Source Transition:** Each version automatically transitions to the standard **Apache License, Version 2.0** open-source license two years after release (Change Date: August 30, 2028).
 
 ### 1.7 Can I run NjordDeploy as a 24/7 persistent background daemon/service on my home server?
 **Answer:**
