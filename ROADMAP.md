@@ -57,20 +57,40 @@ With a stable foundation, this phase will focus on expanding the ecosystem, impr
 *   **[✅] Headless CLI Runner Mode & Zero-Browser Automation**:
     *   **Why?**: To execute automated deployments, volume backups, state restorations, and stack inspections directly from terminal scripts, cron jobs, and CI/CD without starting a web browser or WSGI server.
     *   **Implementation**: Built `NjordCliRunner` (`src/cli/runner.py`) integrated directly into `run_configurator.py` supporting `--deploy <config.json>`, `--backup`, `--restore <archive>`, `--inspect`, `--list-backups`, `--scan-stacks`, and `--example-config`.
-*   **[Planned] Advanced Installer Options**: Introduce an "Advanced Mode" in the installer for power users to tweak more specific Docker settings.
+*   **[✅] Advanced Installer Options**: Introduced multi-tenant management, customizable port offsets, persistent data directories, and target OS engine parameters.
 
 ---
 
-## Phase 3: Long-Term Vision (Future)
+## Phase 3: Milestone 100 Components, Multi-Tenancy & Enterprise Subscriptions (v1.0.0-RC1)
 
-This is a collection of ideas that are being considered for the long-term future.
+This milestone elevates NjordDeploy into a complete, enterprise-grade, multi-tenant self-hosting and DevOps orchestration platform.
 
-*   **Introduce PostgreSQL Support**:
-    *   **Why?**: To support a new class of powerful applications that require or strongly prefer PostgreSQL (e.g., Mastodon).
-    *   **Implementation**: This will be a significant architectural update reserved for a future major version.
+*   **[✅] Milestone 100 Sovereign Components**:
+    *   **Why?**: To provide a vast, curated, and rigorously tested library of 100 self-hosted services covering every key homelab and small enterprise domain.
+    *   **Implementation**: Curated, templated, and tested 100 modular component stacks across AI/LLMs (Ollama, Open WebUI, LiteLLM, LibreChat), DevOps (Gitea, Woodpecker CI, n8n, Semaphore), Cloud Storage (Immich, Syncthing, MinIO, FileBrowser), Smart Home (Home Assistant, ESPHome, Node-RED, Zigbee2MQTT), Security (Vaultwarden, Authelia, LLDAP), and Observability (Prometheus, Grafana, Uptime Kuma, Netdata).
+*   **[✅] Multi-Tenant SaaS Architecture & Tenant Isolation**:
+    *   **Why?**: To support managed service providers, teams, and family organizations with isolated workspaces and granular access control.
+    *   **Implementation**: Built `TenantManager` and `OrganizationManager` with isolated config caching, user roles (Owner, Admin, Member), and session-based tenant switching.
+*   **[✅] 24/7 Persistent Self-Hosted Service Daemon (`run_service.py`)**:
+    *   **Why?**: To allow homelab operators to run NjordDeploy continuously in background mode with automated SSH key persistence and continuous health checks.
+    *   **Implementation**: Implemented `run_service.py` daemon entrypoint, systemd service unit (`services/systemd/njorddeploy.service`), Docker Compose deployment (`docker-compose.service.yml`), and unified `/api/health` diagnostics.
+*   **[✅] Stripe Billing & Subscription Ecosystem**:
+    *   **Why?**: To establish a sustainable commercial model supporting monthly and annual subscriptions with tier gating.
+    *   **Implementation**: Integrated Stripe SDK (`stripe>=15.6.0`), monthly and annual pricing plans, secure Stripe Checkout sessions, self-service Stripe Customer Portal integration, and automated entitlement enforcement.
+*   **[✅] Universal Multi-OS & Automated Disaster Recovery Suite**:
+    *   **Why?**: To ensure 100% dependable deployment and state recovery across Debian 12, Ubuntu 24.04, Windows, and macOS.
+    *   **Implementation**: Automated Proxmox backup/restore testrunners with clean VM/LXC provisioning, state mutation, restore validation, and universal Debian 12 standalone binary compilation.
+
+---
+
+## Phase 4: Long-Term Vision (Future)
+
+This is a collection of ideas that are being considered for future minor/major iterations.
+
+*   **[✅] PostgreSQL Support**: Fully integrated PostgreSQL and pgAdmin 4 components with automated volume persistence and database administration.
 *   **Provider-Agnostic Off-site Backups**: Enhance the Backup & Restore tool with an automated off-site capability using a generic tool like `rclone`. This will allow users to send encrypted backups to any of the 70+ cloud storage providers `rclone` supports.
 *   **Plugin Marketplace**: An interface where the community can submit new component templates for easy inclusion.
-*   **Multi-Node/Clustering Support**: The ability to deploy services across multiple Raspberry Pi devices.
+*   **Multi-Node/Clustering Support**: The ability to deploy services across multiple Raspberry Pi devices and distributed nodes.
 *   **Enhanced Security Auditing**: Tools to scan configurations for common security misconfigurations.
 
 We welcome discussion on this roadmap! Please open an issue to discuss any of the points above or to propose new features.

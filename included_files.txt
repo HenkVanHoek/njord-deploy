@@ -1,10 +1,13 @@
-Tokens: 435673 | VRAM Status: CRITICAL
+Tokens: 498199 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
+.agents/skills/supply-chain-vulnerability-audit/scripts/audit_supply_chain.py
 ansible/playbook.yml
 config/migrate_for_ai_fields.py
 context_generator.py
+docker-compose.service.yml
 docker-compose.template.yml
+docker-compose.yml
 exportToHTML/Migratieplan Hernoemen van PiSelfhosting naar SBCDeploy.md - Nextcloud.pdf.html
 exportToHTML/proxmox_testing_plan.md.html
 exportToHTML/rename_plan.md.html
@@ -14,7 +17,10 @@ playwright.config.js
 run_configurator.py
 run_editor.py
 run_proxmox_gui.py
+run_service.py
 scripts/__init__.py
+scripts/audit_video_frames.py
+scripts/build_linux_binary_proxmox.py
 scripts/check_release_status.py
 scripts/check_secrets.py
 scripts/create_proxmox_lxc.py
@@ -24,6 +30,7 @@ scripts/generate_configurator_feature_slideshow.py
 scripts/generate_demo_loop.py
 scripts/generate_editor_demo_loop.py
 scripts/generate_editor_feature_slideshow.py
+scripts/generate_immich_install_video.py
 scripts/generate_services_doc.py
 scripts/proxmox_gui.py
 scripts/proxmox_package_test_runner.py
@@ -36,6 +43,7 @@ scripts/static/js/proxmox_gui.js
 scripts/templates/proxmox_gui.html
 scripts/test_backup_restore_lxc.py
 scripts/update_docs.py
+scripts/update_operational_vm.py
 src/__init__.py
 src/cli/__init__.py
 src/cli/runner.py
@@ -48,6 +56,7 @@ src/configurator_app/static/css/configurator.css
 src/configurator_app/static/css/njorddeploy-style.css
 src/configurator_app/static/js/accessibility.js
 src/configurator_app/static/js/app.js
+src/configurator_app/static/js/auth.js
 src/configurator_app/static/js/backup_manager_ui.js
 src/configurator_app/templates/__init__.py
 src/configurator_app/templates/base.html
@@ -55,9 +64,12 @@ src/configurator_app/templates/help.html
 src/configurator_app/templates/index.html
 src/configurator_app/templates/install_success.html
 src/configurator_app/templates/live_log.html
+src/configurator_app/templates/login.html
+src/configurator_app/templates/register.html
 src/configurator_app/templates/select_components.html
 src/configurator_app/templates/select_pi.html
 src/configurator_app/templates/settings.html
+src/configurator_app/templates/setup.html
 src/configurator_app/templates/summary.html
 src/configurator_app/templates/swagger.html
 src/editor_app/__init__.py
@@ -72,11 +84,14 @@ src/management_tools/logic.py
 src/management_tools/routes.py
 src/management_tools/templates/backup_ui.html
 src/managers/__init__.py
+src/managers/agent_manager.py
 src/managers/artifact_generator.py
 src/managers/backup_manager.py
+src/managers/billing_manager.py
 src/managers/component_manager.py
 src/managers/component_reader.py
 src/managers/component_writer.py
+src/managers/database_manager.py
 src/managers/deployment_evaluator.py
 src/managers/deployment_manager.py
 src/managers/setup_manager.py

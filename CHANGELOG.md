@@ -4,9 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [Unreleased]
+## [1.0.0-RC1] - 2026-08-30
 
 ### Added
+- **Milestone 100 Components! (100 Tested & Curated Sovereign Self-Hosted Stacks)**:
+  - Curated, templated, and verified exactly 100 modular self-hosted services across AI/LLMs (Ollama, Open WebUI, LiteLLM, LibreChat, SearXNG), DevOps & CI/CD (Gitea, Woodpecker CI, n8n, Semaphore UI, Dockge, Portainer CE), Sovereign Cloud & Media (Immich, Syncthing, MinIO, FileBrowser, Jellyfin, Radarr, Sonarr, Bazarr, Prowlarr, Jellyseerr, qBittorrent, Audiobookshelf, Calibre-web, Mealie, FreshRSS, Memos, Trilium, Wallabag), Smart Home (Home Assistant, ESPHome, Node-RED, Zigbee2MQTT, Scrypted), Privacy Analytics & DBs (Umami, Plausible, MariaDB, PostgreSQL, Redis, Meilisearch, Adminer, pgAdmin 4), and Observability & Security (Prometheus, Grafana, Uptime Kuma, Netdata, Beszel, Speedtest Tracker, Dozzle, Vaultwarden, Authelia, LLDAP, AdGuard Home, Pi-hole, Technitium).
+- **Multi-Tenancy & SaaS Organization Architecture**:
+  - Implemented multi-tenant and organization isolation (`TenantManager`, `OrganizationManager`) enabling user workspaces, role-based access control (Owner, Admin, Member), and session-based tenant context switching.
+- **24/7 Persistent Self-Hosted Service Daemon (`run_service.py`)**:
+  - Built persistent service entrypoint (`run_service.py`) supporting headless 24/7 operation via systemd (`services/systemd/njorddeploy.service`) and Docker Compose (`docker-compose.service.yml`).
+  - Added automated persistent SSH key generation, secure key storage under `NJORD_DATA_DIR`, and `/api/health` diagnostic endpoints with automatic mode reporting (`standalone` vs `service`).
+- **Stripe Billing, Customer Portal & Subscription Tiers**:
+  - Integrated Stripe billing SDK (`stripe>=15.6.0`) supporting monthly and annual subscription plans, secure Stripe Checkout sessions, dynamic entitlement gating, and self-service Stripe Customer Portal management in the Settings pane.
+- **OpenAPI 3.0 Specification & Interactive Swagger UI**:
+  - Published comprehensive OpenAPI 3.0 specification (`/api/openapi.json`) and interactive dark/light theme Swagger documentation (`/api/docs`).
+- **Universal Multi-OS & Automated Disaster Recovery Suite**:
+  - Integrated clean VM/LXC Proxmox disaster recovery automated testrunners (`scripts/proxmox_backup_test_runner.py`) with point-in-time state backups, SHA-256 integrity verification, and safe restoration.
+  - Implemented Universal Debian 12 standalone binary compilation and automated VM 140 deployment runner (`scripts/update_operational_vm.py`).
 - **Automated Visual Demo Loops & Beginners' Quick Start Guide**:
   - Implemented automated Playwright and Pillow generator script ([`scripts/generate_demo_loop.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/generate_demo_loop.py)) capturing all 5 steps of the guided deployment wizard into lightweight animated GIF (`njorddeploy-demo-loop.gif`, 422 KB) and WebP formats.
   - Created didactically simplified beginner onboarding guide ([`docs/GETTING_STARTED_FOR_BEGINNERS.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/GETTING_STARTED_FOR_BEGINNERS.md)) featuring demo visuals, 3 essentials, and FAQ.
@@ -19,7 +33,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
   - Created [`docs/EDITOR_FEATURE_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/EDITOR_FEATURE_GUIDE.md) and [`docs/CONFIGURATOR_FEATURE_GUIDE.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/CONFIGURATOR_FEATURE_GUIDE.md).
   - Integrated both feature guides into the running application's `/help` navigation menu.
 - **Agentic Skills for Automated Asset Regeneration**:
-  - Added 4 dedicated skills in `.agents/skills/`: `configurator-demo-loop`, `editor-demo-loop`, `configurator-feature-slideshow`, and `editor-feature-slideshow`.
+  - Added dedicated skills in `.agents/skills/`: `configurator-demo-loop`, `editor-demo-loop`, `configurator-feature-slideshow`, `editor-feature-slideshow`, and `operational-update`.
 
 ## [0.6.0] - 2026-08-21
 
