@@ -41,9 +41,12 @@ Yes. NjordDeploy includes dedicated AI components such as **Open WebUI bundled w
 **Answer:**
 NjordDeploy is **100% local, self-contained, and privacy-first**. All discovery scans, credential handling, template rendering, and deployments execute directly from your control machine to your target device over local network or encrypted SSH/WireGuard/Tailscale tunnels. No telemetry, metadata, or user credentials ever leave your infrastructure.
 
-### 1.6 Is NjordDeploy free and open source?
+### 1.6 Is NjordDeploy free for self-hosters?
 **Answer:**
-Yes. NjordDeploy is open-source software built for the self-hosting and homelab community.
+**Yes, absolutely!**
+* **Free Community Tier:** Every self-hoster and homelab user can use NjordDeploy **100% free forever** for up to **2 connected servers / SBC devices** (e.g. 1 Raspberry Pi + 1 Homelab server/mini-PC). It includes access to all 100 components, unlimited container deployments, local volume backups, and full multi-tenant workspace isolation without requiring a credit card.
+* **Pro Tier (€5/month or €50/year):** For power users, organizations, and homelabbers managing more than 2 server nodes, NjordDeploy Pro unlocks unlimited connected servers, automated cloud off-site backups, and priority CVE security advisory alerts.
+* **Standalone Desktop Mode:** If running the standalone offline desktop executable locally, there are no node limits.
 
 ### 1.7 Can I run NjordDeploy as a 24/7 persistent background daemon/service on my home server?
 **Answer:**
