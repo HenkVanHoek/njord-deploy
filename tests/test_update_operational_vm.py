@@ -79,7 +79,9 @@ def test_save_obsidian_log(tmp_path):
 @patch("scripts.update_operational_vm.SSHManager")
 @patch("scripts.update_operational_vm.verify_http_endpoint")
 @patch("scripts.update_operational_vm.save_obsidian_log")
-def test_update_operational_environment(mock_save_log, mock_verify, mock_ssh_class):
+def test_update_operational_environment(
+    mock_save_log, mock_verify, mock_ssh_class, tmp_path
+):
     mock_ssh = MagicMock()
     mock_ssh.connect.return_value = (True, "Connected")
     mock_ssh.execute_command.return_value = (0, "Success")
@@ -89,21 +91,32 @@ def test_update_operational_environment(mock_save_log, mock_verify, mock_ssh_cla
 
     mock_verify.return_value = (True, 200)
 
-    with patch(
-        "scripts.update_operational_vm.build_binaries_if_needed",
-        return_value=True,
-    ):
-        success = update_operational_environment(
-            target_ip="192.168.178.40",
-            user="pivm",
-            password="testpass",
-            force_build=False,
-            skip_backup=False,
-            signal=False,
-            save_log=True,
-        )
+    # Ensure isolated dist binaries exist in tmp_path
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir(parents=True, exist_ok=True)
+    for b_name in [
+        "NjordDeployConfigurator",
+        "NjordDeployEditor",
+        "NjordDeployProxmoxTest",
+    ]:
+        (dist_dir / b_name).write_bytes(b"dummy_binary")
 
-        assert success is True
-        assert mock_ssh.connect.called
-        assert mock_sftp.put.called
-        assert mock_save_log.called
+    with patch("scripts.update_operational_vm.project_root", tmp_path):
+        with patch(
+            "scripts.update_operational_vm.build_binaries_if_needed",
+            return_value=True,
+        ):
+            success = update_operational_environment(
+                target_ip="192.168.178.40",
+                user="pivm",
+                password="testpass",
+                force_build=False,
+                skip_backup=False,
+                signal=False,
+                save_log=True,
+            )
+
+            assert success is True
+            assert mock_ssh.connect.called
+            assert mock_sftp.put.called
+            assert mock_save_log.called
