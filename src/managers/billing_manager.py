@@ -248,10 +248,10 @@ class BillingManager:
                 ],
                 "mode": "subscription",
                 "payment_method_types": [
-                    "card",
                     "ideal",
                     "sepa_debit",
                     "bancontact",
+                    "card",
                 ],
                 "managed_payments": {"enabled": False},
                 "success_url": (
