@@ -309,6 +309,12 @@ def create_app(test_config=None):
     if os.environ.get("NJORD_COOKIE_SECURE", "").lower() in ("true", "1"):
         flask_app.config["SESSION_COOKIE_SECURE"] = True
 
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
+    flask_app.wsgi_app = ProxyFix(  # type: ignore
+        flask_app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1
+    )
+
     # Apply testing configuration if provided
     if test_config:
         flask_app.config.update(test_config)
@@ -788,8 +794,12 @@ def create_app(test_config=None):
         interval = data.get("interval", request.args.get("interval", "monthly"))
         price_id = data.get("price_id", request.args.get("price_id"))
 
-        success_url = request.host_url.rstrip("/") + "/?billing=success"
-        cancel_url = request.host_url.rstrip("/") + "/?billing=cancel"
+        proto = request.headers.get("X-Forwarded-Proto", request.scheme)
+        host = request.headers.get("X-Forwarded-Host", request.host)
+        base_url = f"{proto}://{host}".rstrip("/")
+
+        success_url = f"{base_url}/?billing=success"
+        cancel_url = f"{base_url}/?billing=cancel"
 
         checkout_url, err = billing_mgr.create_checkout_session(
             user_id, success_url, cancel_url, interval=interval, price_id=price_id
@@ -806,7 +816,11 @@ def create_app(test_config=None):
         user = db_mgr.get_user_by_username(user_name) if user_name else None
         user_id = user["id"] if user else 1
 
-        return_url = request.host_url.rstrip("/") + "/?billing=portal_return"
+        proto = request.headers.get("X-Forwarded-Proto", request.scheme)
+        host = request.headers.get("X-Forwarded-Host", request.host)
+        base_url = f"{proto}://{host}".rstrip("/")
+
+        return_url = f"{base_url}/?billing=portal_return"
         portal_url, err = billing_mgr.create_customer_portal_session(
             user_id, return_url
         )
