@@ -23,6 +23,10 @@ import sys
 # Common patterns for keys/secrets
 GEMINI_KEY_RE = re.compile(r"AIzaSy[A-Za-z0-9_-]{35}")
 PRIVATE_KEY_RE = re.compile(r"-----BEGIN [A-Z ]+ PRIVATE KEY-----")
+PERSONAL_EMAIL_RE = re.compile(
+    r"\b[A-Za-z0-9._%+-]+@almereautomatisering\.nl\b", re.IGNORECASE
+)
+DOCS_PRIVATE_IP_RE = re.compile(r"\b(192\.168\.178\.\d+|37\.120\.176\.26)\b")
 
 # Regex to detect assignments to sensitive variable names
 # E.g. GEMINI_API_KEY = "xyz" or export PASSWORD="abc"
@@ -137,6 +141,35 @@ def check_file(filepath):
         # 2. Check for Private Keys
         if not is_test_file and PRIVATE_KEY_RE.search(line):
             findings.append((line_num, "Leaked Private Key block detected"))
+            continue
+
+        # 3. Check for Personal Email Addresses (PII)
+        if PERSONAL_EMAIL_RE.search(line):
+            findings.append(
+                (
+                    line_num,
+                    "Personal email address detected. Use generic placeholder "
+                    "(e.g. testuser@example.com or <email>).",
+                )
+            )
+            continue
+
+        # 4. Check for Private Production/Infrastructure IPs in Public Docs
+        is_doc = any(filepath_lower.endswith(ext) for ext in [".md", ".rst"])
+        is_public_doc = (
+            is_doc
+            and "skills/" not in filepath_lower
+            and "docs/proxmox_tests" not in filepath_lower
+            and "docs/proxmox_package_tests" not in filepath_lower
+        )
+        if is_public_doc and DOCS_PRIVATE_IP_RE.search(line):
+            findings.append(
+                (
+                    line_num,
+                    "Private production/infrastructure IP detected in documentation. "
+                    "Use generic placeholder (e.g. <server-ip> or 192.168.1.100).",
+                )
+            )
             continue
 
         # 3. Check for assignments

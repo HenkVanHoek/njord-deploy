@@ -171,7 +171,7 @@ Discovers target hosts on the local network via Subnet Nmap scan, Tailscale mesh
 ```json
 {
   "discovery_method": "direct_ip",
-  "direct_target_ip": "192.168.178.150"
+  "direct_target_ip": "192.168.1.150"
 }
 ```
 *(Or `{"discovery_method": "tailscale"}` / `{"discovery_method": "network_scan"}`)*
@@ -181,7 +181,7 @@ Discovers target hosts on the local network via Subnet Nmap scan, Tailscale mesh
 {
   "hosts": [
     {
-      "ip": "192.168.178.150",
+      "ip": "192.168.1.150",
       "hostname": "raspberrypi",
       "status": "online",
       "os_type": "Debian Linux"
@@ -201,7 +201,7 @@ Connects via SSH to inspect hardware resources, OS version, disk mounts, and act
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123"
 }
@@ -238,7 +238,7 @@ Performs an automated pre-deployment safety analysis by checking port collisions
   "is_reinstallation": false,
   "devices": [
     {
-      "ip": "192.168.178.150",
+      "ip": "192.168.1.150",
       "username": "root",
       "password": "TargetPassword123"
     }
@@ -280,7 +280,7 @@ Generates deployment files (`docker-compose.yml`, `.env`, and configuration dire
   "selected_components": ["grafana"],
   "devices": [
     {
-      "ip": "192.168.178.150",
+      "ip": "192.168.1.150",
       "username": "root",
       "password": "TargetPassword123"
     }
@@ -310,7 +310,7 @@ Initiates the asynchronous deployment over SSH to the remote target host (transf
   "output_path": "/home/user/.local/share/NjordDeploy/output/session_123",
   "devices": [
     {
-      "ip": "192.168.178.150",
+      "ip": "192.168.1.150",
       "username": "root",
       "password": "TargetPassword123"
     }
@@ -342,7 +342,7 @@ Server-Sent Events (SSE) stream providing real-time deployment logs.
 - **Response Stream (`text/event-stream`):**
 ```
 data: Starting deployment process...
-data: Connecting to 192.168.178.150 via SSH...
+data: Connecting to 192.168.1.150 via SSH...
 data: Syncing deployment artifacts to target...
 data: Executing container engine compose up...
 data: [grafana] Container started successfully.
@@ -401,7 +401,7 @@ Fetches the latest live logs directly from a running container on the remote hos
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123",
   "container_name": "njorddeploy-grafana"
@@ -439,7 +439,7 @@ Creates, boots, and provisions a fresh unprivileged LXC container with Docker/Po
 ```json
 {
   "status": "success",
-  "ip": "192.168.178.185",
+  "ip": "192.168.1.185",
   "vmid": 120,
   "hostname": "ct-grafana",
   "username": "root",
@@ -480,7 +480,7 @@ Starts a stopped VM or LXC container and waits until it obtains an IPv4 address.
 - **Response `200 OK`:**
 ```json
 {
-  "ip": "192.168.178.185"
+  "ip": "192.168.1.185"
 }
 ```
 
@@ -562,7 +562,7 @@ Scans target host common filesystem locations (`$HOME`, `/opt`, `/srv`, `/etc/do
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123"
 }
@@ -591,7 +591,7 @@ Inspects the target host's Docker Compose stack configuration and calculates dis
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123",
   "project_config_dir": "~/docker",
@@ -637,7 +637,7 @@ Creates a timestamped `.tar.gz` archive on the target host containing the stack 
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123",
   "selected_components": ["grafana", "uptime-kuma"],
@@ -688,7 +688,7 @@ Restores services and volumes from a selected backup tarball, applies correct pe
 - **Request Body:**
 ```json
 {
-  "ip": "192.168.178.150",
+  "ip": "192.168.1.150",
   "username": "root",
   "password": "TargetPassword123",
   "backup_filename": "njorddeploy_backup_20260818_120000.tar.gz",
@@ -732,25 +732,25 @@ python3 run_configurator.py --deploy deployment.json
 
 ### Direct CLI Deployment via Flags
 ```bash
-python3 run_configurator.py --deploy --ip 192.168.178.31 --user root --components uptime-kuma,homarr --engine docker
+python3 run_configurator.py --deploy --ip 192.168.1.31 --user root --components uptime-kuma,homarr --engine docker
 ```
 
 ### Stack Inspection & Diagnostics
 ```bash
-python3 run_configurator.py --inspect --ip 192.168.178.31 --user root
+python3 run_configurator.py --inspect --ip 192.168.1.31 --user root
 ```
 
 ### Disaster Recovery Backup via CLI
 ```bash
-python3 run_configurator.py --backup --ip 192.168.178.31 --user root --components uptime-kuma --pause-containers
+python3 run_configurator.py --backup --ip 192.168.1.31 --user root --components uptime-kuma --pause-containers
 ```
 
 ### Snapshot Restoration via CLI
 ```bash
-python3 run_configurator.py --restore njorddeploy_backup_20260818_134348.tar.gz --ip 192.168.178.31 --user root
+python3 run_configurator.py --restore njorddeploy_backup_20260818_134348.tar.gz --ip 192.168.1.31 --user root
 ```
 
 ### Stack Auto-Discovery
 ```bash
-python3 run_configurator.py --scan-stacks --ip 192.168.178.31 --user root
+python3 run_configurator.py --scan-stacks --ip 192.168.1.31 --user root
 ```

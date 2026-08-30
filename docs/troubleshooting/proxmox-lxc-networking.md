@@ -9,11 +9,11 @@ This document details the configuration issues, root causes, and fixes applied t
 ### 1.1 Symptoms
 During deployment operations (such as running `docker compose pull`), the task fails with:
 ```
-failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://pkg-containers.githubusercontent.com/...": dial tcp: lookup pkg-containers.githubusercontent.com on 192.168.178.118:53: read udp 192.168.178.91:46161->192.168.178.118:53: i/o timeout
+failed to copy: httpReadSeeker: failed open: failed to do request: Get "https://pkg-containers.githubusercontent.com/...": dial tcp: lookup pkg-containers.githubusercontent.com on 192.168.1.118:53: read udp 192.168.1.91:46161->192.168.1.118:53: i/o timeout
 ```
 
 ### 1.2 Root Cause
-If multiple LXC containers share the same hostname (e.g. `njorddeploy-n8n`), they attempt to register their DNS names against the local network DHCP/DNS server (`192.168.178.118`) under the same name. This causes ARP table collisions, lease conflicts, and packet drops/latency.
+If multiple LXC containers share the same hostname (e.g. `njorddeploy-n8n`), they attempt to register their DNS names against the local network DHCP/DNS server (`192.168.1.118`) under the same name. This causes ARP table collisions, lease conflicts, and packet drops/latency.
 
 ### 1.3 Fix
 We added a pre-flight validation check to both the configurator web-app (`src/configurator_app/app.py`) and the CLI script (`scripts/create_proxmox_lxc.py`). If a container with the same hostname already exists on the Proxmox node, creation is aborted with a `409 Conflict` error displaying the conflicting VMIDs.
@@ -38,7 +38,7 @@ We updated the container network configuration string from `firewall=1` to `fire
 ### 3.1 Symptoms
 The configurator UI or logs display:
 ```
-An error occurred: Failed to connect to container via SSH: Host key for server '192.168.178.91' does not match: got 'AAAAC3NzaC...', expected 'AAAAC3NzaC...'
+An error occurred: Failed to connect to container via SSH: Host key for server '192.168.1.91' does not match: got 'AAAAC3NzaC...', expected 'AAAAC3NzaC...'
 ```
 
 ### 3.2 Root Cause
@@ -56,7 +56,7 @@ This prevents the SSH client from loading the local system's `known_hosts` file 
 ## 4. n8n Secure Cookie Block (HTTP Local IP Access)
 
 ### 4.1 Symptoms
-After successfully launching n8n, accessing it via HTTP (e.g. `http://192.168.178.91:5678`) redirects to an error page:
+After successfully launching n8n, accessing it via HTTP (e.g. `http://192.168.1.91:5678`) redirects to an error page:
 ```
 Your n8n server is configured to use a secure cookie, however you are either visiting this via an insecure URL, or using Safari.
 ```

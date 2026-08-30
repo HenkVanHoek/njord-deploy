@@ -116,26 +116,42 @@ resp = requests.get(target_url, timeout=3)
 | `py/command-injection` | Command injection | Use `subprocess.Popen(cmd_list, shell=False)` with argument lists, never interpolate strings into shell commands. |
 | `py/unsafe-deserialization` | Unsafe YAML/pickle loading | Always use `yaml.safe_load(content)` and avoid `pickle.loads()`. |
 | `B113` (Bandit) | Requests call without timeout | Always supply `timeout=3` (or appropriate seconds) in all `requests.*` calls. |
+| `PII / IP Leak` (Check Secrets) | Leaked private IPs or personal emails | Anonymize with placeholders (`<server-ip>`, `192.168.1.100`, `testuser@example.com`). |
 
 ---
 
-## 4. Verification Workflow
+## 4. Secret Leaks, PII & Infrastructure IP Sanitization Guard
 
-When addressing security alerts or creating new endpoints:
+All documentation, sample configs, comments, and public files must be strictly sanitized before committing or pushing to GitHub:
 
-### Step 1: Run Static Security Analysis (Bandit)
+1. **Private Infrastructure & Production IPs**:
+   - Never commit operational/production IPs (e.g. `192.168.178.x`, production VPS IPs) into public documentation (`docs/`, `README.md`).
+   - Use standard RFC-safe placeholders: `<server-ip>`, `192.168.1.100`, `10.0.0.1`, or `127.0.0.1`.
+2. **Personal Identifiable Information (PII) & Emails**:
+   - Never hardcode personal corporate domains or personal emails (e.g. `@almereautomatisering.nl`).
+   - Always use standard RFC 2606 test domains: `admin@example.com`, `testuser@example.com`, or `<email>`.
+3. **Automated Enforcement**:
+   - Handled automatically via `python3 scripts/check_secrets.py` within `pre-commit run --all-files`.
+
+---
+
+## 5. Verification Workflow
+
+When addressing security alerts, creating new endpoints, or updating documentation:
+
+### Step 1: Run Pre-Commit Security & PII Checks
 ```bash
-.venv/bin/pre-commit run bandit --all-files
+pre-commit run --all-files
 ```
 
-### Step 2: Run Full Quality & Secret Checks
+### Step 2: Run Static Security Analysis (Bandit)
 ```bash
-./scripts/check_code_quality.sh
+pre-commit run bandit --all-files
 ```
 
 ### Step 3: Run Security & Unit Tests
 ```bash
-.venv/bin/pytest tests/test_security_utils.py tests/editor_app/test_editor_app_api.py
+pytest tests/test_security_utils.py tests/editor_app/test_editor_app_api.py
 ```
 
 ### Step 4: Verify with PyCharm Diagnostics

@@ -51,15 +51,18 @@ Review the following files and make manual edits if they are impacted by your ch
     *   [docs/DATA_CONTRACTS.md](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/DATA_CONTRACTS.md): Update if metadata schemas, variables configurations, or API payload contracts are modified.
     *   [docs/FUNCTIONAL_SPEC.md](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/FUNCTIONAL_SPEC.md): Update if new functional behaviors or user-facing requirements are established.
 
-### 3. Verify Code Quality and Format
+### 3. Verify Code Quality, PII Sanitization and Format
 After completing documentation edits:
 
-1.  **Format and Validate Files**:
-    Run `pre-commit` to verify Markdown formatting, JSON schemas, YAML variables, and code syntax:
+1.  **Security, PII & IP Sanitization Audit (MANDATORY)**:
+    Ensure no private production IP addresses (`192.168.178.x`, real VPS IPs) or personal email addresses (e.g. `@almereautomatisering.nl`) exist in any documentation files. Always use generic placeholders (e.g. `<server-ip>`, `192.168.1.100`, `<test_username>`, `testuser@example.com`).
+    This is automatically enforced on all files via the `check-secrets` hook in `pre-commit`.
+2.  **Format and Validate Files**:
+    Run `pre-commit` to verify secrets/PII checks, Markdown formatting, JSON schemas, YAML variables, and code syntax:
     ```bash
     pre-commit run --all-files
     ```
-2.  **Verify Test Suite**:
+3.  **Verify Test Suite**:
     Always execute the test suite to ensure that documentation or configuration updates didn't break parsing tests:
     ```bash
     pytest
