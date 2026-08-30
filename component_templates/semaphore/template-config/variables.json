@@ -1,7 +1,7 @@
 {
     "variables": [
         {
-            "default": "3000",
+            "default": "3005",
             "description": "The port on the host to expose the Semaphore UI web interface.",
             "id": "SEMAPHORE_PORT",
             "label": "Semaphore UI Port",

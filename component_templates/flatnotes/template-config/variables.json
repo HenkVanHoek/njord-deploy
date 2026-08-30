@@ -1,7 +1,7 @@
 {
     "variables": [
         {
-            "default": "8088",
+            "default": "8089",
             "description": "Port for the Flatnotes web interface.",
             "id": "FLATNOTES_WEB_PORT",
             "label": "Flatnotes Web Port",

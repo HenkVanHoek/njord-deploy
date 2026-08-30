@@ -96,6 +96,8 @@ module = [
     "passlib.*",
     "pi_scanner",
     "waitress.*",
+    "gunicorn.*",
+    "run_service",
     "requests.*",
     "node_scanner",
     "scripts.*",

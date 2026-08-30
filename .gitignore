@@ -52,6 +52,8 @@ node_modules/
 # Antigravity artifacts and temporary test directories
 artifacts/
 tmp_proxmox_test/
+tmp_release_test/
+tmp_scratch/
 
 # Proxmox test run reports (dated)
 docs/PROXMOX_TESTS_*_*.md
@@ -59,3 +61,5 @@ docs/PROXMOX_TESTS_*_*.pdf
 docs/PROXMOX_TESTS_*_*runs_*.md
 docs/PROXMOX_TESTS_*_*runs_*.pdf
 docs/PROXMOX_TESTS_test-playwright_*.md
+docs/RELEASE_INSTALLER_TESTS_*_*.md
+docs/RELEASE_INSTALLER_TESTS_*_*.pdf

@@ -1,0 +1,31 @@
+services:
+  njorddeploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: henkvanhoek/njorddeploy:latest
+    container_name: njorddeploy
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    environment:
+      - NJORD_SERVER_MODE=true
+      - NJORD_HOST=0.0.0.0
+      - NJORD_PORT=5001
+      - NJORD_DATA_DIR=/var/lib/njorddeploy
+      - NJORD_SSH_KEY_PATH=/var/lib/njorddeploy/id_ed25519_njorddeploy
+      - NJORD_SECRET_KEY=${NJORD_SECRET_KEY:-njorddeploy-persistent-service-secret-key}
+      - TZ=${TZ:-Europe/Amsterdam}
+    volumes:
+      - njord_data:/var/lib/njorddeploy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5001/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    stop_grace_period: 15s
+
+volumes:
+  njord_data:
+    name: njorddeploy_data

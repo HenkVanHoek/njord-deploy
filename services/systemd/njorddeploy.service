@@ -1,0 +1,27 @@
+[Unit]
+Description=NjordDeploy 24/7 Persistent Self-Hosted Service Daemon
+Documentation=https://github.com/HenkVanHoek/njord-deploy
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hvhoek
+Group=hvhoek
+WorkingDirectory=/opt/njorddeploy
+EnvironmentFile=-/etc/default/njorddeploy
+EnvironmentFile=-/opt/njorddeploy/.env
+Environment=NJORD_SERVER_MODE=true
+Environment=NJORD_HOST=0.0.0.0
+Environment=NJORD_PORT=5001
+Environment=NJORD_DATA_DIR=/var/lib/njorddeploy
+Environment=NJORD_SSH_KEY_PATH=/var/lib/njorddeploy/id_ed25519_njorddeploy
+ExecStart=/opt/njorddeploy/.venv/bin/python /opt/njorddeploy/run_service.py
+Restart=always
+RestartSec=5s
+TimeoutStopSec=15
+LimitNOFILE=65535
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
