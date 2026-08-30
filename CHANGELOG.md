@@ -16,6 +16,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
   - Added automated persistent SSH key generation, secure key storage under `NJORD_DATA_DIR`, and `/api/health` diagnostic endpoints with automatic mode reporting (`standalone` vs `service`).
 - **Stripe Billing, Customer Portal & Subscription Tiers**:
   - Integrated Stripe billing SDK (`stripe>=15.6.0`) supporting monthly and annual subscription plans, secure Stripe Checkout sessions, dynamic entitlement gating, and self-service Stripe Customer Portal management in the Settings pane.
+
+### Fixed
+- **Stripe Return URL WAF Filtering & Pro Celebration Modal**:
+  - Resolved HTTP 403 Forbidden on Stripe checkout redirects by renaming the session parameter from `session_id` to `stripe_session_id`, preventing OWASP session fixation rule blocks at the reverse proxy (Caddy / WAF).
+  - Added dedicated, accessible Pro Celebration Modal (`#proSuccessModal`) in `index.html` and `settings.html` with instant live plan badge refreshing and URL query cleanup.
+  - Whitelisted `/api/v1/billing/webhook` and `/api/billing/webhook` in `enforce_authentication` and ensured active user sessions keep plan entitlement state synchronized with SQLite database records.
 - **OpenAPI 3.0 Specification & Interactive Swagger UI**:
   - Published comprehensive OpenAPI 3.0 specification (`/api/openapi.json`) and interactive dark/light theme Swagger documentation (`/api/docs`).
 - **Universal Multi-OS & Automated Disaster Recovery Suite**:

@@ -191,7 +191,10 @@ class BillingManager:
         """
         if not self.is_configured():
             # Mock checkout session for development/testing when Stripe keys are not set
-            return f"{success_url}?mock_checkout=true&session_id=cs_mock_12345", None
+            mock_url = (
+                f"{success_url}?mock_checkout=true&stripe_session_id=cs_mock_12345"
+            )
+            return mock_url, None
 
         user = self.db.get_user_by_id(user_id)
         if not user:
@@ -255,7 +258,7 @@ class BillingManager:
                 ],
                 "managed_payments": {"enabled": False},
                 "success_url": (
-                    f"{success_url}{delim}session_id={{CHECKOUT_SESSION_ID}}"
+                    f"{success_url}{delim}stripe_session_id={{CHECKOUT_SESSION_ID}}"
                 ),
                 "cancel_url": cancel_url,
                 "client_reference_id": str(user_id),

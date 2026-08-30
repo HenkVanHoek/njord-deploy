@@ -50,6 +50,7 @@ class DatabaseManager:
     @contextlib.contextmanager
     def get_connection(self):
         """Provides a thread-local SQLite connection context with WAL enabled."""
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         conn = sqlite3.connect(
             str(self.db_path),
             timeout=30.0,

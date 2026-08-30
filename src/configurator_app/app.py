@@ -366,6 +366,8 @@ def create_app(test_config=None):
             "/api/agent/install",
             "/api/agent/heartbeat",
             "/api/stripe/webhook",
+            "/api/billing/webhook",
+            "/api/v1/billing/webhook",
             "/api/first-run-status",
         }
         if request.path in public_routes:
@@ -395,6 +397,13 @@ def create_app(test_config=None):
 
         # Check active session
         if session.get("logged_in") and session.get("user"):
+            # noinspection PyBroadException
+            try:
+                user_rec = db_mgr.get_user_by_username(session.get("user"))
+                if user_rec and user_rec.get("plan"):
+                    session["plan"] = user_rec.get("plan")
+            except Exception as ex:
+                logging.debug("Session plan sync skipped: %s", ex)
             return None
 
         # Check API Token / Bearer Key

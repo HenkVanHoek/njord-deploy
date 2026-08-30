@@ -74,6 +74,25 @@ def test_checkout_and_portal_sessions(test_setup):
     assert portal_url is not None and portal_url.startswith("https://")
 
 
+def test_mock_checkout_session_url(test_setup, monkeypatch):
+    db, _, user = test_setup
+    monkeypatch.delenv("STRIPE_SECRET_KEY", raising=False)
+    monkeypatch.delenv("STRIPE_PRO_PRICE_ID", raising=False)
+    monkeypatch.delenv("STRIPE_PRICE_MONTHLY", raising=False)
+    monkeypatch.delenv("STRIPE_PRICE_YEARLY", raising=False)
+
+    unconfigured_billing = BillingManager(db=db)
+    mock_url, err = unconfigured_billing.create_checkout_session(
+        user["id"],
+        success_url="https://deploy.njorddeploy.com/billing/success",
+        cancel_url="https://deploy.njorddeploy.com/billing/cancel",
+    )
+    assert err is None
+    assert mock_url is not None
+    assert "stripe_session_id=" in mock_url
+    assert "session_id=" not in mock_url.replace("stripe_session_id=", "")
+
+
 def test_webhook_event_handling(test_setup):
     import json
 

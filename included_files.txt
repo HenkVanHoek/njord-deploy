@@ -1,4 +1,4 @@
-Tokens: 498203 | VRAM Status: CRITICAL
+Tokens: 505161 | VRAM Status: CRITICAL
 ==============================
 .agents/skills/screenshot-converter/scripts/convert.py
 .agents/skills/supply-chain-vulnerability-audit/scripts/audit_supply_chain.py
@@ -58,6 +58,7 @@ src/configurator_app/static/js/accessibility.js
 src/configurator_app/static/js/app.js
 src/configurator_app/static/js/auth.js
 src/configurator_app/static/js/backup_manager_ui.js
+src/configurator_app/static/js/billing.js
 src/configurator_app/templates/__init__.py
 src/configurator_app/templates/base.html
 src/configurator_app/templates/help.html

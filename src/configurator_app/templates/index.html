@@ -893,6 +893,46 @@
     </div>
 </div>
 
+<!-- Pro Subscription Success Celebration Modal -->
+<div class="modal fade" id="proSuccessModal" tabindex="-1" aria-labelledby="proSuccessModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg text-center p-3" style="background: var(--bg-card); color: var(--text-main);">
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 rounded-circle p-3 text-warning shadow-sm" style="width: 72px; height: 72px;">
+                        <i class="fa-solid fa-crown fa-2x"></i>
+                    </span>
+                </div>
+                <h4 class="modal-title fw-bold text-primary mb-2" id="proSuccessModalLabel">
+                    🎉 Welkom bij NjordDeploy Pro!
+                </h4>
+                <p class="text-muted small mb-4">
+                    Je betaling is succesvol verwerkt en je account is direct geüpgraded naar <strong>NjordDeploy Pro</strong>.
+                </p>
+
+                <div class="text-start bg-body-secondary p-3 rounded mb-4 border">
+                    <div class="small fw-bold text-uppercase text-muted mb-2"><i class="fa-solid fa-sparkles text-warning me-1"></i> Ontgrendelde Pro Functionaliteiten:</div>
+                    <ul class="small list-unstyled mb-0">
+                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> <strong>Onbeperkt</strong> aantal server nodes &amp; VPS instances</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Automatische versleutelde S3 cloud-backups</li>
+                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Realtime multi-node status &amp; telemetry updates</li>
+                        <li class="mb-0"><i class="fa-solid fa-check text-success me-2"></i> Priority security alerts &amp; ondersteuning</li>
+                    </ul>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-primary fw-bold py-2 shadow-sm" data-bs-dismiss="modal">
+                        <i class="fa-solid fa-rocket me-1"></i> Direct Aan de Slag
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm btn-billing-portal">
+                        <i class="fa-solid fa-file-invoice me-1"></i> Facturen &amp; Betaalgegevens Inzien
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/intro.min.js"></script>
 <script src="{{ url_for('static', filename='js/app.js') }}?v=1.7"></script>
