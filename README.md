@@ -15,11 +15,13 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 
 ## 🌟 Key Features
 
+- **Milestone 100 Sovereign Components**: Deploy from a curated library of **100 verified self-hosted services** covering AI & LLMs (Ollama, Open WebUI, LiteLLM, LibreChat), DevOps (Gitea, Woodpecker CI, n8n, Semaphore), Cloud Storage (Immich, Syncthing, MinIO, FileBrowser), Smart Home (Home Assistant, ESPHome, Node-RED, Zigbee2MQTT), Privacy Analytics & DBs (Umami, Plausible, MariaDB, PostgreSQL, pgAdmin 4), and Observability (Prometheus, Grafana, Uptime Kuma, Netdata) (see [Supported Services](docs/SUPPORTED_SERVICES.md)).
+- **Multi-Tenant SaaS & Organization Workspaces**: Granular tenant isolation with role-based access control (Owner, Admin, Member), isolated configuration caching, and seamless workspace switching.
+- **Stripe Billing & Subscription Ecosystem**: Full commercial billing integration with monthly and annual plans, checkout sessions, tier entitlement gating, and self-service Stripe Customer Portal management.
 - **24/7 Persistent Self-Hosted Service Daemon**: Run NjordDeploy continuously on your home server, mini-PC, Raspberry Pi, or Proxmox VM (via Docker Compose or native Linux systemd) with automated persistent SSH key management and live healthchecks (see [Self-Hosted Service Guide](docs/SELF_HOSTED_SERVICE_GUIDE.md)).
 - **Fully Browser-Based Installer**: A simple, local web application guides you through every step, from device discovery to watching the live installation log.
 - **Headless REST API & Agentic DevOps**: Full programmatic control for CI/CD pipelines, Homelab orchestration, and AI coding agents (like Antigravity/Agy). Automate end-to-end deployments, Proxmox LXC provisioning, pre-flight safety analysis, and log evaluation via clean REST endpoints (see [API Reference](docs/API_REFERENCE.md)).
 - **Interactive Swagger UI & OpenAPI 3.0**: Explore, test, and inspect all REST API endpoints directly in your browser at `http://localhost:5001/api/docs` or consume the machine-readable OpenAPI schema at `/api/openapi.json`. Supports dark and light theme switching.
-- **Modular & Flexible**: Choose only the services you want from a curated list of popular applications (see the list of [Supported Services](docs/SUPPORTED_SERVICES.md)).
 - **Dual Container Engine Support (Docker & Rootless Podman)**: Universal container engine abstraction supporting both standard Docker and rootless Podman environments with automated low-port kernel configuration and user lingering.
 - **Dynamic Components Repository**: Synchronize component templates from official GitHub, custom GitLab/Forgejo instances, or operate in fully offline/air-gapped mode.
 - **Component Editor**: A powerful web-based developer tool for creating, testing, and managing all components in the NjordDeploy ecosystem.
@@ -31,7 +33,8 @@ Welcome to Njord-Deploy! This project provides a user-friendly system to deploy 
 NjordDeploy provides a **multi-mode architecture**:
 1. **Interactive Web Wizard (Standalone Desktop Mode)**: End-users download a standalone release executable and interact with a guided web UI (`http://localhost:5001`) for automatic network scanning, component selection, variable customization, and real-time deployment log streaming.
 2. **24/7 Self-Hosted Daemon Mode**: Homelab administrators host NjordDeploy 24/7 in Docker Compose or native systemd on a server/VM with persistent state, continuous SSH key access, and automated health monitoring (`/api/health`).
-3. **Headless REST Engine & Interactive Swagger UI**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API or exploring the interactive Swagger UI (`http://localhost:5001/api/docs`) to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
+3. **Multi-Tenant SaaS / Organization Mode**: Multi-user team deployments with tenant isolation, user authentication, and Stripe subscription tiering.
+4. **Headless REST Engine & Interactive Swagger UI**: Developers, sysadmins, and AI agents can bypass the UI entirely, communicating directly with the backend API or exploring the interactive Swagger UI (`http://localhost:5001/api/docs`) to provision Proxmox virtual environments, validate conflicts, trigger builds, and monitor deployment health programmatically.
 
 ## 📋 System Requirements
 

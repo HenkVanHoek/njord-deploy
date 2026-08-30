@@ -374,3 +374,90 @@ The `auth.json` file securely persists administrator credentials and generated A
 | `NJORD_ADMIN_USER`    | `""`                  | Headless pre-seeded administrator username (bypasses interactive `/setup`).                      |
 | `NJORD_ADMIN_PASSWORD`| `""`                  | Headless pre-seeded administrator plaintext password (hashed on startup).                       |
 | `NJORD_ADMIN_HASH`    | `""`                  | Headless pre-seeded administrator password hash (PBKDF2, Argon2, or Scrypt).                   |
+| `NJORD_DATA_DIR`      | auto-detected         | Base persistent data directory (`/var/lib/njorddeploy` or platformdirs).                       |
+| `NJORD_SSH_KEY_PATH`  | auto-detected         | Persistent SSH key path (`NJORD_DATA_DIR/id_ed25519_njorddeploy`).                              |
+
+---
+
+## Multi-Tenant SaaS Database Schema (`NJORD_DATA_DIR/njord_saas.db`)
+
+Managed by `DatabaseManager` with SQLite WAL mode and enforced foreign keys:
+
+### Table: `users`
+| Column                  | Type      | Nullable | Description                                                               |
+|-------------------------|-----------|----------|---------------------------------------------------------------------------|
+| `id`                    | `INTEGER` | No (PK)  | Auto-incrementing unique user ID.                                         |
+| `username`              | `TEXT`    | No (UQ)  | Unique username handle.                                                   |
+| `email`                 | `TEXT`    | Yes (UQ) | Optional user email address for notifications and invoicing.              |
+| `password_hash`         | `TEXT`    | No       | Argon2/bcrypt cryptographic password hash.                                |
+| `role`                  | `TEXT`    | No       | User system role: `'user'`, `'admin'`, `'owner'`.                         |
+| `plan`                  | `TEXT`    | No       | Active subscription tier: `'free'`, `'pro'`, `'enterprise'`.              |
+| `stripe_customer_id`    | `TEXT`    | Yes      | Stripe Customer identifier (e.g. `cus_1234567890`).                       |
+| `stripe_subscription_id`| `TEXT`    | Yes      | Stripe active Subscription identifier (e.g. `sub_1234567890`).             |
+| `api_key`               | `TEXT`    | Yes (UQ) | 64-character REST API authorization token.                                |
+| `created_at`            | `TIMESTAMP`| No      | Record creation timestamp.                                                |
+| `updated_at`            | `TIMESTAMP`| No      | Record last update timestamp.                                             |
+
+### Table: `servers`
+| Column            | Type      | Nullable | Description                                                               |
+|-------------------|-----------|----------|---------------------------------------------------------------------------|
+| `id`              | `INTEGER` | No (PK)  | Auto-incrementing server node ID.                                         |
+| `user_id`         | `INTEGER` | No (FK)  | Foreign key reference to `users.id`.                                      |
+| `name`            | `TEXT`    | No       | Friendly server display name (e.g. `Homelab-Pi-5`).                       |
+| `ip`              | `TEXT`    | Yes      | IPv4 or hostname of the remote deployment node.                           |
+| `ssh_user`        | `TEXT`    | Yes      | Target SSH username (e.g. `hvhoek`).                                      |
+| `connection_type` | `TEXT`    | No       | Connection driver: `'ssh'`, `'agent'`, `'proxmox'`.                      |
+
+---
+
+## Stripe Billing & Subscription Contracts
+
+### POST `/api/billing/create-checkout-session`
+Initiates a secure Stripe Checkout session.
+- **Request Payload:**
+  ```json
+  {
+    "plan_id": "pro_monthly",
+    "interval": "monthly"
+  }
+  ```
+- **Response Payload (`200 OK`):**
+  ```json
+  {
+    "checkout_url": "https://checkout.stripe.com/c/pay/cs_live_...",
+    "session_id": "cs_live_..."
+  }
+  ```
+
+### POST `/api/billing/create-portal-session`
+Generates a self-service Stripe Customer Portal session URL.
+- **Response Payload (`200 OK`):**
+  ```json
+  {
+    "portal_url": "https://billing.stripe.com/p/session/portal_..."
+  }
+  ```
+
+---
+
+## Health & Diagnostics Contract (`GET /api/health`)
+
+Standardized machine-readable health monitoring contract for Docker, systemd, Kubernetes, and reverse proxies:
+
+```json
+{
+  "status": "ok",
+  "version": "1.0.0-RC1",
+  "mode": "service",
+  "services_catalog": 100,
+  "timestamp": "2026-08-30T14:35:00.000000Z"
+}
+```
+
+| Field              | Type      | Description                                                               |
+|--------------------|-----------|---------------------------------------------------------------------------|
+| `status`           | `string`  | System status indicator (`"ok"` or `"degraded"`).                         |
+| `version`          | `string`  | Current semantic version of the platform (`"1.0.0-RC1"`).                 |
+| `mode`             | `string`  | Operational mode: `"service"` (24/7 daemon) or `"standalone"` (desktop).  |
+| `services_catalog` | `integer` | Count of verified available components in `components_metadata.json` (100). |
+| `timestamp`        | `string`  | ISO 8601 UTC timestamp of the health check.                               |

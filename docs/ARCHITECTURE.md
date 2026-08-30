@@ -259,9 +259,36 @@ Behavior
   - **`editor_app`**: Port `5000` via [`run_editor.py`](../run_editor.py) (overridable via `EDITOR_PORT`).
   - **`configurator_app`**: Port `5001` via [`run_configurator.py`](../run_configurator.py) (overridable via `CONFIGURATOR_PORT`).
   - **`proxmox_gui`**: Port `5050` via [`run_proxmox_gui.py`](../run_proxmox_gui.py) (overridable via `PROXMOX_GUI_PORT`).
+  - **`run_service`**: Port `5001` via [`run_service.py`](../run_service.py) (24/7 persistent background daemon).
 - **Standard Execution Features**:
-  - Multi-threaded Waitress WSGI server (`threads=6`).
+  - Multi-threaded Waitress WSGI server (`threads=6` / `threads=8`).
   - Automatic TCP port availability checking before binding with graceful fallback if already running.
   - Automatic browser launching upon startup (suppressible via `NO_BROWSER=1`).
 - **IDE Run Configurations (`.run/*.run.xml`)**:
   - Standardized as direct `PythonConfigurationType` across PyCharm CE and Professional editions, eliminating legacy Flask plugin configuration conflicts.
+
+## 11. Multi-Tenancy, Organization & Role-Based Access Architecture
+
+- **Principle**: NjordDeploy supports multi-tenant isolation, allowing managed service providers, teams, and multi-user environments to manage separate infrastructure stacks without data bleed.
+- **Tenant Isolation (`DatabaseManager` & `TenantManager`)**: Managed through SQLite (`njord_saas.db`) with Write-Ahead Logging (WAL) and foreign keys enabled. Users are grouped into organizations with granular roles (`owner`, `admin`, `member`).
+- **Context Switching**: The active tenant context is maintained in signed Flask session cookies and verified against request tokens.
+
+## 12. Commercial Subscriptions & Stripe Billing Integration
+
+- **Principle**: Commercially hosted or managed instances integrate seamless subscription tier management (`BillingManager`) backed by the official Stripe SDK (`stripe>=15.6.0`).
+- **Billing Modes**: Supports monthly (`monthly`) and annual (`yearly`) billing intervals with customizable tier entitlements (`free`, `pro`, `enterprise`).
+- **Self-Service Customer Portal**: Users manage active payment methods, billing history, and plan upgrades directly via the integrated Stripe Customer Portal session handler (`/api/billing/create-portal-session`).
+
+## 13. 24/7 Persistent Self-Hosted Service Daemon (`run_service.py`)
+
+- **Principle**: Homelab and server administrators can operate NjordDeploy continuously in daemon mode with persistent SSH key management, systemd supervision, and containerized Docker Compose deployment.
+- **Daemon Features**:
+  - Auto-generation and persistence of dedicated Ed25519 SSH keys (`id_ed25519_njorddeploy`).
+  - Native Linux systemd service unit (`services/systemd/njorddeploy.service`).
+  - Official Docker Compose daemon stack (`docker-compose.service.yml`) mounting `/var/lib/njorddeploy`.
+  - Comprehensive health monitoring endpoint at `/api/health` reporting live uptime, catalog stats, and mode (`service` vs `standalone`).
+
+## 14. Automated Disaster Recovery & Volume Backup Engine (`BackupManager`)
+
+- **Principle**: Point-in-time state backups of managed Docker services, `.env` credentials, and persistent data volumes are orchestrated atomically via `BackupManager`.
+- **Integrity & Verification**: Supports transactional container pausing, SHA-256 manifest generation, and permission reconciliation (`chmod 777`) upon restoration, verified end-to-end via the Proxmox disaster recovery test suite (`scripts/proxmox_backup_test_runner.py`).

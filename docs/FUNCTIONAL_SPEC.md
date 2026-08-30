@@ -582,3 +582,60 @@ repeatable, isolated environment.
 - **Then** disaster recovery operations run directly against the target host and output JSON summaries to stdout.
 - **When** `python3 run_configurator.py --example-config` is executed,
 - **Then** a valid sample deployment JSON configuration is printed to stdout.
+
+---
+
+### Epic 9: Multi-Tenancy & SaaS Organization Management
+
+#### Story: Tenant Workspaces & Role-Based Access Control
+
+> As a managed service provider or team administrator, I want to manage multiple isolated client workspaces and assign roles (Owner, Admin, Member), so that teams can collaborate without data leakage.
+
+**Acceptance Criteria:**
+- **Given** an authenticated user session,
+- **When** a user registers or logs into NjordDeploy SaaS mode,
+- **Then** user credentials and roles are validated against `njord_saas.db` via Argon2 hashing.
+- **When** a user switches between organizations,
+- **Then** deployment targets, server node inventories, and cached configurations are filtered strictly by active tenant context.
+
+---
+
+### Epic 10: Commercial Subscriptions & Stripe Billing Integration
+
+#### Story: Subscription Checkout and Self-Service Customer Portal
+
+> As an end-user or business customer, I want to upgrade to a Pro or Enterprise plan using Stripe and manage my billing details in a self-service portal, so that I can access premium deployment features and automated off-site backups.
+
+**Acceptance Criteria:**
+- **Given** a user is logged into the Configurator app,
+- **When** the user selects a monthly or annual subscription tier on the Billing pane,
+- **Then** `POST /api/billing/create-checkout-session` redirects the user to a secure Stripe Checkout page.
+- **When** the user accesses "Manage Billing" in Settings,
+- **Then** `POST /api/billing/create-portal-session` generates a dynamic Stripe Customer Portal URL for self-service payment management.
+
+---
+
+### Epic 11: 24/7 Persistent Self-Hosted Service Daemon
+
+#### Story: Background Daemon Operation & Health Monitoring
+
+> As a homelab administrator, I want to run NjordDeploy continuously as a background service via Docker Compose or systemd, so that the REST API and deployment automations are always available.
+
+**Acceptance Criteria:**
+- **Given** `run_service.py` is started directly or via systemd (`njorddeploy.service`) / Docker (`docker-compose.service.yml`),
+- **Then** the application initializes persistent SSH keys and storage in `/var/lib/njorddeploy`.
+- **When** a health probe queries `GET /api/health`,
+- **Then** the endpoint returns HTTP 200 with `{ "status": "ok", "mode": "service", "services_catalog": 100 }`.
+
+---
+
+### Epic 12: Milestone 100 Sovereign Components
+
+#### Story: Accessing 100 Verified Self-Hosted Stacks
+
+> As an end-user, I want to browse and deploy from a comprehensive catalog of 100 verified self-hosted components covering AI, DevOps, Media, Smart Home, Privacy, and Observability.
+
+**Acceptance Criteria:**
+- **Given** the Configurator component selection view is loaded,
+- **Then** exactly 100 modular component templates are available, verified for port conflicts and template validity.
+- **And** all 100 components are fully documented in `docs/SUPPORTED_SERVICES.md`.
