@@ -1,21 +1,39 @@
-MIT License
+Business Source License 1.1
 
-Copyright (c) 2025 Henk van Hoek
+Parameters:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Licensor:
+Henk van Hoek
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Licensed Work:
+NjordDeploy (including the Configurator, Component Editor, Service Daemon, Deployment Managers, REST API, templates, and associated metadata).
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Additional Use Grant:
+1. You are granted the right to make use of the Licensed Work free of charge for non-commercial purposes, personal self-hosting, homelab deployments, educational use, and internal evaluation.
+2. For self-hosting and internal business operations, you may manage up to two (2) target server nodes (Single Board Computers, VMs, or physical servers) free of charge without requiring a paid subscription.
+3. You may NOT make the Licensed Work available to third parties as a hosted deployment service, managed SaaS platform, or commercial cloud offering in competition with the Licensor without an explicit written commercial license agreement from the Licensor.
+
+Change Date:
+2028-08-30 (two years from the release date of this version)
+
+Change License:
+Apache License, Version 2.0
+
+----------------------------------------------------------------------
+
+Terms:
+
+The Licensor hereby grants you the right to copy, modify, create derivative works, redistribute, and make non-production use of the Licensed Work. The Licensor also grants you the right to make Additional Use of the Licensed Work as defined above.
+
+The Licensor and you agree that on the Change Date, the Licensed Work becomes licensed under the Change License without restriction.
+
+Effective Date: 2026-08-30
+
+1. Notice. You must include this License and the copyright notice below in all copies of the Licensed Work or portions thereof:
+   Copyright (c) 2025-2026 Henk van Hoek. All rights reserved.
+
+2. Intellectual Property Rights. As between you and the Licensor, the Licensor reserves all rights in the Licensed Work, trademarks, "NjordDeploy" name, and official logos not expressly granted herein.
+
+3. Termination. This License will terminate immediately if you fail to comply with any of its terms and conditions.
+
+4. Disclaimer. TO THE EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSED WORK IS PROVIDED ON AN "AS IS" BASIS. THE LICENSOR DISCLAIMS ALL WARRANTIES AND CONDITIONS, EXPRESS OR IMPLIED, INCLUDING ANY WARRANTIES OR CONDITIONS OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. IN NO EVENT SHALL THE LICENSOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE.

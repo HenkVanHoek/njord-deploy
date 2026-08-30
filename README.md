@@ -222,6 +222,11 @@ We welcome contributions! For guidelines on how to get started with development,
 
 ## 📄 License
 
-This project is open-source and available under the MIT License.
+This project is licensed under the **[Business Source License 1.1 (BSL-1.1)](LICENSE)**:
+- **100% Free for Self-Hosting**: Free of charge for personal use, homelab deployments, non-commercial use, and managing up to two (2) self-hosted target server nodes without a paid subscription.
+- **Commercial Protection**: Hosting or offering NjordDeploy as a commercial deployment platform (SaaS) or competing managed service to third parties requires a commercial license agreement from the author.
+- **Automatic Open Source Transition**: Transitions to the standard Apache 2.0 open-source license two years after release.
+
+Copyright (c) 2025-2026 Henk van Hoek. All rights reserved.
 
 You can also find more information about this project on my GitHub page: [HenkVanHoek/njord-deploy](https://github.com/HenkVanHoek/njord-deploy).

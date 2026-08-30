@@ -23,6 +23,8 @@ filterwarnings = [
 name = "NjordDeploy"
 version = "1.0.0-RC1"
 description = "A project to self-host services on a Raspberry Pi."
+authors = [{ name = "Henk van Hoek" }]
+license = { text = "Business Source License 1.1 (BSL-1.1)" }
 requires-python = ">=3.11"
 dependencies = [
     "flask>=3.1.3",
