@@ -3179,7 +3179,7 @@
             "network_type": "bridge"
         },
         "media-stack": {
-            "description": "",
+            "description": "Unified home media streaming and automated collection pipeline bundling Jellyfin media server, Radarr (movies), Sonarr (TV shows), Prowlarr (indexer management), Jellyseerr (interactive media requests), qBittorrent, and Bazarr.",
             "name": "Media Stack",
             "network_type": "bridge"
         },
@@ -3189,7 +3189,7 @@
             "network_type": "bridge"
         },
         "nextcloud-stack": {
-            "description": "",
+            "description": "High-performance multi-tier enterprise Nextcloud cluster with dedicated MariaDB backend, Redis memory cache, DB auto-dumper, and high-performance push notification daemon.",
             "name": "Nextcloud Stack",
             "network_type": "bridge"
         },

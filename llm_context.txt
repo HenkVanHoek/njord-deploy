@@ -979,7 +979,9 @@ EXTENSIONS = {".py", ".html", ".js", ".css", ".yml", ".mf"}
 
 def validate_yaml(content, file_name):
     """Checks for unquoted secrets in YAML files."""
-    pattern = r"^\s*([a-zA-Z0-9_-]*(?:password|secret|key)[a-zA-Z0-9_-]*):\s*([^\s\"'].*)"
+    pattern = (
+        r"^\s*([a-zA-Z0-9_-]*(?:password|secret|key)[a-zA-Z0-9_-]*):\s*([^\s\"'].*)"
+    )
     matches = re.findall(pattern, content, re.IGNORECASE | re.MULTILINE)
     if matches:
         print(f"SECURITY ALERT: Unquoted secret in {file_name}")
