@@ -170,25 +170,35 @@ class BillingManager:
                 )
 
             delim = "&" if "?" in success_url else "?"
-            session = stripe.checkout.Session.create(
-                customer=customer_id,
-                line_items=[
+            session_kwargs: Dict[str, Any] = {
+                "customer": customer_id,
+                "line_items": [
                     {
                         "price": target_price_id,
                         "quantity": 1,
                     }
                 ],
-                mode="subscription",
-                success_url=f"{success_url}{delim}session_id={{CHECKOUT_SESSION_ID}}",
-                cancel_url=cancel_url,
-                client_reference_id=str(user_id),
-                metadata={
+                "mode": "subscription",
+                "payment_method_types": [
+                    "card",
+                    "ideal",
+                    "sepa_debit",
+                    "bancontact",
+                ],
+                "managed_payments": {"enabled": False},
+                "success_url": (
+                    f"{success_url}{delim}session_id={{CHECKOUT_SESSION_ID}}"
+                ),
+                "cancel_url": cancel_url,
+                "client_reference_id": str(user_id),
+                "metadata": {
                     "user_id": str(user_id),
                     "plan": PLAN_PRO,
                     "interval": interval,
                 },
-                allow_promotion_codes=True,
-            )
+                "allow_promotion_codes": True,
+            }
+            session = stripe.checkout.Session.create(**session_kwargs)
             return session.url, None
         except Exception as e:
             logger.error(f"Stripe Checkout Session creation failed: {e}")
