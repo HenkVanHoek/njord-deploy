@@ -32,6 +32,14 @@ if platform.system() == "Windows":
 elif platform.system() == "Darwin":
     icon_file = "images/njorddeploy-apple.icns"
 
+from PyInstaller.utils.hooks import collect_data_files
+
+stripe_datas = []
+try:
+    stripe_datas = collect_data_files('stripe') + collect_data_files('certifi')
+except Exception:
+    pass
+
 a = Analysis(
     ['run_editor.py'],
     pathex=['src'],
@@ -45,7 +53,7 @@ a = Analysis(
         ('config', 'config'),
         ('component_templates', 'component_templates'),
         ('README.md', '.'),
-    ],
+    ] + stripe_datas,
     hiddenimports=[
         'waitress',
         'nacl',

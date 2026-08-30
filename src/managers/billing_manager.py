@@ -9,6 +9,8 @@ and Tier Quota Limits (Free vs Pro).
 
 import logging
 import os
+import sys
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 try:
@@ -44,6 +46,43 @@ PLAN_QUOTAS = {
 }
 
 
+def configure_stripe_ca_bundle() -> None:
+    """
+    Configures Stripe TLS CA bundle path for PyInstaller binaries and OS hosts.
+    Ensures secure HTTPS communication without missing bundle errors.
+    """
+    if not stripe:
+        return
+
+    ca_candidates = []
+    try:
+        import certifi
+
+        ca_candidates.append(certifi.where())
+    except Exception as ex:
+        logger.debug(f"Certifi bundle probe: {ex}")
+
+    ca_candidates.extend(
+        [
+            "/etc/ssl/certs/ca-certificates.crt",
+            "/etc/pki/tls/certs/ca-bundle.crt",
+            "/etc/ssl/ca-bundle.pem",
+            "/etc/ssl/cert.pem",
+            "/etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem",
+        ]
+    )
+
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        bundle_crt = Path(sys._MEIPASS) / "stripe" / "data" / "ca-certificates.crt"
+        ca_candidates.append(str(bundle_crt))
+
+    for candidate in ca_candidates:
+        if candidate and os.path.exists(candidate):
+            stripe.ca_bundle_path = str(candidate)
+            logger.debug(f"Configured Stripe CA bundle path: {candidate}")
+            break
+
+
 class BillingManager:
     """
     Manages Stripe billing integrations, customer accounts, and subscription tiers.
@@ -52,20 +91,49 @@ class BillingManager:
     def __init__(self, db: Optional[DatabaseManager] = None):
         """Initializes the billing manager with database and Stripe credentials."""
         self.db = db or DatabaseManager.get_instance()
-        self.api_key = os.getenv("STRIPE_SECRET_KEY", "").strip()
-        self.publishable_key = os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip()
-        self.webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
-        self.monthly_price_id = os.getenv(
+        self._ensure_stripe_configured()
+
+    @property
+    def api_key(self) -> str:
+        """Retrieves active Stripe Secret API Key."""
+        return os.getenv("STRIPE_SECRET_KEY", "").strip()
+
+    @property
+    def publishable_key(self) -> str:
+        """Retrieves active Stripe Publishable Key."""
+        return os.getenv("STRIPE_PUBLISHABLE_KEY", "").strip()
+
+    @property
+    def webhook_secret(self) -> str:
+        """Retrieves active Stripe Webhook Secret."""
+        return os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
+
+    @property
+    def monthly_price_id(self) -> str:
+        """Retrieves active Monthly Stripe Price ID."""
+        return os.getenv(
             "STRIPE_PRICE_MONTHLY", os.getenv("STRIPE_PRO_PRICE_ID", "")
         ).strip()
-        self.yearly_price_id = os.getenv("STRIPE_PRICE_YEARLY", "").strip()
-        self.pro_price_id = self.monthly_price_id or self.yearly_price_id
 
+    @property
+    def yearly_price_id(self) -> str:
+        """Retrieves active Yearly Stripe Price ID."""
+        return os.getenv("STRIPE_PRICE_YEARLY", "").strip()
+
+    @property
+    def pro_price_id(self) -> str:
+        """Retrieves fallback Pro Stripe Price ID."""
+        return self.monthly_price_id or self.yearly_price_id
+
+    def _ensure_stripe_configured(self) -> None:
+        """Ensures Stripe API key and TLS CA bundle are loaded."""
         if stripe and self.api_key:
             stripe.api_key = self.api_key
+            configure_stripe_ca_bundle()
 
     def is_configured(self) -> bool:
         """Returns True if Stripe credentials are provided."""
+        self._ensure_stripe_configured()
         return bool(
             stripe
             and self.api_key
