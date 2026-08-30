@@ -84,12 +84,25 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
-                {% if session.get('user') %}
                 <li class="nav-item">
-                    <a class="nav-link" href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" title="Manage Subscription, Payment Methods & Invoices">
+                    <button type="button" class="nav-link btn btn-link text-decoration-none" id="nav-billing-link" data-bs-toggle="tab" data-bs-target="#billing-pane" title="Manage Subscription, Plans & Invoices">
                         <i class="fa-solid fa-credit-card me-1 text-info"></i> Billing
-                    </a>
+                    </button>
                 </li>
+                {% if session.get('plan') != 'pro' %}
+                <li class="nav-item d-flex align-items-center ms-1 me-1">
+                    <button type="button" class="btn btn-sm btn-primary fw-bold text-white shadow-sm" data-bs-toggle="tab" data-bs-target="#billing-pane" title="Upgrade to NjordDeploy Pro">
+                        <i class="fa-solid fa-crown me-1 text-warning"></i> Upgrade to Pro
+                    </button>
+                </li>
+                {% else %}
+                <li class="nav-item d-flex align-items-center ms-1 me-1">
+                    <span class="badge bg-primary text-white shadow-sm" title="Active Pro Subscription">
+                        <i class="fa-solid fa-crown me-1 text-warning"></i> PRO
+                    </span>
+                </li>
+                {% endif %}
+                {% if session.get('user') %}
                 <li class="nav-item d-flex align-items-center me-2">
                     <span class="user-badge-nav shadow-sm" title="Logged in as {{ session.get('user') }}">
                         <i class="fa-solid fa-user-shield me-1"></i> {{ session.get('user') }}
@@ -522,9 +535,9 @@
                                         <h5 class="card-title text-primary mb-0">
                                             <i class="fa-solid fa-gem me-2"></i> Subscription &amp; Stripe Customer Portal
                                         </h5>
-                                        <a href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm fw-bold">
+                                        <button type="button" class="btn btn-outline-primary btn-sm btn-billing-portal fw-bold">
                                             <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Stripe Customer Portal
-                                        </a>
+                                        </button>
                                     </div>
                                     <p class="text-muted small mb-4">
                                         Manage your active plan, download historical invoices, update payment methods (iDEAL, SEPA, Creditcard, Wero), or upgrade to NjordDeploy Pro.
@@ -532,36 +545,53 @@
 
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <div class="p-4 rounded border bg-body-secondary h-100 shadow-sm">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="fw-bold mb-0 text-body">Free Community Tier</h6>
-                                                    <span class="badge bg-secondary-subtle text-secondary-emphasis">Included</span>
+                                            <div class="p-4 rounded border bg-body-secondary h-100 shadow-sm d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <h6 class="fw-bold mb-0 text-body">Free Community Tier</h6>
+                                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Included</span>
+                                                    </div>
+                                                    <div class="fs-4 fw-bold mb-2">€0 <span class="fs-6 text-muted fw-normal">/ forever</span></div>
+                                                    <p class="small text-muted mb-3">Ideal for personal homelabs and sovereign self-hosting beginners.</p>
+                                                    <ul class="small list-unstyled mb-4">
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Up to 2 self-hosted server nodes</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100+ Curated component catalog</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100% Local AI &amp; Docker / Rootless Podman</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Autonomous AI self-healing diagnostics</li>
+                                                    </ul>
                                                 </div>
-                                                <p class="small text-muted mb-3">Ideal for personal homelabs and sovereign self-hosting beginners.</p>
-                                                <ul class="small list-unstyled mb-0">
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Up to 2 self-hosted server nodes</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100+ Curated component catalog</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100% Local AI &amp; Docker / Rootless Podman</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Autonomous AI self-healing diagnostics</li>
-                                                </ul>
+                                                <button type="button" class="btn btn-outline-secondary w-100 btn-sm disabled fw-bold" disabled>
+                                                    Current Base Plan
+                                                </button>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="p-4 rounded border border-primary border-opacity-50 bg-primary-subtle h-100 shadow-sm">
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <h6 class="fw-bold mb-0 text-primary">NjordDeploy Pro</h6>
-                                                    <span class="badge bg-primary text-white">€5 / mnd of €50 / jr</span>
+                                            <div class="p-4 rounded border border-primary border-opacity-50 bg-primary-subtle h-100 shadow-sm d-flex flex-column justify-content-between">
+                                                <div>
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <h6 class="fw-bold mb-0 text-primary">NjordDeploy Pro</h6>
+                                                        <span class="badge bg-primary text-white">Popular</span>
+                                                    </div>
+                                                    <div class="fs-4 fw-bold text-primary mb-2">€5 <span class="fs-6 text-muted fw-normal">/ mnd of €50 / jr</span></div>
+                                                    <p class="small text-muted mb-3">For multi-node server fleets, automated encrypted backups &amp; priority alerts.</p>
+                                                    <ul class="small list-unstyled mb-4">
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> <strong>Unlimited</strong> server nodes &amp; VPS instances</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Automated encrypted S3 cloud backups</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Priority CVE security advisory notifications</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Direct priority support</li>
+                                                    </ul>
                                                 </div>
-                                                <p class="small text-muted mb-3">For multi-node server fleets, automated encrypted backups &amp; priority alerts.</p>
-                                                <ul class="small list-unstyled mb-3">
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> <strong>Unlimited</strong> server nodes &amp; VPS instances</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Automated encrypted S3 cloud backups</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Priority CVE security advisory notifications</li>
-                                                    <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Direct priority support</li>
-                                                </ul>
-                                                <a href="https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00" target="_blank" rel="noopener" class="btn btn-primary btn-sm w-100 fw-bold shadow-sm">
-                                                    <i class="fa-solid fa-credit-card me-1"></i> Manage in Stripe Portal
-                                                </a>
+                                                <div class="d-grid gap-2">
+                                                    <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm btn-checkout-monthly">
+                                                        <i class="fa-solid fa-bolt me-1"></i> Upgrade Monthly (€5 / mnd)
+                                                    </button>
+                                                    <button type="button" class="btn btn-success btn-sm fw-bold shadow-sm btn-checkout-yearly">
+                                                        <i class="fa-solid fa-tag me-1"></i> Upgrade Yearly (€50 / jr - 2 mnd gratis)
+                                                    </button>
+                                                    <button type="button" class="btn btn-outline-primary btn-sm fw-bold btn-billing-portal mt-1">
+                                                        <i class="fa-solid fa-credit-card me-1"></i> Manage in Stripe Portal
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -737,5 +767,6 @@
     });
 </script>
 <script src="{{ url_for('static', filename='js/auth.js') }}?v=1.0"></script>
+<script src="{{ url_for('static', filename='js/billing.js') }}?v=1.0"></script>
 </body>
 </html>
