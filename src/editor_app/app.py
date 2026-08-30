@@ -48,6 +48,8 @@ def create_app(test_config=None):
     from dotenv import load_dotenv
 
     if getattr(sys, "frozen", False):
+        bundle_dir = Path(sys._MEIPASS)
+        project_root = bundle_dir
         exe_dir = Path(sys.executable).parent
         loaded = False
         candidates = [
