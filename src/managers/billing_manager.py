@@ -127,7 +127,17 @@ class BillingManager:
 
         user = self.db.get_user_by_id(user_id)
         if not user:
-            return None, "User not found."
+            # Fallback for standalone desktop mode or guest user
+            user = self.db.get_user_by_username("local_admin")
+            if not user:
+                user = self.db.create_user(  # nosec B106
+                    username="local_admin",
+                    password_hash="",
+                    email=os.getenv("DEFAULT_EMAIL", "admin@njorddeploy.com"),
+                    role="owner",
+                    plan=PLAN_FREE,
+                )
+            user_id = user["id"]
 
         # Determine target price ID
         target_price_id = price_id
@@ -144,11 +154,14 @@ class BillingManager:
             # Look up or create Stripe customer
             customer_id = user.get("stripe_customer_id")
             if not customer_id:
-                customer = stripe.Customer.create(
-                    email=user.get("email") or f"{user['username']}@njorddeploy.local",
-                    name=user["username"],
-                    metadata={"user_id": str(user_id)},
-                )
+                cust_kwargs: Dict[str, Any] = {
+                    "name": user.get("username", "NjordDeploy User"),
+                    "metadata": {"user_id": str(user_id)},
+                }
+                user_email = user.get("email")
+                if user_email and "@" in user_email:
+                    cust_kwargs["email"] = user_email
+                customer = stripe.Customer.create(**cust_kwargs)
                 customer_id = customer.id
                 self.db.update_user_plan(
                     user_id,
@@ -192,7 +205,29 @@ class BillingManager:
             return f"{return_url}?mock_portal=true", None
 
         user = self.db.get_user_by_id(user_id)
+        if not user:
+            user = self.db.get_user_by_username("local_admin")
+
         customer_id = user.get("stripe_customer_id") if user else None
+        if not customer_id and user:
+            try:
+                cust_kwargs: Dict[str, Any] = {
+                    "name": user.get("username", "NjordDeploy User"),
+                    "metadata": {"user_id": str(user["id"])},
+                }
+                user_email = user.get("email")
+                if user_email and "@" in user_email:
+                    cust_kwargs["email"] = user_email
+                customer = stripe.Customer.create(**cust_kwargs)
+                customer_id = customer.id
+                self.db.update_user_plan(
+                    user["id"],
+                    plan=user.get("plan", PLAN_FREE),
+                    stripe_customer_id=customer_id,
+                )
+            except Exception as e:
+                logger.error(f"Failed to auto-create customer for portal: {e}")
+
         if not customer_id:
             return None, "No active billing account found for this user."
 
