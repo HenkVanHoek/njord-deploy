@@ -32,6 +32,8 @@ playwright-report/
 backups/
 certs/
 selected_components.txt
+llm_context.txt
+included_files.txt
 
 # Fully generated Docker output directory
 #-----------------------------------------
