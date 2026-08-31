@@ -47,9 +47,9 @@ docker/
 
 node_modules/
 *.egg-info
-/.agy/
-
-# Antigravity artifacts and temporary test directories
+# Antigravity agent skills, rules, artifacts and temporary test directories
+.agents/
+.agy/
 artifacts/
 tmp_proxmox_test/
 tmp_release_test/
