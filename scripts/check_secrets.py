@@ -28,6 +28,18 @@ PERSONAL_EMAIL_RE = re.compile(
 )
 DOCS_PRIVATE_IP_RE = re.compile(r"\b(192\.168\.178\.\d+|37\.120\.176\.26)\b")
 
+# Patterns for proprietary business, marketing, or launch strategy files
+# that must stay exclusively in Henks Geheugen
+PRIVATE_STRATEGY_DOC_PATTERNS = [
+    re.compile(r"marketing_plan", re.IGNORECASE),
+    re.compile(r"msp_blueprint", re.IGNORECASE),
+    re.compile(r"community_launch", re.IGNORECASE),
+    re.compile(r"launch_kit", re.IGNORECASE),
+    re.compile(r"docs_and_blog_strategy", re.IGNORECASE),
+    re.compile(r"commercial_strategy", re.IGNORECASE),
+    re.compile(r"business_plan", re.IGNORECASE),
+]
+
 # Regex to detect assignments to sensitive variable names
 # E.g. GEMINI_API_KEY = "xyz" or export PASSWORD="abc"
 SECRET_ASSIGNMENT_RE = re.compile(
@@ -95,6 +107,20 @@ def check_file(filepath):
 
     # Check if this is a test file or a documentation/JS file
     is_test_file = "tests/" in filepath_lower or "test_" in filename
+
+    # 0. Check for proprietary strategic, marketing, or business planning documents
+    if not is_test_file and ".agents/" not in filepath_lower:
+        for pat in PRIVATE_STRATEGY_DOC_PATTERNS:
+            if pat.search(filename):
+                return [
+                    (
+                        1,
+                        f"Proprietary strategic/marketing document detected "
+                        f"('{filename}'). Business plans, MSP blueprints, and "
+                        f"marketing kits must only be stored privately in "
+                        f"Henks Geheugen (Obsidian), not in Git.",
+                    )
+                ]
 
     # Only run assignment checks on code and config files, not JS, MD, HTML, CSS, etc.
     run_assignment_check = not is_test_file and any(

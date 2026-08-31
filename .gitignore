@@ -63,3 +63,21 @@ docs/PROXMOX_TESTS_*_*runs_*.pdf
 docs/PROXMOX_TESTS_test-playwright_*.md
 docs/RELEASE_INSTALLER_TESTS_*_*.md
 docs/RELEASE_INSTALLER_TESTS_*_*.pdf
+
+# Private Strategic, Business & Marketing Documentation (Henks Geheugen Only)
+#-----------------------------------------
+*MARKETING*
+*MARKETING_PLAN*
+*MSP_BLUEPRINT*
+*MSP_BLUEPRINTS*
+*COMMUNITY_LAUNCH*
+*LAUNCH_KIT*
+*DOCS_AND_BLOG_STRATEGY*
+*BUSINESS_PLAN*
+*COMMERCIAL_STRATEGY*
+*GTM_STRATEGY*
+docs/private/
+docs/*MARKETING*
+docs/*BLUEPRINT*
+docs/*STRATEGY*
+docs/*LAUNCH*

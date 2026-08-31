@@ -130,7 +130,11 @@ All documentation, sample configs, comments, and public files must be strictly s
 2. **Personal Identifiable Information (PII) & Emails**:
    - Never hardcode personal corporate domains or personal emails (e.g. `@almereautomatisering.nl`).
    - Always use standard RFC 2606 test domains: `admin@example.com`, `testuser@example.com`, or `<email>`.
-3. **Automated Enforcement**:
+3. **Proprietary Strategic, Business & Marketing Documents Guard**:
+   - Never commit private marketing strategies, MSP margin models, sales battlecards, go-to-market roadmaps, or community launch kits into the public Git repository (`docs/`, `README.md`, etc.).
+   - All strategic planning, margin blueprints, and PR launch kits must be stored **exclusively in Henks Geheugen (Obsidian vault)**.
+   - Enforced automatically via `.gitignore` patterns and `scripts/check_secrets.py`.
+4. **Automated Enforcement**:
    - Handled automatically via `python3 scripts/check_secrets.py` within `pre-commit run --all-files`.
 
 ---
