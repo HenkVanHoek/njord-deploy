@@ -25,13 +25,22 @@ The Configurator backend runs by default at `http://localhost:5001`.
 
 ---
 
-## Interactive Swagger UI & OpenAPI Spec
+## Interactive Swagger UI, OpenAPI Spec & AI Endpoints
 
 ### `GET /api/docs`
 Renders the full, interactive Swagger UI with live request execution and dynamic accessibility theming (Futuristic Dark, Standard Light, High Contrast).
 
 ### `GET /api/openapi.json`
 Returns the complete OpenAPI 3.0.3 machine-readable specification formatted for automated tooling and agent ingestion.
+
+### `GET /robots.txt`
+Returns the search and generative AI crawler accessibility rules, enabling bots like `PerplexityBot`, `GPTBot`, and `ClaudeBot` while protecting sensitive endpoints.
+
+### `GET /llms.txt`
+Returns the machine-readable architecture and documentation index structured according to the [llmstxt.org](https://llmstxt.org/) standard.
+
+### `GET /llms-full.txt`
+Returns the consolidated full technical specification and documentation text for LLM context windows and RAG systems.
 
 ---
 

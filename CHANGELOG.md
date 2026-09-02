@@ -19,6 +19,10 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **1-Click Turnkey Bundles & Multi-Component Presets**:
   - Implemented single-click turnkey bundle presets across MSPs (*The Modern Sovereign Workplace*, *Digital Archive & Document Compliance*, *Agile Operations & Secure Chat*, *Observability & Privacy Analytics*) and Homelabs (*Open WebUI & Ollama AI Studio*, *Media Streaming Suite*, *Sovereign Smart Home Hub*, *DNS Privacy Shield*, *Reverse Proxy Workspace*).
   - Enhanced Configurator Step 3 with dedicated Turnkey Stacks tab, MSP badges, constituent application pills, zero-collision port validation, and bi-directional partial/full selection synchronization.
+- **Generative Engine Optimization (GEO) & AI Search Standards**:
+  - Implemented crawler accessibility directives in `robots.txt` specifically enabling search and live-retrieval AI bots (`PerplexityBot`, `ChatGPT-User`, `Claude-Web`, `GoogleOther`) and generative training crawlers (`GPTBot`, `ClaudeBot`, `Google-Extended`, `Applebot-Extended`, `Meta-ExternalAgent`, `Diffbot`, `CCBot`) with protection on private endpoints.
+  - Authored RFC-compliant `llms.txt` and `llms-full.txt` files conforming to the [llmstxt.org](https://llmstxt.org/) specification for machine-readable identity, core architectural specifications, and LLM context injection.
+  - Implemented Schema.org JSON-LD structured data (`SoftwareApplication`, `WebSite`, and `FAQPage`) and exposed root `/robots.txt`, `/llms.txt`, and `/llms-full.txt` routes across the Configurator Flask engine and public website.
 - **Streamlined Public Landing Page Redesign (`njorddeploy.com`)**:
   - Redesigned the public web portal to eliminate cognitive overload: clean single-demo viewport, 3 dedicated persona paths (Homelab, Developers, MSPs), interactive 100+ app directory, and decoupled technical documentation.
 

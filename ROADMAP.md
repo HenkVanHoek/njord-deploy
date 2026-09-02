@@ -80,6 +80,9 @@ This milestone elevates NjordDeploy into a complete, enterprise-grade, multi-ten
 *   **[✅] Universal Multi-OS & Automated Disaster Recovery Suite**:
     *   **Why?**: To ensure 100% dependable deployment and state recovery across Debian 12, Ubuntu 24.04, Windows, and macOS.
     *   **Implementation**: Automated Proxmox backup/restore testrunners with clean VM/LXC provisioning, state mutation, restore validation, and universal Debian 12 standalone binary compilation.
+*   **[✅] Generative Engine Optimization (GEO) & Machine-Readable AI Standards**:
+    *   **Why?**: To enable accurate, hallucination-free indexing and retrieval by AI search engines (Perplexity, ChatGPT Search, Claude, Gemini) and AI coding agents.
+    *   **Implementation**: Authored RFC-compliant `llms.txt` and `llms-full.txt` (conforming to [llmstxt.org](https://llmstxt.org/)), fine-tuned AI bot crawler directives in `robots.txt`, integrated Schema.org JSON-LD (`SoftwareApplication`, `WebSite`, `FAQPage`), and implemented root Flask routes for server daemon and website deployments.
 
 ---
 
