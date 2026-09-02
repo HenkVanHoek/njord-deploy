@@ -17,6 +17,7 @@ from flask import (
     redirect,
     render_template,
     request,
+    send_from_directory,
     session,
     url_for,
 )
@@ -896,6 +897,33 @@ def create_app(test_config=None):
     def openapi_spec_json():
         """Returns the OpenAPI 3.0.3 specification JSON."""
         return jsonify(get_openapi_spec()), 200
+
+    @flask_app.route("/robots.txt", methods=["GET"])
+    def robots_txt() -> Response:
+        """Serve robots.txt for search engines and AI crawlers."""
+        return send_from_directory(
+            flask_app.static_folder or "static",
+            "robots.txt",
+            mimetype="text/plain",
+        )
+
+    @flask_app.route("/llms.txt", methods=["GET"])
+    def llms_txt() -> Response:
+        """Serve machine-readable llms.txt standard index for AI models."""
+        return send_from_directory(
+            flask_app.static_folder or "static",
+            "llms.txt",
+            mimetype="text/markdown",
+        )
+
+    @flask_app.route("/llms-full.txt", methods=["GET"])
+    def llms_full_txt() -> Response:
+        """Serve consolidated documentation for LLM prompt context & RAG."""
+        return send_from_directory(
+            flask_app.static_folder or "static",
+            "llms-full.txt",
+            mimetype="text/markdown",
+        )
 
     @flask_app.route("/help", methods=["GET"])
     def help_page():

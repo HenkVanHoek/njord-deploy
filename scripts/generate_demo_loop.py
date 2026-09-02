@@ -253,7 +253,7 @@ def generate_frames():
         f3 = add_banner(
             f3_raw,
             "Step 3: Select Your Applications",
-            "Choose from 50+ modular services or curated all-in-one stacks.",
+            "Choose from 100+ modular services or curated all-in-one stacks.",
             images_dir / "demo_step_3_selection.png",
         )
 

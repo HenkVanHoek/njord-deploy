@@ -240,7 +240,7 @@ def generate_slideshow():
         )
 
         # -------------------------------------------------------------
-        # Slide 4: Software Stack Selection (50+ Modular Apps)
+        # Slide 4: Software Stack Selection (100+ Modular Apps)
         # -------------------------------------------------------------
         print("[*] Capturing Slide 4: Software Stack Selection...")
         page.evaluate(
@@ -256,7 +256,7 @@ def generate_slideshow():
         s4 = add_banner(
             s4_raw,
             "4. Software Selection & Curated Bundles",
-            "Select from 50+ modular services, media suites, and all-in-one packages.",
+            "Select from 100+ modular services, media suites, and all-in-one packages.",
             images_dir / "config_slide_4_selection.png",
         )
 

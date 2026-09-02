@@ -1,0 +1,68 @@
+# ==============================================================================
+# robots.txt for NjordDeploy (Generative Engine & AI Search Optimized)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. AI Search & Live Retrieval Bots (Allow full access to docs & public pages)
+# ------------------------------------------------------------------------------
+User-agent: PerplexityBot
+User-agent: ChatGPT-User
+User-agent: Claude-Web
+User-agent: GoogleOther
+Allow: /
+Allow: /docs/
+Allow: /api/docs
+Allow: /api/openapi.json
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /help
+Disallow: /api/auth/
+Disallow: /api/billing/
+Disallow: /api/stripe/
+Disallow: /session/
+Disallow: /live-log
+
+# ------------------------------------------------------------------------------
+# 2. Generative Model Training Crawlers
+# ------------------------------------------------------------------------------
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: anthropic-ai
+User-agent: Google-Extended
+User-agent: cohere-ai
+User-agent: Applebot-Extended
+User-agent: Meta-ExternalAgent
+User-agent: Diffbot
+User-agent: CCBot
+Allow: /
+Allow: /docs/
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /api/docs
+Disallow: /api/auth/
+Disallow: /api/billing/
+Disallow: /api/servers/
+Disallow: /session/
+Disallow: /install/
+
+# ------------------------------------------------------------------------------
+# 3. General Search Engine Crawlers (Googlebot, Bingbot, DuckDuckBot)
+# ------------------------------------------------------------------------------
+User-agent: *
+Allow: /
+Allow: /static/
+Allow: /help
+Allow: /llms.txt
+Allow: /llms-full.txt
+Disallow: /api/
+Allow: /api/docs
+Allow: /api/openapi.json
+Disallow: /settings
+Disallow: /setup
+Disallow: /login
+Disallow: /register
+
+# ------------------------------------------------------------------------------
+# Machine-Readable Declarations (https://llmstxt.org/)
+# ------------------------------------------------------------------------------
+Sitemap: https://njorddeploy.com/sitemap.xml

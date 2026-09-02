@@ -6,6 +6,11 @@ external automated consumers / AI coding agents.
 
 from typing import Any, Dict
 
+try:
+    from utils.resource_utils import get_project_version
+except ImportError:
+    from src.utils.resource_utils import get_project_version
+
 
 def get_openapi_spec() -> Dict[str, Any]:
     """Returns the complete OpenAPI 3.0.3 specification for NjordDeploy."""
@@ -19,14 +24,17 @@ def get_openapi_spec() -> Dict[str, Any]:
                 "provisioning, pre-flight conflict safety analysis, "
                 "and real-time SSE log streaming."
             ),
-            "version": "0.5.24",
+            "version": get_project_version(),
             "contact": {
                 "name": "NjordDeploy Project",
                 "url": "https://njorddeploy.com",
             },
             "license": {
-                "name": "MIT License",
-                "url": "https://opensource.org/licenses/MIT",
+                "name": "Business Source License 1.1 (BSL-1.1)",
+                "url": (
+                    "https://raw.githubusercontent.com/HenkVanHoek/njord-deploy"
+                    "/main/LICENSE"
+                ),
             },
         },
         "servers": [
@@ -98,10 +106,10 @@ def get_openapi_spec() -> Dict[str, Any]:
                                 "application/json": {
                                     "example": {
                                         "status": "ok",
-                                        "version": "0.6.0",
+                                        "version": "1.0.0-RC1",
                                         "mode": "service",
-                                        "services_catalog": 85,
-                                        "timestamp": "2026-08-29T14:38:00+00:00",
+                                        "services_catalog": 100,
+                                        "timestamp": "2026-08-31T20:00:00+00:00",
                                     }
                                 }
                             },

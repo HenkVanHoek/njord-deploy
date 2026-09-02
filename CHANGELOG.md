@@ -16,6 +16,9 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
   - Added automated persistent SSH key generation, secure key storage under `NJORD_DATA_DIR`, and `/api/health` diagnostic endpoints with automatic mode reporting (`standalone` vs `service`).
 - **Stripe Billing, Customer Portal & Subscription Tiers**:
   - Integrated Stripe billing SDK (`stripe>=15.6.0`) supporting monthly and annual subscription plans, secure Stripe Checkout sessions, dynamic entitlement gating, and self-service Stripe Customer Portal management in the Settings pane.
+- **1-Click Turnkey Bundles & Multi-Component Presets**:
+  - Implemented single-click turnkey bundle presets across MSPs (*The Modern Sovereign Workplace*, *Digital Archive & Document Compliance*, *Agile Operations & Secure Chat*, *Observability & Privacy Analytics*) and Homelabs (*Open WebUI & Ollama AI Studio*, *Media Streaming Suite*, *Sovereign Smart Home Hub*, *DNS Privacy Shield*, *Reverse Proxy Workspace*).
+  - Enhanced Configurator Step 3 with dedicated Turnkey Stacks tab, MSP badges, constituent application pills, zero-collision port validation, and bi-directional partial/full selection synchronization.
 - **Streamlined Public Landing Page Redesign (`njorddeploy.com`)**:
   - Redesigned the public web portal to eliminate cognitive overload: clean single-demo viewport, 3 dedicated persona paths (Homelab, Developers, MSPs), interactive 100+ app directory, and decoupled technical documentation.
 

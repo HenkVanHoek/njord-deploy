@@ -17,7 +17,7 @@ The Component Editor is a developer and maintainer workspace for creating, inspe
 ### 1. Main Workspace & Sidebar Navigation
 ![Workspace](images/editor_tour/editor_slide_1_workspace.png)
 * **Groups vs Packages View:** Toggle between browsing individual service categories (DNS, AI, Media, Smart Home) or bundled all-in-one software stacks.
-* **Instant Filtering & Search:** Rapid real-time search across 50+ modular components by name, description, tags, or ports.
+* **Instant Filtering & Search:** Rapid real-time search across 100+ modular components by name, description, tags, or ports.
 * **Expand / Collapse All:** Quick controls to inspect deep category trees with 1 click.
 * **Theme Switching:** Choose between *Futuristic Dark (Glassmorphic)*, *Standard Light*, and *High Contrast* accessibility modes.
 

@@ -7,6 +7,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NjordDeploy Deployment Wizard</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="LLMs.txt">
+
+    <!-- Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "@id": "https://njorddeploy.com/#software",
+          "name": "NjordDeploy",
+          "applicationCategory": "DeveloperApplication",
+          "applicationSubCategory": "DevOps & Self-Hosting Orchestration",
+          "operatingSystem": "Linux (Debian 11/12/13, Ubuntu 22.04/24.04/26.04, Raspberry Pi OS), Proxmox VE (LXC/VM), Windows 10/11, macOS",
+          "softwareVersion": "0.4.46-Alpha",
+          "description": "Sovereign, agentless self-hosting orchestrator and AI component studio to deploy 100+ verified Docker and Rootless Podman stacks to Raspberry Pi, Proxmox, and Linux servers over SSH without installing Python on the target host.",
+          "url": "https://njorddeploy.com",
+          "downloadUrl": "https://github.com/HenkVanHoek/njord-deploy/releases",
+          "license": "https://github.com/HenkVanHoek/njord-deploy/blob/main/LICENSE",
+          "isAccessibleForFree": true,
+          "author": {
+            "@type": "Person",
+            "name": "Henk van Hoek",
+            "url": "https://github.com/HenkVanHoek"
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "NjordDeploy",
+            "url": "https://njorddeploy.com"
+          },
+          "featureList": [
+            "Agentless SSH Orchestration (Zero target daemon footprint)",
+            "Strict No Python on Target Host Policy",
+            "Dual-Engine Support: Docker Compose & Rootless Podman",
+            "100+ Curated and Verified Application Stacks",
+            "AI Component Studio (Git-to-Compose via Ollama, Gemini, OpenAI)",
+            "Proxmox VE Automated LXC & VM Provisioning",
+            "Transactional Point-in-Time Volume & Database Backups",
+            "Headless OpenAPI 3.0 REST Engine and CLI Automation"
+          ]
+        }
+      ]
+    }
+    </script>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/intro.js@7.2.0/introjs.min.css" rel="stylesheet">

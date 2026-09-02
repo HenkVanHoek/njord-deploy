@@ -455,3 +455,17 @@ class ConfiguratorAppTestCase(unittest.TestCase):
         self.assertEqual(len(data["groups"]["Shared Name"]["components"]), 2)
         self.assertIn("comp_a", data["groups"]["Shared Name"]["components"])
         self.assertIn("comp_b", data["groups"]["Shared Name"]["components"])
+
+    def test_robots_and_llms_endpoints(self):
+        """Test GET /robots.txt, /llms.txt, and /llms-full.txt endpoints."""
+        robots_resp = self.client.get("/robots.txt")
+        self.assertEqual(robots_resp.status_code, 200)
+        self.assertIn(b"GPTBot", robots_resp.data)
+
+        llms_resp = self.client.get("/llms.txt")
+        self.assertEqual(llms_resp.status_code, 200)
+        self.assertIn(b"NjordDeploy", llms_resp.data)
+
+        llms_full_resp = self.client.get("/llms-full.txt")
+        self.assertEqual(llms_full_resp.status_code, 200)
+        self.assertIn(b"Tarball Deployment", llms_full_resp.data)

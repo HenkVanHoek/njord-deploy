@@ -1,0 +1,23 @@
+1
+00:00:00,200 --> 00:00:07,460
+Welcome to NjordDeploy. Let's start an automated discovery scan to locate nodes on our network.
+
+2
+00:00:13,509 --> 00:00:25,379
+Target node njord-cloud-01 discovered at 192.168.1.185. Entering SSH credentials for hardware verification.
+
+3
+00:00:31,429 --> 00:00:40,130
+Target verified: 8 gigabytes of RAM and 64 gigabytes of storage. Zero target dependencies required.
+
+4
+00:00:45,780 --> 00:00:59,479
+In the Turnkey Stacks catalog, selecting The Modern Sovereign Workplace. With one click, Nextcloud, MariaDB, Redis cache, push notifications, and Vaultwarden are instantly coordinated.
+
+5
+00:01:09,310 --> 00:01:17,130
+Deployment complete! All enterprise microservices are provisioned, isolated, and verified healthy.
+
+6
+00:01:17,980 --> 00:01:24,280
+Launch Nextcloud and Vaultwarden web dashboards instantly from your private sovereign cloud harbor.

@@ -166,7 +166,7 @@ def generate_slideshow():
         s1 = add_banner(
             s1_raw,
             "1. Component Workspace & Sidebar Navigation",
-            "Browse 50+ services by category or package with instant search.",
+            "Browse 100+ services by category or package with instant search.",
             images_dir / "editor_slide_1_workspace.png",
         )
 

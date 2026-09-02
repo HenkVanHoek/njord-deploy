@@ -991,41 +991,69 @@
                 const activeClass = active ? 'show active' : '';
                 tabNavHTML += `
                     <button class="nav-link ${active}" id="v-pills-packages-tab" data-bs-toggle="pill" data-bs-target="#v-pills-packages" type="button" role="tab">
-                        <i class="fa-solid fa-layer-group me-2"></i>Stacks (Packages)
+                        <i class="fa-solid fa-layer-group me-2 text-warning"></i>Turnkey Stacks & Bundles
                     </button>`;
 
                 tabContentHTML += `
                     <div class="tab-pane fade ${activeClass}" id="v-pills-packages" role="tabpanel">
-                        <h3 class="h5 border-bottom pb-2 mb-3"><i class="fa-solid fa-layer-group me-2 text-primary"></i>All-in-One Stacks (Packages)</h3>
-                        <p class="text-muted small mb-3">Select a package to instantly deploy a fully integrated stack of services.</p>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center border-bottom pb-2 mb-3">
+                            <div>
+                                <h3 class="h5 mb-1"><i class="fa-solid fa-layer-group me-2 text-primary"></i>1-Click Turnkey Bundles & Stacks</h3>
+                                <p class="text-muted small mb-0">Select an integrated, production-tested bundle tailored for MSPs, enterprise workflows, or homelabs.</p>
+                            </div>
+                        </div>
                         <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3">`;
 
                 Object.keys(packages).forEach(pkgId => {
                     const pkg = packages[pkgId];
-                    const pkgComponents = allSoftwareCache.filter(c => c.package_id === pkgId);
+                    const pkgComponents = (pkg.components && Array.isArray(pkg.components))
+                        ? allSoftwareCache.filter(c => pkg.components.includes(c.id))
+                        : allSoftwareCache.filter(c => c.package_id === pkgId);
                     const compNames = pkgComponents.map(c => c.name).join(', ');
                     const escapedPkgId = escapeHTML(pkgId);
                     const escapedPkgName = escapeHTML(pkg.name);
-                    const escapedPkgDesc = escapeHTML(pkg.description || 'A pre-configured stack of services.');
+                    const escapedPkgDesc = escapeHTML(pkg.description || 'A pre-configured turnkey stack of services.');
+
+                    const isMsp = (pkg.badge && pkg.badge.toLowerCase().includes('msp')) || pkgId.includes('workplace') || pkgId.includes('archive') || pkgId.includes('agile') || pkgId.includes('observability');
+                    const badgeClass = isMsp ? 'bg-primary text-white' : 'bg-secondary text-white';
+                    const badgeIcon = isMsp ? 'fa-solid fa-briefcase' : 'fa-solid fa-cubes';
+                    const badgeText = pkg.badge || (isMsp ? 'MSP Turnkey Bundle' : 'Curated Stack');
+                    const iconClass = pkg.icon || (isMsp ? 'fa-solid fa-briefcase' : 'fa-solid fa-layer-group');
+
                     const pkgSearchText = [
                         pkg.name || '',
                         pkgId || '',
                         pkg.description || '',
+                        badgeText || '',
                         compNames || ''
                     ].join(' ').toLowerCase();
 
+                    const pillsHtml = pkgComponents.map(c => `
+                        <span class="badge bg-body-secondary text-body border small text-truncate" style="max-width: 140px;" title="${escapeHTML(c.name)}">
+                            <i class="fa-solid fa-cube text-primary me-1"></i>${escapeHTML(c.name)}
+                        </span>
+                    `).join('');
+
                     tabContentHTML += `
                         <div class="col">
-                            <div class="card h-100 package-card border-primary" style="cursor: pointer; transition: all 0.2s;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}" data-search-text="${escapeHTML(pkgSearchText)}">
+                            <div class="card h-100 package-card border-primary shadow-sm" style="cursor: pointer; transition: all 0.25s ease;" data-package-id="${escapedPkgId}" data-components="${escapeHTML(JSON.stringify(pkgComponents.map(c=>c.id)))}" data-search-text="${escapeHTML(pkgSearchText)}">
                                 <div class="card-body d-flex flex-column align-items-center text-center p-3">
-                                    <div class="mb-3 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 70px; height: 70px; background-color: rgba(255,255,255,0.05) !important;">
-                                        <i class="fa-solid fa-layer-group text-primary fa-2x"></i>
+                                    <div class="d-flex justify-content-between align-items-center w-100 mb-2">
+                                        <span class="badge ${badgeClass} shadow-sm"><i class="${badgeIcon} me-1"></i>${escapeHTML(badgeText)}</span>
+                                        <span class="badge bg-dark-subtle text-body-secondary small">${pkgComponents.length} Apps</span>
                                     </div>
-                                    <h5 class="card-title fw-bold mb-2">${escapedPkgName}</h5>
-                                    <p class="card-text small text-muted flex-grow-1">${escapedPkgDesc}</p>
-                                    <p class="card-text small text-info mt-1"><em>Includes: ${escapeHTML(compNames)}</em></p>
+                                    <div class="mb-2 p-3 bg-light rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; background-color: rgba(255,255,255,0.05) !important;">
+                                        <i class="${escapeHTML(iconClass)} text-primary fa-xl"></i>
+                                    </div>
+                                    <h5 class="card-title fw-bold mb-1 fs-6">${escapedPkgName}</h5>
+                                    <p class="card-text small text-muted flex-grow-1 mb-2">${escapedPkgDesc}</p>
+                                    <div class="d-flex flex-wrap justify-content-center gap-1 my-2 w-100" style="max-height: 75px; overflow-y: auto;">
+                                        ${pillsHtml}
+                                    </div>
                                     <input type="checkbox" class="form-check-input package-checkbox d-none" id="pkg-${escapedPkgId}" value="${escapedPkgId}">
-                                    <button class="btn btn-outline-primary btn-select-package mt-3 w-100" type="button" style="pointer-events: none;">Select Stack</button>
+                                    <button class="btn btn-outline-primary btn-select-package mt-2 w-100" type="button" style="pointer-events: none;">
+                                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Select 1-Click Bundle
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1238,15 +1266,19 @@
 
                     // Update package card visual state
                     if (checkbox.checked) {
-                        card.classList.remove('border-primary');
+                        card.classList.remove('border-primary', 'border-info');
                         card.classList.add('border-success');
-                        button.className = 'btn btn-success btn-select-package mt-3 w-100';
-                        button.innerHTML = '<i class="fa-solid fa-check me-2"></i>Stack Selected';
+                        if (button) {
+                            button.className = 'btn btn-success btn-select-package mt-2 w-100';
+                            button.innerHTML = `<i class="fa-solid fa-check me-2"></i>Bundle Selected (${compIds.length} Apps)`;
+                        }
                     } else {
-                        card.classList.remove('border-success');
+                        card.classList.remove('border-success', 'border-info');
                         card.classList.add('border-primary');
-                        button.className = 'btn btn-outline-primary btn-select-package mt-3 w-100';
-                        button.innerHTML = 'Select Stack';
+                        if (button) {
+                            button.className = 'btn btn-outline-primary btn-select-package mt-2 w-100';
+                            button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1"></i>Select 1-Click Bundle';
+                        }
                     }
                 });
             });
@@ -1260,23 +1292,37 @@
                     const compIds = JSON.parse(card.dataset.components || '[]');
                     if (compIds.length === 0) return;
 
-                    const allChecked = compIds.every(id => {
+                    const checkedCount = compIds.filter(id => {
                         const compInput = /** @type {HTMLInputElement} */ (document.getElementById(`comp-${id}`));
                         return compInput && compInput.checked;
-                    });
+                    }).length;
 
-                    checkbox.checked = allChecked;
+                    const allChecked = (checkedCount === compIds.length && compIds.length > 0);
+                    if (checkbox) {
+                        checkbox.checked = allChecked;
+                    }
 
                     if (allChecked) {
-                        card.classList.remove('border-primary');
+                        card.classList.remove('border-primary', 'border-info');
                         card.classList.add('border-success');
-                        button.className = 'btn btn-success btn-select-package mt-3 w-100';
-                        button.innerHTML = '<i class="fa-solid fa-check me-2"></i>Stack Selected';
+                        if (button) {
+                            button.className = 'btn btn-success btn-select-package mt-2 w-100';
+                            button.innerHTML = `<i class="fa-solid fa-check me-2"></i>Bundle Selected (${compIds.length} Apps)`;
+                        }
+                    } else if (checkedCount > 0) {
+                        card.classList.remove('border-success', 'border-primary');
+                        card.classList.add('border-info');
+                        if (button) {
+                            button.className = 'btn btn-outline-info btn-select-package mt-2 w-100';
+                            button.innerHTML = `<i class="fa-solid fa-list-check me-2"></i>Partial (${checkedCount}/${compIds.length} Apps)`;
+                        }
                     } else {
-                        card.classList.remove('border-success');
+                        card.classList.remove('border-success', 'border-info');
                         card.classList.add('border-primary');
-                        button.className = 'btn btn-outline-primary btn-select-package mt-3 w-100';
-                        button.innerHTML = 'Select Stack';
+                        if (button) {
+                            button.className = 'btn btn-outline-primary btn-select-package mt-2 w-100';
+                            button.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles me-1"></i>Select 1-Click Bundle';
+                        }
                     }
                 });
             };

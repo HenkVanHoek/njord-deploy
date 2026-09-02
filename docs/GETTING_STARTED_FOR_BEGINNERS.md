@@ -60,18 +60,25 @@ You only need **three simple things**:
 
 ### Step 3: Choose Your Software
 
-NjordDeploy offers over 50+ curated applications. You can either select individual apps or pick an **All-in-One Starter Stack**:
+NjordDeploy offers over 100+ curated applications. You can either select individual apps across categories or pick a **1-Click Turnkey Bundle / All-in-One Stack**:
 
-* **🛡️ Network Ad-Blocker Stack:** [AdGuard Home](https://adguard.com/en/adguard-home/overview.html) + [Pi-hole](https://pi-hole.net/) (block ads and trackers network-wide on all phones and TVs).
-* **🏠 Smart Home Stack:** [Home Assistant](https://www.home-assistant.io/) + [Zigbee2MQTT](https://www.zigbee2mqtt.io/) (automate lights, sensors, and heating).
-* **☁️ Private Cloud Stack:** [Nextcloud](https://nextcloud.com/) + [Vaultwarden](https://github.com/dani-garcia/vaultwarden) (securely sync photos, files, and passwords).
-* **📊 Monitoring Stack:** [Uptime Kuma](https://github.com/louislam/uptime-kuma) + [Homepage](https://gethomepage.dev/) (a unified dashboard for your home server).
+#### 💼 MSP & Small Business Turnkey Bundles
+* **💼 The Modern Sovereign Workplace:** Enterprise [Nextcloud](https://nextcloud.com/) Hub + MariaDB + Redis cache + automated database dumper + high-performance push notifications + [Vaultwarden](https://github.com/dani-garcia/vaultwarden) team password manager.
+* **📄 Digital Archive & Document Compliance:** [Paperless-ngx](https://docs.paperless-ngx.com/) automated OCR document scanner + [Stirling-PDF](https://github.com/Stirling-Tools/Stirling-PDF) sovereign web PDF utility + [Actual Budget](https://actualbudget.org/) accounting + [NocoDB](https://nocodb.com/) smart database.
+* **🚀 Agile Operations & Secure Chat:** [Vikunja](https://vikunja.io/) task management + [Focalboard](https://www.focalboard.com/) Kanban boards + [Gitea](https://about.gitea.com/) Git/CI-CD + [Conduit](https://conduit.rs/) lightweight Matrix chat + [Memos](https://usememos.com/) knowledge base.
+* **📈 Observability & Privacy Analytics:** [Beszel](https://github.com/henrygd/beszel) host metrics + [Prometheus](https://prometheus.io/) + [Grafana](https://grafana.com/) dashboards + [Plausible](https://plausible.io/) cookie-less analytics + [Uptime Kuma](https://github.com/louislam/uptime-kuma) status monitors.
+
+#### 🏠 Popular Homelab Stacks
+* **🤖 Open WebUI & Ollama AI Studio:** [Ollama](https://ollama.com/) local LLMs + [Open WebUI](https://openwebui.com/) + [LiteLLM](https://github.com/BerriAI/litellm) gateway.
+* **🎬 Media Streaming Suite:** [Jellyfin](https://jellyfin.org/) media server + [Radarr](https://radarr.video/) + [Sonarr](https://sonarr.tv/) + [Prowlarr](https://prowlarr.com/) + [Jellyseerr](https://github.com/Fallenbagel/jellyseerr) + [qBittorrent](https://www.qbittorrent.org/) + [Bazarr](https://www.bazarr.media/).
+* **🏠 Sovereign Smart Home Hub:** [Home Assistant](https://www.home-assistant.io/) + [ESPHome](https://esphome.io/) + [Node-RED](https://nodered.org/) + [Scrypted](https://www.scrypted.app/).
+* **🛡️ DNS & Privacy Shield:** [AdGuard Home](https://adguard.com/en/adguard-home/overview.html) DNS sinkhole + [Unbound](https://nlnetlabs.nl/projects/unbound/about/) recursive resolver.
 
 <div align="center">
-  <img src="images/demo_step_3_selection.png" alt="Step 3: Select Software Applications" width="750" style="border-radius: 6px; margin: 15px 0;" />
+  <img src="images/demo_step_3_selection.png" alt="Step 3: Select Software Applications and Bundles" width="750" style="border-radius: 6px; margin: 15px 0;" />
 </div>
 
-Click on the services you want, then click **"Proceed to Configuration"**.
+Click on a bundle or individual services you want, then click **"Proceed to Configuration"**.
 
 ---
 
@@ -122,5 +129,5 @@ NjordDeploy includes built-in **AI Failure Diagnostics**. If a port is occupied 
 ## 📚 Where to Go Next?
 
 * 📖 **[Full User & Network Setup Guide](USER_GUIDE.md)**: Deep dive into custom subnets, SSH keys, and Tailscale mesh networks.
-* 🛠️ **[Supported Services Catalog](SUPPORTED_SERVICES.md)**: Explore all 50+ available self-hosted applications.
+* 🛠️ **[Supported Services Catalog](SUPPORTED_SERVICES.md)**: Explore all 100+ available self-hosted applications.
 * 🏛️ **[System Architecture](ARCHITECTURE.md)**: Learn how NjordDeploy works under the hood.

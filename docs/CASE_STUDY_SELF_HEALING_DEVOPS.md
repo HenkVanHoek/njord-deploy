@@ -6,7 +6,7 @@
 ### Executive Summary
 
 Deploying and maintaining multiservice self-hosted environments across heterogeneous Linux systems (Debian, Raspberry Pi OS, Docker, Rootless Podman, LXC, and QEMU/KVM VMs) is notoriously complex. Traditional approaches suffer from two main bottlenecks:
-1. **Configuration Drift & Human Error**: Writing, templating, and keeping 50+ service definitions up to date requires immense manual effort.
+1. **Configuration Drift & Human Error**: Writing, templating, and keeping 100+ service definitions up to date requires immense manual effort.
 2. **Disconnected Feedback Loops**: Theoretical configurations pass static linting but fail in real runtime environments due to socket permissions, kernel capabilities, or engine quirks.
 
 **NjordDeploy** introduces an engineering paradigm: a **closed-loop, self-healing DevOps triad** where:

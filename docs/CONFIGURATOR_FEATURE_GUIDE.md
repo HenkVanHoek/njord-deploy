@@ -39,10 +39,11 @@ The Configurator is an end-user deployment wizard designed to make discovering, 
 
 ---
 
-### 4. Software Selection & Curated Bundles
+### 4. Software Selection, 1-Click Turnkey Bundles & Stacks
 ![Software Selection](images/configurator_tour/config_slide_4_selection.png)
-* **50+ Modular Services:** Choose from categorized apps across DNS blocklists, Media suites (*arr stack, Jellyfin), Smart Home (Home Assistant, Frigate), and Private Cloud (Nextcloud, Vaultwarden).
-* **Curated All-in-One Stacks:** Deploy complete application environments with one click.
+* **1-Click Turnkey Bundles & Stacks:** Prominent default tab featuring pre-packaged solutions for MSPs (*Modern Workplace*, *Digital Archive & Compliance*, *Agile Operations*, *Observability*) and Homelabs (*AI Studio*, *Media Suite*, *Smart Home*, *DNS Shield*).
+* **100+ Modular Services:** Choose from granular categories across DNS blocklists, Media suites (*arr stack, Jellyfin), Smart Home (Home Assistant, Frigate), and Private Cloud (Nextcloud, Vaultwarden).
+* **Constituent App Pills & Live Sync:** Each bundle card displays member application pills with bi-directional selection synchronization and partial status tracking (`Partial (3/5 Apps)`).
 * **Conflict & Dependency Engine:** Prevents port overlaps (e.g. port 80/53 collisions) and automatically suggests required database/cache companion containers.
 
 ---

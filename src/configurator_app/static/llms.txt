@@ -1,0 +1,44 @@
+# NjordDeploy
+
+> Sovereign Self-Hosting Engine & AI Component Studio. An agentless, metadata-driven deployment orchestrator for running 100+ Docker and Rootless Podman services on Raspberry Pi, Proxmox VE (LXC/VM), and Linux servers over SSH without installing Python on the target host.
+
+NjordDeploy removes the complexity of self-hosting by automating hardware discovery, Jinja2 Compose template rendering, port collision prevention, reverse proxy configuration (Traefik, Caddy, Nginx Proxy Manager), and transactional state backups. It runs as a standalone desktop utility (Windows, macOS, Linux) or as a 24/7 background systemd/Docker daemon.
+
+## Core Architectural Specifications
+
+- **Deployment Mechanism**: Agentless SSH orchestration with atomic Tarball Deployment (no target background daemon).
+- **Target OS Policy**: Strict "No Python on Target" policy. The target host remains clean; all application runtimes execute strictly inside container boundaries.
+- **Container Engines**: Dual-engine support for standard Docker Engine (Compose v2) and unprivileged Rootless Podman (with automatic low-port kernel configuration `net.ipv4.ip_unprivileged_port_start=53`).
+- **Single Source of Truth (SST)**: Authoritative service catalog in `config/components_metadata.json` with modular Jinja2 templates in `component_templates/`.
+- **Target Hardware**: Raspberry Pi 4/5, Orange Pi, Rock Pi, x86_64 mini-PCs, Intel NUCs, and Proxmox VE hypervisors (LXC containers & QEMU VMs).
+- **Target OS Support**: Debian 11/12/13 (Bookworm/Trixie), Ubuntu 22.04/24.04/26.04 LTS, Raspberry Pi OS (64-bit).
+- **AI Component Studio**: Offline Git-to-Compose generation using local Ollama models (Llama 3, Mistral, Qwen), sovereign Loes.ai / HostYourAI, Google Gemini, or OpenAI.
+- **Disaster Recovery**: Transactional point-in-time state backups for persistent volumes and databases with container-safe freezing, SHA-256 integrity checks, and 1-click restore.
+- **Licensing**: Business Source License 1.1 (BSL-1.1). 100% free forever for homelabs and up to 2 connected server nodes. Automatically transitions to Apache 2.0 two years after release.
+
+## Key Service Catalog Categories (100+ Stacks)
+
+- **AI & LLM Studios**: Ollama, Open WebUI, LiteLLM, Voicebox (TTS/STT), n8n (AI Agent Automation), LocalAI.
+- **Privacy & DNS**: AdGuard Home, Pi-hole, Unbound DNS, Tailscale Subnet Router.
+- **Smart Home & IoT**: Home Assistant Core/Supervised, Zigbee2MQTT, Frigate (AI Object Detection NVR), Scrypted, UniFi Network Controller, Mosquitto MQTT.
+- **Cloud & Collaboration**: Nextcloud Hub, Immich (Self-Hosted Photos), Vaultwarden (Bitwarden compatible), Syncthing, MinIO S3 Object Storage, Filebrowser.
+- **Media & Streaming**: Jellyfin, Plex, Audiobookshelf, Sonarr, Radarr, Prowlarr, qBittorrent with Gluetun VPN killswitch.
+- **Monitoring & DevOps**: Prometheus, Grafana, Uptime Kuma, Semaphore UI (Ansible/Terraform Web UI), Dozzle, Portainer CE, Homepage, Homarr.
+- **Databases & Utilities**: PostgreSQL, MariaDB, Redis, Adminer, phpMyAdmin, Stirling PDF, Microbin, IT-Tools.
+
+## Primary Documentation Links
+
+- [Quick Start Guide](https://njorddeploy.com/docs/GETTING_STARTED_FOR_BEGINNERS.md): Step-by-step onboarding for deploying your first self-hosted stack in 5 minutes.
+- [System Architecture](https://njorddeploy.com/docs/ARCHITECTURE.md): Complete technical architecture, component lifecycle, and atomic deployment mechanics.
+- [Supported Services Matrix](https://njorddeploy.com/docs/SUPPORTED_SERVICES.md): Full breakdown of all 100+ verified container stacks with default ports and requirements.
+- [REST API Reference & OpenAPI](https://njorddeploy.com/docs/API_REFERENCE.md): Headless OpenAPI 3.0 endpoints for CI/CD pipelines, DevOps scripts, and AI coding agents.
+- [Container Engine & Podman Guide](https://njorddeploy.com/docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md): Technical deep-dive on Docker vs. Rootless Podman and unprivileged port handling.
+- [Frequently Asked Questions (FAQ)](https://njorddeploy.com/docs/FAQ.md): Comprehensive architectural, operational, and licensing Q&A.
+
+## Optional & Deep Dive References
+
+- [Self-Healing DevOps Case Study](https://njorddeploy.com/docs/CASE_STUDY_SELF_HEALING_DEVOPS.md): Proxmox 4-way hypervisor cross-validation matrix and autonomous AI log diagnostics.
+- [Local AI Sovereignty Case Study](https://njorddeploy.com/docs/CASE_STUDY_LOCAL_AI_SOVEREIGNTY.md): Zero-cloud AI component scaffolding using local Ollama LLMs and deterministic Air Traffic Control rules.
+- [24/7 Self-Hosted Service Daemon Guide](https://njorddeploy.com/docs/SELF_HOSTED_SERVICE_GUIDE.md): Running NjordDeploy continuously via Docker Compose or Linux systemd.
+- [Full LLM Context Reference](https://njorddeploy.com/llms-full.txt): Complete consolidated technical documentation for LLM prompt context and RAG indexing.
+- [GitHub Repository](https://github.com/HenkVanHoek/njord-deploy): Source code repository, issue tracker, and release downloads.

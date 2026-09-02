@@ -58,8 +58,10 @@ def test_packages_assigned_components_exist(component_manager: ComponentManager)
     all_components = component_manager.get_all_components()
     comp_ids = {c["id"] for c in all_components}
 
-    for pkg_id in packages:
-        assigned = [c["id"] for c in all_components if c.get("package_id") == pkg_id]
+    for pkg_id, pkg_data in packages.items():
+        assigned = pkg_data.get("components") or [
+            c["id"] for c in all_components if c.get("package_id") == pkg_id
+        ]
         assert len(assigned) > 0, f"Package '{pkg_id}' has no assigned components."
         for cid in assigned:
             assert (
@@ -77,7 +79,7 @@ def test_package_templates_and_ports(project_paths: Tuple[Path, Path]):
     components: Dict[str, Any] = meta.get("components", {})
 
     for pkg_id, pkg_info in packages.items():
-        assigned_cids = [
+        assigned_cids = pkg_info.get("components") or [
             cid
             for cid, cinfo in components.items()
             if cinfo.get("package_id") == pkg_id

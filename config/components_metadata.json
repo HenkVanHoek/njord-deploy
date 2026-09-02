@@ -2835,7 +2835,7 @@
             "image_name": "traefik",
             "intent_questions": [],
             "last_tested": "2026-08-16T09:09:37.568697+00:00",
-            "last_updated": "2026-08-31T17:41:46.716245+00:00",
+            "last_updated": "2026-09-02T08:29:15.094233+00:00",
             "name": "Traefik",
             "package_id": null,
             "project_url": "https://traefik.io/traefik/",
@@ -3173,14 +3173,84 @@
         }
     },
     "packages": {
+        "agile-ops": {
+            "badge": "MSP Turnkey Bundle",
+            "components": [
+                "vikunja",
+                "focalboard",
+                "gitea",
+                "conduit",
+                "memos"
+            ],
+            "description": "Agile project execution and encrypted collaboration workstation bundling Vikunja task management, Focalboard Kanban sprint boards, Gitea code repository & CI/CD, Conduit lightweight Matrix homeserver, and Memos private notes.",
+            "icon": "fa-solid fa-diagram-project",
+            "name": "Agile Operations & Secure Chat",
+            "network_type": "bridge"
+        },
         "caddy-filebrowser-stack": {
-            "description": "Deploy Caddy reverse proxy together with FileBrowser to easily edit configuration files from your browser.",
-            "name": "Caddy & Filebrowser Stack",
+            "badge": "Web & Utilities",
+            "components": [
+                "caddy",
+                "filebrowser"
+            ],
+            "description": "Caddy automated HTTPS reverse proxy paired with FileBrowser for instant web-based file and configuration management.",
+            "icon": "fa-solid fa-folder-tree",
+            "name": "Reverse Proxy & Remote Workspace",
+            "network_type": "bridge"
+        },
+        "digital-archive": {
+            "badge": "MSP Turnkey Bundle",
+            "components": [
+                "paperless-ngx",
+                "stirling-pdf",
+                "actual-budget",
+                "nocodb"
+            ],
+            "description": "Paperless office and compliance workstation bundling Paperless-ngx automated OCR document scanning, Stirling-PDF sovereign web PDF utility, Actual Budget financial tracking, and NocoDB relational database.",
+            "icon": "fa-solid fa-file-shield",
+            "name": "Digital Archive & Document Compliance",
+            "network_type": "bridge"
+        },
+        "dns-shield-stack": {
+            "badge": "Security & Privacy",
+            "components": [
+                "adguard-home",
+                "unbound"
+            ],
+            "description": "Network-wide privacy barrier bundling AdGuard Home DNS sinkhole with Unbound recursive DNS resolver for zero-ISP tracking.",
+            "icon": "fa-solid fa-shield-halved",
+            "name": "DNS & Ad-Blocking Privacy Shield",
             "network_type": "bridge"
         },
         "media-stack": {
-            "description": "Unified home media streaming and automated collection pipeline bundling Jellyfin media server, Radarr (movies), Sonarr (TV shows), Prowlarr (indexer management), Jellyseerr (interactive media requests), qBittorrent, and Bazarr.",
-            "name": "Media Stack",
+            "badge": "Media Suite",
+            "components": [
+                "jellyfin",
+                "radarr",
+                "sonarr",
+                "prowlarr",
+                "jellyseerr",
+                "qbittorrent",
+                "bazarr"
+            ],
+            "description": "Unified sovereign media streaming pipeline bundling Jellyfin media server, Radarr (movies), Sonarr (TV shows), Prowlarr (indexer proxy), Jellyseerr (requests), qBittorrent, and Bazarr (subtitles).",
+            "icon": "fa-solid fa-photo-film",
+            "name": "Media Streaming & Servarr Suite",
+            "network_type": "bridge"
+        },
+        "modern-workplace": {
+            "badge": "MSP Turnkey Bundle",
+            "components": [
+                "nextcloud",
+                "nextcloud-db",
+                "nextcloud-redis",
+                "nextcloud-db-dumper",
+                "notify-push",
+                "vaultwarden"
+            ],
+            "description": "Turnkey Microsoft 365 & Google Workspace alternative bundling enterprise Nextcloud Hub, dedicated MariaDB, Redis cache, automated database dumper, high-performance push notifications, and Vaultwarden centralized password management.",
+            "icon": "fa-solid fa-briefcase",
+            "name": "The Modern Sovereign Workplace",
             "network_type": "bridge"
         },
         "monitoring-stack": {
@@ -3193,9 +3263,43 @@
             "name": "Nextcloud Stack",
             "network_type": "bridge"
         },
+        "observability-analytics": {
+            "badge": "MSP Turnkey Bundle",
+            "components": [
+                "beszel",
+                "prometheus",
+                "grafana",
+                "plausible",
+                "uptime-kuma"
+            ],
+            "description": "Full-stack server fleet observability and GDPR-compliant website analytics bundling Beszel lightweight metrics, Prometheus time-series collector, Grafana visualization dashboards, Plausible cookie-less web analytics, and Uptime Kuma status monitors.",
+            "icon": "fa-solid fa-chart-line",
+            "name": "Observability & Privacy Analytics",
+            "network_type": "bridge"
+        },
         "open-webui-ollama": {
-            "description": "Integrated AI chatbot and inference platform combining Open WebUI with the local Ollama LLM engine.",
-            "name": "Open WebUI & Ollama Stack",
+            "badge": "AI & LLM Stack",
+            "components": [
+                "ollama",
+                "open-webui",
+                "litellm"
+            ],
+            "description": "Integrated sovereign AI chatbot and inference platform combining Open WebUI with the local Ollama LLM engine and LiteLLM unified gateway.",
+            "icon": "fa-solid fa-robot",
+            "name": "Open WebUI & Ollama AI Studio",
+            "network_type": "bridge"
+        },
+        "smarthome-stack": {
+            "badge": "Smart Home & IoT",
+            "components": [
+                "homeassistant",
+                "esphome",
+                "node-red",
+                "scrypted"
+            ],
+            "description": "Local home automation workstation combining Home Assistant, ESPHome firmware builder, Node-RED visual logic orchestrator, and Scrypted video integration.",
+            "icon": "fa-solid fa-house-signal",
+            "name": "Sovereign Smart Home Hub",
             "network_type": "bridge"
         }
     }

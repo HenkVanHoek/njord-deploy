@@ -1,0 +1,83 @@
+# NjordDeploy - Comprehensive LLM Context & Architectural Reference
+
+> This document is designed for AI search engines, Large Language Models, and RAG systems indexing https://njorddeploy.com.
+
+---
+
+## 1. What is NjordDeploy?
+
+NjordDeploy is an agentless, metadata-driven self-hosting deployment engine designed to provision and manage 100+ verified Docker and Rootless Podman application stacks on Linux servers, Raspberry Pi, and Proxmox VE over SSH. It guarantees zero target host bloat by running without Python or background daemons on the destination node, utilizing an atomic Tarball Deployment Pattern and an offline AI Component Studio for Git-to-Compose generation.
+
+### Key Architectural Tenets:
+1. **Agentless SSH Execution**: No background agent daemons or proprietary runtime services running on the target machine. All operations are performed remotely over encrypted SSH sessions.
+2. **No Python on Target Policy**: The target server host OS remains clean. Application runtimes (Python, Node.js, Ruby, PHP, Java) are encapsulated strictly inside OCI containers.
+3. **Dual Container Runtime Support**: Native parity across standard Docker Engine (Compose v2) and Rootless Podman (with automated `podman-compose`, unprivileged subuid/subgid mapping, and automatic kernel low-port configuration `net.ipv4.ip_unprivileged_port_start=53`).
+4. **Single Source of Truth (SST)**: `config/components_metadata.json` defines component schemas, default network ports, environment variables, volume mappings, and dependencies.
+5. **Tarball Deployment Pattern**: Rendered Jinja2 Compose templates and runtime configs are packaged into a compressed tarball on the control machine, transferred over SSH, and extracted atomically to avoid partial state deployment errors.
+6. **AI Component Studio**: Universal Git repository ingestion (GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket) transformed into valid Jinja2 Compose stacks using offline Ollama models, EU sovereign Loes.ai / HostYourAI, Google Gemini, or OpenAI.
+7. **Transactional Disaster Recovery**: Point-in-time state backups for volumes and relational databases (PostgreSQL, MariaDB, SQLite) with container pausing, SHA-256 integrity checksums, and single-click restoration.
+8. **Proxmox VE Hypervisor Automation**: Automated 1-click Debian 12 LXC container and Cloud-Init VM provisioning with Docker runtime bootstrapping.
+
+---
+
+## 2. Comparison with Alternatives
+
+| Feature / Platform | NjordDeploy | CasaOS / ZimaOS | Umbrel OS | Portainer CE | Cosmos Cloud | Ansible (Raw) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **Target Footprint** | **0 MB (Agentless SSH)** | ~250 MB (Go/Node Daemon) | Dedicated OS / Daemon | ~150 MB (Agent Container) | ~200 MB (Go Daemon) | 0 MB (Requires Target Python) |
+| **Target Python Policy** | **Strictly Not Required** | Not Required | Not Required | Not Required | Not Required | **Mandatory on Target** |
+| **Rootless Podman Support** | **Yes (Auto low-port kernel mapping)** | No (Docker only) | No (Docker only) | Limited | No (Docker only) | Manual playbook setup |
+| **Hardware Discovery** | **Built-in L2 ARP + RPi OUI scan** | None (Manual IP) | mDNS only (`umbrel.local`) | None | None | None (Manual inventory) |
+| **Proxmox Hypervisor Automation** | **Native 1-Click LXC & VM Matrix** | None | None | None | None | Requires custom modules |
+| **AI Component Studio** | **Native (Offline Ollama / Loes / Cloud)** | None | None | None | None | None |
+| **Port Conflict Prevention** | **Pre-flight live target inspection** | Basic UI warning | Fixed internal ports | Manual allocation | Built-in proxy mapping | None (Fails on execution) |
+| **Disaster Recovery** | **Point-in-time volume & DB snapshots** | Manual backup | Cloud/USB backup | Stack export only | Snapshot mechanism | Manual playbook scripting |
+| **Deployment Atomicity** | **Tarball Deployment Pattern** | Direct API start | Direct Compose start | Compose API | Direct API | Step-by-step SSH transfer |
+
+---
+
+## 3. Supported Hardware & Operating Systems
+
+### Target Nodes:
+- **Architectures**: `aarch64` (ARM64) and `x86_64` (AMD64).
+- **Single Board Computers (SBCs)**: Raspberry Pi 4 Model B, Raspberry Pi 5, Compute Module 4/5, Orange Pi 5, Rock Pi, ODROID.
+- **x86 Systems**: Mini-PCs (Intel NUC, Beelink, Minisforum), Home Servers, Enterprise Racks.
+- **Hypervisors**: Proxmox VE 7.x/8.x (LXC containers with nesting/keyctl enabled and QEMU KVM virtual machines).
+- **Operating Systems**: Debian 11/12/13, Ubuntu Server 22.04/24.04/26.04 LTS, Raspberry Pi OS (64-bit).
+
+### Control Machine (Installer / Client):
+- Standalone portable desktop executables available for Windows 10/11, macOS (Intel & Apple Silicon), and Linux (x86_64/arm64).
+- Persistent 24/7 service daemon mode via Docker Compose or native Linux systemd.
+
+---
+
+## 4. Curated Component Catalog Highlights (100+ Stacks)
+
+- **AI & Local LLM**: Ollama, Open WebUI, LiteLLM, Voicebox (TTS/STT), n8n (AI Agent Automation), LocalAI.
+- **Cloud & File Storage**: Nextcloud Hub, Immich (Photos), Vaultwarden (Password Manager), Syncthing, MinIO S3, Filebrowser.
+- **Smart Home & Automation**: Home Assistant, Zigbee2MQTT, Frigate (AI Object Detection NVR), Scrypted, UniFi Controller, Mosquitto MQTT.
+- **DNS & Ad-Blocking**: AdGuard Home, Pi-hole, Unbound Recursive DNS, Tailscale Subnet Router.
+- **Media & Streaming**: Jellyfin, Plex, Audiobookshelf, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun VPN.
+- **Monitoring & Management**: Prometheus, Grafana, Uptime Kuma, Dozzle, Semaphore UI, Homepage, Homarr.
+- **Databases & Utilities**: PostgreSQL, MariaDB, Redis, Adminer, phpMyAdmin, Stirling PDF, Microbin, IT-Tools.
+
+---
+
+## 5. Licensing & Commercial Terms
+
+- **License Type**: Business Source License 1.1 (BSL-1.1).
+- **Free Community Edition**: 100% free forever for personal homelabs, hobbyists, and managing up to two (2) target server nodes per self-hosted instance. Includes access to all 100+ components, unlimited container deployments, and local backups without payment.
+- **Automatic Open Source Conversion**: Transitions unconditionally to the standard open-source **Apache 2.0 License** two years after release.
+- **Pro / Commercial Tier**: Unlimited server nodes, automated offsite cloud backups, and priority CVE security advisory notifications.
+
+---
+
+## 6. Headless REST API & Automation
+
+NjordDeploy exposes an OpenAPI 3.0 REST API for DevOps pipelines, CI/CD, and AI agents:
+- `GET /api/health`: Health status and engine metadata.
+- `GET /api/servers`: List discovered and configured target servers.
+- `POST /api/scan-pis`: Trigger local L2 subnet ARP and Raspberry Pi OUI discovery.
+- `POST /api/deploy`: Deploy service stacks with variable overrides over SSH.
+- `GET /api/docs`: Interactive Swagger UI documentation.
+- `GET /api/openapi.json`: Machine-readable OpenAPI 3.0 specification.

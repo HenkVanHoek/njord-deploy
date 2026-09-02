@@ -93,3 +93,22 @@ NjordDeploy includes AI-powered failure diagnostics and automatic stack bootstra
 * **HostYourAI / Loes (EU):** GDPR and EU AI Act compliant European private cloud. Portal: [HostYourAI](https://hostyourai.com) (`HOSTYOURAI_API_KEY`).
 * **Ollama Local (Offline):** 100% private, offline LLMs running locally without API keys. Download: [Ollama](https://ollama.com) (`OLLAMA_BASE_URL=http://localhost:11434/v1`).
 * **Custom Endpoints:** Compatible with any OpenAI-standard chat completion API (`CUSTOM_AI_BASE_URL`, `CUSTOM_AI_API_KEY`).
+
+---
+
+## 6. 1-Click Turnkey Bundles & Software Packages
+
+In addition to granular per-service selection, NjordDeploy provides curated **1-Click Turnkey Bundles** in Step 3 of the Configurator wizard. Selecting a bundle automatically selects and coordinates all constituent companion services, databases, and caches:
+
+### 6.1 MSP & Enterprise Business Bundles
+* **The Modern Sovereign Workplace:** Full Nextcloud cluster (database, Redis cache, backup dumper, notify-push) + Vaultwarden team password manager.
+* **Digital Archive & Document Compliance:** Paperless-ngx OCR scanning + Stirling-PDF + Actual Budget + NocoDB.
+* **Agile Operations & Secure Chat:** Vikunja tasks + Focalboard Kanban + Gitea code/CI/CD + Conduit Matrix server + Memos.
+* **Observability & Privacy Analytics:** Beszel host metrics + Prometheus + Grafana dashboards + Plausible web analytics + Uptime Kuma monitoring.
+
+### 6.2 Curated Homelab Stacks
+* **Open WebUI & Ollama AI Studio:** Local offline LLM chatbot + OpenAI proxy gateway.
+* **Media Streaming Suite:** Jellyfin + Servarr suite (*arr stack) + qBittorrent.
+* **Sovereign Smart Home Hub:** Home Assistant + ESPHome + Node-RED + Scrypted.
+* **DNS & Privacy Shield:** AdGuard Home + Unbound recursive DNS resolver.
+* **Reverse Proxy & Remote Workspace:** Caddy HTTPS proxy + FileBrowser web manager.

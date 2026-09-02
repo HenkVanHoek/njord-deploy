@@ -43,6 +43,7 @@
 ## 🌟 Key Highlights
 
 * **100+ Verified Sovereign Stacks**: Deploy pre-tested applications spanning AI/LLMs (Ollama, Open WebUI, LiteLLM), Cloud Storage (Immich, Nextcloud, Syncthing, MinIO), Home Automation (Home Assistant, ESPHome, Zigbee2MQTT), Security (Vaultwarden, AdGuard Home, Traefik, CrowdSec), and Media (Jellyfin, Plex, Audiobookshelf) (see [Supported Services Catalog](docs/SUPPORTED_SERVICES.md)).
+* **1-Click Turnkey Bundles & Stacks**: Instant, single-click deployment presets for MSPs (*Modern Workplace*, *Digital Archive & Compliance*, *Agile Operations*, *Observability*) and Homelabs (*AI Studio*, *Media Suite*, *Smart Home*, *DNS Shield*) with zero port collisions and automated companion dependency wiring.
 * **Zero Target Host Footprint**: Connects over agentless SSH. Does **not** require or install Python, compilers, or background agent daemons on the target machine.
 * **Dual-Engine Architecture (Docker & Rootless Podman)**: Universal container abstraction supporting standard Docker CE and unprivileged Rootless Podman with automatic low-port kernel mapping (`net.ipv4.ip_unprivileged_port_start=53`) and user session lingering.
 * **AI Component Studio**: Convert any public or self-hosted Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket**) into a validated Jinja2 Compose stack powered by local offline Ollama models, EU sovereign Loes.ai / HostYourAI, Google Gemini, or OpenAI (see [Developer AI Guide](docs/DEVELOPER_AI_AND_SYNC_GUIDE.md)).

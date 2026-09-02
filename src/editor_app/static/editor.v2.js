@@ -2331,13 +2331,29 @@ document.addEventListener('DOMContentLoaded', () => {
             packageMembers[pkgId] = [];
         });
 
+        const allCompsMap = new Map();
         componentData.groups.forEach(group => {
             group.components.forEach(comp => {
+                allCompsMap.set(comp.id, comp);
                 const pkgId = comp.package_id;
                 if (pkgId && packageMembers[pkgId] !== undefined) {
-                    packageMembers[pkgId].push(comp);
+                    if (!packageMembers[pkgId].some(c => c.id === comp.id)) {
+                        packageMembers[pkgId].push(comp);
+                    }
                 }
             });
+        });
+
+        Object.keys(componentData.packages).forEach(pkgId => {
+            const pkg = componentData.packages[pkgId];
+            if (pkg && Array.isArray(pkg.components)) {
+                pkg.components.forEach(cid => {
+                    const comp = allCompsMap.get(cid);
+                    if (comp && !packageMembers[pkgId].some(c => c.id === comp.id)) {
+                        packageMembers[pkgId].push(comp);
+                    }
+                });
+            }
         });
 
         Object.keys(componentData.packages).forEach(pkgId => {
