@@ -928,7 +928,7 @@
         "error_message": ""
     },
     {
-        "timestamp": "2026-09-05 15:18:40",
+        "timestamp": "2026-09-05 16:24:43",
         "package_id": "agile-ops",
         "package_name": "Agile Operations & Secure Chat",
         "status": "success",
@@ -944,7 +944,7 @@
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null,
-                "screenshot_path": "images/test_screenshots/pkg_vikunja_lxc_podman_20260905_151915.png",
+                "screenshot_path": "images/test_screenshots/pkg_vikunja_lxc_podman_20260905_162511.png",
                 "http_url": "http://10.99.0.199:3456"
             },
             "focalboard": {
@@ -953,7 +953,7 @@
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null,
-                "screenshot_path": "images/test_screenshots/pkg_focalboard_lxc_podman_20260905_151919.png",
+                "screenshot_path": "images/test_screenshots/pkg_focalboard_lxc_podman_20260905_162519.png",
                 "http_url": "http://10.99.0.199:8099"
             },
             "gitea": {
@@ -962,7 +962,7 @@
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null,
-                "screenshot_path": "images/test_screenshots/pkg_gitea_lxc_podman_20260905_151924.png",
+                "screenshot_path": "images/test_screenshots/pkg_gitea_lxc_podman_20260905_162523.png",
                 "http_url": "http://10.99.0.199:3000"
             },
             "conduit": {
@@ -980,40 +980,45 @@
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null,
-                "screenshot_path": "images/test_screenshots/pkg_memos_lxc_podman_20260905_151928.png",
+                "screenshot_path": "images/test_screenshots/pkg_memos_lxc_podman_20260905_162526.png",
                 "http_url": "http://10.99.0.199:5230"
             }
         },
-        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_lxc_podman_20260905_151840.md",
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_lxc_podman_20260905_162443.md",
         "error_message": ""
     },
     {
+        "timestamp": "2026-09-05 16:25:29",
         "package_id": "caddy-filebrowser-stack",
         "package_name": "Reverse Proxy & Remote Workspace",
-        "status": "failed",
+        "status": "success",
         "mode": "lxc",
         "engine": "podman",
-        "vmid": 106,
-        "ip": "192.168.178.75",
+        "vmid": 104,
+        "ip": "10.99.0.199",
         "deployment": "success",
         "components": {
             "caddy": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'caddy'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_caddy_lxc_podman_20260905_162548.png",
+                "http_url": "http://10.99.0.199:80"
             },
             "filebrowser": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'filebrowser'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_filebrowser_lxc_podman_20260905_162551.png",
+                "http_url": "http://10.99.0.199:8080"
             }
         },
-        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
-        "error_message": "Successfully checked 2 components."
+        "report_file": "PROXMOX_PACKAGE_TESTS_caddy-filebrowser-stack_lxc_podman_20260905_162529.md",
+        "error_message": ""
     },
     {
         "timestamp": "2026-09-05 15:21:20",

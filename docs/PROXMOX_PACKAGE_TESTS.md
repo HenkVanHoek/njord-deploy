@@ -1,7 +1,7 @@
 # Proxmox Automated Package Testing Report
 
-**Run Timestamp:** 2026-09-05 15:22:54
-**Total Packages Tested:** 25 | **Passed:** 22 | **Failed:** 3
+**Run Timestamp:** 2026-09-05 16:25:54
+**Total Packages Tested:** 25 | **Passed:** 23 | **Failed:** 2
 
 ## Packages Summary Table
 
@@ -30,7 +30,7 @@
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | VM | DOCKER | 104 | 192.168.178.178 | success | **✅ PASS** |
 | `smarthome-stack` | Sovereign Smart Home Hub | VM | DOCKER | 104 | 192.168.178.172 | success | **✅ PASS** |
 | `agile-ops` | Agile Operations & Secure Chat | LXC | PODMAN | 104 | 10.99.0.199 | success | **✅ PASS** |
-| `caddy-filebrowser-stack` | Reverse Proxy & Remote Workspace | LXC | PODMAN | 106 | 192.168.178.75 | success | **❌ FAIL** |
+| `caddy-filebrowser-stack` | Reverse Proxy & Remote Workspace | LXC | PODMAN | 104 | 10.99.0.199 | success | **✅ PASS** |
 | `agile-ops` | Agile Operations & Secure Chat | VM | PODMAN | 104 | 10.99.0.199 | success | **✅ PASS** |
 
 ## Detailed Components Verification Status
@@ -503,44 +503,52 @@ Successfully checked 4 components.
 ##### Component: `vikunja`
 - **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
 
-![vikunja Web UI](images/test_screenshots/pkg_vikunja_lxc_podman_20260905_151915.png)
+![vikunja Web UI](images/test_screenshots/pkg_vikunja_lxc_podman_20260905_162511.png)
 
 ##### Component: `focalboard`
 - **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
 
-![focalboard Web UI](images/test_screenshots/pkg_focalboard_lxc_podman_20260905_151919.png)
+![focalboard Web UI](images/test_screenshots/pkg_focalboard_lxc_podman_20260905_162519.png)
 
 ##### Component: `gitea`
 - **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
 
-![gitea Web UI](images/test_screenshots/pkg_gitea_lxc_podman_20260905_151924.png)
+![gitea Web UI](images/test_screenshots/pkg_gitea_lxc_podman_20260905_162523.png)
 
 ##### Component: `memos`
 - **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
 
-![memos Web UI](images/test_screenshots/pkg_memos_lxc_podman_20260905_151928.png)
+![memos Web UI](images/test_screenshots/pkg_memos_lxc_podman_20260905_162526.png)
 
 
 ---
 
 ### Package: `caddy-filebrowser-stack` (Reverse Proxy & Remote Workspace)
 - **Target:** LXC | **Engine:** PODMAN
-- **VMID:** 106
-- **IP:** 192.168.178.75
+- **VMID:** 104
+- **IP:** 10.99.0.199
 - **Deployment:** success
-- **Overall Status:** ❌ FAIL
+- **Overall Status:** ✅ PASS
 
 #### Component Health Status:
 
 | Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `caddy` | Stopped | N/A | None | unknown | ❌ FAILED |
-| `filebrowser` | Stopped | N/A | None | unknown | ❌ FAILED |
+| `caddy` | Running | OK | None | unknown | ✅ OK |
+| `filebrowser` | Running | OK | None | unknown | ✅ OK |
 
-**Error / Failures Message:**
-```
-Successfully checked 2 components.
-```
+#### Web UI Screenshots:
+
+##### Component: `caddy`
+- **Endpoint:** [http://10.99.0.199:80](http://10.99.0.199:80)
+
+![caddy Web UI](images/test_screenshots/pkg_caddy_lxc_podman_20260905_162548.png)
+
+##### Component: `filebrowser`
+- **Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
+
+![filebrowser Web UI](images/test_screenshots/pkg_filebrowser_lxc_podman_20260905_162551.png)
+
 
 ---
 
