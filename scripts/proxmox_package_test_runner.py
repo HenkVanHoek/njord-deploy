@@ -56,6 +56,7 @@ TEST_PORT_OVERRIDES = {
 
 def setup_proxmox_client() -> ProxmoxClient:
     """Initializes ProxmoxClient from environment variables."""
+    load_dotenv(project_root / ".env", override=False)
     host = os.getenv("PROXMOX_HOST") or "https://192.168.178.51:8006"
     user = os.getenv("PROXMOX_USER") or "root@pam"
     token_id = os.getenv("PROXMOX_TOKEN_ID") or ""
@@ -315,8 +316,12 @@ def verify_package_health(
                 )
                 if matched_container:
                     err_logs: List[str] = []
+                    log_cmd = (
+                        f"{sudo_pfx}{cont_cli} logs {matched_container} 2>&1 "
+                        "| tail -n 100"
+                    )
                     ssh_mgr.execute_command(
-                        f"{sudo_pfx}{cont_cli} logs {matched_container} --tail 100",
+                        log_cmd,
                         lambda x: err_logs.append(x),
                         check_exit_code=False,
                     )
@@ -329,7 +334,7 @@ def verify_package_health(
                 # Check container logs for tracebacks or fatal errors
                 comp_logs: List[str] = []
                 ssh_mgr.execute_command(
-                    f"{sudo_pfx}{cont_cli} logs {matched_container} --tail 100",
+                    f"{sudo_pfx}{cont_cli} logs {matched_container} 2>&1 | tail -n 100",
                     lambda x: comp_logs.append(x),
                     check_exit_code=False,
                 )
@@ -412,10 +417,22 @@ def verify_package_health(
                             f"(retrying up to {max_retries} times)..."
                         )
                         probe_success = False
+                        probe_timeout = (
+                            25
+                            if comp_id
+                            in [
+                                "nextcloud",
+                                "paperless-ngx",
+                                "open-webui",
+                                "immich",
+                                "stirling-pdf",
+                            ]
+                            else 10
+                        )
                         for attempt in range(1, max_retries + 1):
                             try:
                                 res = requests.get(
-                                    url, timeout=5, verify=False
+                                    url, timeout=probe_timeout, verify=False
                                 )  # nosec B501
                                 if res.status_code in [200, 301, 302, 401, 403]:
                                     comp_http_ok = True
@@ -443,7 +460,9 @@ def verify_package_health(
                             # noinspection PyBroadException
                             try:
                                 res = requests.get(
-                                    fallback_url, timeout=5, verify=False
+                                    fallback_url,
+                                    timeout=probe_timeout,
+                                    verify=False,
                                 )  # nosec B501
                                 if res.status_code in [200, 301, 302, 401, 403]:
                                     comp_http_ok = True
@@ -498,6 +517,46 @@ def verify_package_health(
                                 )
                         else:
                             overall_success = False
+                            diag_lines: List[str] = []
+                            if matched_container:
+                                fail_comp_logs: List[str] = []
+                                ssh_mgr.execute_command(
+                                    f"{sudo_pfx}{cont_cli} logs "
+                                    f"{matched_container} 2>&1 | tail -n 60",
+                                    lambda x: fail_comp_logs.append(x),
+                                    check_exit_code=False,
+                                )
+                                if fail_comp_logs:
+                                    diag_lines.append(
+                                        f"=== Logs for {matched_container} ==="
+                                    )
+                                    diag_lines.extend(fail_comp_logs[-40:])
+                            if "paperless" in comp_id:
+                                for dep in (
+                                    "njorddeploy-paperless-broker",
+                                    "njorddeploy-paperless-db",
+                                ):
+                                    dep_logs: List[str] = []
+                                    dep_cmd = (
+                                        f"{sudo_pfx}{cont_cli} logs {dep} 2>&1 "
+                                        "| tail -n 30"
+                                    )
+                                    ssh_mgr.execute_command(
+                                        dep_cmd,
+                                        lambda x: dep_logs.append(x),
+                                        check_exit_code=False,
+                                    )
+                                    if dep_logs:
+                                        diag_lines.append(f"=== Logs for {dep} ===")
+                                        diag_lines.extend(dep_logs[-20:])
+                            if diag_lines:
+                                tail_str = "\n".join(diag_lines)
+                                logger.warning(
+                                    f"Diagnostics for {comp_id}:\n{tail_str}"
+                                )
+                                comp_error_message += (
+                                    f"\nStack diagnostics:\n{tail_str}"
+                                )
 
             comp_record = {
                 "running": is_running,
@@ -512,9 +571,21 @@ def verify_package_health(
 
         results["success"] = overall_success
         results["components"] = component_status
-        results["details"] = (
-            f"Successfully checked {len(package_components)} components."
-        )
+        if overall_success:
+            results["details"] = (
+                f"Successfully checked {len(package_components)} components."
+            )
+        else:
+            failed_msgs: List[str] = []
+            for cid, cinfo in component_status.items():
+                if not cinfo.get("running"):
+                    failed_msgs.append(f"{cid} (not running)")
+                elif cinfo.get("http_ok") is False:
+                    failed_msgs.append(f"{cid} (HTTP probe failed)")
+                elif cinfo.get("logs_error"):
+                    failed_msgs.append(f"{cid} (fatal logs)")
+            reasons = ", ".join(failed_msgs) if failed_msgs else "unspecified error"
+            results["details"] = f"Verification failed for components: {reasons}"
 
     finally:
         ssh_mgr.close()
@@ -1074,6 +1145,123 @@ def calculate_package_resources(
     }
 
 
+def execute_target_cleanup(
+    vm_ip: str,
+    ssh_user: str,
+    vm_pass: str,
+    engine: str,
+    is_lxc: bool = True,
+) -> None:
+    """Performs a fast, in-place container and port teardown on the target node."""
+    clean_cli = "podman" if engine.lower() == "podman" else "docker"
+    user_clean = ""
+    if clean_cli == "podman" and ssh_user and ssh_user != "root":
+        user_clean = (
+            f'su - {ssh_user} -c "XDG_RUNTIME_DIR=/run/user/$(id -u) '
+            "podman stop -a -t 2 2>/dev/null || true; "
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+            "podman rm -fa 2>/dev/null || true; "
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+            "podman volume prune -f 2>/dev/null || true; "
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+            "podman image prune -a -f 2>/dev/null || true; "
+            "for net in njorddeploy_net nextcloud-internal; do "
+            "if XDG_RUNTIME_DIR=/run/user/$(id -u) podman network inspect "
+            "$net 2>/dev/null | grep -q '\"dns_enabled\": false'; then "
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) podman network rm -f $net "
+            "2>/dev/null || true; fi; "
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+            "podman network create $net "
+            '2>/dev/null || true; done"; '
+        )
+
+    cleanup_script = (
+        "if [ -d /opt/njorddeploy ]; then "
+        f"  (cd /opt/njorddeploy && {clean_cli} compose down -v "
+        "--remove-orphans 2>/dev/null || true); "
+        f"  (cd /opt/njorddeploy && {clean_cli}-compose down -v "
+        "--remove-orphans 2>/dev/null || true); "
+        "fi; "
+        f"{clean_cli} stop -a -t 2 2>/dev/null || true; "
+        f"{clean_cli} rm -fa 2>/dev/null || true; "
+        f"{clean_cli} volume prune -f 2>/dev/null || true; "
+        f"{clean_cli} image prune -a -f 2>/dev/null || true; "
+        f"{clean_cli} builder prune -a -f 2>/dev/null || true; "
+        f"{user_clean}"
+        "pkill -9 -f rootlessport 2>/dev/null || true; "
+        "pkill -9 -f slirp4netns 2>/dev/null || true; "
+        "pkill -9 -f pasta 2>/dev/null || true; "
+        "pkill -9 -f conmon 2>/dev/null || true; "
+        f'if [ "{clean_cli}" = "podman" ]; then '
+        "if [ -f /usr/bin/systemd-run ] && "
+        "[ ! -f /usr/bin/systemd-run.real ]; then "
+        "mv /usr/bin/systemd-run /usr/bin/systemd-run.real && "
+        'printf \'#!/bin/bash\\nif [ "$(id -u)" -eq 0 ]; then\\n'
+        '  args=()\\n  for arg in "$@"; do\\n'
+        '    if [ "$arg" != "--user" ]; then args+=("$arg"); fi\\n'
+        '  done\\n  exec /usr/bin/systemd-run.real "${args[@]}"\\n'
+        'else\\n  exec /usr/bin/systemd-run.real "$@"\\nfi\\n\' '
+        "> /usr/bin/systemd-run && chmod +x /usr/bin/systemd-run; fi; "
+        "for net in njorddeploy_net nextcloud-internal; do "
+        "if podman network inspect $net 2>/dev/null | "
+        "grep -q '\"dns_enabled\": false'; then "
+        "podman network rm -f $net 2>/dev/null || true; fi; "
+        "podman network create $net 2>/dev/null || true; done; else "
+        f"{clean_cli} network create njorddeploy_net 2>/dev/null || true; "
+        f"{clean_cli} network create nextcloud-internal 2>/dev/null || true; fi; "
+        "mkdir -p /tmp/.ansible && "
+        "chmod 1777 /tmp/.ansible 2>/dev/null || true; "
+        "rm -rf /opt/njorddeploy/* /opt/njorddeploy_data/* "
+        "/var/cache/apt/archives/* /tmp/containerd* "
+        "/tmp/.ansible/* 2>/dev/null || true; "
+        "journalctl --vacuum-time=1m 2>/dev/null || true; "
+        "mkdir -p /etc/docker 2>/dev/null || true; "
+        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
+        '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
+        '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
+        "> /etc/docker/daemon.json 2>/dev/null || true; "
+        "mkdir -p /etc/containers/registries.conf.d 2>/dev/null || true; "
+        'printf \'[[registry]]\\nprefix = "docker.io"\\n'
+        'location = "docker.io"\\n\\n'
+        '[[registry.mirror]]\\nlocation = "10.99.0.2:5000"\\n'
+        "insecure = true\\n' "
+        "> /etc/containers/registries.conf.d/mirror.conf 2>/dev/null || true"
+    )
+    b64_clean = base64.b64encode(cleanup_script.encode("utf-8")).decode("ascii")
+    # noinspection PyBroadException
+    try:
+        cleanup_ssh = SSHManager(
+            hostname=vm_ip,
+            username=ssh_user,
+            password=vm_pass,
+            allow_auto_add=True,
+            load_system_keys=False,
+        )
+        connected = False
+        for _ in range(6):
+            connected, _ = cleanup_ssh.connect()
+            if connected:
+                break
+            time.sleep(2)
+        if connected:
+            if is_lxc or ssh_user == "root":
+                clean_cmd = f"bash -c 'echo {b64_clean} | base64 -d | bash'"
+            else:
+                clean_cmd = (
+                    f"echo '{vm_pass}' | sudo -S "
+                    f"bash -c 'echo {b64_clean} | base64 -d | bash'"
+                )
+            cleanup_ssh.execute_command(
+                clean_cmd, lambda msg: None, check_exit_code=False
+            )
+            cleanup_ssh.close()
+    except Exception as clean_err:
+        logger.warning(f"Note: In-place cleanup encountered an issue: {clean_err}")
+
+
+_execute_target_cleanup = execute_target_cleanup
+
+
 def run_package_environment_tests(
     proxmox_client: ProxmoxClient,
     node: str,
@@ -1176,6 +1364,26 @@ def run_package_environment_tests(
                 )
                 if shared_lxc_vmid is None:
                     raise RuntimeError("Failed to allocate shared LXC VMID.")
+
+                # Expand LXC rootfs disk to 60GB for package testing headroom
+                # noinspection PyBroadException
+                try:
+                    resize_res = proxmox_client.resize_lxc_disk(
+                        node=node,
+                        vmid=shared_lxc_vmid,
+                        disk="rootfs",
+                        size="+40G",
+                    )
+                    r_upid = resize_res.get("data")
+                    if isinstance(r_upid, str):
+                        wait_for_proxmox_task(proxmox_client, node, r_upid)
+                    logger.info(
+                        f"Expanded LXC {shared_lxc_vmid} rootfs disk "
+                        f"(+40G to ~60GB)."
+                    )
+                except Exception as r_err:
+                    logger.warning(f"Could not resize LXC rootfs disk: {r_err}")
+
                 start_lxc(proxmox_client, node, shared_lxc_vmid)
             else:
                 logger.info(
@@ -1192,7 +1400,7 @@ def run_package_environment_tests(
                     "cores": 4,
                     "memory": 4096,
                     "swap": 512,
-                    "rootfs": "local-lvm:40",
+                    "rootfs": "local-lvm:60",
                     "net0": lxc_net,
                     "features": "nesting=1",
                     "unprivileged": 1,
@@ -1275,7 +1483,6 @@ def run_package_environment_tests(
             return []
 
     try:
-        clean_cli = "podman" if engine == "podman" else "docker"
         ssh_user = "root" if is_lxc else vm_user
 
         for pkg_id, pkg in target_packages.items():
@@ -1304,6 +1511,33 @@ def run_package_environment_tests(
             if not package_components:
                 logger.warning(f"No components found for package {pkg_id}. Skipping.")
                 continue
+
+            if getattr(args, "skip_passed", False):
+                pkg_results_file = (
+                    project_root / "tests" / "proxmox_package_results.json"
+                )
+                if pkg_results_file.exists():
+                    try:
+                        with open(pkg_results_file, "r", encoding="utf-8") as f:
+                            hist_data = json.load(f)
+                        already_passed = any(
+                            r.get("package_id") == pkg_id
+                            and (r.get("mode") or "").lower() == mode.lower()
+                            and (r.get("engine") or "").lower() == engine.lower()
+                            and r.get("status") == "success"
+                            for r in hist_data
+                            if isinstance(r, dict)
+                        )
+                        if already_passed:
+                            logger.info(
+                                f"⏩ [SKIP-PASSED] Package '{pkg_id}' [{mode.upper()} / "
+                                f"{engine.upper()}] already passed. Skipping."
+                            )
+                            continue
+                    except Exception as hist_err:
+                        logger.warning(
+                            f"Failed reading test history for skip-passed: {hist_err}"
+                        )
 
             pkg_res = calculate_package_resources(pkg_id, package_components)
             logger.info(
@@ -1339,70 +1573,40 @@ def run_package_environment_tests(
             is_dedicated_vm = False
 
             try:
-                if is_lxc:
-                    # Clean engine state between packages
+                if is_lxc and vm_ip:
+                    # Clean engine state before testing package
                     logger.info(
                         f"Cleaning {engine.upper()} environment before testing "
                         f"package {pkg_id}..."
                     )
-                    cleanup_ssh = SSHManager(
-                        hostname=vm_ip,
-                        username=ssh_user,
-                        password=vm_pass,
-                        allow_auto_add=True,
-                        load_system_keys=False,
+                    _execute_target_cleanup(
+                        vm_ip=vm_ip,
+                        ssh_user=ssh_user,
+                        vm_pass=vm_pass,
+                        engine=engine,
+                        is_lxc=True,
                     )
-                    cleanup_connected = False
-                    for attempt in range(6):
-                        cleanup_connected, _ = cleanup_ssh.connect()
-                        if cleanup_connected:
-                            break
-                        time.sleep(3)
-                    if not cleanup_connected:
-                        raise RuntimeError(
-                            f"Cannot connect to shared LXC container {vm_ip} "
-                            "for cleanup."
-                        )
-
-                    cleanup_script = (
-                        f"running_c=$({clean_cli} ps -q 2>/dev/null); "
-                        f'if [ -n "$running_c" ]; then {clean_cli} stop $running_c '
-                        "2>/dev/null || true; fi; "
-                        f"all_c=$({clean_cli} ps -aq 2>/dev/null); "
-                        f'if [ -n "$all_c" ]; then {clean_cli} rm -f $all_c '
-                        "2>/dev/null || true; fi; "
-                        f"{clean_cli} system prune -af --volumes 2>/dev/null || true; "
-                        f"{clean_cli} network inspect njorddeploy_net "
-                        ">/dev/null 2>&1 || "
-                        f"{clean_cli} network create njorddeploy_net "
-                        "2>/dev/null || true; "
-                        "mkdir -p /tmp/.ansible && "
-                        "chmod 1777 /tmp/.ansible 2>/dev/null || true; "
-                        "mkdir -p /etc/docker 2>/dev/null || true; "
-                        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
-                        '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
-                        '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
-                        "> /etc/docker/daemon.json 2>/dev/null || true; "
-                        "mkdir -p /etc/containers/registries.conf.d "
-                        "2>/dev/null || true; "
-                        'printf \'[[registry]]\\nprefix = "docker.io"\\n'
-                        'location = "docker.io"\\n\\n'
-                        '[[registry.mirror]]\\nlocation = "10.99.0.2:5000"\\n'
-                        "insecure = true\\n' "
-                        "> /etc/containers/registries.conf.d/mirror.conf "
-                        "2>/dev/null || true; "
-                        "rm -rf /opt/njorddeploy/* 2>/dev/null || true"
-                    )
-                    b64_clean = base64.b64encode(cleanup_script.encode("utf-8")).decode(
-                        "ascii"
-                    )
-                    cleanup_ssh.execute_command(
-                        f"bash -c 'echo {b64_clean} | base64 -d | bash'",
-                        lambda msg: None,
-                        check_exit_code=False,
-                    )
-                    cleanup_ssh.close()
                     logger.info(f"{engine.upper()} environment clean.")
+
+                    if shared_lxc_vmid and pkg_res.get("extra_disk_gb", 0) > 20:
+                        # noinspection PyBroadException
+                        try:
+                            resize_res = proxmox_client.resize_lxc_disk(
+                                node=node,
+                                vmid=shared_lxc_vmid,
+                                disk="rootfs",
+                                size=f"+{pkg_res['extra_disk_gb']}G",
+                            )
+                            r_upid = resize_res.get("data")
+                            if isinstance(r_upid, str):
+                                wait_for_proxmox_task(proxmox_client, node, r_upid)
+                            logger.info(
+                                f"Expanded LXC {shared_lxc_vmid} disk "
+                                f"(+{pkg_res['extra_disk_gb']}G) for heavy "
+                                f"stack '{pkg_id}'."
+                            )
+                        except Exception as resize_err:
+                            logger.warning(f"Could not resize LXC disk: {resize_err}")
 
                 else:
                     if not check_host_memory_headroom(
@@ -1546,8 +1750,6 @@ def run_package_environment_tests(
                     vm_init_script = (
                         "#!/usr/bin/env bash\n"
                         "set -e\n"
-                        "if command -v cloud-init >/dev/null 2>&1; then "
-                        "cloud-init status --wait || true; fi\n"
                         "systemctl stop systemd-resolved 2>/dev/null || true\n"
                         "systemctl disable systemd-resolved 2>/dev/null || true\n"
                         "chattr -i /etc/resolv.conf 2>/dev/null || true\n"
@@ -1555,6 +1757,9 @@ def run_package_environment_tests(
                         "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' "
                         "> /etc/resolv.conf\n"
                         "chattr +i /etc/resolv.conf 2>/dev/null || true\n"
+                        "pkill -9 -f apt-get 2>/dev/null || true\n"
+                        "if command -v cloud-init >/dev/null 2>&1; then "
+                        "cloud-init status --wait || true; fi\n"
                         "mkdir -p /etc/docker 2>/dev/null || true\n"
                         'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
                         '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
@@ -1789,6 +1994,18 @@ def run_package_environment_tests(
                     except Exception as teardown_err:
                         logger.error(f"Failed to destroy VM {new_vmid}: {teardown_err}")
 
+                if is_lxc and vm_ip:
+                    logger.info(
+                        f"Tearing down {engine.upper()} stack for package {pkg_id}..."
+                    )
+                    _execute_target_cleanup(
+                        vm_ip=vm_ip,
+                        ssh_user=ssh_user,
+                        vm_pass=vm_pass,
+                        engine=engine,
+                        is_lxc=True,
+                    )
+
                 # Cleanup local output folder
                 folder_vmid = shared_lxc_vmid if is_lxc else new_vmid
                 if folder_vmid:
@@ -1936,7 +2153,7 @@ def run_proxmox_package_tests(cli_args) -> int:
             )
         logger.info(f"Total test executions: {len(matrix) * len(target_packages)}")
     else:
-        m, e = matrix[0]
+        (m, e), *_ = matrix
         logger.info(
             f"EXECUTING PACKAGE TEST RUN(S): Mode={m.upper()} | Engine={e.upper()}"
         )
@@ -2172,6 +2389,11 @@ if __name__ == "__main__":
         choices=["docker", "podman", "both", "all"],
         default="docker",
         help="Container engine: 'docker', 'podman', or 'both' (default: docker)",
+    )
+    parser.add_argument(
+        "--skip-passed",
+        action="store_true",
+        help="Skip packages that already passed in results history",
     )
     args = parser.parse_args()
 

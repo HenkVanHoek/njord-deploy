@@ -1,0 +1,16 @@
+{
+  "timestamp": "2026-09-05 21:38:05",
+  "package_id": "digital-archive",
+  "mode": "lxc",
+  "engine": "podman",
+  "error_summary": "Verification failed for components: paperless-ngx (HTTP probe failed)",
+  "dns_enabled": true,
+  "disk_free_mb": 56466,
+  "failed_containers": [
+    "paperless-ngx"
+  ],
+  "container_logs": {},
+  "recommended_action": "",
+  "auto_heal_attempted": false,
+  "heal_success": false
+}

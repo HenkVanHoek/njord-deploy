@@ -73,6 +73,7 @@ class TestRunnerManager:
         self.is_running: bool = False
         self.is_aborted: bool = False
         self.current_component: Optional[str] = None
+        self.target_type: str = "components"
         self.current_engine: str = "DOCKER"
         self.current_mode: str = "LXC"
         self.current_ip: Optional[str] = None
@@ -95,6 +96,7 @@ class TestRunnerManager:
         mode: str = "lxc",
         node: str = "pve",
         template_id: str = "902",
+        skip_passed: bool = False,
     ) -> bool:
         """Launches test runner subprocess (components or packages) in background."""
         with self.lock:
@@ -175,6 +177,8 @@ class TestRunnerManager:
                 cmd.extend(["--template-id", eff_template])
             if packages:
                 cmd.extend(["--packages", ",".join(packages)])
+            if skip_passed:
+                cmd.append("--skip-passed")
         else:
             runner_script = project_root / "scripts" / "proxmox_test_runner.py"
             cmd = [
@@ -192,6 +196,8 @@ class TestRunnerManager:
                 cmd.extend(["--template-id", eff_template])
             if components:
                 cmd.extend(["--components", ",".join(components)])
+            if skip_passed:
+                cmd.append("--skip-passed")
 
         logger.info(f"Launching test process ({target_type}): {' '.join(cmd)}")
 
@@ -1142,6 +1148,7 @@ def create_app() -> Flask:
         mode = data.get("mode", "lxc").lower()
         node = data.get("node", "pve")
         template_id = data.get("template_id", "902")
+        skip_passed = bool(data.get("skip_passed", False))
 
         if engine not in ["docker", "podman", "both", "all"]:
             engine = "docker"
@@ -1156,6 +1163,7 @@ def create_app() -> Flask:
             mode=mode,
             node=node,
             template_id=template_id,
+            skip_passed=skip_passed,
         )
         if success:
             return jsonify({"success": True, "target_type": target_type})
@@ -1179,6 +1187,7 @@ def create_app() -> Flask:
             {
                 "is_running": runner_mgr.is_running,
                 "current_component": runner_mgr.current_component,
+                "target_type": runner_mgr.target_type,
             }
         )
 

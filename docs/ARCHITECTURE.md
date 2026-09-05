@@ -330,3 +330,27 @@ Behavior
 - **Print Optimization**:
   - Uses CSS media queries (`@media print`) and vendor-neutral pagination controls (`page-break-inside: avoid`, `break-inside: avoid`) to prevent orphaned headers, split tables, or fractured screenshot cards.
   - Automatically injects running page headers and footers with page numbering (`Page {pageNumber} of {totalPages}`) and timestamp metadata.
+
+## 18. Autonomous Proxmox Test Autopilot & Signal Alerting Architecture
+
+- **Principle**: High-throughput, multi-hour hypervisor matrix testing across 44 permutations must run completely autonomously without manual developer babysitting or continuous LLM token consumption. Failures must trigger instantaneous fail-fast abortion, automated root-cause diagnosis, and out-of-band alerts.
+- **Watchdog Implementation (`scripts/proxmox_autopilot.py`)**:
+  - Runs as an independent, zero-token daemon (`--watch`) polling the Proxmox runner event stream and result manifests.
+  - **Fail-Fast Early Abort**: Intercepts package health check probe failures and terminates the active test runner process immediately via `/api/stop` to conserve hypervisor I/O and CPU resources.
+  - **Automated Root-Cause SSH Diagnosis**: Before tearing down the failing container or VM, the autopilot connects directly over SSH, inspects container lifecycle states, tails the last 50 lines of logs from crashed services, inspects network bridge configurations, and compiles structured diagnosis reports (`docs/AUTOPILOT_DIAG_*.md` and JSON).
+  - **Out-of-Band Mobile Alerting**: Integrates with the Signal REST API bridge (`/v2/send`) to dispatch actionable error alerts with failing container logs, and sends a celebration notification upon complete matrix passing.
+
+## 19. Unprivileged LXC Podman Namespace Isolation & DNS Architecture
+
+- **Principle**: Running multi-container Compose stacks inside unprivileged Proxmox LXC containers with Podman requires robust container-to-container DNS resolution (`aardvark-dns`) without requiring elevated host privileges or security-compromising nesting permissions.
+- **The User Namespace / Netavark Challenge**:
+  - In unprivileged LXC containers, UID 0 is mapped to host subuid `100000` (`/proc/self/uid_map`).
+  - In Debian 12 (Podman 4.3.1), Netavark inspects `uid_map` and mistakenly assumes root inside the container is running in rootless mode, executing:
+    `systemd-run -q --scope --user /usr/lib/podman/aardvark-dns ...`
+  - Because no `systemd --user` session bus exists for root inside unprivileged containers, this command failed with `Failed to connect to bus: No such file or directory`, preventing `aardvark-dns` from launching and breaking internal DNS name resolution.
+- **Systemd-Run Intercept Wrapper**:
+  - Implemented a wrapper on `/usr/bin/systemd-run` that intercepts calls from UID 0 (`id -u == 0`) and automatically strips the `--user` flag.
+  - Passes the modified argument list to `/usr/bin/systemd-run.real`, causing `aardvark-dns` to attach directly to the container system scope via system bus.
+  - Re-creating user-defined networks (`njorddeploy_net`) with this wrapper active reliably provisions `"dns_enabled": true`.
+- **Infrastructure Standardization**:
+  - The wrapper and pre-configured bridge network are baked directly into Proxmox Golden Template `914` (`njorddeploy-podman-lxc-template`), automated in `ansible/playbook.yml`, and checked before every package deployment in `proxmox_package_test_runner.py`.

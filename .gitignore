@@ -57,6 +57,7 @@ node_modules/
 .agy/
 artifacts/
 tmp_*/
+scratch/
 
 # Proxmox test run reports (dated)
 docs/PROXMOX_TESTS_*_*.md

@@ -107,6 +107,8 @@ def _save_incremental_test_result(test_record: Dict[str, Any]) -> None:
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(history, f, indent=4)
             f.write("\n")
+
+        update_master_markdown_report(history)
     except Exception as save_err:
         logger.warning(f"Failed to incrementally save test result: {save_err}")
 
@@ -484,9 +486,23 @@ def verify_service_health(
                     f"Probing HTTP UI endpoint: {url} "
                     f"(retrying up to {max_retries} times)..."
                 )
+                probe_timeout = (
+                    25
+                    if _component_id
+                    in [
+                        "nextcloud",
+                        "paperless-ngx",
+                        "open-webui",
+                        "immich",
+                        "stirling-pdf",
+                    ]
+                    else 10
+                )
                 for attempt in range(1, max_retries + 1):
                     try:
-                        res = requests.get(url, timeout=5, verify=False)  # nosec B501
+                        res = requests.get(
+                            url, timeout=probe_timeout, verify=False
+                        )  # nosec B501
                         if res.status_code in [200, 301, 302, 401, 403, 404]:
                             results["http_ok"] = True
                             results["running"] = True
@@ -1165,6 +1181,24 @@ def provision_shared_test_instance(
                     "net0": lxc_net,
                 },
             )
+            # Expand LXC rootfs disk to 60GB for test headroom
+            # noinspection PyBroadException
+            try:
+                resize_res = proxmox_client.resize_lxc_disk(
+                    node=node,
+                    vmid=shared_lxc_vmid,
+                    disk="rootfs",
+                    size="+40G",
+                )
+                r_upid = resize_res.get("data")
+                if isinstance(r_upid, str):
+                    wait_for_proxmox_task(proxmox_client, node, r_upid)
+                logger.info(
+                    f"Expanded LXC {shared_lxc_vmid} rootfs disk (+40G to ~60GB)."
+                )
+            except Exception as r_err:
+                logger.warning(f"Could not resize LXC rootfs disk: {r_err}")
+
             proxmox_client.start_lxc(node, shared_lxc_vmid)
         else:
             logger.info(
@@ -1698,10 +1732,45 @@ def run_environment_tests(
     ssh_public_key: str,
     keep: bool = False,
     report_filename: Optional[str] = None,
+    skip_passed: bool = False,
 ) -> List[Dict[str, Any]]:
     """Runs test cycle on a specific (mode, engine) environment."""
     is_lxc = mode == "lxc"
     env_results: List[Dict[str, Any]] = []
+
+    if skip_passed:
+        comp_results_file = project_root / "tests" / "proxmox_results.json"
+        if comp_results_file.exists():
+            try:
+                with open(comp_results_file, "r", encoding="utf-8") as f:
+                    hist_data = json.load(f)
+                filtered_targets: List[Dict[str, Any]] = []
+                for c in target_components:
+                    c_id = c.get("id", "unknown")
+                    matching = [
+                        r
+                        for r in hist_data
+                        if isinstance(r, dict)
+                        and r.get("component_id") == c_id
+                        and (r.get("mode") or "").lower() == mode.lower()
+                        and (r.get("engine") or "").lower() == engine.lower()
+                    ]
+                    last_rec = matching[-1] if matching else None
+                    if not last_rec or last_rec.get("status") not in (
+                        "success",
+                        "skipped",
+                    ):
+                        filtered_targets.append(c)
+                target_components = filtered_targets
+            except Exception as f_err:
+                logger.warning(f"Error filtering target components: {f_err}")
+
+    if not target_components:
+        logger.info(
+            f"⏩ [SKIP-PASSED] All components for {mode.upper()} / {engine.upper()} "
+            "already passed or skipped. Skipping environment."
+        )
+        return env_results
 
     res_req = calculate_resource_requirements(target_components)
     allocated_ram = res_req["ram"]
@@ -1782,6 +1851,35 @@ def run_environment_tests(
                 logger.warning("⚠️ Abort requested. Halting component test loop.")
                 break
             comp_id = comp.get("id", "unknown")
+            if getattr(args, "skip_passed", False):
+                comp_results_file = project_root / "tests" / "proxmox_results.json"
+                if comp_results_file.exists():
+                    try:
+                        with open(comp_results_file, "r", encoding="utf-8") as f:
+                            hist_data = json.load(f)
+                        matching = [
+                            r
+                            for r in hist_data
+                            if isinstance(r, dict)
+                            and r.get("component_id") == comp_id
+                            and (r.get("mode") or "").lower() == mode.lower()
+                            and (r.get("engine") or "").lower() == engine.lower()
+                        ]
+                        last_rec = matching[-1] if matching else None
+                        already_passed = last_rec is not None and last_rec.get(
+                            "status"
+                        ) in ("success", "skipped")
+                        if already_passed:
+                            logger.info(
+                                f"⏩ [SKIP-PASSED] Component '{comp_id}' "
+                                f"[{mode.upper()} / {engine.upper()}] "
+                                "already passed. Skipping."
+                            )
+                            continue
+                    except Exception as hist_err:
+                        logger.warning(
+                            f"Failed reading test history for skip-passed: {hist_err}"
+                        )
             logger.info("----------------------------------------")
             logger.info(
                 f"Testing component: {comp_id} "
@@ -1963,9 +2061,14 @@ def run_environment_tests(
                         "XDG_RUNTIME_DIR=/run/user/$(id -u) "
                         "podman volume prune -f 2>/dev/null || true; "
                         "XDG_RUNTIME_DIR=/run/user/$(id -u) "
-                        "podman system prune -af --volumes 2>/dev/null || true; "
+                        "if XDG_RUNTIME_DIR=/run/user/$(id -u) "
+                        "podman network inspect njorddeploy_net 2>/dev/null | "
+                        "grep -q '\"dns_enabled\": false'; then "
                         "XDG_RUNTIME_DIR=/run/user/$(id -u) "
-                        "podman network create --disable-dns njorddeploy_net "
+                        "podman network rm -f njorddeploy_net 2>/dev/null || true; "
+                        "fi; "
+                        "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+                        "podman network create njorddeploy_net "
                         '2>/dev/null || true"; '
                     )
 
@@ -1984,11 +2087,23 @@ def run_environment_tests(
                     "pkill -9 -f rootlessport 2>/dev/null || true; "
                     "pkill -9 -f slirp4netns 2>/dev/null || true; "
                     "pkill -9 -f pasta 2>/dev/null || true; "
-                    "pkill -9 -f conmon 2>/dev/null || true; "
-                    "pkill -9 -f aardvark-dns 2>/dev/null || true; "
-                    f"{clean_cli} network create --disable-dns njorddeploy_net "
-                    "2>/dev/null || "
-                    f"{clean_cli} network create njorddeploy_net 2>/dev/null || true; "
+                    f'if [ "{clean_cli}" = "podman" ]; then '
+                    "if [ -f /usr/bin/systemd-run ] && "
+                    "[ ! -f /usr/bin/systemd-run.real ]; then "
+                    "mv /usr/bin/systemd-run /usr/bin/systemd-run.real && "
+                    'printf \'#!/bin/bash\\nif [ "$(id -u)" -eq 0 ]; then\\n'
+                    '  args=()\\n  for arg in "$@"; do\\n'
+                    '    if [ "$arg" != "--user" ]; then args+=("$arg"); fi\\n'
+                    '  done\\n  exec /usr/bin/systemd-run.real "${args[@]}"\\n'
+                    'else\\n  exec /usr/bin/systemd-run.real "$@"\\nfi\\n\' '
+                    "> /usr/bin/systemd-run && chmod +x /usr/bin/systemd-run; fi; "
+                    "if podman network inspect njorddeploy_net 2>/dev/null | "
+                    "grep -q '\"dns_enabled\": false'; then "
+                    "podman network rm -f njorddeploy_net 2>/dev/null || true; fi; "
+                    "podman network create njorddeploy_net 2>/dev/null || true; "
+                    "else "
+                    f"{clean_cli} network create njorddeploy_net "
+                    "2>/dev/null || true; fi; "
                     "mkdir -p /tmp/.ansible && "
                     "chmod 1777 /tmp/.ansible 2>/dev/null || true; "
                     "rm -rf /opt/njorddeploy/* /opt/njorddeploy_data/* "
@@ -2500,6 +2615,7 @@ def run_proxmox_tests(cli_args) -> int:
             ssh_public_key=ssh_public_key,
             keep=bool(getattr(cli_args, "keep", False)),
             report_filename=report_filename,
+            skip_passed=bool(getattr(cli_args, "skip_passed", False)),
         )
         results_summary.extend(env_results)
 
@@ -2645,16 +2761,8 @@ def run_proxmox_tests(cli_args) -> int:
         except Exception as ai_ex:
             logger.warning(f"AI batch failure diagnosis failed: {ai_ex}")
 
-    # Maintain copy at PROXMOX_TESTS.md
-    latest_report_path = docs_dir / "PROXMOX_TESTS.md"
-    try:
-        if latest_report_path.exists():
-            latest_report_path.unlink()
-        import shutil
-
-        shutil.copy2(report_path, latest_report_path)
-    except Exception as sym_err:
-        logger.warning(f"Could not copy latest report to PROXMOX_TESTS.md: {sym_err}")
+    # Maintain consolidated master report at PROXMOX_TESTS.md
+    update_master_markdown_report(history)
 
     return failed_count
 
@@ -2774,6 +2882,62 @@ def write_markdown_report(
         f.write("\n".join(md_lines).rstrip() + "\n")
 
 
+def update_master_markdown_report(history: List[Dict[str, Any]]) -> None:
+    """Consolidates latest test results across all catalog components and updates
+    docs/PROXMOX_TESTS.md with the full master matrix summary.
+    """
+    try:
+        docs_dir = project_root / "docs"
+        docs_dir.mkdir(exist_ok=True)
+        latest_report_path = docs_dir / "PROXMOX_TESTS.md"
+
+        comp_meta_file = project_root / "config" / "components_metadata.json"
+        cat_ids: set[str] = set()
+        if comp_meta_file.exists():
+            try:
+                with open(comp_meta_file, "r", encoding="utf-8") as cmf:
+                    cat_meta = json.load(cmf)
+                    cat_ids = set(cat_meta.get("components", {}).keys())
+            except Exception as cmf_err:
+                logger.debug(f"Could not load components metadata: {cmf_err}")
+
+        latest_map: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+        for h_item in history:
+            cid = h_item.get("component_id")
+            if cat_ids and cid not in cat_ids:
+                continue
+            h_mode = (h_item.get("mode") or "lxc").upper()
+            h_eng = (h_item.get("engine") or "docker").upper()
+            latest_map[(str(cid), h_mode, h_eng)] = h_item
+
+        consolidated_records = list(latest_map.values())
+        consolidated_records.sort(
+            key=lambda x: (
+                str(x.get("component_id", "")),
+                str(x.get("mode", "")),
+                str(x.get("engine", "")),
+            )
+        )
+        total_failed_hist = sum(
+            1
+            for r in consolidated_records
+            if r.get("status") not in ("success", "skipped")
+        )
+        write_markdown_report(
+            latest_report_path,
+            consolidated_records,
+            total_failed_hist,
+            title_suffix="All Components Master Matrix",
+            engine="MATRIX (4 envs)",
+        )
+        logger.info(
+            f"Updated consolidated master report at: {latest_report_path} "
+            f"({len(consolidated_records)} permutations)"
+        )
+    except Exception as rep_err:
+        logger.warning(f"Could not write master PROXMOX_TESTS.md: {rep_err}")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=(
@@ -2842,6 +3006,11 @@ if __name__ == "__main__":
             "Use Gemini AI to analyze test failures and provide systemic "
             "architectural recommendations."
         ),
+    )
+    parser.add_argument(
+        "--skip-passed",
+        action="store_true",
+        help="Skip components that have already passed in historical results.",
     )
     args = parser.parse_args()
 

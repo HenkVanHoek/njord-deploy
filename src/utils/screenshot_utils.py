@@ -3,6 +3,7 @@
 import logging
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
 logger = logging.getLogger("NjordDeploy.Screenshot")
 
@@ -43,7 +44,25 @@ def capture_service_screenshot(
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         with sync_playwright() as playwright_instance:
-            browser = playwright_instance.chromium.launch(headless=True)
+            launch_args = ["--no-sandbox", "--disable-setuid-sandbox"]
+            # noinspection PyBroadException
+            try:
+                parsed = urlparse(url)
+                if parsed.scheme and parsed.netloc:
+                    origins = [f"{parsed.scheme}://{parsed.netloc}"]
+                    if parsed.hostname and parsed.hostname != parsed.netloc:
+                        origins.append(f"{parsed.scheme}://{parsed.hostname}")
+                    origins_str = ",".join(origins)
+                    launch_args.append(
+                        f"--unsafely-treat-insecure-origin-as-secure={origins_str}"
+                    )
+            except Exception as parse_ex:
+                logger.debug(f"Could not parse origin for insecure flag: {parse_ex}")
+
+            browser = playwright_instance.chromium.launch(
+                headless=True,
+                args=launch_args,
+            )
             context = browser.new_context(
                 ignore_https_errors=True,
                 viewport={"width": viewport_width, "height": viewport_height},

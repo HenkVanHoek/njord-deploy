@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "2.5.2.5491-ls158"
-# platform_notes: "Tested on Proxmox LXC: docker (2.5.2.5491-ls158, 2026-09-05), podman (2.5.2.5491-ls158, 2026-09-04); Proxmox VM: docker (2.5.2.5491-ls158, 2026-09-04), podman (2.5.2.5491-ls158, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (2.5.2.5491-ls158, 2026-09-05), podman (2.5.2.5491-ls158, 2026-09-05); Proxmox VM: docker (2.5.2.5491-ls158, 2026-09-04), podman (2.5.2.5491-ls158, 2026-09-05)."
 # breaking_changes: none
 services:
   prowlarr:

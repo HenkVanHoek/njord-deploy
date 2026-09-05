@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "3.1.3"
-# platform_notes: "Tested on Proxmox LXC: docker (3.1.3, 2026-09-05), podman (7.4.11, 2026-08-28); Proxmox VM: docker (3.1.3, 2026-09-04), podman (3.1.2, 2026-09-03)."
+# last_tested_version: "v3.1.0"
+# platform_notes: "Tested on Proxmox LXC: docker (3.1.3, 2026-09-05), podman (22.04, 2026-09-05); Proxmox VM: docker (3.1.3, 2026-09-05), podman (v3.1.0, 2026-09-05)."
 # breaking_changes: none
 services:
   paperless-ngx:
@@ -25,13 +25,13 @@ services:
       - "{{ CONFIG_BASE_PATH }}/paperless-ngx/export:/usr/src/paperless/export"
       - "{{ CONFIG_BASE_PATH }}/paperless-ngx/consume:/usr/src/paperless/consume"
     depends_on:
-      - paperless-broker
-      - paperless-db
+      - njorddeploy-paperless-broker
+      - njorddeploy-paperless-db
     networks:
       - njorddeploy_net
     user: "0:0"
 
-  paperless-broker:
+  njorddeploy-paperless-broker:
     container_name: njorddeploy-paperless-broker
     image: redis:7-alpine
     volumes:
@@ -40,7 +40,7 @@ services:
       - njorddeploy_net
     user: "0:0"
 
-  paperless-db:
+  njorddeploy-paperless-db:
     container_name: njorddeploy-paperless-db
     image: postgres:16-alpine
     environment:

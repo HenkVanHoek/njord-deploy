@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "v1.6.0-ls362"
-# platform_notes: "Tested on Proxmox LXC: docker (v1.6.0-ls362, 2026-09-05), podman (v1.6.0-ls362, 2026-09-04); Proxmox VM: docker (v1.6.0-ls362, 2026-09-04), podman (v1.6.0-ls362, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (v1.6.0-ls362, 2026-09-05), podman (v1.6.0-ls362, 2026-09-05); Proxmox VM: docker (v1.6.0-ls362, 2026-09-04), podman (v1.6.0-ls362, 2026-09-05)."
 # breaking_changes: none
 services:
   bazarr:

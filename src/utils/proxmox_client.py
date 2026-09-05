@@ -224,6 +224,20 @@ class ProxmoxClient:
         response.raise_for_status()
         return response.json()
 
+    def resize_lxc_disk(self, node: str, vmid: int, disk: str, size: str) -> dict:
+        """Resizes an LXC disk (e.g. disk='rootfs', size='40G' or '+20G')."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/resize"
+        url = f"{self.api_url}/{endpoint.lstrip('/')}"
+        response = requests.put(
+            url,
+            headers=self.headers,
+            data={"disk": disk, "size": size},
+            verify=self.verify_ssl,
+            timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def get_vm_ip(self, node: str, vmid: int) -> str | None:
         """
         Retrieves the first non-loopback IPv4 address of the VM

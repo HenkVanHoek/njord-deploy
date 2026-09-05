@@ -240,15 +240,31 @@
         enabled: yes
       when: container_engine == 'docker'
 
+    - name: Ensure systemd-run wrapper is configured for Podman in unprivileged containers
+      ansible.builtin.shell: |
+        if [ -f /usr/bin/systemd-run ] && [ ! -f /usr/bin/systemd-run.real ]; then
+          mv /usr/bin/systemd-run /usr/bin/systemd-run.real
+          printf '#!/bin/bash\nif [ "$(id -u)" -eq 0 ]; then\n  args=()\n  for arg in "$@"; do\n    if [ "$arg" != "--user" ]; then args+=("$arg"); fi\n  done\n  exec /usr/bin/systemd-run.real "${args[@]}"\nelse\n  exec /usr/bin/systemd-run.real "$@"\nfi\n' > /usr/bin/systemd-run
+          chmod +x /usr/bin/systemd-run
+        fi
+      when: container_engine == 'podman'
+      changed_when: false
+
     - name: Ensure NjordDeploy network exists
       ansible.builtin.shell: |
         if [ "{{ container_engine }}" = "podman" ]; then
-          podman network create --disable-dns njorddeploy_net 2>/dev/null || podman network create njorddeploy_net 2>/dev/null || true
+          for net in njorddeploy_net nextcloud-internal; do
+            if podman network inspect $net 2>/dev/null | grep -q '"dns_enabled": false'; then
+              podman network rm -f $net 2>/dev/null || true
+            fi
+            podman network create $net 2>/dev/null || true
+          done
           if [ "{{ (podman_rootful | default(false)) | bool }}" = "False" ] && [ -n "{{ ansible_user }}" ]; then
-            su - {{ ansible_user }} -c "podman network create --disable-dns njorddeploy_net 2>/dev/null || podman network create njorddeploy_net 2>/dev/null || true"
+            su - {{ ansible_user }} -c 'for net in njorddeploy_net nextcloud-internal; do if podman network inspect $net 2>/dev/null | grep -q "\"dns_enabled\": false"; then podman network rm -f $net 2>/dev/null || true; fi; podman network create $net 2>/dev/null || true; done'
           fi
         else
           docker network create njorddeploy_net 2>/dev/null || true
+          docker network create nextcloud-internal 2>/dev/null || true
         fi
       changed_when: false
 

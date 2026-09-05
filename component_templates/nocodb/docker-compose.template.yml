@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "24.14.0"
-# platform_notes: "Tested on Proxmox LXC: docker (24.14.0, 2026-09-05), podman (24.14.0, 2026-09-03); Proxmox VM: docker (24.14.0, 2026-09-03), podman (24.14.0, 2026-09-03)."
+# last_tested_version: "v3.1.0"
+# platform_notes: "Tested on Proxmox LXC: docker (24.14.0, 2026-09-05), podman (22.04, 2026-09-05); Proxmox VM: docker (24.14.0, 2026-09-05), podman (v3.1.0, 2026-09-05)."
 # breaking_changes: none
 services:
   nocodb:

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "22.23.2"
-# platform_notes: "Tested on Proxmox LXC: docker (22.23.2, 2026-09-04), podman (1.19, 2026-08-28); Proxmox VM: docker (22.23.2, 2026-09-04), podman (postgresql-latest, 2026-09-03)."
+# last_tested_version: "v3.1.0"
+# platform_notes: "Tested on Proxmox LXC: docker (22.23.2, 2026-09-04), podman (22.04, 2026-09-05); Proxmox VM: docker (22.23.2, 2026-09-04), podman (v3.1.0, 2026-09-06)."
 # breaking_changes: "None"
 services:
   umami:

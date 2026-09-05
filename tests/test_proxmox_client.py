@@ -129,6 +129,46 @@ class TestProxmoxClient(unittest.TestCase):
             timeout=15,
         )
 
+    @patch("requests.put")
+    def test_resize_vm_disk(self, mock_put):
+        """Verify calling VM disk resize endpoint with correct parameters."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"data": "UPID:pve:00001"}
+        mock_put.return_value = mock_response
+
+        res = self.client.resize_vm_disk(
+            node="pve", vmid=9000, disk="scsi0", size="+10G"
+        )
+
+        self.assertEqual(res["data"], "UPID:pve:00001")
+        mock_put.assert_called_once_with(
+            "https://192.168.178.51:8006/api2/json/nodes/pve/qemu/9000/resize",
+            headers=self.client.headers,
+            data={"disk": "scsi0", "size": "+10G"},
+            verify=False,
+            timeout=15,
+        )
+
+    @patch("requests.put")
+    def test_resize_lxc_disk(self, mock_put):
+        """Verify calling LXC disk resize endpoint with correct parameters."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"data": "UPID:pve:00002"}
+        mock_put.return_value = mock_response
+
+        res = self.client.resize_lxc_disk(
+            node="pve", vmid=104, disk="rootfs", size="+40G"
+        )
+
+        self.assertEqual(res["data"], "UPID:pve:00002")
+        mock_put.assert_called_once_with(
+            "https://192.168.178.51:8006/api2/json/nodes/pve/lxc/104/resize",
+            headers=self.client.headers,
+            data={"disk": "rootfs", "size": "+40G"},
+            verify=False,
+            timeout=15,
+        )
+
     @patch("requests.get")
     def test_get_vm_ip_success(self, mock_get):
         """Verify extracting IPv4 from guest agent network interfaces response."""

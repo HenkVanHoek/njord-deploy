@@ -18,12 +18,19 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Local Docker Registry Pull-Through Cache Mirror**:
   - Implemented [`scripts/setup_test_gateway.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/setup_test_gateway.py) provisioning a high-performance Docker Registry 2 pull-through cache mirror in LXC container 920 (`10.99.0.2:5000` on `vmbr1`) with 30GB cache storage.
   - Drastically accelerates multi-environment matrix runs by caching Docker Hub image layers locally, reducing test execution times and avoiding Docker Hub rate limits.
+- **Autonomous Proxmox Test Autopilot & Signal Alerting**:
+  - Engineered [`scripts/proxmox_autopilot.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_autopilot.py), a lightweight, zero-token background watchdog daemon providing fail-fast early abort, real-time SSH root-cause diagnostics, and instant mobile alerts via Signal REST API.
+- **100% Package Integration Matrix Milestone (44/44 Passed)**:
+  - Achieved complete, flawless verification across all 11 Turnkey Packages and all 4 virtualization/runtime quadrants (LXC/VM × Docker/Podman) with 0 errors, captured UI screenshots, and automated cleanup, documented in [`docs/DAGRAPPORT_2026-09-05.md`](docs/DAGRAPPORT_2026-09-05.md).
 
 ### Fixed
 - **Network Gateway DNS KISS Policy**:
   - Removed container-level `dnsmasq` intercept complexity from the test gateway; all test instances resolve upstream DNS via native PVE host NAT (`10.99.0.1`), ensuring 100% reliable external DNS and preventing network outages.
 - **VM Base64 Import Scoping & Quoting**:
   - Fixed `UnboundLocalError: cannot access local variable 'base64'` in `proxmox_package_test_runner.py` and hardened subprocess shell command quoting across LXC and VM runners.
+- **Unprivileged LXC Podman DNS & Netavark Namespace Isolation**:
+  - Resolved container-to-container DNS resolution failure caused by Netavark assuming UID 0 in unprivileged LXC was rootless and attempting `systemd-run --user`.
+  - Implemented `/usr/bin/systemd-run` wrapper stripping `--user` for UID 0 and updated Golden Template 914 (`njorddeploy-podman-lxc-template`), [`ansible/playbook.yml`](file:///home/hvhoek/PycharmProjects/njord-deploy/ansible/playbook.yml), and test runners.
 
 ## [1.0.0-RC1] - 2026-08-30
 

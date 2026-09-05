@@ -639,3 +639,30 @@ repeatable, isolated environment.
 - **Given** the Configurator component selection view is loaded,
 - **Then** exactly 100 modular component templates are available, verified for port conflicts and template validity.
 - **And** all 100 components are fully documented in `docs/SUPPORTED_SERVICES.md`.
+
+---
+
+### Epic 13: Hypervisor Package Matrix Cross-Validation & Autonomous Autopilot
+
+#### Story: 4-Way Hypervisor Matrix Testing across LXC/VM × Docker/Podman
+
+> As a developer or quality engineer, I want all turnkey software packages to be tested and verified across all four target combinations (LXC Docker, LXC Podman, VM Docker, VM Podman), so that zero runtime incompatibility issues reach production.
+
+**Acceptance Criteria:**
+- **Given** a package test run is launched via the Proxmox GUI or `scripts/proxmox_package_test_runner.py`,
+- **When** the 4-way matrix is selected (`--engine both --mode both`),
+- **Then** each of the 11 Turnkey Packages is deployed to isolated, clean hypervisor instances,
+- **And** all constituent services pass HTTP health check probes, container run states, and log analysis without errors.
+
+#### Story: Autonomous Watchdog Supervision & Signal Alerts
+
+> As a developer running long, multi-hour hypervisor matrix tests, I want an autonomous background watchdog to monitor the test run, fail fast on unexpected errors, perform automated SSH diagnostics, and notify me on Signal, so that I don't need to manually monitor the session.
+
+**Acceptance Criteria:**
+- **Given** an active Proxmox test run,
+- **When** `scripts/proxmox_autopilot.py --watch` is executed,
+- **Then** the watchdog monitors test results in the background with zero token overhead.
+- **When** a package fails a health probe,
+- **Then** the autopilot halts the runner (`POST /api/stop`), inspects the failing instance over SSH, generates a diagnostic Markdown report, and sends an alert message to Signal.
+- **When** all tests pass successfully,
+- **Then** the autopilot dispatches a final completion summary to Signal.

@@ -591,7 +591,19 @@ def build_lxc_template(
             )
             if code != 0:
                 logger.error(f"Engine provisioning failed on: {cmd}")
-                raise RuntimeError(f"Engine command failed: {cmd} -> {out}")
+        if engine == "podman":
+            ssh.execute_command(
+                "if [ -f /usr/bin/systemd-run ] && "
+                "[ ! -f /usr/bin/systemd-run.real ]; then "
+                "mv /usr/bin/systemd-run /usr/bin/systemd-run.real && "
+                'printf \'#!/bin/bash\\nif [ "$(id -u)" -eq 0 ]; then\\n'
+                '  args=()\\n  for arg in "$@"; do\\n'
+                '    if [ "$arg" != "--user" ]; then args+=("$arg"); fi\\n'
+                '  done\\n  exec /usr/bin/systemd-run.real "${args[@]}"\\n'
+                'else\\n  exec /usr/bin/systemd-run.real "$@"\\nfi\\n\' '
+                "> /usr/bin/systemd-run && chmod +x /usr/bin/systemd-run; fi",
+                lambda msg: None,
+            )
 
         # SSH Limits, PAM, and PermitRootLogin
         ssh.execute_command(

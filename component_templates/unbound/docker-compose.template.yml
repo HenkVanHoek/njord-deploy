@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "latest"
-# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-09-05), podman (latest, 2026-09-04); Proxmox VM: docker (latest, 2026-09-04), podman (latest, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-09-05), podman (latest, 2026-09-05); Proxmox VM: docker (latest, 2026-09-04), podman (latest, 2026-09-05)."
 # breaking_changes: "None"
 services:
   unbound:

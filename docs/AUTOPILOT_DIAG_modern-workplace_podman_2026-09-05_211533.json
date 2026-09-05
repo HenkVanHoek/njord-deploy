@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-09-05 21:15:33",
+  "package_id": "modern-workplace",
+  "mode": "lxc",
+  "engine": "podman",
+  "error_summary": "Successfully checked 6 components.",
+  "dns_enabled": true,
+  "disk_free_mb": 56458,
+  "failed_containers": [
+    "nextcloud",
+    "nextcloud-db",
+    "nextcloud-redis",
+    "nextcloud-db-dumper",
+    "notify-push"
+  ],
+  "container_logs": {},
+  "recommended_action": "",
+  "auto_heal_attempted": false,
+  "heal_success": false
+}

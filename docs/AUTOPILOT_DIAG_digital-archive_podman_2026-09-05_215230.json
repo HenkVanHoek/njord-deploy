@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-09-05 21:52:30",
+  "package_id": "digital-archive",
+  "mode": "lxc",
+  "engine": "podman",
+  "error_summary": "Package deployment failed: non-zero return code | stderr: Failed to connect to bus: No medium found\nFailed to connect to bus: No medium found\nTraceback (most recent call last):\n  File \"/usr/bin/podman-compose\", line 33, in <module>\n    sys.exit(load_entry_point('podman-compose==1.0.3', 'console_scripts', 'podman-compose')())\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 1775, in main\n    podman_compose.run()\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 1024, in run\n    cmd(self, args)\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 1248, in wrapped\n    return func(*args, **kw)\n           ^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 1415, in compose_up\n    podman_args = container_to_args(compose, cnt, detached=args.detach)\n                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 645, in container_to_args\n    assert_cnt_nets(compose, cnt)\n  File \"/usr/lib/python3/dist-packages/podman_compose.py\", line 558, in assert_cnt_nets\n    net_desc = nets[net] or {}\n               ~~~~^^^^^\nKeyError: \"njorddeploy_net={'aliases': ['paperless-broker', 'njorddeploy-paperless-broker']}\"",
+  "dns_enabled": true,
+  "disk_free_mb": 56466,
+  "failed_containers": [],
+  "container_logs": {},
+  "recommended_action": "",
+  "auto_heal_attempted": false,
+  "heal_success": false
+}

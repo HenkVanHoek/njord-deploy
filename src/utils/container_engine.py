@@ -207,17 +207,19 @@ class ContainerEngine:
 
         if not is_root:
             commands.append(
-                f"su - {username} -c "
-                "'podman network create --disable-dns njorddeploy_net "
-                "2>/dev/null || podman network create njorddeploy_net "
-                "2>/dev/null || true'"
+                f"su - {username} -c '"
+                "if podman network inspect njorddeploy_net 2>/dev/null | "
+                "grep -q '\"dns_enabled\": false'; then "
+                "podman network rm -f njorddeploy_net 2>/dev/null || true; fi; "
+                "podman network create njorddeploy_net 2>/dev/null || true'"
             )
         else:
             commands.append(
-                f"{cmd_prefix}podman network create --disable-dns njorddeploy_net "
-                f"2>/dev/null || "
-                f"{cmd_prefix}podman network create njorddeploy_net "
-                "2>/dev/null || true"
+                f"{cmd_prefix}sh -c '"
+                "if podman network inspect njorddeploy_net 2>/dev/null | "
+                "grep -q '\"dns_enabled\": false'; then "
+                "podman network rm -f njorddeploy_net 2>/dev/null || true; fi; "
+                "podman network create njorddeploy_net 2>/dev/null || true'"
             )
         return commands
 

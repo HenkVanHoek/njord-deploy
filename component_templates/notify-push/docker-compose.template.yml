@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "10.11.19"
-# platform_notes: "Tested on Proxmox LXC: docker (10.11.19, 2026-09-05), podman (10.11.19, 2026-09-04); Proxmox VM: docker (8.5.10, 2026-09-04), podman (10.11.19, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (10.11.19, 2026-09-05), podman (10.11.19, 2026-09-05); Proxmox VM: docker (8.5.10, 2026-09-04), podman (10.11.19, 2026-09-05)."
 # breaking_changes: "None"
 services:
   notify-push:

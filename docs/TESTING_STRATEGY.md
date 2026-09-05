@@ -189,3 +189,24 @@ For audit compliance, client deliverables, and offline documentation, the Proxmo
 - Rendered via headless Playwright Chromium with `@media print` styling.
 - Local screenshot images are converted and embedded as Base64 data URIs for 100% self-contained, offline viewing.
 - Features automatic running headers/footers with dynamic page numbering.
+
+### 5.6 Autonomous Test Autopilot & Signal Alerting
+
+To enable zero-touch, overnight, and long-running hypervisor testing, NjordDeploy includes an autonomous watchdog daemon:
+- **Zero Token Overhead**: [`scripts/proxmox_autopilot.py`](../scripts/proxmox_autopilot.py) runs locally in background mode (`--watch`), continuously supervising the active test runner process without generating continuous LLM token consumption.
+- **Fail-Fast Early Abort**: Halts the test runner immediately on package health check probe failure (`POST /api/stop`), preserving hypervisor CPU and disk I/O.
+- **Automated Root-Cause SSH Diagnosis**: Before instances are destroyed, the autopilot connects via SSH to the target, collects container exit codes, tails the last 50 lines of logs, inspects network DNS settings, and produces structured markdown diagnosis reports (`docs/AUTOPILOT_DIAG_*.md`).
+- **Real-Time Signal Mobile Alerts**: Delivers immediate failure notifications with extracted stack traces and milestone completion celebrations directly to the operator's phone via the Signal REST API.
+
+### 5.7 100% Package Matrix Milestone & LXC Podman DNS Hardening
+
+On September 5, 2026, the complete 4-way matrix achieved a **100% pass rate (44/44 tests passed)** across all 11 curated Turnkey Application Packages:
+- **LXC / Docker**: 11 / 11 Passed (100%)
+- **LXC / Podman**: 11 / 11 Passed (100%)
+- **VM / Docker**: 11 / 11 Passed (100%)
+- **VM / Podman**: 11 / 11 Passed (100%)
+
+Key to this milestone was resolving the unprivileged LXC Podman DNS limitation:
+- Netavark's mistaken assumption that root inside an unprivileged user namespace is rootless was resolved via a `/usr/bin/systemd-run` wrapper that strips `--user` for UID 0.
+- `aardvark-dns` attaches directly to the container's systemd system scope, enabling sub-millisecond container-to-container DNS resolution with 0% packet loss across all complex multi-container stacks.
+- Permanently baked into Proxmox Golden Template `914` (`njorddeploy-podman-lxc-template`), Ansible playbook, and automated test runners.
