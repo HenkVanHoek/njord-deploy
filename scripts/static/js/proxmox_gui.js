@@ -27,6 +27,8 @@
     activeAiProvider: "",
     activeAiName: "",
     activeAiModel: "",
+    currentReportFile: "",
+    currentCompId: "",
   };
 
   // DOM Elements
@@ -52,6 +54,12 @@
     nodeInput: document.getElementById("node-input"),
     templateIdInput: document.getElementById("template-id-input"),
     templateIdWrapper: document.getElementById("template-id-wrapper"),
+    templatesDisplay: document.getElementById("templates-display"),
+    toggleNetworkBtn: document.getElementById("toggle-network-btn"),
+    configBridgeLabel: document.getElementById("config-bridge-label"),
+    configGwLabel: document.getElementById("config-gw-label"),
+    configIpLabel: document.getElementById("config-ip-label"),
+    configNetStatus: document.getElementById("config-net-status"),
 
     // Filter & Search elements (Services)
     searchInput: document.getElementById("search-input"),
@@ -88,6 +96,7 @@
     clearTerminalBtn: document.getElementById("clear-terminal-btn"),
     copyTerminalBtn: document.getElementById("copy-terminal-btn"),
     viewReportBtn: document.getElementById("view-report-btn"),
+    exportLatestPdfBtn: document.getElementById("export-latest-pdf-btn"),
 
     // Results & History table
     resultsTableBody: document.getElementById("results-table-body"),
@@ -114,6 +123,12 @@
     closeModalBtn: document.getElementById("close-modal-btn"),
     reportModalCloseBtn: document.getElementById("report-modal-close-btn"),
     reportContent: document.getElementById("report-content"),
+    reportRawContent: document.getElementById("report-raw-content"),
+    btnReportViewFormatted: document.getElementById("btn-report-view-formatted"),
+    btnReportViewRaw: document.getElementById("btn-report-view-raw"),
+    btnReportExportPdf: document.getElementById("btn-report-export-pdf"),
+    reportModalExportPdfBtn: document.getElementById("report-modal-export-pdf-btn"),
+    reportModalMeta: document.getElementById("report-modal-meta"),
   };
 
   /**
@@ -230,6 +245,102 @@
    */
   function getFilteredPackages() {
     return state.packages.filter(matchesPackageFilter);
+  }
+
+  /**
+   * Updates test network indicators and text values in the UI
+   */
+  function updateNetworkUI(networkConfig) {
+    if (!networkConfig) return;
+    if (elements.configBridgeLabel && networkConfig.bridge) {
+      elements.configBridgeLabel.textContent = networkConfig.bridge;
+    }
+    if (elements.configGwLabel && networkConfig.gateway) {
+      elements.configGwLabel.textContent = networkConfig.gateway;
+    }
+    if (elements.configIpLabel && networkConfig.test_ip) {
+      const cidr = networkConfig.test_ip.includes("/")
+        ? networkConfig.test_ip
+        : `${networkConfig.test_ip}/24`;
+      elements.configIpLabel.textContent = cidr;
+    }
+    if (elements.configNetStatus) {
+      if (
+        networkConfig.bridge === "vmbr1" ||
+        (networkConfig.test_ip && networkConfig.test_ip.startsWith("10.99."))
+      ) {
+        elements.configNetStatus.textContent = "Geïsoleerd Test-Subnet";
+        elements.configNetStatus.style.color = "var(--accent-green)";
+      } else {
+        elements.configNetStatus.textContent = "LAN Bridge (vmbr0)";
+        elements.configNetStatus.style.color = "var(--accent-amber)";
+      }
+    }
+  }
+
+  /**
+   * Updates the active Proxmox Golden Template badges (911-914)
+   * dynamically based on Target Mode and Container Engine selections.
+   */
+  function updateTemplatesUI() {
+    if (!elements.templatesDisplay) return;
+
+    const mode = state.mode; // 'lxc' | 'vm' | 'both'
+    const engine = state.engine; // 'docker' | 'podman' | 'both'
+
+    const activeTemplates = [];
+
+    const isLxc = mode === "lxc" || mode === "both";
+    const isVm = mode === "vm" || mode === "both";
+    const isDocker = engine === "docker" || engine === "both";
+    const isPodman = engine === "podman" || engine === "both";
+
+    if (isLxc && isDocker) {
+      activeTemplates.push({
+        id: 912,
+        mode: "LXC",
+        engine: "Docker",
+        cls: "tpl-lxc-docker",
+      });
+    }
+    if (isLxc && isPodman) {
+      activeTemplates.push({
+        id: 914,
+        mode: "LXC",
+        engine: "Podman",
+        cls: "tpl-lxc-podman",
+      });
+    }
+    if (isVm && isDocker) {
+      activeTemplates.push({
+        id: 911,
+        mode: "VM",
+        engine: "Docker",
+        cls: "tpl-vm-docker",
+      });
+    }
+    if (isVm && isPodman) {
+      activeTemplates.push({
+        id: 913,
+        mode: "VM",
+        engine: "Podman",
+        cls: "tpl-vm-podman",
+      });
+    }
+
+    elements.templatesDisplay.innerHTML = "";
+    activeTemplates.forEach((t) => {
+      const badge = document.createElement("span");
+      badge.className = `template-badge ${t.cls}`;
+      badge.title = `Template ID ${t.id}: ${t.engine} op ${t.mode}`;
+      badge.innerHTML = `<strong>${t.id}</strong> <small>(${t.mode} ${t.engine})</small>`;
+      elements.templatesDisplay.appendChild(badge);
+    });
+
+    if (elements.templateIdInput) {
+      const firstTpl = activeTemplates[0];
+      elements.templateIdInput.value = firstTpl ? String(firstTpl.id) : "902";
+    }
   }
 
   /**
@@ -1179,6 +1290,7 @@
           <td>
             <div style="display: inline-flex; gap: 0.35rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
               <button type="button" class="btn-report-doc" data-file="${escapeHtml(reportFile)}" data-comp="${escapeHtml(compId)}" title="Open test report document"><span>📄</span> Report</button>
+              <button type="button" class="btn-report-pdf" data-file="${escapeHtml(reportFile)}" data-comp="${escapeHtml(compId)}" title="Download test report as PDF"><span>📥</span> PDF</button>
               ${
                 isFail && !record.is_package
                   ? `<button type="button" class="btn-ai-fix" data-comp="${escapeHtml(compId)}" data-mode="${escapeHtml(recMode)}" data-engine="${escapeHtml(recEngine)}" title="AI Diagnosis & Auto-Fix"><span>✨</span> AI Fix</button>`
@@ -1288,8 +1400,9 @@
         );
 
       if (match) {
+        const origTs = match.timestamp;
         Object.assign(match, rec);
-        if (rec.timestamp) match.timestamp = rec.timestamp;
+        if (origTs) match.timestamp = origTs;
       } else {
         state.results.unshift({
           ...rec,
@@ -1400,11 +1513,12 @@
           : [state.engine.toUpperCase()];
 
       // Pre-populate results table with pending rows for every matrix combination
+      const newPendingRows = [];
       activeModes.forEach((m) => {
         activeEngines.forEach((e) => {
           state.selectedPackageIds.forEach((pkgId) => {
             const pkgObj = state.packages.find((p) => p.id === pkgId);
-            state.results.unshift({
+            newPendingRows.push({
               timestamp: ts,
               component_id: pkgId,
               package_name: pkgObj ? pkgObj.name : pkgId,
@@ -1424,6 +1538,7 @@
           });
         });
       });
+      state.results = [...newPendingRows, ...state.results];
       renderResultsTable();
 
       try {
@@ -1506,10 +1621,11 @@
           : [state.engine.toUpperCase()];
 
       // Pre-populate results table with pending rows for every matrix combination
+      const newPendingRows = [];
       activeModes.forEach((m) => {
         activeEngines.forEach((e) => {
           state.selectedIds.forEach((cid) => {
-            state.results.unshift({
+            newPendingRows.push({
               timestamp: ts,
               component_id: cid,
               mode: m,
@@ -1527,6 +1643,7 @@
           });
         });
       });
+      state.results = [...newPendingRows, ...state.results];
       renderResultsTable();
 
       try {
@@ -1650,11 +1767,53 @@
   }
 
   /**
-   * Fetches specific or latest markdown test report
+   * Fallback Markdown renderer if marked.js is unavailable
+   */
+  function renderMarkdownFallback(md) {
+    if (!md) return "";
+    let html = escapeHtml(md);
+    // Images: ![alt](url)
+    html = html.replace(
+      /!\[(.*?)\]\((.*?)\)/g,
+      '<img src="$2" alt="$1" title="$1">'
+    );
+    // Links: [text](url)
+    html = html.replace(
+      /\[(.*?)\]\((.*?)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+    // Headers: ###, ##, #
+    html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
+    html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
+    html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
+    // Bold: **text**
+    html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    // Inline code: `code`
+    html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+    // Line breaks
+    html = html.replace(/\n/g, "<br>");
+    return html;
+  }
+
+  /**
+   * Fetches specific or latest markdown test report and renders Markdown & screenshots
    */
   async function loadReport(targetFile = null, compId = null) {
     try {
-      elements.reportContent.textContent = "Loading report...";
+      if (elements.reportContent) {
+        elements.reportContent.innerHTML = "<p><em>Loading report...</em></p>";
+        elements.reportContent.style.display = "block";
+      }
+      if (elements.reportRawContent) {
+        elements.reportRawContent.textContent = "Loading report...";
+        elements.reportRawContent.style.display = "none";
+      }
+      if (elements.btnReportViewFormatted) {
+        elements.btnReportViewFormatted.classList.add("active");
+      }
+      if (elements.btnReportViewRaw) {
+        elements.btnReportViewRaw.classList.remove("active");
+      }
       elements.reportModal.classList.add("open");
 
       let query = "";
@@ -1672,16 +1831,107 @@
       const modalTitle = document.getElementById("report-modal-title");
       if (modalTitle) {
         modalTitle.textContent = data.filename
-          ? `📄 Test Report (${data.filename})`
-          : "📄 Test Report";
+          ? `Test Report (${data.filename})`
+          : "Test Report";
       }
-      if (data.report) {
-        elements.reportContent.textContent = data.report;
-      } else {
-        elements.reportContent.textContent = "No report generated yet.";
+      if (elements.reportModalMeta) {
+        elements.reportModalMeta.textContent = data.filename || "";
+      }
+      state.currentReportFile = data.filename || targetFile || "";
+      state.currentCompId = compId || "";
+
+      const rawText = data.report || "";
+      if (elements.reportRawContent) {
+        elements.reportRawContent.textContent = rawText || "No report generated yet.";
+      }
+
+      if (elements.reportContent) {
+        if (!rawText) {
+          elements.reportContent.innerHTML =
+            "<p><em>No report generated yet.</em></p>";
+        } else if (
+          typeof window.marked !== "undefined" &&
+          typeof window.marked.parse === "function"
+        ) {
+          elements.reportContent.innerHTML = window.marked.parse(rawText);
+        } else {
+          elements.reportContent.innerHTML = renderMarkdownFallback(rawText);
+        }
+
+        // Add interactive zoom behavior to embedded screenshot images
+        elements.reportContent.querySelectorAll("img").forEach((img) => {
+          img.addEventListener("click", () => {
+            img.classList.toggle("zoomed");
+          });
+        });
       }
     } catch (err) {
-      elements.reportContent.textContent = `Error loading report: ${err.message}`;
+      if (elements.reportContent) {
+        elements.reportContent.innerHTML = `<p style="color: var(--status-error);">Error loading report: ${escapeHtml(err.message)}</p>`;
+      }
+      if (elements.reportRawContent) {
+        elements.reportRawContent.textContent = `Error loading report: ${err.message}`;
+      }
+    }
+  }
+
+  /**
+   * Generates and downloads an A4 PDF for a given report file or component
+   */
+  async function exportReportToPdf(targetFile, compId, triggerBtn) {
+    const origText = triggerBtn ? triggerBtn.innerHTML : "";
+    if (triggerBtn) {
+      triggerBtn.disabled = true;
+      triggerBtn.innerHTML = `<span>⏳</span> Exporteren...`;
+    }
+
+    try {
+      let query = "";
+      if (targetFile) {
+        query = `file=${encodeURIComponent(targetFile)}`;
+      } else if (compId) {
+        query = `component=${encodeURIComponent(compId)}`;
+      } else {
+        const reportType = state.targetType === "packages" ? "package" : "latest";
+        query = `type=${reportType}`;
+      }
+
+      const res = await fetch(`/api/report/pdf?${query}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `HTTP ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = url;
+
+      let downloadName = "test_report.pdf";
+      const disposition = res.headers.get("Content-Disposition");
+      if (disposition && disposition.includes("filename=")) {
+        const match = disposition.match(/filename="?([^";]+)"?/);
+        if (match && match[1]) {
+          downloadName = match[1];
+        }
+      } else if (targetFile) {
+        downloadName = targetFile.replace(/\.md$/, ".pdf");
+      }
+
+      a.download = downloadName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("PDF Export error:", err);
+      alert(`Kon PDF rapport niet exporteren: ${err.message}`);
+    } finally {
+      if (triggerBtn) {
+        triggerBtn.disabled = false;
+        triggerBtn.innerHTML = origText;
+      }
     }
   }
 
@@ -1842,23 +2092,20 @@
                 elements.engineDockerBtn.classList.remove("active");
               }
             }
-            const bridgeLabel = document.getElementById("config-bridge-label");
-            const ipLabel = document.getElementById("config-ip-label");
-            const netStatus = document.getElementById("config-net-status");
-            if (bridgeLabel && config.bridge) bridgeLabel.textContent = config.bridge;
-            if (ipLabel && config.test_ip) {
-              const cidr = config.test_ip.includes("/") ? config.test_ip : `${config.test_ip}/24`;
-              ipLabel.textContent = cidr;
-            }
-            if (netStatus) {
-              if (config.bridge === "vmbr1" || (config.test_ip && config.test_ip.startsWith("10.99."))) {
-                netStatus.textContent = "✅ Isolated Subnet Active";
-                netStatus.style.color = "var(--accent-green)";
-              } else {
-                netStatus.textContent = "⚠️ LAN Bridge (vmbr0)";
-                netStatus.style.color = "var(--accent-amber)";
+            if (config.mode) {
+              state.mode = config.mode.toLowerCase();
+              if (state.mode === "vm") {
+                elements.modeVmBtn.classList.add("active");
+                elements.modeLxcBtn.classList.remove("active");
+              } else if (state.mode === "both") {
+                if (elements.modeBothBtn) {
+                  elements.modeBothBtn.classList.add("active", "mode-both");
+                }
+                elements.modeLxcBtn.classList.remove("active");
               }
             }
+            updateNetworkUI(config);
+            updateTemplatesUI();
           }
         })(),
         initAiProviderSelector(),
@@ -2020,8 +2267,7 @@
       elements.modeLxcBtn.classList.add("active");
       elements.modeVmBtn.classList.remove("active");
       if (elements.modeBothBtn) elements.modeBothBtn.classList.remove("active", "mode-both");
-      elements.templateIdWrapper.style.opacity = "0.5";
-      elements.templateIdInput.disabled = true;
+      updateTemplatesUI();
     });
 
     elements.modeVmBtn.addEventListener("click", () => {
@@ -2029,8 +2275,7 @@
       elements.modeVmBtn.classList.add("active");
       elements.modeLxcBtn.classList.remove("active");
       if (elements.modeBothBtn) elements.modeBothBtn.classList.remove("active", "mode-both");
-      elements.templateIdWrapper.style.opacity = "1";
-      elements.templateIdInput.disabled = false;
+      updateTemplatesUI();
     });
 
     if (elements.modeBothBtn) {
@@ -2039,8 +2284,7 @@
         elements.modeBothBtn.classList.add("active", "mode-both");
         elements.modeLxcBtn.classList.remove("active");
         elements.modeVmBtn.classList.remove("active");
-        elements.templateIdWrapper.style.opacity = "1";
-        elements.templateIdInput.disabled = false;
+        updateTemplatesUI();
       });
     }
 
@@ -2050,6 +2294,7 @@
       elements.engineDockerBtn.classList.add("active");
       elements.enginePodmanBtn.classList.remove("active", "engine-podman");
       if (elements.engineBothBtn) elements.engineBothBtn.classList.remove("active", "engine-both");
+      updateTemplatesUI();
     });
 
     elements.enginePodmanBtn.addEventListener("click", () => {
@@ -2057,6 +2302,7 @@
       elements.enginePodmanBtn.classList.add("active", "engine-podman");
       elements.engineDockerBtn.classList.remove("active");
       if (elements.engineBothBtn) elements.engineBothBtn.classList.remove("active", "engine-both");
+      updateTemplatesUI();
     });
 
     if (elements.engineBothBtn) {
@@ -2065,6 +2311,46 @@
         elements.engineBothBtn.classList.add("active", "engine-both");
         elements.engineDockerBtn.classList.remove("active");
         elements.enginePodmanBtn.classList.remove("active", "engine-podman");
+        updateTemplatesUI();
+      });
+    }
+
+    // Network profile toggle (Isolated Subnet vs LAN Bridge)
+    if (elements.toggleNetworkBtn) {
+      elements.toggleNetworkBtn.addEventListener("click", async () => {
+        if (state.isRunning) {
+          alert("Cannot switch network configuration while a test run is in progress.");
+          return;
+        }
+        const currentBridge = elements.configBridgeLabel
+          ? elements.configBridgeLabel.textContent.trim()
+          : "";
+        const targetProfile = currentBridge === "vmbr1" ? "lan" : "isolated";
+        try {
+          elements.toggleNetworkBtn.disabled = true;
+          elements.toggleNetworkBtn.textContent = "⏳ Bezig...";
+          const res = await fetch("/api/config/network", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profile: targetProfile }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            updateNetworkUI(data);
+            const ts = getTimestamp();
+            appendLog(
+              `[${ts}] [GUI] Test netwerk gewisseld naar ${data.profile.toUpperCase()} ` +
+              `profiel (${data.bridge} | Gateway ${data.gateway} | Doel ${data.test_ip})`
+            );
+          } else {
+            console.error("Failed to switch network configuration");
+          }
+        } catch (err) {
+          console.error("Error toggling network profile:", err);
+        } finally {
+          elements.toggleNetworkBtn.disabled = false;
+          elements.toggleNetworkBtn.textContent = "Wissel Netwerk";
+        }
       });
     }
 
@@ -2163,6 +2449,14 @@
           return;
         }
 
+        const pdfBtn = e.target.closest(".btn-report-pdf");
+        if (pdfBtn) {
+          const file = pdfBtn.getAttribute("data-file") || "";
+          const comp = pdfBtn.getAttribute("data-comp") || "";
+          exportReportToPdf(file, comp, pdfBtn);
+          return;
+        }
+
         const aiBtn = e.target.closest(".btn-ai-fix");
         if (aiBtn) {
           const compId = aiBtn.getAttribute("data-comp") || "";
@@ -2203,8 +2497,31 @@
       }
     });
 
-    // Report modal
+    // Report modal & PDF Export
     elements.viewReportBtn.addEventListener("click", () => loadReport());
+    if (elements.exportLatestPdfBtn) {
+      elements.exportLatestPdfBtn.addEventListener("click", () => {
+        exportReportToPdf(null, null, elements.exportLatestPdfBtn);
+      });
+    }
+    if (elements.btnReportExportPdf) {
+      elements.btnReportExportPdf.addEventListener("click", () => {
+        exportReportToPdf(
+          state.currentReportFile,
+          state.currentCompId,
+          elements.btnReportExportPdf
+        );
+      });
+    }
+    if (elements.reportModalExportPdfBtn) {
+      elements.reportModalExportPdfBtn.addEventListener("click", () => {
+        exportReportToPdf(
+          state.currentReportFile,
+          state.currentCompId,
+          elements.reportModalExportPdfBtn
+        );
+      });
+    }
     elements.closeModalBtn.addEventListener("click", () => {
       elements.reportModal.classList.remove("open");
     });
@@ -2219,6 +2536,23 @@
         elements.reportModal.classList.remove("open");
       }
     });
+
+    if (elements.btnReportViewFormatted) {
+      elements.btnReportViewFormatted.addEventListener("click", () => {
+        if (elements.reportContent) elements.reportContent.style.display = "block";
+        if (elements.reportRawContent) elements.reportRawContent.style.display = "none";
+        elements.btnReportViewFormatted.classList.add("active");
+        if (elements.btnReportViewRaw) elements.btnReportViewRaw.classList.remove("active");
+      });
+    }
+    if (elements.btnReportViewRaw) {
+      elements.btnReportViewRaw.addEventListener("click", () => {
+        if (elements.reportContent) elements.reportContent.style.display = "none";
+        if (elements.reportRawContent) elements.reportRawContent.style.display = "block";
+        if (elements.btnReportViewFormatted) elements.btnReportViewFormatted.classList.remove("active");
+        elements.btnReportViewRaw.classList.add("active");
+      });
+    }
 
     // AI Diagnostics Modal controls
     if (elements.aiBatchBtn) {

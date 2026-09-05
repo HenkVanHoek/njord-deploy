@@ -1,13 +1,15 @@
 # scripts/proxmox_package_test_runner.py
 import argparse
+import base64
 import json
 import logging
 import os
+import shutil
 import signal
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests  # type: ignore
 from dotenv import load_dotenv
@@ -21,6 +23,7 @@ from managers.deployment_manager import DeploymentManager  # noqa: E402
 from managers.setup_manager import SetupManager  # noqa: E402
 from managers.ssh_manager import SSHManager  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
+from utils.screenshot_utils import capture_service_screenshot  # noqa: E402
 from utils.security_utils import mask_passwords  # noqa: E402
 from utils.template_header import update_template_header_content  # noqa: E402
 
@@ -103,6 +106,7 @@ def verify_package_health(
     comp_mgr: ComponentManager,
     engine: str = "docker",
     max_retries: int = 40,
+    mode: str = "vm",
 ) -> Dict[str, Any]:
     """Runs SSH-based checks and optional HTTP requests to verify health.
 
@@ -150,9 +154,18 @@ def verify_package_health(
             )
             cont_cli = (cli_out or "").strip() or "docker"
 
+        sudo_pfx = "" if vm_user == "root" else f"echo '{vm_pass}' | sudo -S "
+        user_pfx = (
+            "XDG_RUNTIME_DIR=/run/user/$(id -u) "
+            if cont_cli == "podman" and vm_user != "root"
+            else ""
+        )
+
         def _get_running_containers() -> List[str]:
+            containers: List[str] = []
+            # Check user namespace
             cmd_cont_ps = (
-                f"{cont_cli} ps -a --filter "
+                f"{user_pfx}{cont_cli} ps -a --filter "
                 "label=com.docker.compose.project=njorddeploy "
                 "--format '{{.Names}} ({{.Status}})'"
             )
@@ -165,7 +178,8 @@ def verify_package_health(
             if cmd_exit != 0 or not ps_out or not ps_out.strip():
                 # Fallback without label filter if not tagged by compose
                 fallback_ps = (
-                    f"{cont_cli} ps -a --format '{{{{.Names}}}} ({{{{.Status}}}})'"
+                    f"{user_pfx}{cont_cli} ps -a "
+                    "--format '{{{{.Names}}}} ({{{{.Status}}}})'"
                 )
                 fallback_exit, fallback_out = ssh_mgr.execute_command(
                     fallback_ps,
@@ -177,8 +191,41 @@ def verify_package_health(
                     cmd_exit = 0
 
             if cmd_exit == 0 and ps_out:
-                return [line.strip() for line in ps_out.splitlines() if line.strip()]
-            return []
+                containers.extend(
+                    [line.strip() for line in ps_out.splitlines() if line.strip()]
+                )
+
+            # Check root namespace if non-root user (e.g. rootful Podman/Docker in VM)
+            if vm_user != "root":
+                root_ps = (
+                    f"{sudo_pfx}{cont_cli} ps -a --filter "
+                    "label=com.docker.compose.project=njorddeploy "
+                    "--format '{{.Names}} ({{.Status}})'"
+                )
+                root_exit, root_out = ssh_mgr.execute_command(
+                    root_ps,
+                    lambda x: None,
+                    check_exit_code=False,
+                )
+                if root_exit != 0 or not root_out or not root_out.strip():
+                    fallback_root = (
+                        f"{sudo_pfx}{cont_cli} ps -a "
+                        "--format '{{{{.Names}}}} ({{{{.Status}}}})'"
+                    )
+                    _, fb_root_out = ssh_mgr.execute_command(
+                        fallback_root,
+                        lambda x: None,
+                        check_exit_code=False,
+                    )
+                    if fb_root_out:
+                        root_out = fb_root_out
+                        root_exit = 0
+                if root_exit == 0 and root_out:
+                    containers.extend(
+                        [line.strip() for line in root_out.splitlines() if line.strip()]
+                    )
+
+            return list(dict.fromkeys(containers))
 
         running_containers = _get_running_containers()
         overall_success = True
@@ -259,6 +306,8 @@ def verify_package_health(
             comp_http_ok: str | bool | None = None
             comp_logs_error = False
             comp_detected_version = None
+            comp_record_screenshot: Optional[str] = None
+            comp_record_url: Optional[str] = None
 
             if not is_running:
                 comp_error_message = (
@@ -267,7 +316,7 @@ def verify_package_health(
                 if matched_container:
                     err_logs: List[str] = []
                     ssh_mgr.execute_command(
-                        f"{cont_cli} logs {matched_container} --tail 100",
+                        f"{sudo_pfx}{cont_cli} logs {matched_container} --tail 100",
                         lambda x: err_logs.append(x),
                         check_exit_code=False,
                     )
@@ -280,7 +329,7 @@ def verify_package_health(
                 # Check container logs for tracebacks or fatal errors
                 comp_logs: List[str] = []
                 ssh_mgr.execute_command(
-                    f"{cont_cli} logs {matched_container} --tail 100",
+                    f"{sudo_pfx}{cont_cli} logs {matched_container} --tail 100",
                     lambda x: comp_logs.append(x),
                     check_exit_code=False,
                 )
@@ -290,7 +339,7 @@ def verify_package_health(
 
                 # Inspect container config to get the actual version
                 cmd_inspect = (
-                    f"{cont_cli} inspect {matched_container} "
+                    f"{sudo_pfx}{cont_cli} inspect {matched_container} "
                     "--format '{{{{json .Config}}}}'"
                 )
                 inspect_exit, inspect_out = ssh_mgr.execute_command(
@@ -402,7 +451,52 @@ def verify_package_health(
                             except Exception:  # nosec B110
                                 pass
 
-                        if not probe_success:
+                        if probe_success:
+                            active_shot_url = (
+                                fallback_url
+                                if (
+                                    comp_id in ["adguard-home", "adguardhome"]
+                                    and res.status_code not in [200, 301, 302, 401, 403]
+                                )
+                                else url
+                            )
+                            comp_record_url = active_shot_url
+                            try:
+                                shot_dir = (
+                                    project_root
+                                    / "docs"
+                                    / "images"
+                                    / "test_screenshots"
+                                )
+                                shot_dir.mkdir(parents=True, exist_ok=True)
+                                ts_clean = time.strftime("%Y%m%d_%H%M%S")
+                                m_clean = mode.lower()
+                                e_clean = engine.lower()
+                                shot_fn = (
+                                    f"pkg_{comp_id}_{m_clean}_{e_clean}_{ts_clean}.png"
+                                )
+                                shot_dest = shot_dir / shot_fn
+                                logger.info(
+                                    f"📸 Capturing Web UI screenshot for "
+                                    f"{comp_id} at {active_shot_url}..."
+                                )
+                                captured_path = capture_service_screenshot(
+                                    url=active_shot_url,
+                                    output_path=shot_dest,
+                                )
+                                if captured_path and shot_dest.exists():
+                                    comp_record_screenshot = (
+                                        f"images/test_screenshots/{shot_fn}"
+                                    )
+                                    logger.info(
+                                        f"📸 Screenshot saved: "
+                                        f"{comp_record_screenshot}"
+                                    )
+                            except Exception as shot_ex:
+                                logger.warning(
+                                    f"Screenshot failed for {comp_id}: {shot_ex}"
+                                )
+                        else:
                             overall_success = False
 
             comp_record = {
@@ -411,6 +505,8 @@ def verify_package_health(
                 "logs_error": comp_logs_error,
                 "error_message": comp_error_message,
                 "detected_version": comp_detected_version,
+                "screenshot_path": comp_record_screenshot,
+                "http_url": comp_record_url,
             }
             component_status[comp_id] = comp_record
 
@@ -526,6 +622,55 @@ def wait_for_lxc_ip(
     raise TimeoutError("Container failed to acquire an IP address in time.")
 
 
+def resolve_dedicated_vm_template(
+    proxmox_client: ProxmoxClient, node: str, engine: str, template_id: int
+) -> Tuple[int, bool]:
+    """Returns (effective_template_id, is_dedicated).
+
+    Auto-selects dedicated VM template (911 for Docker, 913 for Podman).
+    """
+    target_id = 911 if engine.lower() == "docker" else 913
+    if template_id == target_id:
+        return target_id, True
+
+    if template_id in (902, 911, 912, 913, 914):
+        # noinspection PyBroadException
+        try:
+            qemu_vms = proxmox_client.get(f"nodes/{node}/qemu").get("data", [])
+            for vm in qemu_vms:
+                if vm.get("vmid") == target_id:
+                    logger.info(
+                        f"🚀 Auto-selected dedicated {engine.upper()} VM "
+                        f"template ID {target_id} on '{node}'."
+                    )
+                    return target_id, True
+        except Exception as e:
+            logger.debug(f"Failed to check dedicated VM template: {e}")
+    return template_id, False
+
+
+def resolve_dedicated_lxc_template(
+    proxmox_client: ProxmoxClient, node: str, engine: str
+) -> Optional[int]:
+    """Returns dedicated LXC template ID (912 for Docker, 914 for Podman)
+    if it exists on the node.
+    """
+    target_id = 912 if engine.lower() == "docker" else 914
+    # noinspection PyBroadException
+    try:
+        lxc_containers = proxmox_client.get(f"nodes/{node}/lxc").get("data", [])
+        for ct in lxc_containers:
+            if ct.get("vmid") == target_id:
+                logger.info(
+                    f"🚀 Auto-selected dedicated {engine.upper()} LXC "
+                    f"template ID {target_id} on '{node}'."
+                )
+                return target_id
+    except Exception as e:
+        logger.debug(f"Failed to check dedicated LXC template: {e}")
+    return None
+
+
 def start_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
     return client.post(f"nodes/{node}/lxc/{vmid}/status/start")
 
@@ -535,7 +680,7 @@ def stop_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
 
 
 def destroy_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
-    return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1})
+    return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1, "force": 1})
 
 
 def wait_for_proxmox_task(
@@ -652,6 +797,14 @@ def _save_incremental_package_result(test_record: Dict[str, Any]) -> None:
             json.dump(history, f, indent=4)
             f.write("\n")
 
+        # Write instance-specific markdown report
+        inst_rep_fn = clean_record.get("report_file")
+        if inst_rep_fn and inst_rep_fn != "PROXMOX_PACKAGE_TESTS.md":
+            inst_path = docs_dir / inst_rep_fn
+            inst_failed = 0 if clean_record.get("status") == "success" else 1
+            write_markdown_report(inst_path, [clean_record], inst_failed)
+            logger.info(f"Saved instance markdown report to: {inst_path}")
+
         latest_report_path = docs_dir / "PROXMOX_PACKAGE_TESTS.md"
         hist_failed = sum(1 for r in history if r.get("status") != "success")
         write_markdown_report(latest_report_path, history, hist_failed)
@@ -695,12 +848,20 @@ def register_signal_handlers(client: ProxmoxClient, node: str) -> None:
                     f"{'LXC' if is_lxc else 'VM'} {vmid}..."
                 )
                 if is_lxc:
-                    stop_lxc(cli, nod, vmid)
-                    time.sleep(1)
+                    # noinspection PyBroadException
+                    try:
+                        stop_lxc(cli, nod, vmid)
+                        time.sleep(1)
+                    except Exception:  # nosec B110
+                        pass
                     destroy_lxc(cli, nod, vmid)
                 else:
-                    cli.stop_vm(nod, vmid)
-                    time.sleep(1)
+                    # noinspection PyBroadException
+                    try:
+                        cli.stop_vm(nod, vmid)
+                        time.sleep(1)
+                    except Exception:  # nosec B110
+                        pass
                     cli.destroy_vm(nod, vmid)
                 logger.info(f"Emergency cleanup for {vmid} complete.")
             except Exception as e:
@@ -821,10 +982,26 @@ def cleanup_stale_test_instances(client: ProxmoxClient, node: str) -> None:
     # noinspection PyBroadException
     try:
         lxcs = client.get(f"nodes/{node}/lxc").get("data", [])
+        test_ips = ("10.99.0.199", "192.168.178.199")
         for lxc in lxcs:
             lxc_name = lxc.get("name", "")
             vmid = lxc.get("vmid")
-            if any(lxc_name.startswith(pfx) for pfx in stale_prefixes) and vmid:
+            if not vmid or lxc.get("template"):
+                continue
+
+            is_stale = any(lxc_name.startswith(pfx) for pfx in stale_prefixes)
+            if not is_stale and lxc_name.startswith("CT"):
+                # Check if this CT has one of the dedicated test IPs
+                # noinspection PyBroadException
+                try:
+                    cfg = client.get(f"nodes/{node}/lxc/{vmid}/config").get("data", {})
+                    net0 = cfg.get("net0", "")
+                    if any(f"ip={tip}" in net0 for tip in test_ips):
+                        is_stale = True
+                except Exception:  # nosec B110
+                    pass
+
+            if is_stale:
                 logger.warning(
                     f"Found stale test LXC '{lxc_name}' (VMID: {vmid}). Cleaning up..."
                 )
@@ -919,9 +1096,18 @@ def run_package_environment_tests(
     env_results: List[Dict[str, Any]] = []
 
     test_ip = os.getenv("PROXMOX_TEST_IP")
-    bridge = os.getenv("PROXMOX_BRIDGE", "vmbr1" if test_ip else "vmbr0")
+    bridge = os.getenv("PROXMOX_BRIDGE")
+    if not bridge:
+        bridge = "vmbr1" if (test_ip and "10.99." in test_ip) else "vmbr0"
+    elif test_ip and "10.99." in test_ip and bridge == "vmbr0":
+        bridge = "vmbr1"
+
     default_gw = "10.99.0.1" if (test_ip and "10.99." in test_ip) else "192.168.178.1"
-    test_gw = os.getenv("PROXMOX_GATEWAY", default_gw)
+    raw_gw = os.getenv("PROXMOX_GATEWAY")
+    if not raw_gw or (test_ip and "10.99." in test_ip and "10.99." not in raw_gw):
+        test_gw = default_gw
+    else:
+        test_gw = raw_gw
     vlan_tag = os.getenv("PROXMOX_VLAN_TAG")
 
     tag_suffix = f",tag={vlan_tag}" if vlan_tag else ""
@@ -959,31 +1145,65 @@ def run_package_environment_tests(
             active_cleanup_target["vmid"] = shared_lxc_vmid
             active_cleanup_target["shared_lxc_vmid"] = shared_lxc_vmid
             active_cleanup_target["is_lxc"] = True
-            logger.info(
-                f"Creating shared LXC container {shared_lxc_vmid} "
-                f"on node '{node}'..."
+            dedicated_lxc_id = resolve_dedicated_lxc_template(
+                proxmox_client, node, engine
             )
-            ostemplate = find_suitable_lxc_template(proxmox_client, node)
-            logger.info(f"Using template: {ostemplate}")
+            if dedicated_lxc_id:
+                logger.info(
+                    f"Cloning dedicated LXC template {dedicated_lxc_id} to "
+                    f"shared container {shared_lxc_vmid} on node '{node}'..."
+                )
+                clone_res = proxmox_client.clone_lxc(
+                    node=node,
+                    vmid=dedicated_lxc_id,
+                    newid=shared_lxc_vmid,
+                    hostname=f"pish-test-pkg-{engine.lower()}",
+                    full=True,
+                )
+                upid = clone_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(proxmox_client, node, upid)
 
-            create_data = {
-                "vmid": shared_lxc_vmid,
-                "ostemplate": ostemplate,
-                "cores": 4,
-                "memory": 4096,
-                "swap": 512,
-                "rootfs": "local-lvm:40",
-                "net0": lxc_net,
-                "features": "nesting=1",
-                "unprivileged": 1,
-                "password": vm_pass,
-                "ssh-public-keys": ssh_public_key,
-                "start": 1,
-            }
-            create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
-            upid = create_res.get("data")
-            if isinstance(upid, str):
-                wait_for_proxmox_task(proxmox_client, node, upid)
+                proxmox_client.configure_lxc(
+                    node=node,
+                    vmid=shared_lxc_vmid,
+                    config_data={
+                        "cores": 4,
+                        "memory": 4096,
+                        "swap": 512,
+                        "net0": lxc_net,
+                    },
+                )
+                if shared_lxc_vmid is None:
+                    raise RuntimeError("Failed to allocate shared LXC VMID.")
+                start_lxc(proxmox_client, node, shared_lxc_vmid)
+            else:
+                logger.info(
+                    f"Creating shared LXC container {shared_lxc_vmid} "
+                    f"on node '{node}'..."
+                )
+                ostemplate = find_suitable_lxc_template(proxmox_client, node)
+                logger.info(f"Using template: {ostemplate}")
+
+                create_data = {
+                    "vmid": shared_lxc_vmid,
+                    "ostemplate": ostemplate,
+                    "hostname": f"pish-test-pkg-{engine.lower()}",
+                    "cores": 4,
+                    "memory": 4096,
+                    "swap": 512,
+                    "rootfs": "local-lvm:40",
+                    "net0": lxc_net,
+                    "features": "nesting=1",
+                    "unprivileged": 1,
+                    "password": vm_pass,
+                    "ssh-public-keys": ssh_public_key,
+                    "start": 1,
+                }
+                create_res = proxmox_client.post(f"nodes/{node}/lxc", data=create_data)
+                upid = create_res.get("data")
+                if isinstance(upid, str):
+                    wait_for_proxmox_task(proxmox_client, node, upid)
 
             if shared_lxc_vmid is None:
                 raise RuntimeError("shared_lxc_vmid unexpectedly None")
@@ -995,52 +1215,53 @@ def run_package_environment_tests(
                 shared_lxc_ip = wait_for_lxc_ip(proxmox_client, node, shared_lxc_vmid)
             if shared_lxc_ip is None:
                 raise RuntimeError("shared_lxc_ip is None in LXC mode")
-            logger.info(f"Shared LXC container online at {shared_lxc_ip}.")
-            time.sleep(10)
+            logger.info(f"LXC container {shared_lxc_vmid} online at {shared_lxc_ip}.")
+            time.sleep(5)
 
-            # Install engine on the shared container
-            logger.info(f"Installing {engine.upper()} on shared LXC container...")
-            lxc_ssh = SSHManager(
-                hostname=shared_lxc_ip,
-                username="root",
-                password=vm_pass,
-                allow_auto_add=True,
-                load_system_keys=False,
-            )
-            connected = False
-            conn_msg = ""
-            for attempt in range(6):
-                connected, conn_msg = lxc_ssh.connect()
-                if connected:
-                    break
-                logger.info(
-                    f"SSH attempt {attempt + 1}/6 failed: {conn_msg}. "
-                    "Retrying in 5 seconds..."
+            # Install engine manually on shared container only if created from scratch
+            if not dedicated_lxc_id:
+                logger.info(f"Installing {engine.upper()} on shared LXC container...")
+                lxc_ssh = SSHManager(
+                    hostname=shared_lxc_ip,
+                    username="root",
+                    password=vm_pass,
+                    allow_auto_add=True,
+                    load_system_keys=False,
                 )
-                time.sleep(5)
-            if not connected:
-                raise RuntimeError(
-                    f"Failed to SSH into shared LXC container: {conn_msg}"
-                )
+                connected = False
+                conn_msg = ""
+                for attempt in range(6):
+                    connected, conn_msg = lxc_ssh.connect()
+                    if connected:
+                        break
+                    logger.info(
+                        f"SSH attempt {attempt + 1}/6 failed: {conn_msg}. "
+                        "Retrying in 5 seconds..."
+                    )
+                    time.sleep(5)
+                if not connected:
+                    raise RuntimeError(
+                        f"Failed to SSH into shared LXC container: {conn_msg}"
+                    )
 
-            if engine == "docker":
-                for cmd in [
-                    "apt-get update",
-                    "apt-get install -y curl ca-certificates gnupg",
-                    "curl -fsSL https://get.docker.com -o get-docker.sh",
-                    "sh get-docker.sh",
-                    "systemctl enable --now docker",
-                ]:
-                    lxc_ssh.execute_command(cmd, lambda msg: None)
-            else:
-                for cmd in [
-                    "apt-get update",
-                    "apt-get install -y podman podman-compose",
-                ]:
-                    lxc_ssh.execute_command(cmd, lambda msg: None)
+                if engine == "docker":
+                    for cmd in [
+                        "apt-get update",
+                        "apt-get install -y curl ca-certificates gnupg",
+                        "curl -fsSL https://get.docker.com -o get-docker.sh",
+                        "sh get-docker.sh",
+                        "systemctl enable --now docker",
+                    ]:
+                        lxc_ssh.execute_command(cmd, lambda msg: None)
+                else:
+                    for cmd in [
+                        "apt-get update",
+                        "apt-get install -y podman podman-compose",
+                    ]:
+                        lxc_ssh.execute_command(cmd, lambda msg: None)
 
-            lxc_ssh.close()
-            logger.info(f"{engine.upper()} installed on shared LXC container.")
+                lxc_ssh.close()
+                logger.info(f"{engine.upper()} installed on shared LXC container.")
 
         except Exception as setup_err:
             logger.error(f"Failed to provision shared LXC container: {setup_err}")
@@ -1092,7 +1313,14 @@ def run_package_environment_tests(
                 f"{pkg_res['max_retries']} Retries"
             )
 
+            ts_inst = time.strftime("%Y%m%d_%H%M%S")
+            inst_report_filename = (
+                f"PROXMOX_PACKAGE_TESTS_{pkg_id}_{mode.lower()}_"
+                f"{engine.lower()}_{ts_inst}.md"
+            )
+
             test_record: Dict[str, Any] = {
+                "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
                 "package_id": pkg_id,
                 "package_name": pkg.get("name"),
                 "status": "failed",
@@ -1102,12 +1330,13 @@ def run_package_environment_tests(
                 "ip": shared_lxc_ip if is_lxc else None,
                 "deployment": "failed",
                 "components": {},
-                "report_file": report_filename,
+                "report_file": inst_report_filename,
                 "error_message": "",
             }
 
             new_vmid: int | None = None
             vm_ip: str | None = shared_lxc_ip if is_lxc else None
+            is_dedicated_vm = False
 
             try:
                 if is_lxc:
@@ -1149,10 +1378,26 @@ def run_package_environment_tests(
                         "2>/dev/null || true; "
                         "mkdir -p /tmp/.ansible && "
                         "chmod 1777 /tmp/.ansible 2>/dev/null || true; "
+                        "mkdir -p /etc/docker 2>/dev/null || true; "
+                        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
+                        '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
+                        '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
+                        "> /etc/docker/daemon.json 2>/dev/null || true; "
+                        "mkdir -p /etc/containers/registries.conf.d "
+                        "2>/dev/null || true; "
+                        'printf \'[[registry]]\\nprefix = "docker.io"\\n'
+                        'location = "docker.io"\\n\\n'
+                        '[[registry.mirror]]\\nlocation = "10.99.0.2:5000"\\n'
+                        "insecure = true\\n' "
+                        "> /etc/containers/registries.conf.d/mirror.conf "
+                        "2>/dev/null || true; "
                         "rm -rf /opt/njorddeploy/* 2>/dev/null || true"
                     )
+                    b64_clean = base64.b64encode(cleanup_script.encode("utf-8")).decode(
+                        "ascii"
+                    )
                     cleanup_ssh.execute_command(
-                        f"sh -c '{cleanup_script}'",
+                        f"bash -c 'echo {b64_clean} | base64 -d | bash'",
                         lambda msg: None,
                         check_exit_code=False,
                     )
@@ -1171,14 +1416,18 @@ def run_package_environment_tests(
                     new_vmid = proxmox_client.get_next_vmid()
                     active_cleanup_target["vmid"] = new_vmid
                     active_cleanup_target["is_lxc"] = False
+                    test_record["vmid"] = new_vmid
+                    eff_vm_template, is_dedicated_vm = resolve_dedicated_vm_template(
+                        proxmox_client, node, engine, template_id
+                    )
                     logger.info(
-                        f"Cloning VM {template_id} to new VMID {new_vmid} "
-                        f"(package: {pkg_id})..."
+                        f"Cloning VM template {eff_vm_template} to new VMID "
+                        f"{new_vmid} (package: {pkg_id}, engine: {engine.upper()})..."
                     )
                     try:
                         clone_res = proxmox_client.clone_vm(
                             node=node,
-                            vmid=template_id,
+                            vmid=eff_vm_template,
                             newid=new_vmid,
                             name=f"pish-test-{pkg_id}",
                             full=False,
@@ -1193,7 +1442,7 @@ def run_package_environment_tests(
                             )
                             clone_res = proxmox_client.clone_vm(
                                 node=node,
-                                vmid=template_id,
+                                vmid=eff_vm_template,
                                 newid=new_vmid,
                                 name=f"pish-test-{pkg_id}",
                                 full=True,
@@ -1206,7 +1455,7 @@ def run_package_environment_tests(
 
                     import urllib.parse
 
-                    proxmox_client.configure_vm(
+                    conf_res = proxmox_client.configure_vm(
                         node=node,
                         vmid=new_vmid,
                         config_data={
@@ -1216,11 +1465,17 @@ def run_package_environment_tests(
                             "cipassword": vm_pass,
                             "sshkeys": urllib.parse.quote(ssh_public_key),
                             "ipconfig0": vm_ipconfig,
+                            "nameserver": os.getenv(
+                                "PROXMOX_NAMESERVER", "1.1.1.1 8.8.8.8"
+                            ),
                             "agent": "enabled=1",
-                            "ide2": "local-lvm:cloudinit",
                             "net0": vm_net,
                         },
                     )
+                    upid = conf_res.get("data")
+                    if isinstance(upid, str):
+                        wait_for_proxmox_task(proxmox_client, node, upid)
+
                     # noinspection PyBroadException
                     try:
                         proxmox_client.resize_vm_disk(
@@ -1239,19 +1494,112 @@ def run_package_environment_tests(
                     proxmox_client.start_vm(node=node, vmid=new_vmid)
                     if new_vmid is None:
                         raise RuntimeError("new_vmid is None")
+
+                    # Wait for guest agent to report IP and verify VM has booted
+                    discovered_ip = wait_for_ip(
+                        proxmox_client, node, new_vmid, timeout_seconds=120
+                    )
                     if clean_ip:
                         vm_ip = clean_ip
-                        logger.info(f"Using configured static IP for VM: {vm_ip}")
-                        time.sleep(15)
+                        logger.info(
+                            f"Using configured static IP for VM: {vm_ip} "
+                            f"(guest agent reported: {discovered_ip})"
+                        )
                     else:
-                        vm_ip = wait_for_ip(proxmox_client, node, new_vmid)
+                        vm_ip = discovered_ip
+
                     if not vm_ip:
                         raise TimeoutError(
                             "Unable to retrieve IP address for cloned VM."
                         )
                     test_record["vmid"] = new_vmid
                     test_record["ip"] = vm_ip
-                    time.sleep(10)
+                    logger.info(f"VM {new_vmid} online at {vm_ip}.")
+                    time.sleep(3)
+
+                    logger.info(
+                        f"Waiting for SSH daemon to become ready on VM {vm_ip}..."
+                    )
+                    vm_ssh = SSHManager(
+                        hostname=vm_ip,
+                        username=vm_user,
+                        password=vm_pass,
+                        allow_auto_add=True,
+                        load_system_keys=False,
+                    )
+                    connected = False
+                    conn_msg = ""
+                    for attempt in range(15):
+                        connected, conn_msg = vm_ssh.connect()
+                        if connected:
+                            break
+                        time.sleep(5)
+                    if not connected:
+                        raise TimeoutError(
+                            f"Could not connect via SSH to VM {vm_ip}: {conn_msg}"
+                        )
+
+                    # Prepare VM environment: DNS, Registry Mirror, apt locks, disk
+                    sudo_pfx = (
+                        "" if vm_user == "root" else f"echo '{vm_pass}' | sudo -S "
+                    )
+                    vm_init_script = (
+                        "#!/usr/bin/env bash\n"
+                        "set -e\n"
+                        "if command -v cloud-init >/dev/null 2>&1; then "
+                        "cloud-init status --wait || true; fi\n"
+                        "systemctl stop systemd-resolved 2>/dev/null || true\n"
+                        "systemctl disable systemd-resolved 2>/dev/null || true\n"
+                        "chattr -i /etc/resolv.conf 2>/dev/null || true\n"
+                        "rm -f /etc/resolv.conf\n"
+                        "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' "
+                        "> /etc/resolv.conf\n"
+                        "chattr +i /etc/resolv.conf 2>/dev/null || true\n"
+                        "mkdir -p /etc/docker 2>/dev/null || true\n"
+                        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
+                        '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
+                        '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
+                        "> /etc/docker/daemon.json 2>/dev/null || true\n"
+                        "mkdir -p /etc/containers/registries.conf.d "
+                        "2>/dev/null || true\n"
+                        'printf \'[[registry]]\\nprefix = "docker.io"\\n'
+                        'location = "docker.io"\\n\\n'
+                        '[[registry.mirror]]\\nlocation = "10.99.0.2:5000"\\n'
+                        "insecure = true\\n' "
+                        "> /etc/containers/registries.conf.d/mirror.conf "
+                        "2>/dev/null || true\n"
+                        "systemctl restart docker 2>/dev/null || true\n"
+                        "mkdir -p /tmp/.ansible && chmod 1777 /tmp/.ansible\n"
+                        "systemctl stop apt-daily.service apt-daily-upgrade.service "
+                        "apt-daily.timer apt-daily-upgrade.timer "
+                        "unattended-upgrades.service 2>/dev/null || true\n"
+                        "systemctl disable --now apt-daily.timer "
+                        "apt-daily-upgrade.timer "
+                        "unattended-upgrades.service 2>/dev/null || true\n"
+                        "systemctl kill --kill-who=all apt-daily.service "
+                        "apt-daily-upgrade.service unattended-upgrades.service "
+                        "2>/dev/null || true\n"
+                        "while fuser /var/lib/dpkg/lock-frontend "
+                        "/var/lib/dpkg/lock /var/lib/apt/lists/lock "
+                        "/var/cache/apt/archives/lock >/dev/null 2>&1; do "
+                        "sleep 2; done\n"
+                        "growpart /dev/sda 1 2>/dev/null || true\n"
+                        "resize2fs /dev/sda1 2>/dev/null || true\n"
+                    )
+                    b64_init = base64.b64encode(vm_init_script.encode("utf-8")).decode(
+                        "ascii"
+                    )
+                    logger.info(
+                        "Initializing VM environment (DNS, registry mirror, "
+                        "apt locks, disk)..."
+                    )
+                    vm_ssh.execute_command(
+                        f"{sudo_pfx}bash -c 'echo {b64_init} | base64 -d | bash'",
+                        lambda msg: None,
+                        check_exit_code=False,
+                    )
+
+                    vm_ssh.close()
 
                 # Build configuration package locally
                 logger.info(
@@ -1330,7 +1678,7 @@ def run_package_environment_tests(
                     engine.lower() == "podman"
                     and any(bool(c.get("requires_root")) for c in all_selected_data)
                 )
-                skip_prov = bool(is_lxc)
+                skip_prov = bool(is_lxc or is_dedicated_vm)
                 deploy_mgr.start_deployment(
                     task_id=task_id,
                     tasks=tasks_dict,
@@ -1376,12 +1724,16 @@ def run_package_environment_tests(
                     comp_mgr=comp_mgr,
                     engine=engine,
                     max_retries=pkg_res["max_retries"],
+                    mode=mode,
                 )
 
                 test_record["components"] = health_results["components"]
                 if health_results["success"]:
                     test_record["status"] = "success"
-                    logger.info(f"✅ Package {pkg_id} verified successfully!")
+                    logger.info(
+                        f"✅ Package {pkg_id} verified successfully! "
+                        f"[{mode.upper()} / {engine.upper()}]"
+                    )
 
                     for comp in package_components:
                         cid = comp.get("id")
@@ -1400,22 +1752,35 @@ def run_package_environment_tests(
                     test_record["status"] = "failed"
                     test_record["error_message"] = health_results["details"]
                     logger.error(
-                        f"❌ Package verification failed: {health_results['details']}"
+                        f"❌ Package verification failed for {pkg_id} "
+                        f"[{mode.upper()} / {engine.upper()}]: "
+                        f"{health_results['details']}"
                     )
 
             except Exception as ex:
-                logger.error(f"❌ Error during test of package {pkg_id}: {ex}")
+                logger.error(
+                    f"❌ Error during test of package {pkg_id} "
+                    f"[{mode.upper()} / {engine.upper()}]: {ex}"
+                )
                 test_record["status"] = "failed"
                 test_record["error_message"] = str(ex)
             finally:
                 active_cleanup_target["vmid"] = None
                 if not is_lxc and new_vmid:
                     logger.info(f"Stopping and destroying VM {new_vmid}...")
+                    # noinspection PyBroadException
                     try:
                         stop_res = proxmox_client.stop_vm(node, new_vmid)
                         upid = stop_res.get("data")
                         if isinstance(upid, str):
                             wait_for_proxmox_task(proxmox_client, node, upid)
+                    except Exception as stop_err:
+                        logger.warning(
+                            f"Note: Could not stop VM {new_vmid} "
+                            f"(may already be stopped): {stop_err}"
+                        )
+                    # noinspection PyBroadException
+                    try:
                         destroy_res = proxmox_client.destroy_vm(node, new_vmid)
                         upid = destroy_res.get("data")
                         if isinstance(upid, str):
@@ -1429,8 +1794,6 @@ def run_package_environment_tests(
                 if folder_vmid:
                     pkg_output_dir = setup_output_dir / str(folder_vmid) / pkg_id
                     if pkg_output_dir.exists():
-                        import shutil
-
                         shutil.rmtree(pkg_output_dir)
 
             env_results.append(test_record)
@@ -1441,18 +1804,35 @@ def run_package_environment_tests(
         active_cleanup_target["shared_lxc_vmid"] = None
         if is_lxc and shared_lxc_vmid:
             logger.info(f"Destroying shared LXC container {shared_lxc_vmid}...")
+            # noinspection PyBroadException
             try:
-                stop_res = stop_lxc(proxmox_client, node, shared_lxc_vmid)
-                upid = stop_res.get("data")
-                if isinstance(upid, str):
-                    wait_for_proxmox_task(proxmox_client, node, upid)
+                status_info = proxmox_client.get(
+                    f"nodes/{node}/lxc/{shared_lxc_vmid}/status/current"
+                )
+                ct_status = status_info.get("data", {}).get("status")
+                if ct_status == "running":
+                    logger.info(f"Stopping LXC container {shared_lxc_vmid}...")
+                    stop_res = stop_lxc(proxmox_client, node, shared_lxc_vmid)
+                    upid = stop_res.get("data")
+                    if isinstance(upid, str):
+                        wait_for_proxmox_task(proxmox_client, node, upid)
+            except Exception as stop_err:
+                logger.warning(
+                    f"Note: Could not stop LXC container {shared_lxc_vmid} "
+                    f"(may already be stopped): {stop_err}"
+                )
+
+            # noinspection PyBroadException
+            try:
                 destroy_res = destroy_lxc(proxmox_client, node, shared_lxc_vmid)
                 upid = destroy_res.get("data")
                 if isinstance(upid, str):
                     wait_for_proxmox_task(proxmox_client, node, upid)
-                logger.info(f"Shared LXC container {shared_lxc_vmid} destroyed.")
+                logger.info(
+                    f"Shared LXC container {shared_lxc_vmid} destroyed successfully."
+                )
             except Exception as teardown_err:
-                logger.error(
+                logger.warning(
                     "Failed to destroy shared LXC container "
                     f"{shared_lxc_vmid}: {teardown_err}"
                 )
@@ -1580,6 +1960,9 @@ def run_proxmox_package_tests(cli_args) -> int:
     results_summary: List[Dict[str, Any]] = []
 
     for mode_item, engine_item in matrix:
+        logger.info(
+            f"Target Environment: {mode_item.upper()} | Engine: {engine_item.upper()}"
+        )
         env_results = run_package_environment_tests(
             proxmox_client=proxmox_client,
             node=node,
@@ -1723,6 +2106,23 @@ def write_markdown_report(
                     f"| `{comp_id}` | {running} | {http_val} | "
                     f"{log_err} | {ver} | {comp_status} |"
                 )
+
+            pkg_shots = [
+                (cid, crec)
+                for cid, crec in components_data.items()
+                if crec.get("screenshot_path")
+            ]
+            if pkg_shots:
+                md_lines.append("")
+                md_lines.append("#### Web UI Screenshots:")
+                md_lines.append("")
+                for cid, crec in pkg_shots:
+                    surl = crec.get("http_url") or "N/A"
+                    md_lines.append(f"##### Component: `{cid}`")
+                    md_lines.append(f"- **Endpoint:** [{surl}]({surl})")
+                    md_lines.append("")
+                    md_lines.append(f"![{cid} Web UI]({crec['screenshot_path']})")
+                    md_lines.append("")
 
         if record.get("error_message"):
             md_lines.append("")

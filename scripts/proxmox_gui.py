@@ -4,10 +4,12 @@ Interactive Web Application for configuring and running NjordDeploy component
 integration tests on Proxmox VE (supporting Docker & Podman).
 """
 
+import base64
 import json
 import logging
 import os
 import queue
+import re
 import signal
 import subprocess  # nosec B404
 import sys
@@ -17,7 +19,15 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from dotenv import load_dotenv
-from flask import Flask, Response, jsonify, make_response, render_template, request
+from flask import (
+    Flask,
+    Response,
+    jsonify,
+    make_response,
+    render_template,
+    request,
+    send_from_directory,
+)
 
 
 def get_project_root() -> Path:
@@ -72,6 +82,7 @@ class TestRunnerManager:
         self.current_http_ok: Optional[bool] = None
         self.current_http_url: Optional[str] = None
         self.current_report_file: Optional[str] = None
+        self.last_failed_key: Optional[str] = None
         self.results_history: List[Dict[str, Any]] = []
         self.lock = threading.Lock()
 
@@ -101,6 +112,7 @@ class TestRunnerManager:
             self.current_http_ok = None
             self.current_http_url = None
             self.current_report_file = None
+            self.last_failed_key = None
             self.current_engine = (
                 "DOCKER" if engine in ("both", "all") else engine.upper()
             )
@@ -139,7 +151,14 @@ class TestRunnerManager:
                 "--node",
                 node,
             ]
-        elif target_type == "packages":
+        # Determine effective template ID: for matrix runs across modes or engines,
+        # ensure dynamic resolution across 911/912/913/914 by passing 902.
+        eff_template = template_id
+        if mode in ("both", "all") or engine in ("both", "all"):
+            if not eff_template or eff_template in ("902", "911", "912", "913", "914"):
+                eff_template = "902"
+
+        if target_type == "packages":
             runner_script = project_root / "scripts" / "proxmox_package_test_runner.py"
             cmd = [
                 python_bin,
@@ -152,8 +171,8 @@ class TestRunnerManager:
                 "--node",
                 node,
             ]
-            if mode in ("vm", "both", "all") and template_id:
-                cmd.extend(["--template-id", template_id])
+            if eff_template:
+                cmd.extend(["--template-id", eff_template])
             if packages:
                 cmd.extend(["--packages", ",".join(packages)])
         else:
@@ -169,8 +188,8 @@ class TestRunnerManager:
                 "--node",
                 node,
             ]
-            if mode == "vm" and template_id:
-                cmd.extend(["--template-id", template_id])
+            if eff_template:
+                cmd.extend(["--template-id", eff_template])
             if components:
                 cmd.extend(["--components", ",".join(components)])
 
@@ -184,11 +203,21 @@ class TestRunnerManager:
                 # noinspection SpellCheckingInspection
                 env["PYTHONUNBUFFERED"] = "1"
                 env["CONTAINER_ENGINE"] = engine
-                env["PROXMOX_BRIDGE"] = os.getenv("PROXMOX_BRIDGE", "vmbr1")
-                if os.getenv("PROXMOX_TEST_IP"):
-                    env["PROXMOX_TEST_IP"] = os.getenv("PROXMOX_TEST_IP")
-                if os.getenv("PROXMOX_GATEWAY"):
-                    env["PROXMOX_GATEWAY"] = os.getenv("PROXMOX_GATEWAY")
+                test_ip = os.getenv("PROXMOX_TEST_IP", "10.99.0.199")
+                bridge = os.getenv("PROXMOX_BRIDGE")
+                if not bridge:
+                    bridge = "vmbr1" if "10.99." in test_ip else "vmbr0"
+                elif "10.99." in test_ip and bridge == "vmbr0":
+                    bridge = "vmbr1"
+
+                default_gw = "10.99.0.1" if "10.99." in test_ip else "192.168.178.1"
+                test_gw = os.getenv("PROXMOX_GATEWAY")
+                if not test_gw or ("10.99." in test_ip and "10.99." not in test_gw):
+                    test_gw = default_gw
+
+                env["PROXMOX_BRIDGE"] = bridge
+                env["PROXMOX_TEST_IP"] = test_ip
+                env["PROXMOX_GATEWAY"] = test_gw
                 if os.getenv("PROXMOX_VLAN_TAG"):
                     env["PROXMOX_VLAN_TAG"] = os.getenv("PROXMOX_VLAN_TAG")
 
@@ -334,10 +363,18 @@ class TestRunnerManager:
                 self.current_report_file = rep_part.strip()
             except Exception:  # nosec B110
                 pass
-        elif "Saved human-readable markdown report to:" in line:
+        elif (
+            "Saved human-readable markdown report to:" in line
+            or "Saved instance markdown report to:" in line
+        ):
             # noinspection PyBroadException
             try:
-                _, path_part = line.split("Saved human-readable markdown report to:", 1)
+                split_key = (
+                    "Saved human-readable markdown report to:"
+                    if "Saved human-readable markdown report to:" in line
+                    else "Saved instance markdown report to:"
+                )
+                _, path_part = line.split(split_key, 1)
                 self.current_report_file = Path(path_part.strip()).name
             except Exception:  # nosec B110
                 pass
@@ -350,13 +387,15 @@ class TestRunnerManager:
             self.current_component = pkg_id
             self.current_http_ok = None
             self.current_http_url = None
+            self.last_failed_key = None
 
             current_engine = self.current_engine
             current_mode = self.current_mode
             if "[" in line and "]" in line:
                 # noinspection PyBroadException
                 try:
-                    bracket_content = line.split("[", 1)[1].split("]", 1)[0]
+                    # Use rsplit to target trailing '[MODE / ENGINE]'
+                    bracket_content = line.rsplit("[", 1)[1].split("]", 1)[0]
                     if "/" in bracket_content:
                         m_tok, e_tok = bracket_content.split("/", 1)
                         current_mode = m_tok.strip().upper()
@@ -395,6 +434,7 @@ class TestRunnerManager:
             self.current_component = comp_id
             self.current_http_ok = None
             self.current_http_url = None
+            self.last_failed_key = None
 
             current_engine = self.current_engine
             current_mode = self.current_mode
@@ -445,14 +485,28 @@ class TestRunnerManager:
             _, pkg_part = line.split("Package", 1)
             pkg_words = pkg_part.strip().split()
             pkg_id = next(iter(pkg_words), "unknown")
+            mode_val = self.current_mode
+            engine_val = self.current_engine
+            if "[" in line and "]" in line:
+                # noinspection PyBroadException
+                try:
+                    bracket_content = line.rsplit("[", 1)[1].split("]", 1)[0]
+                    if "/" in bracket_content:
+                        m_tok, e_tok = bracket_content.split("/", 1)
+                        mode_val = m_tok.strip().upper()
+                        engine_val = e_tok.strip().upper()
+                except Exception:  # nosec B110
+                    pass
+            self.current_mode = mode_val
+            self.current_engine = engine_val
             self.log_queue.put(
                 {
                     "type": "record",
                     "record": {
                         "timestamp": now_ts,
                         "component_id": pkg_id,
-                        "mode": self.current_mode,
-                        "engine": self.current_engine,
+                        "mode": mode_val,
+                        "engine": engine_val,
                         "vmid": self.current_vmid,
                         "ip": self.current_ip,
                         "status": "success",
@@ -499,34 +553,52 @@ class TestRunnerManager:
             or "❌ Package verification failed" in line
             or "❌ Error during test of" in line
         ):
-            self.current_run_failures += 1
             comp_id = self.current_component or "unknown"
             is_pkg = "Package" in line or self.target_type == "packages"
-            err_msg = line.strip()
-            if ":" in line:
-                _, err_msg = line.split(":", 1)
-                err_msg = err_msg.strip()
-            self.log_queue.put(
-                {
-                    "type": "record",
-                    "record": {
-                        "timestamp": now_ts,
-                        "component_id": comp_id,
-                        "mode": self.current_mode,
-                        "engine": self.current_engine,
-                        "vmid": self.current_vmid,
-                        "ip": self.current_ip,
-                        "status": "failed",
-                        "deployment": "failed",
-                        "running": False,
-                        "http_ok": self.current_http_ok,
-                        "http_url": self.current_http_url,
-                        "report_file": self.current_report_file,
-                        "error_message": err_msg,
-                        "is_package": is_pkg,
-                    },
-                }
-            )
+            mode_val = self.current_mode
+            engine_val = self.current_engine
+            if "[" in line and "]" in line:
+                # noinspection PyBroadException
+                try:
+                    bracket_content = line.rsplit("[", 1)[1].split("]", 1)[0]
+                    if "/" in bracket_content:
+                        m_tok, e_tok = bracket_content.split("/", 1)
+                        mode_val = m_tok.strip().upper()
+                        engine_val = e_tok.strip().upper()
+                except Exception:  # nosec B110
+                    pass
+            self.current_mode = mode_val
+            self.current_engine = engine_val
+
+            fail_key = f"{comp_id}_{mode_val}_{engine_val}"
+            if self.last_failed_key != fail_key:
+                self.last_failed_key = fail_key
+                self.current_run_failures += 1
+                err_msg = line.strip()
+                if ":" in line:
+                    _, err_msg = line.split(":", 1)
+                    err_msg = err_msg.strip()
+                self.log_queue.put(
+                    {
+                        "type": "record",
+                        "record": {
+                            "timestamp": now_ts,
+                            "component_id": comp_id,
+                            "mode": mode_val,
+                            "engine": engine_val,
+                            "vmid": self.current_vmid,
+                            "ip": self.current_ip,
+                            "status": "failed",
+                            "deployment": "failed",
+                            "running": False,
+                            "http_ok": self.current_http_ok,
+                            "http_url": self.current_http_url,
+                            "report_file": self.current_report_file,
+                            "error_message": err_msg,
+                            "is_package": is_pkg,
+                        },
+                    }
+                )
 
         # Detect failure category tag: "🏷️ Failure Category: [<category>]"
         elif "🏷️ Failure Category:" in line or "🏷️ [" in line:
@@ -667,6 +739,179 @@ class TestRunnerManager:
                 return False
 
 
+def _resolve_report_path(
+    docs_dir: Path,
+    report_type: str = "latest",
+    target_file: str = "",
+    comp_id: str = "",
+) -> Optional[Path]:
+    """Resolves target markdown report path based on query parameters."""
+    if target_file:
+        safe_name = Path(target_file).name
+        candidate = docs_dir / safe_name
+        if candidate.exists() and candidate.is_file():
+            return candidate
+
+    if comp_id:
+        matching = sorted(
+            docs_dir.glob(f"PROXMOX_*_{comp_id}_*.md"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        if not matching:
+            matching = sorted(
+                docs_dir.glob(f"PROXMOX_*{comp_id}*.md"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True,
+            )
+        if matching:
+            return next(iter(matching), None)
+
+    package_reports = sorted(
+        docs_dir.glob("PROXMOX_PACKAGE_TESTS_*.md"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )
+    component_report = docs_dir / "PROXMOX_TESTS.md"
+    package_summary = docs_dir / "PROXMOX_PACKAGE_TESTS.md"
+
+    if report_type == "package":
+        return next(
+            iter(package_reports),
+            package_summary if package_summary.exists() else None,
+        )
+    if report_type == "component":
+        if component_report.exists():
+            return component_report
+        return None
+
+    latest_pkg = next(iter(package_reports), None)
+    if latest_pkg and component_report.exists():
+        if latest_pkg.stat().st_mtime > component_report.stat().st_mtime:
+            return latest_pkg
+        return component_report
+    if latest_pkg:
+        return latest_pkg
+    if component_report.exists():
+        return component_report
+    if package_summary.exists():
+        return package_summary
+    return None
+
+
+def render_markdown_to_pdf(markdown_text: str, docs_dir: Path) -> Optional[bytes]:
+    """Renders markdown text into an A4 PDF with embedded images using Playwright."""
+    # noinspection PyBroadException
+    try:
+        import mistune  # type: ignore
+        from playwright.sync_api import sync_playwright  # type: ignore
+    except ImportError as err:
+        logger.error(f"Required PDF export package missing: {err}")
+        return None
+
+    # noinspection PyBroadException
+    try:
+        rendered_html = mistune.html(markdown_text)
+        html_content = (
+            rendered_html if isinstance(rendered_html, str) else str(rendered_html)
+        )
+
+        def embed_img(match: re.Match) -> str:
+            rel_path = match.group(1)
+            img_file = (docs_dir / rel_path).resolve()
+            if str(img_file).startswith(str(docs_dir.resolve())) and img_file.exists():
+                data = base64.b64encode(img_file.read_bytes()).decode("ascii")
+                ext = img_file.suffix.lstrip(".").lower() or "png"
+                return f'src="data:image/{ext};base64,{data}"'
+            return match.group(0)
+
+        html_content = re.sub(r'src="(images/[^"]+)"', embed_img, html_content)
+
+        full_html = (
+            "<!DOCTYPE html>\n<html>\n<head>\n"
+            '<meta charset="utf-8">\n'
+            "<style>\n"
+            "  @page { size: A4; margin: 15mm; }\n"
+            "  body {\n"
+            "    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', "
+            "Roboto, Helvetica, Arial, sans-serif;\n"
+            "    color: #1e293b; background: #ffffff; margin: 0; padding: 0;\n"
+            "    line-height: 1.5; font-size: 13px;\n"
+            "  }\n"
+            "  h1 { font-size: 20px; color: #0f172a; border-bottom: 2px solid "
+            "#e2e8f0; padding-bottom: 8px; margin-top: 0; "
+            "page-break-after: avoid; }\n"
+            "  h2 { font-size: 16px; color: #1e293b; border-bottom: 1px solid "
+            "#e2e8f0; padding-bottom: 4px; margin-top: 22px; "
+            "page-break-after: avoid; }\n"
+            "  h3 { font-size: 14px; color: #334155; margin-top: 16px; "
+            "page-break-after: avoid; }\n"
+            "  h4 { font-size: 13px; color: #475569; margin-top: 14px; "
+            "page-break-after: avoid; }\n"
+            "  h5 { font-size: 12px; color: #64748b; margin-top: 12px; "
+            "page-break-after: avoid; }\n"
+            "  table {\n"
+            "    width: 100%; border-collapse: collapse; margin: 12px 0 18px 0;\n"
+            "    font-size: 11px; page-break-inside: avoid;\n"
+            "  }\n"
+            "  th, td {\n"
+            "    border: 1px solid #cbd5e1; padding: 5px 8px; text-align: left;\n"
+            "  }\n"
+            "  th {\n"
+            "    background-color: #f1f5f9; font-weight: 600; color: #334155;\n"
+            "  }\n"
+            "  tr:nth-child(even) { background-color: #f8fafc; }\n"
+            "  code {\n"
+            "    background: #f1f5f9; border: 1px solid #e2e8f0; padding: 1px 4px;\n"
+            "    border-radius: 3px; font-family: ui-monospace, SFMono-Regular, "
+            "Menlo, monospace; font-size: 11px;\n"
+            "  }\n"
+            "  pre {\n"
+            "    background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px;\n"
+            "    border-radius: 4px; font-size: 11px; page-break-inside: avoid;\n"
+            "  }\n"
+            "  img {\n"
+            "    max-width: 100%; max-height: 280px; object-fit: contain;\n"
+            "    border-radius: 6px; border: 1px solid #cbd5e1; display: block;\n"
+            "    margin: 6px 0 12px 0; page-break-inside: avoid;\n"
+            "  }\n"
+            "  a { color: #2563eb; text-decoration: none; }\n"
+            "  hr { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }\n"
+            "</style>\n</head>\n<body>\n"
+            f"{html_content}\n"
+            "</body>\n</html>"
+        )
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            page.set_content(full_html, wait_until="load")
+            pdf_bytes = page.pdf(
+                format="A4",
+                margin={
+                    "top": "15mm",
+                    "bottom": "15mm",
+                    "left": "15mm",
+                    "right": "15mm",
+                },
+                print_background=True,
+                display_header_footer=True,
+                header_template="<div></div>",
+                footer_template=(
+                    '<div style="font-size: 9px; color: #94a3b8; '
+                    "font-family: sans-serif; width: 100%; text-align: right; "
+                    'padding-right: 15mm;">'
+                    'Page <span class="pageNumber"></span> of '
+                    '<span class="totalPages"></span> | NjordDeploy Test Report</div>'
+                ),
+            )
+            browser.close()
+            return pdf_bytes
+    except Exception as err:
+        logger.error(f"Failed to generate PDF from markdown: {err}")
+        return None
+
+
 def create_app() -> Flask:
     """Creates and configures the Flask application."""
     load_dotenv(project_root / ".env")
@@ -701,16 +946,77 @@ def create_app() -> Flask:
         """Returns Proxmox settings from .env."""
         load_dotenv(project_root / ".env", override=True)
         default_engine = get_configured_engine()
+        test_ip = os.getenv("PROXMOX_TEST_IP", "10.99.0.199")
+        bridge = os.getenv("PROXMOX_BRIDGE")
+        if not bridge:
+            bridge = "vmbr1" if "10.99." in test_ip else "vmbr0"
+        elif "10.99." in test_ip and bridge == "vmbr0":
+            bridge = "vmbr1"
+
+        default_gw = "10.99.0.1" if "10.99." in test_ip else "192.168.178.1"
+        test_gw = os.getenv("PROXMOX_GATEWAY")
+        if not test_gw or ("10.99." in test_ip and "10.99." not in test_gw):
+            test_gw = default_gw
+
         return jsonify(
             {
                 "node": os.getenv("PROXMOX_NODE", "pve"),
                 "template_id": os.getenv("PROXMOX_TEMPLATE_ID", "902"),
+                "templates": {
+                    "docker_vm": 911,
+                    "docker_lxc": 912,
+                    "podman_vm": 913,
+                    "podman_lxc": 914,
+                },
                 "engine": default_engine,
                 "mode": "lxc",
-                "bridge": os.getenv("PROXMOX_BRIDGE", "vmbr1"),
-                "test_ip": os.getenv("PROXMOX_TEST_IP", ""),
-                "gateway": os.getenv("PROXMOX_GATEWAY", ""),
+                "bridge": bridge,
+                "test_ip": test_ip,
+                "gateway": test_gw,
                 "vlan_tag": os.getenv("PROXMOX_VLAN_TAG", ""),
+            }
+        )
+
+    @app.route("/api/config/network", methods=["POST"])
+    def set_config_network() -> Union[Response, Tuple[Response, int]]:
+        """Sets or toggles the active test network profile (isolated vs lan)."""
+        from utils.ai_provider_manager import set_env_key_value
+
+        raw_payload = request.get_json()
+        payload = raw_payload if isinstance(raw_payload, dict) else {}
+        profile = str(payload.get("profile", "isolated")).lower()
+
+        if profile == "lan":
+            bridge = "vmbr0"
+            test_ip = "192.168.178.199"
+            gateway = "192.168.178.1"
+        else:
+            profile = "isolated"
+            bridge = "vmbr1"
+            test_ip = "10.99.0.199"
+            gateway = "10.99.0.1"
+
+        os.environ["PROXMOX_BRIDGE"] = bridge
+        os.environ["PROXMOX_TEST_IP"] = test_ip
+        os.environ["PROXMOX_GATEWAY"] = gateway
+
+        env_path = project_root / ".env"
+        if env_path.exists():
+            with open(env_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+            lines = set_env_key_value(lines, "PROXMOX_BRIDGE", bridge)
+            lines = set_env_key_value(lines, "PROXMOX_TEST_IP", test_ip)
+            lines = set_env_key_value(lines, "PROXMOX_GATEWAY", gateway)
+            with open(env_path, "w", encoding="utf-8") as f:
+                f.writelines(lines)
+
+        return jsonify(
+            {
+                "success": True,
+                "profile": profile,
+                "bridge": bridge,
+                "test_ip": test_ip,
+                "gateway": gateway,
             }
         )
 
@@ -906,58 +1212,12 @@ def create_app() -> Flask:
         target_file = request.args.get("file", "").strip()
         comp_id = request.args.get("component", "").strip()
 
-        target_path: Optional[Path] = None
-
-        if target_file:
-            safe_name = Path(target_file).name
-            candidate = docs_dir / safe_name
-            if candidate.exists() and candidate.is_file():
-                target_path = candidate
-        elif comp_id:
-            matching = sorted(
-                docs_dir.glob(f"PROXMOX_*_{comp_id}_*.md"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True,
-            )
-            if not matching:
-                matching = sorted(
-                    docs_dir.glob(f"PROXMOX_*{comp_id}*.md"),
-                    key=lambda p: p.stat().st_mtime,
-                    reverse=True,
-                )
-            if matching:
-                target_path = next(iter(matching), None)
-
-        if not target_path:
-            package_reports = sorted(
-                docs_dir.glob("PROXMOX_PACKAGE_TESTS_*.md"),
-                key=lambda p: p.stat().st_mtime,
-                reverse=True,
-            )
-            component_report = docs_dir / "PROXMOX_TESTS.md"
-            package_summary = docs_dir / "PROXMOX_PACKAGE_TESTS.md"
-
-            if report_type == "package":
-                target_path = next(
-                    iter(package_reports),
-                    package_summary if package_summary.exists() else None,
-                )
-            elif report_type == "component":
-                if component_report.exists():
-                    target_path = component_report
-            else:
-                latest_pkg = next(iter(package_reports), None)
-                if latest_pkg and component_report.exists():
-                    if latest_pkg.stat().st_mtime > component_report.stat().st_mtime:
-                        target_path = latest_pkg
-                    else:
-                        target_path = component_report
-                elif latest_pkg:
-                    target_path = latest_pkg
-                elif component_report.exists():
-                    target_path = component_report
-                elif package_summary.exists():
-                    target_path = package_summary
+        target_path = _resolve_report_path(
+            docs_dir=docs_dir,
+            report_type=report_type,
+            target_file=target_file,
+            comp_id=comp_id,
+        )
 
         if target_path and target_path.exists():
             content = target_path.read_text(encoding="utf-8")
@@ -965,6 +1225,49 @@ def create_app() -> Flask:
                 {"report": content, "filename": target_path.name, "success": True}
             )
         return jsonify({"report": "", "filename": "", "success": False})
+
+    @app.route("/api/report/pdf", methods=["GET"])
+    def export_report_pdf() -> Union[Response, Tuple[Response, int]]:
+        """Renders and exports a markdown report as an A4 PDF."""
+        docs_dir = project_root / "docs"
+        report_type = request.args.get("type", "latest")
+        target_file = request.args.get("file", "").strip()
+        comp_id = request.args.get("component", "").strip()
+
+        target_path = _resolve_report_path(
+            docs_dir=docs_dir,
+            report_type=report_type,
+            target_file=target_file,
+            comp_id=comp_id,
+        )
+
+        if not target_path or not target_path.exists():
+            return jsonify({"error": "Report file not found"}), 404
+
+        content = target_path.read_text(encoding="utf-8")
+        pdf_bytes = render_markdown_to_pdf(content, docs_dir)
+        if not pdf_bytes:
+            return jsonify({"error": "Failed to generate PDF"}), 500
+
+        pdf_filename = f"{target_path.stem}.pdf"
+        response = Response(pdf_bytes, mimetype="application/pdf")
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{pdf_filename}"'
+        )
+        return response
+
+    @app.route("/images/<path:filename>", methods=["GET"])
+    @app.route("/docs/images/<path:filename>", methods=["GET"])
+    def serve_docs_image(filename: str) -> Union[Response, Tuple[Response, int]]:
+        """Securely serves image assets and test screenshots from docs/images."""
+        images_dir = (project_root / "docs" / "images").resolve()
+        requested_path = (images_dir / filename).resolve()
+        # Prevent directory traversal attacks
+        if not str(requested_path).startswith(str(images_dir)):
+            return jsonify({"error": "Access denied"}), 403
+        if not requested_path.exists() or not requested_path.is_file():
+            return jsonify({"error": "Image not found"}), 404
+        return send_from_directory(images_dir, filename)
 
     @app.route("/api/results", methods=["GET"])
     def get_results() -> Response:
@@ -1042,6 +1345,7 @@ def create_app() -> Flask:
                                         ),
                                         "status": prec.get("status", "success"),
                                         "error_message": prec.get("error_message", ""),
+                                        "report_file": prec.get("report_file", ""),
                                         "is_package": True,
                                         "components": comp_statuses,
                                     }
@@ -1142,8 +1446,8 @@ def create_app() -> Flask:
     def select_ai_provider() -> Union[Response, Tuple[Response, int]]:
         """Sets active AI provider and persists it to .env and environment."""
         from utils.ai_provider_manager import (
-            _set_env_key_value,
             load_ai_providers_registry,
+            set_env_key_value,
         )
 
         raw_payload = request.get_json()
@@ -1178,7 +1482,7 @@ def create_app() -> Flask:
         if env_path.exists():
             with open(env_path, "r", encoding="utf-8") as f:
                 lines = f.readlines()
-        new_lines = _set_env_key_value(lines, "AI_PROVIDER", chosen_provider)
+        new_lines = set_env_key_value(lines, "AI_PROVIDER", chosen_provider)
         with open(env_path, "w", encoding="utf-8") as f:
             f.writelines(new_lines)
 

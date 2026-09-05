@@ -260,6 +260,11 @@ def _set_env_key_value(lines: list[str], key: str, value: str) -> list[str]:
     return new_lines
 
 
+def set_env_key_value(lines: list[str], key: str, value: str) -> list[str]:
+    """Public helper to update or append a key=value pair in .env lines."""
+    return _set_env_key_value(lines, key, value)
+
+
 def save_api_key_to_env_file(
     key: Optional[str] = None,
     provider: str = "gemini",

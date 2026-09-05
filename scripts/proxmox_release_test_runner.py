@@ -252,7 +252,7 @@ def run_linux_vm_test(
         logger.info(
             f"[{os_name.upper()} VM] Configuring Cloud-Init for VMID {new_vmid}..."
         )
-        client.configure_vm(
+        conf_res = client.configure_vm(
             node=node,
             vmid=new_vmid,
             config_data={
@@ -261,10 +261,12 @@ def run_linux_vm_test(
                 "sshkeys": urllib.parse.quote(ssh_public_key),
                 "ipconfig0": "ip=dhcp",
                 "agent": "enabled=1",
-                "ide2": "local-lvm:cloudinit",
                 "net0": "virtio,bridge=vmbr0,firewall=0",
             },
         )
+        upid = conf_res.get("data")
+        if isinstance(upid, str):
+            wait_for_proxmox_task(client, node, upid)
 
         # Step 3: Start VM
         logger.info(f"[{os_name.upper()} VM] Starting VMID {new_vmid}...")

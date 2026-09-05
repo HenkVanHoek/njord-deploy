@@ -1,7 +1,7 @@
 # Proxmox Automated Package Testing Report
 
-**Run Timestamp:** 2026-09-05 08:49:08
-**Total Packages Tested:** 24 | **Passed:** 19 | **Failed:** 5
+**Run Timestamp:** 2026-09-05 15:22:54
+**Total Packages Tested:** 25 | **Passed:** 22 | **Failed:** 3
 
 ## Packages Summary Table
 
@@ -13,12 +13,12 @@
 | `digital-archive` | Digital Archive & Document Compliance | LXC | DOCKER | 108 | 10.99.0.199 | success | **✅ PASS** |
 | `observability-analytics` | Observability & Privacy Analytics | LXC | DOCKER | 108 | 10.99.0.199 | success | **✅ PASS** |
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | LXC | DOCKER | 108 | 10.99.0.199 | failed | **❌ FAIL** |
-| `agile-ops` | Agile Operations & Secure Chat | LXC | DOCKER | 109 | 10.99.0.199 | failed | **❌ FAIL** |
+| `agile-ops` | Agile Operations & Secure Chat | LXC | DOCKER | 104 | 10.99.0.199 | success | **✅ PASS** |
 | `smarthome-stack` | Sovereign Smart Home Hub | LXC | DOCKER | 106 | 192.168.178.36 | success | **✅ PASS** |
 | `nextcloud-stack` | Nextcloud Stack | LXC | DOCKER | 108 | 10.99.0.199 | success | **✅ PASS** |
 | `modern-workplace` | The Modern Sovereign Workplace | LXC | DOCKER | 108 | 10.99.0.199 | success | **✅ PASS** |
 | `media-stack` | Media Streaming & Servarr Suite | LXC | DOCKER | 108 | 10.99.0.199 | success | **✅ PASS** |
-| `agile-ops` | Agile Operations & Secure Chat | VM | DOCKER | 104 | 192.168.178.144 | success | **✅ PASS** |
+| `agile-ops` | Agile Operations & Secure Chat | VM | DOCKER | 104 | 10.99.0.199 | success | **✅ PASS** |
 | `caddy-filebrowser-stack` | Reverse Proxy & Remote Workspace | VM | DOCKER | 104 | 192.168.178.147 | success | **✅ PASS** |
 | `digital-archive` | Digital Archive & Document Compliance | VM | DOCKER | 104 | 192.168.178.143 | success | **❌ FAIL** |
 | `dns-shield-stack` | DNS & Ad-Blocking Privacy Shield | VM | DOCKER | 104 | 192.168.178.22 | success | **✅ PASS** |
@@ -29,8 +29,9 @@
 | `observability-analytics` | Observability & Privacy Analytics | VM | DOCKER | 104 | 192.168.178.184 | success | **✅ PASS** |
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | VM | DOCKER | 104 | 192.168.178.178 | success | **✅ PASS** |
 | `smarthome-stack` | Sovereign Smart Home Hub | VM | DOCKER | 104 | 192.168.178.172 | success | **✅ PASS** |
-| `agile-ops` | Agile Operations & Secure Chat | LXC | PODMAN | 106 | 192.168.178.75 | success | **❌ FAIL** |
+| `agile-ops` | Agile Operations & Secure Chat | LXC | PODMAN | 104 | 10.99.0.199 | success | **✅ PASS** |
 | `caddy-filebrowser-stack` | Reverse Proxy & Remote Workspace | LXC | PODMAN | 106 | 192.168.178.75 | success | **❌ FAIL** |
+| `agile-ops` | Agile Operations & Secure Chat | VM | PODMAN | 104 | 10.99.0.199 | success | **✅ PASS** |
 
 ## Detailed Components Verification Status
 
@@ -135,15 +136,43 @@ Package deployment failed: The deployment sequence failed. See the console logs 
 
 ### Package: `agile-ops` (Agile Operations & Secure Chat)
 - **Target:** LXC | **Engine:** DOCKER
-- **VMID:** 109
+- **VMID:** 104
 - **IP:** 10.99.0.199
-- **Deployment:** failed
-- **Overall Status:** ❌ FAIL
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
 
-**Error / Failures Message:**
-```
-Package deployment failed: The deployment sequence failed. See the console logs for detailed execution output.
-```
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `vikunja` | Running | OK | None | unknown | ✅ OK |
+| `focalboard` | Running | OK | None | unknown | ✅ OK |
+| `gitea` | Running | OK | None | unknown | ✅ OK |
+| `conduit` | Running | N/A | None | unknown | ✅ OK |
+| `memos` | Running | OK | None | unknown | ✅ OK |
+
+#### Web UI Screenshots:
+
+##### Component: `vikunja`
+- **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
+
+![vikunja Web UI](images/test_screenshots/pkg_vikunja_lxc_docker_20260905_151756.png)
+
+##### Component: `focalboard`
+- **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
+
+![focalboard Web UI](images/test_screenshots/pkg_focalboard_lxc_docker_20260905_151801.png)
+
+##### Component: `gitea`
+- **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
+
+![gitea Web UI](images/test_screenshots/pkg_gitea_lxc_docker_20260905_151808.png)
+
+##### Component: `memos`
+- **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
+
+![memos Web UI](images/test_screenshots/pkg_memos_lxc_docker_20260905_151811.png)
+
 
 ---
 
@@ -228,7 +257,7 @@ Package deployment failed: The deployment sequence failed. See the console logs 
 ### Package: `agile-ops` (Agile Operations & Secure Chat)
 - **Target:** VM | **Engine:** DOCKER
 - **VMID:** 104
-- **IP:** 192.168.178.144
+- **IP:** 10.99.0.199
 - **Deployment:** success
 - **Overall Status:** ✅ PASS
 
@@ -236,11 +265,34 @@ Package deployment failed: The deployment sequence failed. See the console logs 
 
 | Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `vikunja` | Running | N/A | None | unknown | ✅ OK |
-| `focalboard` | Running | N/A | None | unknown | ✅ OK |
-| `gitea` | Running | N/A | None | unknown | ✅ OK |
+| `vikunja` | Running | OK | None | unknown | ✅ OK |
+| `focalboard` | Running | OK | None | unknown | ✅ OK |
+| `gitea` | Running | OK | None | unknown | ✅ OK |
 | `conduit` | Running | N/A | None | unknown | ✅ OK |
-| `memos` | Running | N/A | None | unknown | ✅ OK |
+| `memos` | Running | OK | None | unknown | ✅ OK |
+
+#### Web UI Screenshots:
+
+##### Component: `vikunja`
+- **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
+
+![vikunja Web UI](images/test_screenshots/pkg_vikunja_vm_docker_20260905_152055.png)
+
+##### Component: `focalboard`
+- **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
+
+![focalboard Web UI](images/test_screenshots/pkg_focalboard_vm_docker_20260905_152103.png)
+
+##### Component: `gitea`
+- **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
+
+![gitea Web UI](images/test_screenshots/pkg_gitea_vm_docker_20260905_152107.png)
+
+##### Component: `memos`
+- **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
+
+![memos Web UI](images/test_screenshots/pkg_memos_vm_docker_20260905_152111.png)
+
 
 ---
 
@@ -431,25 +483,43 @@ Successfully checked 4 components.
 
 ### Package: `agile-ops` (Agile Operations & Secure Chat)
 - **Target:** LXC | **Engine:** PODMAN
-- **VMID:** 106
-- **IP:** 192.168.178.75
+- **VMID:** 104
+- **IP:** 10.99.0.199
 - **Deployment:** success
-- **Overall Status:** ❌ FAIL
+- **Overall Status:** ✅ PASS
 
 #### Component Health Status:
 
 | Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `vikunja` | Stopped | N/A | None | unknown | ❌ FAILED |
-| `focalboard` | Stopped | N/A | None | unknown | ❌ FAILED |
-| `gitea` | Stopped | N/A | None | unknown | ❌ FAILED |
-| `conduit` | Stopped | N/A | None | unknown | ❌ FAILED |
-| `memos` | Stopped | N/A | None | unknown | ❌ FAILED |
+| `vikunja` | Running | OK | None | unknown | ✅ OK |
+| `focalboard` | Running | OK | None | unknown | ✅ OK |
+| `gitea` | Running | OK | None | unknown | ✅ OK |
+| `conduit` | Running | N/A | None | unknown | ✅ OK |
+| `memos` | Running | OK | None | unknown | ✅ OK |
 
-**Error / Failures Message:**
-```
-Successfully checked 5 components.
-```
+#### Web UI Screenshots:
+
+##### Component: `vikunja`
+- **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
+
+![vikunja Web UI](images/test_screenshots/pkg_vikunja_lxc_podman_20260905_151915.png)
+
+##### Component: `focalboard`
+- **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
+
+![focalboard Web UI](images/test_screenshots/pkg_focalboard_lxc_podman_20260905_151919.png)
+
+##### Component: `gitea`
+- **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
+
+![gitea Web UI](images/test_screenshots/pkg_gitea_lxc_podman_20260905_151924.png)
+
+##### Component: `memos`
+- **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
+
+![memos Web UI](images/test_screenshots/pkg_memos_lxc_podman_20260905_151928.png)
+
 
 ---
 
@@ -471,5 +541,47 @@ Successfully checked 5 components.
 ```
 Successfully checked 2 components.
 ```
+
+---
+
+### Package: `agile-ops` (Agile Operations & Secure Chat)
+- **Target:** VM | **Engine:** PODMAN
+- **VMID:** 104
+- **IP:** 10.99.0.199
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
+
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `vikunja` | Running | OK | None | unknown | ✅ OK |
+| `focalboard` | Running | OK | None | unknown | ✅ OK |
+| `gitea` | Running | OK | None | unknown | ✅ OK |
+| `conduit` | Running | N/A | None | unknown | ✅ OK |
+| `memos` | Running | OK | None | unknown | ✅ OK |
+
+#### Web UI Screenshots:
+
+##### Component: `vikunja`
+- **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
+
+![vikunja Web UI](images/test_screenshots/pkg_vikunja_vm_podman_20260905_152231.png)
+
+##### Component: `focalboard`
+- **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
+
+![focalboard Web UI](images/test_screenshots/pkg_focalboard_vm_podman_20260905_152239.png)
+
+##### Component: `gitea`
+- **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
+
+![gitea Web UI](images/test_screenshots/pkg_gitea_vm_podman_20260905_152243.png)
+
+##### Component: `memos`
+- **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
+
+![memos Web UI](images/test_screenshots/pkg_memos_vm_podman_20260905_152246.png)
+
 
 ---

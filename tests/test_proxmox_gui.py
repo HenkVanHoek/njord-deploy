@@ -1,20 +1,29 @@
 # tests/test_proxmox_gui.py
 import json
+import shutil
 
 from scripts.proxmox_gui import TestRunnerManager, create_app, project_root
 
 
 def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
-    # Isolate results and reports file to avoid touching workspace history
+    # Isolate results, reports, config, and .env to avoid touching workspace history
     dummy_rec = [{"component_id": "dummy", "status": "success"}]
     (tmp_path / "tests").mkdir(parents=True, exist_ok=True)
     (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config").mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        project_root / "config" / "components_metadata.json",
+        tmp_path / "config" / "components_metadata.json",
+    )
     (tmp_path / "tests" / "proxmox_results.json").write_text(json.dumps(dummy_rec))
     (tmp_path / "docs" / "PROXMOX_TESTS.md").write_text("# Test Report")
+    (tmp_path / ".env").write_text(
+        "PROXMOX_BRIDGE=vmbr1\nPROXMOX_TEST_IP=10.99.0.199\nPROXMOX_GATEWAY=10.99.0.1\n"
+    )
 
     class FakeRoot:
         def __truediv__(self, other):
-            if other in ("tests", "docs"):
+            if other in ("tests", "docs", ".env", "config"):
                 return tmp_path / other
             return project_root / other
 
@@ -36,6 +45,31 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     assert "node" in config_data
     assert "engine" in config_data
     assert "mode" in config_data
+    assert "bridge" in config_data
+    assert "test_ip" in config_data
+    assert "gateway" in config_data
+    assert "templates" in config_data
+
+    # 2b. Test POST /api/config/network
+    res_net_lan = client.post("/api/config/network", json={"profile": "lan"})
+    assert res_net_lan.status_code == 200
+    assert res_net_lan.json["profile"] == "lan"
+    assert res_net_lan.json["bridge"] == "vmbr0"
+    assert res_net_lan.json["test_ip"] == "192.168.178.199"
+    assert res_net_lan.json["gateway"] == "192.168.178.1"
+
+    res_net_iso = client.post("/api/config/network", json={"profile": "isolated"})
+    assert res_net_iso.status_code == 200
+    assert res_net_iso.json["profile"] == "isolated"
+    assert res_net_iso.json["bridge"] == "vmbr1"
+    assert res_net_iso.json["test_ip"] == "10.99.0.199"
+    assert res_net_iso.json["gateway"] == "10.99.0.1"
+
+    env_content = (tmp_path / ".env").read_text()
+    assert (
+        'PROXMOX_BRIDGE="vmbr1"' in env_content or "PROXMOX_BRIDGE=vmbr1" in env_content
+    )
+    assert "10.99.0.199" in env_content
 
     # 3. Test components API
     res = client.get("/api/components")
@@ -96,6 +130,23 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     # Safe name is 'passwd' which doesn't exist in docs, so falls back to default
     assert res_trav.json.get("report") == "# Test Report"
 
+    # 5b. Test PDF export API
+    res_pdf = client.get("/api/report/pdf")
+    assert res_pdf.status_code == 200
+    assert res_pdf.content_type == "application/pdf"
+    assert len(res_pdf.data) > 1000
+    assert "attachment; filename=" in res_pdf.headers.get("Content-Disposition", "")
+
+    # Specific file PDF export
+    res_file_pdf = client.get(
+        "/api/report/pdf?file=PROXMOX_TESTS_web-notepad_20260904_151908.md"
+    )
+    assert res_file_pdf.status_code == 200
+    assert res_file_pdf.content_type == "application/pdf"
+    assert "PROXMOX_TESTS_web-notepad_20260904_151908.pdf" in res_file_pdf.headers.get(
+        "Content-Disposition", ""
+    )
+
     # 6. Test stream API endpoint headers
     res_stream = client.get("/api/stream")
     assert res_stream.status_code == 200
@@ -111,6 +162,28 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     res_clear = client.post("/api/results/clear")
     assert res_clear.status_code == 200
     assert json.loads(res_clear.data).get("success") is True
+
+    # 9. Test image serving routes and path traversal protection
+    images_dir = tmp_path / "docs" / "images" / "test_screenshots"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    sample_png = images_dir / "adguard_test.png"
+    sample_png.write_bytes(b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDRtest")
+
+    res_img = client.get("/images/test_screenshots/adguard_test.png")
+    assert res_img.status_code == 200
+    assert res_img.data.startswith(b"\x89PNG")
+
+    res_docs_img = client.get("/docs/images/test_screenshots/adguard_test.png")
+    assert res_docs_img.status_code == 200
+    assert res_docs_img.data.startswith(b"\x89PNG")
+
+    # Non-existent image
+    res_img_404 = client.get("/images/test_screenshots/not_found.png")
+    assert res_img_404.status_code == 404
+
+    # Traversal attempt
+    res_img_trav = client.get("/images/../../etc/shadow")
+    assert res_img_trav.status_code in (403, 404)
 
 
 def test_runner_manager_inspect_log():
@@ -232,7 +305,7 @@ def test_runner_manager_completion_counters():
 def test_ai_endpoints_mocked(tmp_path, monkeypatch):
     class FakeRoot:
         def __truediv__(self, other):
-            if other in ("tests", "docs", "component_templates"):
+            if other in ("tests", "docs", "component_templates", "config"):
                 return tmp_path / other
             return project_root / other
 
@@ -242,6 +315,11 @@ def test_ai_endpoints_mocked(tmp_path, monkeypatch):
     comp_dir.mkdir(parents=True, exist_ok=True)
     (comp_dir / "docker-compose.template.yml").write_text(
         "services:\n  traefik:\n    image: traefik:v3\n"
+    )
+    (tmp_path / "config").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "config" / "components_metadata.json").write_text(
+        json.dumps({"components": {"traefik": {"name": "Traefik"}}}),
+        encoding="utf-8",
     )
 
     app = create_app()

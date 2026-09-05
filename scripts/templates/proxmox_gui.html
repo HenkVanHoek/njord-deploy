@@ -84,19 +84,26 @@
           <input type="text" id="node-input" class="text-input" placeholder="pve" value="pve" />
         </div>
 
-        <!-- Template ID (for VM mode) -->
-        <div class="config-item" id="template-id-wrapper" style="opacity: 0.5;">
-          <label for="template-id-input">VM Template ID</label>
-          <input type="text" id="template-id-input" class="text-input" placeholder="902" value="902" disabled />
+        <!-- Test Templates (Dynamic selection from Target Mode & Engine) -->
+        <div class="config-item" id="template-id-wrapper">
+          <label>Test Templates</label>
+          <div class="templates-badge-display" id="templates-display" title="Actieve Proxmox Golden Templates (911-914) op basis van Target Mode en Container Engine">
+            <span class="template-badge tpl-lxc-docker"><strong>912</strong> <small>(LXC Docker)</small></span>
+          </div>
+          <input type="hidden" id="template-id-input" value="912" />
         </div>
 
         <!-- Network Bridge & Subnet (Isolated Test Network) -->
         <div class="config-item">
           <label>Test Network Subnet</label>
-          <div class="network-badge-display" id="network-badge-display" title="Active bridge and subnet for test execution">
-            <span class="net-bridge-tag">🌉 <strong id="config-bridge-label">vmbr1</strong></span>
-            <span class="net-ip-tag">🎯 <strong id="config-ip-label">10.99.0.199/24</strong></span>
-            <span class="net-status-badge" id="config-net-status">✅ Isolated Subnet</span>
+          <div class="network-badge-display" id="network-badge-display" title="Actieve bridge, gateway en doel-IP voor testuitvoering">
+            <span class="net-text-item"><span class="net-text-label">Bridge:</span> <strong id="config-bridge-label">vmbr1</strong></span>
+            <span class="net-text-item"><span class="net-text-label">Gateway:</span> <strong id="config-gw-label">10.99.0.1</strong></span>
+            <span class="net-text-item"><span class="net-text-label">Doel IP:</span> <strong id="config-ip-label">10.99.0.199/24</strong></span>
+            <span class="net-status-badge" id="config-net-status">Geïsoleerd Test-Subnet</span>
+            <button type="button" id="toggle-network-btn" class="btn-network-switch" title="Wissel tussen Geïsoleerd Test-Subnet (vmbr1) en LAN Bridge (vmbr0)">
+              Wissel Netwerk
+            </button>
           </div>
         </div>
 
@@ -232,6 +239,11 @@
           <span>📄</span>
           <span>View Latest Markdown Report</span>
         </button>
+
+        <button type="button" id="export-latest-pdf-btn" class="btn-secondary" title="Export the latest test report directly as a formatted A4 PDF">
+          <span>📥</span>
+          <span>Export Latest to PDF</span>
+        </button>
       </div>
     </section>
 
@@ -340,19 +352,35 @@
 
   <!-- Report Viewer Modal -->
   <div id="report-modal" class="modal-backdrop">
-    <div class="modal-content" style="max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;">
-      <div class="modal-header">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
+    <div class="modal-content modal-report-viewer" style="max-width: 1100px; width: 95vw; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; text-overflow: ellipsis;">
           <span style="font-size: 1.25rem;">📄</span>
-          <h3 id="report-modal-title" style="margin: 0;">Test Report</h3>
+          <h3 id="report-modal-title" style="margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Test Report</h3>
         </div>
-        <button type="button" id="close-modal-btn" class="modal-close-btn">&times;</button>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <div class="report-view-toggle">
+            <button type="button" id="btn-report-view-formatted" class="report-view-btn active" title="Bekijk opgemaakt rapport">Opgemaakt</button>
+            <button type="button" id="btn-report-view-raw" class="report-view-btn" title="Bekijk ruwe markdown broncode">Markdown</button>
+          </div>
+          <button type="button" id="btn-report-export-pdf" class="btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.35rem;" title="Download dit rapport als PDF bestand">
+            <span>📥</span> Export to PDF
+          </button>
+          <button type="button" id="close-modal-btn" class="modal-close-btn">&times;</button>
+        </div>
       </div>
-      <div class="modal-body" style="overflow-y: auto; flex: 1;">
-        <pre id="report-content" style="font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); color: var(--text-primary); margin: 0;">Loading report...</pre>
+      <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 1.5rem;">
+        <div id="report-content" class="report-markdown-body">Loading report...</div>
+        <pre id="report-raw-content" class="report-raw-body" style="display: none; font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); color: var(--text-primary); margin: 0;"></pre>
       </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
-        <button type="button" id="report-modal-close-btn" class="btn-secondary">Close</button>
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <span id="report-modal-meta" style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);"></span>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button type="button" id="report-modal-export-pdf-btn" class="btn-primary" style="display: flex; align-items: center; gap: 0.35rem;" title="Download dit rapport als PDF bestand">
+            <span>📥</span> Export to PDF
+          </button>
+          <button type="button" id="report-modal-close-btn" class="btn-secondary">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -362,6 +390,7 @@
     NjordDeploy Automated Infrastructure & Component Test Runner &copy; 2026
   </footer>
 
+  <script src="/static/js/vendor/marked.min.js"></script>
   <script src="/static/js/proxmox_gui.js?v={{ cache_bust }}"></script>
 </body>
 </html>

@@ -358,7 +358,7 @@
             "has_ui": true,
             "image_name": "adminer",
             "intent_questions": [],
-            "last_tested": "2026-09-04T19:34:21.759260+00:00",
+            "last_tested": "2026-09-05T12:53:52.751616+00:00",
             "name": "Adminer",
             "package_id": null,
             "project_url": "https://www.adminer.org/",

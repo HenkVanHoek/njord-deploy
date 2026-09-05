@@ -29,6 +29,7 @@ from utils.failed_components import (  # noqa: E402
     remove_untestable_component,
 )
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
+from utils.screenshot_utils import capture_service_screenshot  # noqa: E402
 from utils.security_utils import mask_passwords  # noqa: E402
 from utils.template_header import update_template_header_content  # noqa: E402
 
@@ -803,10 +804,26 @@ def cleanup_stale_test_instances(client: ProxmoxClient, node: str) -> None:
     # noinspection PyBroadException
     try:
         lxcs = client.get(f"nodes/{node}/lxc").get("data", [])
+        test_ips = ("10.99.0.199", "192.168.178.199")
         for lxc in lxcs:
             lxc_name = lxc.get("name", "")
             vmid = lxc.get("vmid")
-            if any(lxc_name.startswith(pfx) for pfx in stale_prefixes) and vmid:
+            if not vmid or lxc.get("template"):
+                continue
+
+            is_stale = any(lxc_name.startswith(pfx) for pfx in stale_prefixes)
+            if not is_stale and lxc_name.startswith("CT"):
+                # Check if this CT has one of the dedicated test IPs
+                # noinspection PyBroadException
+                try:
+                    cfg = client.get(f"nodes/{node}/lxc/{vmid}/config").get("data", {})
+                    net0 = cfg.get("net0", "")
+                    if any(f"ip={tip}" in net0 for tip in test_ips):
+                        is_stale = True
+                except Exception:  # nosec B110
+                    pass
+
+            if is_stale:
                 logger.warning(
                     f"Found stale test LXC '{lxc_name}' (VMID: {vmid}). Cleaning up..."
                 )
@@ -907,14 +924,15 @@ def find_suitable_lxc_template(client: ProxmoxClient, node: str) -> str:
 def resolve_dedicated_vm_template(
     proxmox_client: ProxmoxClient, node: str, engine: str, template_id: int
 ) -> Tuple[int, bool]:
-    """
-    Returns (effective_template_id, is_dedicated).
+    """Returns (effective_template_id, is_dedicated).
 
-    If template_id is 902 and dedicated template (911 for Docker, 913 for
-    Podman) exists on the node, auto-selects it and returns (dedicated_id, True).
+    Auto-selects dedicated VM template (911 for Docker, 913 for Podman).
     """
-    if template_id == 902:
-        target_id = 911 if engine.lower() == "docker" else 913
+    target_id = 911 if engine.lower() == "docker" else 913
+    if template_id == target_id:
+        return target_id, True
+
+    if template_id in (902, 911, 912, 913, 914):
         # noinspection PyBroadException
         try:
             qemu_vms = proxmox_client.get(f"nodes/{node}/qemu").get("data", [])
@@ -927,8 +945,6 @@ def resolve_dedicated_vm_template(
                     return target_id, True
         except Exception as e:
             logger.debug(f"Failed to check dedicated VM template: {e}")
-    elif template_id in (911, 913):
-        return template_id, True
     return template_id, False
 
 
@@ -989,7 +1005,7 @@ def stop_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
 
 
 def destroy_lxc(client: ProxmoxClient, node: str, vmid: int) -> dict:
-    return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1})
+    return client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1, "force": 1})
 
 
 def recover_shared_instance(
@@ -1342,7 +1358,7 @@ def provision_shared_test_instance(
 
         import urllib.parse
 
-        proxmox_client.configure_vm(
+        conf_res = proxmox_client.configure_vm(
             node=node,
             vmid=shared_vm_vmid,
             config_data={
@@ -1350,6 +1366,7 @@ def provision_shared_test_instance(
                 "cipassword": vm_pass,
                 "sshkeys": urllib.parse.quote(ssh_public_key),
                 "ipconfig0": vm_ipconfig,
+                "nameserver": os.getenv("PROXMOX_NAMESERVER", "1.1.1.1 8.8.8.8"),
                 "net0": vm_net,
                 "cores": allocated_cores,
                 "memory": allocated_ram,
@@ -1357,6 +1374,9 @@ def provision_shared_test_instance(
                 "agent": "enabled=1",
             },
         )
+        upid = conf_res.get("data")
+        if isinstance(upid, str):
+            wait_for_proxmox_task(proxmox_client, node, upid)
         # Expand VM disk by +60GB to prevent disk exhaustion across tests
         try:
             resize_res = proxmox_client.put(
@@ -1408,6 +1428,8 @@ def provision_shared_test_instance(
         sudo_pfx = "" if vm_user == "root" else f"echo '{vm_pass}' | sudo -S "
         # Wait for cloud-init and apt background daily upgrades to clear locks
         wait_script = (
+            "rm -f /etc/resolv.conf; "
+            "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > /etc/resolv.conf; "
             "if command -v cloud-init >/dev/null 2>&1; then "
             "cloud-init status --wait || true; fi; "
             "systemctl stop apt-daily.service apt-daily-upgrade.service "
@@ -1699,9 +1721,18 @@ def run_environment_tests(
         )
         return env_results
     test_ip = os.getenv("PROXMOX_TEST_IP")
-    bridge = os.getenv("PROXMOX_BRIDGE", "vmbr1" if test_ip else "vmbr0")
+    bridge = os.getenv("PROXMOX_BRIDGE")
+    if not bridge:
+        bridge = "vmbr1" if (test_ip and "10.99." in test_ip) else "vmbr0"
+    elif test_ip and "10.99." in test_ip and bridge == "vmbr0":
+        bridge = "vmbr1"
+
     default_gw = "10.99.0.1" if (test_ip and "10.99." in test_ip) else "192.168.178.1"
-    test_gw = os.getenv("PROXMOX_GATEWAY", default_gw)
+    raw_gw = os.getenv("PROXMOX_GATEWAY")
+    if not raw_gw or (test_ip and "10.99." in test_ip and "10.99." not in raw_gw):
+        test_gw = default_gw
+    else:
+        test_gw = raw_gw
     vlan_tag = os.getenv("PROXMOX_VLAN_TAG")
 
     tag_suffix = f",tag={vlan_tag}" if vlan_tag else ""
@@ -2142,6 +2173,42 @@ def run_environment_tests(
                 if is_success:
                     test_record["status"] = "success"
                     logger.info(f"✅ Component {comp_id} verified successfully!")
+
+                    # Capture Web UI screenshot if component has a reachable UI
+                    http_target_url = health.get("http_url")
+                    if http_target_url and (
+                        comp.get("has_ui") or health.get("http_ok")
+                    ):
+                        try:
+                            shot_dir = (
+                                project_root / "docs" / "images" / "test_screenshots"
+                            )
+                            shot_dir.mkdir(parents=True, exist_ok=True)
+                            ts_clean = time.strftime("%Y%m%d_%H%M%S")
+                            m_clean = mode.lower()
+                            e_clean = engine.lower()
+                            shot_fn = f"{comp_id}_{m_clean}_{e_clean}_{ts_clean}.png"
+                            shot_path = shot_dir / shot_fn
+                            logger.info(
+                                f"📸 Capturing Web UI screenshot for {comp_id} at "
+                                f"{http_target_url}..."
+                            )
+                            captured_path = capture_service_screenshot(
+                                url=http_target_url,
+                                output_path=shot_path,
+                            )
+                            if captured_path and shot_path.exists():
+                                rel_path = f"images/test_screenshots/{shot_fn}"
+                                test_record["screenshot_path"] = rel_path
+                                logger.info(
+                                    f"📸 UI Screenshot captured successfully: "
+                                    f"{rel_path}"
+                                )
+                        except Exception as shot_err:
+                            logger.warning(
+                                f"Screenshot capture failed for {comp_id}: {shot_err}"
+                            )
+
                     detected_version = health.get("detected_version")
                     version_to_record = (
                         detected_version
@@ -2216,32 +2283,60 @@ def run_environment_tests(
                 )
         elif active_vmid:
             logger.info(f"Destroying shared {mode.upper()} {active_vmid}...")
-            try:
-                if is_lxc:
-                    stop_res = stop_lxc(proxmox_client, node, active_vmid)
-                    upid = stop_res.get("data")
-                    if isinstance(upid, str):
-                        wait_for_proxmox_task(proxmox_client, node, upid)
+            if is_lxc:
+                # noinspection PyBroadException
+                try:
+                    status_info = proxmox_client.get(
+                        f"nodes/{node}/lxc/{active_vmid}/status/current"
+                    )
+                    ct_status = status_info.get("data", {}).get("status")
+                    if ct_status == "running":
+                        logger.info(f"Stopping LXC container {active_vmid}...")
+                        stop_res = stop_lxc(proxmox_client, node, active_vmid)
+                        upid = stop_res.get("data")
+                        if isinstance(upid, str):
+                            wait_for_proxmox_task(proxmox_client, node, upid)
+                except Exception as stop_err:
+                    logger.warning(
+                        f"Note: Could not stop LXC container {active_vmid} "
+                        f"(may already be stopped): {stop_err}"
+                    )
+                # noinspection PyBroadException
+                try:
                     destroy_res = destroy_lxc(proxmox_client, node, active_vmid)
                     upid = destroy_res.get("data")
                     if isinstance(upid, str):
                         wait_for_proxmox_task(proxmox_client, node, upid)
-                    logger.info(f"Shared LXC container {active_vmid} destroyed.")
-                else:
+                    logger.info(
+                        f"Shared LXC container {active_vmid} destroyed successfully."
+                    )
+                except Exception as teardown_err:
+                    logger.warning(
+                        f"Failed to destroy shared LXC {active_vmid}: {teardown_err}"
+                    )
+            else:
+                # noinspection PyBroadException
+                try:
                     stop_res = proxmox_client.stop_vm(node, active_vmid)
                     upid = stop_res.get("data")
                     if isinstance(upid, str):
                         wait_for_proxmox_task(proxmox_client, node, upid)
+                except Exception as stop_err:
+                    logger.warning(
+                        f"Note: Could not stop VM {active_vmid} "
+                        f"(may already be stopped): {stop_err}"
+                    )
+                # noinspection PyBroadException
+                try:
                     destroy_res = proxmox_client.destroy_vm(node, active_vmid)
                     upid = destroy_res.get("data")
                     if isinstance(upid, str):
                         wait_for_proxmox_task(proxmox_client, node, upid)
-                    logger.info(f"Shared VM {active_vmid} destroyed.")
-            except Exception as teardown_err:
-                logger.error(
-                    f"Failed to destroy shared {mode.upper()} "
-                    f"{active_vmid}: {teardown_err}"
-                )
+                    logger.info(f"Shared VM {active_vmid} destroyed successfully.")
+                except Exception as teardown_err:
+                    logger.warning(
+                        f"Failed to destroy shared VM {active_vmid}: {teardown_err}"
+                    )
 
     return env_results
 
@@ -2625,6 +2720,26 @@ def write_markdown_report(
             f"{'Running' if record['running'] else 'Stopped'} | "
             f"{http_val} | **{status_emoji}** |"
         )
+
+    screenshots_records = [r for r in results if r.get("screenshot_path")]
+    if screenshots_records:
+        md_lines.append("")
+        md_lines.append("## Visual Verification & Web UI Screenshots")
+        md_lines.append("")
+        for s_rec in screenshots_records:
+            cid = s_rec.get("component_id", "service")
+            smode = (s_rec.get("mode") or "LXC").upper()
+            sengine = (s_rec.get("engine") or engine).upper()
+            surl = s_rec.get("http_url") or "N/A"
+            vmid_val = s_rec.get("vmid", "—")
+            ip_val = s_rec.get("ip", "—")
+            md_lines.append(f"### Component: `{cid}` ({smode} + {sengine})")
+            md_lines.append(f"- **Web UI Endpoint:** [{surl}]({surl})")
+            md_lines.append(f"- **Target Mode:** `{smode}` | **Engine:** `{sengine}`")
+            md_lines.append(f"- **VM ID:** {vmid_val} | **IP:** `{ip_val}`")
+            md_lines.append("")
+            md_lines.append(f"![{cid} Web UI]({s_rec['screenshot_path']})")
+            md_lines.append("")
 
     md_lines.append("")
     md_lines.append("## Details & Failures")

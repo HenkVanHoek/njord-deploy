@@ -188,17 +188,64 @@
         "error_message": "Package deployment failed: The deployment sequence failed. See the console logs for detailed execution output."
     },
     {
+        "timestamp": "2026-09-05 15:17:26",
         "package_id": "agile-ops",
         "package_name": "Agile Operations & Secure Chat",
-        "status": "failed",
+        "status": "success",
         "mode": "lxc",
         "engine": "docker",
-        "vmid": 109,
+        "vmid": 104,
         "ip": "10.99.0.199",
-        "deployment": "failed",
-        "components": {},
-        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_084747.md",
-        "error_message": "Package deployment failed: The deployment sequence failed. See the console logs for detailed execution output."
+        "deployment": "success",
+        "components": {
+            "vikunja": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_vikunja_lxc_docker_20260905_151756.png",
+                "http_url": "http://10.99.0.199:3456"
+            },
+            "focalboard": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_focalboard_lxc_docker_20260905_151801.png",
+                "http_url": "http://10.99.0.199:8099"
+            },
+            "gitea": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_gitea_lxc_docker_20260905_151808.png",
+                "http_url": "http://10.99.0.199:3000"
+            },
+            "conduit": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null
+            },
+            "memos": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_memos_lxc_docker_20260905_151811.png",
+                "http_url": "http://10.99.0.199:5230"
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_lxc_docker_20260905_151726.md",
+        "error_message": ""
     },
     {
         "package_id": "smarthome-stack",
@@ -411,51 +458,63 @@
         "error_message": ""
     },
     {
+        "timestamp": "2026-09-05 15:19:35",
         "package_id": "agile-ops",
         "package_name": "Agile Operations & Secure Chat",
         "status": "success",
         "mode": "vm",
         "engine": "docker",
         "vmid": 104,
-        "ip": "192.168.178.144",
+        "ip": "10.99.0.199",
         "deployment": "success",
         "components": {
             "vikunja": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
-                "detected_version": null
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_vikunja_vm_docker_20260905_152055.png",
+                "http_url": "http://10.99.0.199:3456"
             },
             "focalboard": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
-                "detected_version": null
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_focalboard_vm_docker_20260905_152103.png",
+                "http_url": "http://10.99.0.199:8099"
             },
             "gitea": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
-                "detected_version": null
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_gitea_vm_docker_20260905_152107.png",
+                "http_url": "http://10.99.0.199:3000"
             },
             "conduit": {
                 "running": true,
                 "http_ok": null,
                 "logs_error": false,
                 "error_message": "",
-                "detected_version": null
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null
             },
             "memos": {
                 "running": true,
-                "http_ok": null,
+                "http_ok": true,
                 "logs_error": false,
                 "error_message": "",
-                "detected_version": null
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_memos_vm_docker_20260905_152111.png",
+                "http_url": "http://10.99.0.199:5230"
             }
         },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_vm_docker_20260905_151935.md",
         "error_message": ""
     },
     {
@@ -869,53 +928,64 @@
         "error_message": ""
     },
     {
+        "timestamp": "2026-09-05 15:18:40",
         "package_id": "agile-ops",
         "package_name": "Agile Operations & Secure Chat",
-        "status": "failed",
+        "status": "success",
         "mode": "lxc",
         "engine": "podman",
-        "vmid": 106,
-        "ip": "192.168.178.75",
+        "vmid": 104,
+        "ip": "10.99.0.199",
         "deployment": "success",
         "components": {
             "vikunja": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'vikunja'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_vikunja_lxc_podman_20260905_151915.png",
+                "http_url": "http://10.99.0.199:3456"
             },
             "focalboard": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'focalboard'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_focalboard_lxc_podman_20260905_151919.png",
+                "http_url": "http://10.99.0.199:8099"
             },
             "gitea": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'gitea'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_gitea_lxc_podman_20260905_151924.png",
+                "http_url": "http://10.99.0.199:3000"
             },
             "conduit": {
-                "running": false,
+                "running": true,
                 "http_ok": null,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'conduit'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null
             },
             "memos": {
-                "running": false,
-                "http_ok": null,
+                "running": true,
+                "http_ok": true,
                 "logs_error": false,
-                "error_message": "No running container found matching service 'memos'.",
-                "detected_version": null
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_memos_lxc_podman_20260905_151928.png",
+                "http_url": "http://10.99.0.199:5230"
             }
         },
-        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
-        "error_message": "Successfully checked 5 components."
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_lxc_podman_20260905_151840.md",
+        "error_message": ""
     },
     {
         "package_id": "caddy-filebrowser-stack",
@@ -944,5 +1014,65 @@
         },
         "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
         "error_message": "Successfully checked 2 components."
+    },
+    {
+        "timestamp": "2026-09-05 15:21:20",
+        "package_id": "agile-ops",
+        "package_name": "Agile Operations & Secure Chat",
+        "status": "success",
+        "mode": "vm",
+        "engine": "podman",
+        "vmid": 104,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "vikunja": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_vikunja_vm_podman_20260905_152231.png",
+                "http_url": "http://10.99.0.199:3456"
+            },
+            "focalboard": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_focalboard_vm_podman_20260905_152239.png",
+                "http_url": "http://10.99.0.199:8099"
+            },
+            "gitea": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_gitea_vm_podman_20260905_152243.png",
+                "http_url": "http://10.99.0.199:3000"
+            },
+            "conduit": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null
+            },
+            "memos": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_memos_vm_podman_20260905_152246.png",
+                "http_url": "http://10.99.0.199:5230"
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_vm_podman_20260905_152120.md",
+        "error_message": ""
     }
 ]

@@ -244,3 +244,7 @@ class SSHManager:
         if self.client:
             self.client.close()
             self.client = None
+
+    def disconnect(self) -> None:
+        """Closes the SSH connection (alias for close)."""
+        self.close()
