@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [Unreleased] - 2026-09-05
+
+### Added
+- **Playwright Vector PDF Report Export**:
+  - Implemented headless Playwright Chromium endpoint (`GET /api/report/pdf`) in [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py) generating publication-ready, A4 vector PDF test reports.
+  - Automatically embeds local visual verification screenshots as Base64 data URIs for self-contained, offline-portable PDF documents.
+  - Formatted with clean print CSS, dedicated page numbering headers/footers, and clean page-break isolation.
+  - Added "Export to PDF" action buttons in the Proxmox GUI results table rows, report preview modal, and top action bar with dynamic download feedback.
+- **Dedicated Per-Matrix Isolated Test Reporting**:
+  - Enhanced [`scripts/proxmox_package_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_package_test_runner.py) and [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py) to generate isolated Markdown reports (`PROXMOX_PACKAGE_TESTS_{pkg}_{mode}_{engine}_{ts}.md`) and timestamped screenshots (`pkg_{comp}_{mode}_{engine}_{ts}.png`) per matrix environment.
+  - Enables non-destructive, audit-ready verification across all 4 quadrants (LXC/Docker, LXC/Podman, VM/Docker, VM/Podman) with distinct historical traceability.
+- **Local Docker Registry Pull-Through Cache Mirror**:
+  - Implemented [`scripts/setup_test_gateway.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/setup_test_gateway.py) provisioning a high-performance Docker Registry 2 pull-through cache mirror in LXC container 920 (`10.99.0.2:5000` on `vmbr1`) with 30GB cache storage.
+  - Drastically accelerates multi-environment matrix runs by caching Docker Hub image layers locally, reducing test execution times and avoiding Docker Hub rate limits.
+
+### Fixed
+- **Network Gateway DNS KISS Policy**:
+  - Removed container-level `dnsmasq` intercept complexity from the test gateway; all test instances resolve upstream DNS via native PVE host NAT (`10.99.0.1`), ensuring 100% reliable external DNS and preventing network outages.
+- **VM Base64 Import Scoping & Quoting**:
+  - Fixed `UnboundLocalError: cannot access local variable 'base64'` in `proxmox_package_test_runner.py` and hardened subprocess shell command quoting across LXC and VM runners.
+
 ## [1.0.0-RC1] - 2026-08-30
 
 ### Added

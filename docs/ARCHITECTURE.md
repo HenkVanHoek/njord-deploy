@@ -304,3 +304,29 @@ Behavior
   - Gracefully restarts systemd services (`njorddeploy-configurator.service`, `njorddeploy-editor.service`, `njorddeploy-proxmox-test.service`).
   - Verifies local and public HTTP endpoints (`https://deploy.njorddeploy.com/api/v1/health` and inbound Stripe webhook reachability).
   - Logs execution details directly to Henks Geheugen (Obsidian) and optionally dispatches alert notifications via Signal.
+
+## 16. Proxmox Test Gateway & Docker Registry Pull-Through Cache Mirror
+
+- **Principle**: Automated 4-way matrix testing (LXC vs VM × Docker vs Podman) pulls numerous container images repeatedly. To eliminate external WAN bandwidth saturation and Docker Hub rate limiting, all test traffic routes through a dedicated local pull-through registry mirror on the isolated test subnet (`10.99.0.0/24` on `vmbr1`).
+- **Architecture & Infrastructure**:
+  - **Gateway Container**: Deployed via [`scripts/setup_test_gateway.py`](../scripts/setup_test_gateway.py) as LXC container `920` running on Proxmox node `pve` at `10.99.0.2:5000`.
+  - **Storage**: Allocates 30GB of dedicated local-lvm storage to cache Docker Hub (`registry-1.docker.io`) layers across multiple runs.
+  - **Target Client Configuration**: Test runners automatically inject registry mirror configuration into test instances:
+    - Docker: Configured via `/etc/docker/daemon.json` with `"registry-mirrors": ["http://10.99.0.2:5000"]` and insecure registry declarations.
+    - Podman: Configured via `/etc/containers/registries.conf` with unqualified search mirrors pointing to `10.99.0.2:5000`.
+- **KISS Network & DNS Routing**:
+  - Following Keep It Simple, Stupid (KISS), container 920 operates purely as a registry mirror without running internal DNS servers (`dnsmasq`).
+  - All test containers and VMs use the PVE host NAT gateway (`10.99.0.1`) for standard upstream DNS resolution, eliminating DNS hijacking and preserving external connectivity.
+
+## 17. Automated Playwright Vector PDF Reporting Architecture
+
+- **Principle**: Test reports, visual verification proofs, and stack compliance documents must be exportable as self-contained, publication-ready A4 vector PDF documents that can be shared offline with clients, architects, and compliance officers.
+- **Implementation & Endpoint**:
+  - Endpoint `GET /api/report/pdf` in [`scripts/proxmox_gui.py`](../scripts/proxmox_gui.py) synthesizes the report dynamically using headless Playwright Chromium.
+  - Generates true vector PDF (`format="A4"`, `print_background=True`) with custom margin definitions (`15mm top/bottom`, `12mm left/right`).
+- **Self-Contained Image Packaging**:
+  - Visual verification screenshots referenced in Markdown are parsed and loaded from disk, converted to Base64 data URIs (`data:image/png;base64,...`), and embedded directly into the HTML document prior to Playwright PDF rendering.
+  - This ensures 100% portable PDFs with zero external asset dependencies or broken image placeholders.
+- **Print Optimization**:
+  - Uses CSS media queries (`@media print`) and vendor-neutral pagination controls (`page-break-inside: avoid`, `break-inside: avoid`) to prevent orphaned headers, split tables, or fractured screenshot cards.
+  - Automatically injects running page headers and footers with page numbering (`Page {pageNumber} of {totalPages}`) and timestamp metadata.

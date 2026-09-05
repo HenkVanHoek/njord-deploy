@@ -48,7 +48,7 @@
 * **Dual-Engine Architecture (Docker & Rootless Podman)**: Universal container abstraction supporting standard Docker CE and unprivileged Rootless Podman with automatic low-port kernel mapping (`net.ipv4.ip_unprivileged_port_start=53`) and user session lingering.
 * **AI Component Studio**: Convert any public or self-hosted Git repository (**GitHub, GitLab, Gitea, Forgejo, Codeberg, Bitbucket**) into a validated Jinja2 Compose stack powered by local offline Ollama models, EU sovereign Loes.ai / HostYourAI, Google Gemini, or OpenAI (see [Developer AI Guide](docs/DEVELOPER_AI_AND_SYNC_GUIDE.md)).
 * **Transactional Disaster Recovery**: Point-in-time state backups for all managed persistent volumes and databases with container-safe volume pausing, SHA-256 integrity checksums, and single-click restoration.
-* **Proxmox 4-Way Cross-Validation & Self-Healing**: Automated hypervisor matrix testing across 4 quadrants (Docker vs Podman × LXC vs VM) with autonomous AI log diagnostics and 1-click Jinja2 diff patches (see [Self-Healing DevOps Case Study](docs/CASE_STUDY_SELF_HEALING_DEVOPS.md)).
+* **Proxmox 4-Way Cross-Validation & PDF Reporting**: Automated hypervisor matrix testing across 4 quadrants (Docker vs Podman × LXC vs VM) with autonomous AI log diagnostics, local pull-through registry caching, and 1-click A4 vector PDF export with embedded visual proofs (see [Testing Strategy](docs/TESTING_STRATEGY.md) and [Self-Healing DevOps Case Study](docs/CASE_STUDY_SELF_HEALING_DEVOPS.md)).
 * **Headless REST API & Interactive Swagger UI**: Complete OpenAPI 3.0 REST engine for CI/CD automation, homelab scripting, and AI coding agents (see [API Reference](docs/API_REFERENCE.md)).
 
 ---

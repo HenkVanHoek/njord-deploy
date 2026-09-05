@@ -83,6 +83,9 @@ This milestone elevates NjordDeploy into a complete, enterprise-grade, multi-ten
 *   **[✅] Generative Engine Optimization (GEO) & Machine-Readable AI Standards**:
     *   **Why?**: To enable accurate, hallucination-free indexing and retrieval by AI search engines (Perplexity, ChatGPT Search, Claude, Gemini) and AI coding agents.
     *   **Implementation**: Authored RFC-compliant `llms.txt` and `llms-full.txt` (conforming to [llmstxt.org](https://llmstxt.org/)), fine-tuned AI bot crawler directives in `robots.txt`, integrated Schema.org JSON-LD (`SoftwareApplication`, `WebSite`, `FAQPage`), and implemented root Flask routes for server daemon and website deployments.
+*   **[✅] Enterprise Matrix Reporting & Playwright Vector PDF Export**:
+    *   **Why?**: To provide self-contained, audit-grade documentation and visual verification proofs of 4-way hypervisor matrix tests that can be shared with enterprise clients and compliance teams offline.
+    *   **Implementation**: Implemented headless Playwright Chromium A4 vector PDF engine (`GET /api/report/pdf`), isolated per-matrix markdown reporting (`PROXMOX_PACKAGE_TESTS_{pkg}_{mode}_{engine}_{ts}.md`), Base64 screenshot embedding, and local Docker Registry pull-through caching (`setup_test_gateway.py`).
 
 ---
 

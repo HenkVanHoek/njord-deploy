@@ -142,20 +142,50 @@ test-frontend:
 
 With this in place, you can run `make test` to validate the entire application.
 
-## 5. Proxmox Component Integration Testing
+## 5. Proxmox Hypervisor Matrix Testing
 
-NjordDeploy features a high-fidelity automated test runner that validates components by deploying them on dynamically cloned **LXC containers** within a Proxmox VE server.
+NjordDeploy features a high-fidelity automated test matrix suite that validates individual components and multi-app turnkey packages across real virtualized environments on a Proxmox VE server.
 
-This test runner performs the following steps:
-1. Clones a master template LXC container on the Proxmox host.
-2. Injects SSH keys and boots the container.
-3. Retrieves the dynamic IP address of the booted container.
-4. Generates deployment configurations and runs the deployment process over SSH.
-5. Performs HTTP and Docker health verification checks.
-6. Automatically cleans up by destroying the temporary container.
+### 5.1 The 4-Way Cross-Validation Matrix
 
-Results are stored as:
-- **JSON**: `tests/proxmox_results.json` (raw data, consumed by UI verification tests)
-- **Markdown**: `docs/PROXMOX_TESTS.md` (human-readable test report)
+To ensure unconditional reliability in both homelab and production enterprise environments, components and stacks are verified across a 4-way matrix (2 targets × 2 engines):
 
-For credentials, setup instructions, and advanced parameters, refer to the [.agents/skills/proxmox-test/SKILL.md](file:///home/hvhoek/PycharmProjects/njord-deploy/.agents/skills/proxmox-test/SKILL.md) skill file.
+| Environment Combination | Target Hypervisor Mode | Container Runtime Engine | Template ID |
+|:---|:---|:---|:---|
+| **LXC + Docker** | Unprivileged Debian 12 LXC Container | Docker Engine (CE) | `912` |
+| **LXC + Podman** | Unprivileged Debian 12 LXC Container | Rootless Podman | `914` |
+| **VM + Docker** | Debian 12 KVM Virtual Machine (Cloud-Init) | Docker Engine (CE) | `911` |
+| **VM + Podman** | Debian 12 KVM Virtual Machine (Cloud-Init) | Rootless Podman | `913` |
+
+### 5.2 Test Runners & Interactive GUI
+
+Two dedicated runners orchestrate testing over agentless SSH on an isolated test subnet (`10.99.0.0/24` on `vmbr1`):
+1. **Single Component Runner (`scripts/proxmox_test_runner.py`)**:
+   Tests individual components from `component_templates/` in isolation.
+2. **Turnkey Package Runner (`scripts/proxmox_package_test_runner.py`)**:
+   Tests multi-service bundles (e.g. `agile-ops`, `media-stack`, `smarthome-stack`) with full dependency wiring and zero-collision port validation.
+3. **Interactive Test GUI (`run_proxmox_gui.py` on port `5050`)**:
+   Real-time SSE log streaming, dynamic package/component selection, environment filtering, live result tracking, and AI-assisted root cause diagnosis.
+
+### 5.3 Local Docker Registry Pull-Through Cache Mirror
+
+Multi-environment matrix runs pull dozens of container images. To eliminate WAN bandwidth overhead and Docker Hub rate limiting:
+- LXC container `920` runs a dedicated Docker Registry pull-through mirror at `10.99.0.2:5000` with 30GB storage on `vmbr1`.
+- Provisioned via [`scripts/setup_test_gateway.py`](../scripts/setup_test_gateway.py).
+- Runners configure test instances to route all Docker and Podman image pulls through this local cache.
+- Networking follows a strict KISS policy: standard upstream DNS is provided directly by the Proxmox host NAT gateway (`10.99.0.1`), avoiding container-level DNS interception.
+
+### 5.4 Isolated Matrix Reports & Visual Proofs
+
+Test results and visual verification proofs are recorded with full isolation:
+- **JSON Manifests**: `tests/proxmox_results.json` and `tests/proxmox_package_results.json`.
+- **Global Reports**: `docs/PROXMOX_TESTS.md` and `docs/PROXMOX_PACKAGE_TESTS.md`.
+- **Per-Matrix Isolated Reports**: `docs/PROXMOX_PACKAGE_TESTS_{pkg}_{mode}_{engine}_{ts}.md`.
+- **Automated Screenshots**: Headless Playwright captures live web interfaces at runtime, stored in `docs/images/test_screenshots/`.
+
+### 5.5 Playwright Vector PDF Export
+
+For audit compliance, client deliverables, and offline documentation, the Proxmox GUI provides single-click export to A4 vector PDF (`GET /api/report/pdf`):
+- Rendered via headless Playwright Chromium with `@media print` styling.
+- Local screenshot images are converted and embedded as Base64 data URIs for 100% self-contained, offline viewing.
+- Features automatic running headers/footers with dynamic page numbering.
