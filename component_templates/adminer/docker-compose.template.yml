@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "8.4.24"
-# platform_notes: "Tested on Proxmox LXC: docker (8.4.24, 2026-08-15), podman (8.4.24, 2026-08-15); Proxmox VM: docker (8.4.24, 2026-08-15), podman (8.4.24, 2026-08-15)."
+# last_tested_version: "6.0.1"
+# platform_notes: "Tested on Proxmox LXC: docker (8.4.25, 2026-09-04), podman (6.0.1, 2026-09-04); Proxmox VM: docker (8.4.25, 2026-09-04), podman (6.0.1, 2026-09-04)."
 # breaking_changes: "None"
 services:
   adminer:

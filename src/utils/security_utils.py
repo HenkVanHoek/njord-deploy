@@ -1,7 +1,9 @@
 # src/utils/security_utils.py
 
+import os
+import re
 import urllib.parse
-from typing import Optional, Tuple
+from typing import Iterable, Optional, Set, Tuple
 
 ALLOWED_HTTP_SCHEMES = {"http", "https"}
 
@@ -116,3 +118,69 @@ def build_safe_target_url(
         return True, target_url, None
     except Exception as e:
         return False, None, f"Failed to construct target URL: {e}"
+
+
+ECHO_SUDO_PATTERN = re.compile(
+    r"(echo\s+)(['\"][^'\"]*['\"]|[^\s|]+)(\s*\|\s*sudo(?:\s+-S)?)",
+    re.IGNORECASE,
+)
+
+PASSWORD_PARAM_PATTERN = re.compile(
+    r"((?:password|passwd|ansible_password|ansible_become_password|"
+    r"secret|api_key|token)[\"']?\s*[:=]\s*['\"])(?:(?!\1)[^\"'\s]+)(['\"])",
+    re.IGNORECASE,
+)
+
+
+def mask_passwords(
+    text: str,
+    extra_secrets: Optional[Iterable[str]] = None,
+    mask: str = "*******",
+) -> str:
+    """Mask sensitive passwords and echo credentials from logs and strings.
+
+    Replaces:
+    1. 'echo <password> | sudo' and 'echo '<password>' | sudo -S' patterns.
+    2. Sensitive key-value fields (password, ansible_password, token, etc.).
+    3. Any explicit secrets passed in extra_secrets or environment variables
+       (PROXMOX_PASSWORD, PROXMOX_VM_PASSWORD, etc.).
+
+    Args:
+        text: Input string potentially containing plaintext credentials.
+        extra_secrets: Optional iterable of additional secret strings to mask.
+        mask: Mask string to replace credentials (defaults to '*******').
+
+    Returns:
+        Sanitized string safe for logging, terminal streaming, and reports.
+    """
+    if not text:
+        return text
+
+    # 1. Mask 'echo <password> | sudo [-S]'
+    sanitized = ECHO_SUDO_PATTERN.sub(rf"\1'{mask}'\3", text)
+
+    # 2. Mask password fields in key-value config lines / JSON
+    sanitized = PASSWORD_PARAM_PATTERN.sub(rf"\1{mask}\2", sanitized)
+
+    # 3. Mask explicit secrets
+    secrets_to_mask: Set[str] = set()
+    if extra_secrets:
+        for s in extra_secrets:
+            if s and len(s) >= 3:
+                secrets_to_mask.add(s)
+
+    for env_var in (
+        "PROXMOX_PASSWORD",
+        "PROXMOX_VM_PASSWORD",
+        "PVE_PASSWORD",
+        "VM_PASSWORD",
+        "ANSIBLE_PASSWORD",
+    ):
+        val = os.getenv(env_var)
+        if val and len(val) >= 3:
+            secrets_to_mask.add(val)
+
+    for secret in secrets_to_mask:
+        sanitized = sanitized.replace(secret, mask)
+
+    return sanitized

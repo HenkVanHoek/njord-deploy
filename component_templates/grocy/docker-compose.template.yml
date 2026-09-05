@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v4.7.0-ls338"
-# platform_notes: "Tested on Proxmox LXC: docker (v4.7.0-ls338, 2026-08-29), podman (v4.7.0-ls338, 2026-08-29); Proxmox VM: docker (v4.7.0-ls338, 2026-08-29), podman (v4.7.0-ls338, 2026-08-29)."
+# last_tested_version: "v4.7.1-ls339"
+# platform_notes: "Tested on Proxmox LXC: docker (v4.7.0-ls338, 2026-09-04), podman (v4.7.0-ls338, 2026-09-04); Proxmox VM: docker (v4.7.1-ls339, 2026-09-04), podman (v4.7.1-ls339, 2026-09-04)."
 # breaking_changes: none
 services:
   grocy:

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v3.24.0"
-# platform_notes: "Tested on Proxmox LXC: docker (v3.24.0, 2026-08-28), podman (v3.24.0, 2026-08-28); Proxmox VM: docker (v3.24.0, 2026-08-28), podman (v3.24.0, 2026-08-28)."
+# last_tested_version: "v3.25.1"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.25.1, 2026-09-04), podman (v3.25.1, 2026-09-04); Proxmox VM: docker (v3.25.1, 2026-09-04), podman (v3.25.1, 2026-09-04)."
 # breaking_changes: none
 services:
   mealie:

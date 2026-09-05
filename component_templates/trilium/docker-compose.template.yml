@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "v0.95.0"
-# platform_notes: "Tested on Proxmox LXC: docker (v0.95.0, 2026-08-29), podman (v0.95.0, 2026-08-29); Proxmox VM: docker (v0.95.0, 2026-08-29), podman (v0.95.0, 2026-08-29)."
+# platform_notes: "Tested on Proxmox LXC: docker (v0.95.0, 2026-09-04), podman (v0.95.0, 2026-09-04); Proxmox VM: docker (v0.95.0, 2026-09-04), podman (v0.95.0, 2026-09-04)."
 # breaking_changes: none
 services:
   trilium:

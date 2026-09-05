@@ -171,6 +171,7 @@ Behavior
 - Facilitates Cloud-Init VM provisioning by injecting SSH public keys and setting username, password, network configuration, and guest agent status.
 - Used by the automated Proxmox test runner (`scripts/proxmox_test_runner.py`)
   and by the `configurator_app` for live VM/LXC provisioning and status queries.
+- **Golden Templates & Fast Execution**: Dedicated Proxmox templates (`911` Docker VM, `912` Docker LXC, `913` Podman VM, `914` Podman LXC) are maintained as pre-updated Golden Images with cached base container images and sanitized apt lock states. Test runners pass `skip_engine_provisioning: true` to bypass redundant runtime package installations. Automated weekly updates are handled via `scripts/maintain_proxmox_templates.py` and systemd units (`njorddeploy-template-maintenance.timer`).
 - TLS verification is disabled by default for self-signed Proxmox certificates;
   this behaviour is intentional for homelab deployments and must not be changed
   without a migration plan.
@@ -292,3 +293,14 @@ Behavior
 
 - **Principle**: Point-in-time state backups of managed Docker services, `.env` credentials, and persistent data volumes are orchestrated atomically via `BackupManager`.
 - **Integrity & Verification**: Supports transactional container pausing, SHA-256 manifest generation, and permission reconciliation (`chmod 777`) upon restoration, verified end-to-end via the Proxmox disaster recovery test suite (`scripts/proxmox_backup_test_runner.py`).
+
+## 15. Operational Production Deployment & SaaS Synchronization
+
+- **Principle**: The live production service (`deploy.njorddeploy.com`, hosted on Proxmox VM 140 @ `<production-ip>`) shall remain synchronized with stable release branches and critical backend contract updates via automated deployment tooling.
+- **Universal Binary Compilation**: To ensure backwards compatibility (GLIBC 2.36 baseline) and complete isolation, production binaries are compiled on-demand in a clean Debian 12 Proxmox LXC container via [`scripts/build_linux_binary_proxmox.py`](../scripts/build_linux_binary_proxmox.py).
+- **Automated Live Deployment (`scripts/update_operational_vm.py`)**:
+  - Automatically takes a point-in-time snapshot backup of `/opt/njorddeploy` on VM 140 before modification.
+  - Deploys updated standalone binaries (`NjordDeployConfigurator`, `NjordDeployEditor`, `NjordDeployProxmoxTest`).
+  - Gracefully restarts systemd services (`njorddeploy-configurator.service`, `njorddeploy-editor.service`, `njorddeploy-proxmox-test.service`).
+  - Verifies local and public HTTP endpoints (`https://deploy.njorddeploy.com/api/v1/health` and inbound Stripe webhook reachability).
+  - Logs execution details directly to Henks Geheugen (Obsidian) and optionally dispatches alert notifications via Signal.

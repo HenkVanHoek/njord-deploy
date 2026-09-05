@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "4.0.19.2979-ls321"
-# platform_notes: "Tested on Proxmox LXC: docker (4.0.19.2979-ls321, 2026-08-15), podman (4.0.19.2979-ls321, 2026-08-15); Proxmox VM: docker (4.0.19.2979-ls321, 2026-08-15), podman (4.0.19.2979-ls321, 2026-08-15)."
+# last_tested_version: "4.0.19.2979-ls322"
+# platform_notes: "Tested on Proxmox LXC: docker (4.0.19.2979-ls322, 2026-09-05), podman (4.0.19.2979-ls322, 2026-09-04); Proxmox VM: docker (4.0.19.2979-ls322, 2026-09-04), podman (4.0.19.2979-ls322, 2026-09-04)."
 # breaking_changes: "None"
 services:
   sonarr:

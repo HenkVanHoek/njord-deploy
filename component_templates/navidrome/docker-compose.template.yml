@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "0.63.2"
-# platform_notes: "Tested on Proxmox LXC: docker (0.63.2, 2026-08-28), podman (0.63.2, 2026-08-28); Proxmox VM: docker (0.63.2, 2026-08-28), podman (0.63.2, 2026-08-28)."
+# platform_notes: "Tested on Proxmox LXC: docker (0.63.2, 2026-09-04), podman (0.63.2, 2026-09-04); Proxmox VM: docker (0.63.2, 2026-09-04), podman (0.63.2, 2026-09-04)."
 # breaking_changes: none
 services:
   navidrome:

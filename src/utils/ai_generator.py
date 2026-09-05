@@ -253,6 +253,31 @@ class AIGenerator:
                 if data.get("variables") or data.get("config_templates"):
                     metadata["has_configuration"] = True
 
+                # Normalize requires_root and podman_mode
+                docker_comp_text = str(data.get("docker_compose", ""))
+                has_root_reqs = any(
+                    sig in docker_comp_text
+                    for sig in [
+                        "privileged: true",
+                        "privileged: 'true'",
+                        "network_mode: host",
+                        "network_mode: 'host'",
+                        "cap_add:",
+                        "/dev/net/tun",
+                        "/dev/fuse",
+                        "/var/run/docker.sock",
+                        ":53/udp",
+                        ":53/tcp",
+                        ":67/udp",
+                    ]
+                )
+                if has_root_reqs:
+                    metadata["requires_root"] = True
+                    metadata["podman_mode"] = "rootful"
+                else:
+                    metadata.setdefault("requires_root", False)
+                    metadata.setdefault("podman_mode", "rootless")
+
                 # Run security and validation checks
                 if progress_callback:
                     progress_callback(
@@ -321,6 +346,16 @@ class AIGenerator:
                     "system/network daemons (e.g. DNS, database, monitoring), "
                     'ensure `user: "0:0"` is explicitly set at the service '
                     "level to prevent Linux file permission errors.\n"
+                    "6. If SQLite is used as the database, configure valid "
+                    "direct file paths inside mounted volumes (e.g. "
+                    "`/var/lib/app/data.sqlite`) or rely on default embedded "
+                    "SQLite without invalid URI schemes (avoid `sqlite3:///...`).\n"
+                    "7. If the service is a CI/CD server or forge integration "
+                    "tool (e.g. Woodpecker CI), ensure minimal working forge "
+                    "configuration (e.g. `WOODPECKER_OPEN=true`, "
+                    "`WOODPECKER_GITEA=true`, "
+                    "`WOODPECKER_GITEA_URL=http://gitea:3000`) is included to "
+                    "prevent startup crashes.\n"
                     "Return the complete corrected JSON configuration "
                     "according to the original schema."
                 )
@@ -721,6 +756,44 @@ class AIGenerator:
                                 'Set `user: "0:0"` at the service level to '
                                 "prevent volume permission errors on Linux hosts."
                             )
+
+                        # Check environment variables for malformed SQLite schemes
+                        env_confs = service_conf.get("environment", [])
+                        env_list: list[str] = []
+                        if isinstance(env_confs, list):
+                            env_list = [str(x) for x in env_confs]
+                        elif isinstance(env_confs, dict):
+                            env_list = [f"{k}={v}" for k, v in env_confs.items()]
+
+                        for env_str in env_list:
+                            if "sqlite3:///" in env_str:
+                                warnings.append(
+                                    f"Service '{service_name}' contains "
+                                    f"malformed SQLite URI '{env_str}'. "
+                                    "Use a valid file path inside mounted volume "
+                                    "or omit the variable for embedded SQLite."
+                                )
+
+                        # Check CI / Forge servers for missing startup forge config
+                        is_woodpecker = (
+                            "woodpecker" in service_lower or "woodpecker" in image_lower
+                        )
+                        if is_woodpecker:
+                            has_forge = any(
+                                "WOODPECKER_GITEA" in e
+                                or "WOODPECKER_OPEN" in e
+                                or "WOODPECKER_GITHUB" in e
+                                or "WOODPECKER_GITLAB" in e
+                                for e in env_list
+                            )
+                            if not has_forge:
+                                warnings.append(
+                                    f"Service '{service_name}' appears to be "
+                                    "Woodpecker CI but is missing forge configuration "
+                                    "(e.g. 'WOODPECKER_OPEN=true', "
+                                    "'WOODPECKER_GITEA=true', "
+                                    "'WOODPECKER_GITEA_URL=http://gitea:3000')."
+                                )
             except Exception as e:
                 warnings.append(
                     f"Failed to parse Docker Compose for security checks: {e}"

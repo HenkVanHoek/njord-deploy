@@ -1,0 +1,16 @@
+[Unit]
+Description=NjordDeploy Weekly Proxmox Golden Template Maintenance
+Documentation=https://github.com/HenkVanHoek/njord-deploy
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=hvhoek
+Group=hvhoek
+WorkingDirectory=/home/hvhoek/PycharmProjects/njord-deploy
+EnvironmentFile=-/home/hvhoek/PycharmProjects/njord-deploy/.env
+ExecStart=/usr/bin/python3 /home/hvhoek/PycharmProjects/njord-deploy/scripts/maintain_proxmox_templates.py --target all
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=1800

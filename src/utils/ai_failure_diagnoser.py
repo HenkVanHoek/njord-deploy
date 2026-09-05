@@ -183,19 +183,27 @@ class AIFailureDiagnoser:
                 "local build context not present on target."
             )
 
-        # 5. Rootless UID / GID namespace restriction in LXC or Podman
+        # 5. Rootless UID / GID namespace restriction or low port in Podman/LXC
         if (
             "usermod: uid" in combined_text
             or "operation not permitted" in combined_text
             or "permission denied" in combined_text
+            or "cannot listen on the udp port" in combined_text
+            or "cannot listen on the tcp port" in combined_text
+            or "address already in use" in combined_text
+            or "user: 0:0" in combined_text
         ):
             hints.append(
-                "PERMISSIONS & NAMESPACE NOTE: Under rootless Podman or "
-                "unprivileged LXC, entrypoint scripts that attempt to run "
-                "'usermod -u 0' or change root ownership of volume mounts "
-                "fail due to user namespace mapping. If this service "
-                "fundamentally requires root, consider classifying as "
-                "MATRIX_CONSTRAINT (Docker-only or VM-only)."
+                "PERMISSIONS & ROOTFUL PODMAN NOTE: Under rootless Podman, services "
+                "binding low system ports (e.g. 53 DNS, 67 DHCP, 443), requesting "
+                "NET_ADMIN/tun devices, or running with 'user: 0:0' fail with "
+                "'cannot listen on the UDP port', 'operation not permitted', or UID "
+                "errors. NjordDeploy supports 'requires_root: true' and "
+                "'podman_mode: \"rootful\"' in metadata "
+                "('config/components_metadata.json') to automatically deploy with "
+                "become/rootful privileges. If the service needs root privileges, "
+                "provide a 'suggested_root_mode' object instead of restricting "
+                "engine compatibility."
             )
 
         # 6. Docker daemon socket requirement in Podman
@@ -205,9 +213,9 @@ class AIFailureDiagnoser:
             hints.append(
                 "DOCKER SOCKET REQUIREMENT: The service depends on "
                 "'/var/run/docker.sock' to discover or manage container "
-                "instances. Podman does not provide this socket by default. "
-                "Classify as MATRIX_CONSTRAINT (engines: ['docker']) if Docker "
-                "engine is fundamentally required."
+                "instances. In Podman, this requires rootful mode ('requires_root: "
+                "true', 'podman_mode: \"rootful\"') or Docker engine. Recommend "
+                "'suggested_root_mode'."
             )
 
         # 7. Device passthrough / Kernel modules in LXC
@@ -222,7 +230,89 @@ class AIFailureDiagnoser:
                 "LXC containers. Recommend MATRIX_CONSTRAINT (VM-only)."
             )
 
-        # 8. HTTP probe failure
+        # 8. SQLite Database URI / Configuration Errors
+        if (
+            "missing sqlite file name" in combined_text
+            or "sqlite3:///" in combined_text
+            or "meta database configuration" in combined_text
+            or "sqlite_cantopen" in combined_text
+            or "cannot open database file" in combined_text
+        ):
+            hints.append(
+                "SQLITE CONFIGURATION ERROR: The container failed with an SQLite "
+                "parsing or path error (e.g. 'Meta database configuration missing "
+                "SQLite file name' or 'SQLITE_CANTOPEN'). For applications with "
+                "built-in SQLite (e.g. NocoDB, Vikunja), remove custom NC_DB / "
+                "connection strings so the app uses its internal default in the "
+                "mounted volume, or specify a plain file path (e.g. "
+                "'/var/lib/app/data.sqlite') without malformed 'sqlite3:///' prefixes."
+            )
+
+        # 9. CI/CD Forge Configuration Requirement (Woodpecker CI / Drone CI)
+        if (
+            "forge not configured" in combined_text
+            or "could not setup service manager" in combined_text
+            or ("woodpecker" in combined_text and "exit code" in combined_text)
+            or ("woodpecker" in combined_text and "crash" in combined_text)
+            or "oauth2 not configured" in combined_text
+        ):
+            hints.append(
+                "FORGE / CI PREREQUISITE REQUIREMENT: CI/CD servers (such as "
+                "Woodpecker CI v3 or Drone) crash on startup unless an upstream "
+                "forge/VCS integration is configured. To allow standalone operation "
+                "and successful web UI loading, add 'WOODPECKER_OPEN=true', "
+                "'WOODPECKER_GITEA=true', and 'WOODPECKER_GITEA_URL=http://gitea:3000' "
+                "(or corresponding provider variables) to the template environment."
+            )
+
+        # 10. Remote Git Context / Source Build Failure
+        if (
+            "failed to resolve source metadata" in combined_text
+            or "git clone failed" in combined_text
+            or "could not resolve host: github.com" in combined_text
+            or ("build:" in combined_text and "pull_policy: build" in combined_text)
+        ):
+            hints.append(
+                "SOURCE BUILD vs PRE-BUILT IMAGE: Building directly from remote Git "
+                "URLs ('build: context: https://...') frequently fails during "
+                "automated deployments. Recommend migrating to an official multi-arch "
+                "pre-built image from Docker Hub or GitHub Container Registry "
+                "('ghcr.io/...')."
+            )
+
+        # 11. Podman Heavy Stack Database Migrations & HTTP Probe Timing
+        if (
+            (
+                "http probe failed after" in combined_text
+                or "httpconnectionpool" in combined_text
+                or "connection refused" in combined_text
+            )
+            and any(
+                stack in combined_text
+                for stack in [
+                    "immich",
+                    "nextcloud",
+                    "paperless",
+                    "plausible",
+                    "romm",
+                    "umami",
+                    "librechat",
+                    "litellm",
+                    "clickhouse",
+                    "postgres",
+                ]
+            )
+            and ("podman" in combined_text or engine.upper() == "PODMAN")
+        ):
+            hints.append(
+                "PODMAN HEAVY STACK COLD-START NOTE: Multi-container stacks with "
+                "PostgreSQL, ClickHouse, or Prisma migrations take longer to "
+                "initialize under rootless Podman. Verify that database containers "
+                "are running, data directory volume mounts have write permissions "
+                "('user: \"0:0\"'), and ensure sufficient startup retry budget."
+            )
+
+        # 12. HTTP probe failure
         if "http probe:" in combined_text or "httpconnectionpool" in combined_text:
             hints.append(
                 "HTTP PROBE NOTE: The container was running, but the HTTP "
@@ -332,6 +422,11 @@ class AIFailureDiagnoser:
             "  },\n"
             '  "matrix_notes": "<reason why certain modes or engines are '
             'unsupported>",\n'
+            '  "suggested_root_mode": {\n'
+            '    "requires_root": true,\n'
+            '    "podman_mode": "rootful",\n'
+            '    "reason": "<reason why rootful podman mode is required>"\n'
+            "  },\n"
             '  "action_plan": "<step-by-step instructions for developer in '
             'IDE/PyCharm>",\n'
             '  "cross_matrix_notes": "<verification of compatibility across '

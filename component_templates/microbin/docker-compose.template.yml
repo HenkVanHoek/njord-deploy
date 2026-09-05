@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "2.1.4"
-# platform_notes: "Tested on Proxmox LXC: docker (2.1.4, 2026-08-15), podman (2.1.4, 2026-08-15); Proxmox VM: docker (2.1.4, 2026-08-15), podman (2.1.4, 2026-08-15)."
+# platform_notes: "Tested on Proxmox LXC: docker (2.1.4, 2026-09-04), podman (2.1.4, 2026-09-04); Proxmox VM: docker (2.1.4, 2026-09-04), podman (2.1.4, 2026-09-04)."
 # breaking_changes: Image moved from szabodanika/microbin to danielszabo99/microbin on Docker Hub.
 services:
   microbin:

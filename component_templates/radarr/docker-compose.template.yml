@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "6.3.0.10514-ls313"
-# platform_notes: "Tested on Proxmox LXC: docker (6.3.0.10514-ls313, 2026-08-15), podman (6.3.0.10514-ls313, 2026-08-15); Proxmox VM: docker (6.3.0.10514-ls313, 2026-08-15), podman (6.3.0.10514-ls313, 2026-08-15)."
+# last_tested_version: "6.3.0.10514-ls314"
+# platform_notes: "Tested on Proxmox LXC: docker (6.3.0.10514-ls314, 2026-09-05), podman (6.3.0.10514-ls314, 2026-09-04); Proxmox VM: docker (6.3.0.10514-ls314, 2026-09-04), podman (6.3.0.10514-ls314, 2026-09-04)."
 # breaking_changes: "None"
 services:
   radarr:

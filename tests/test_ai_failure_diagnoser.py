@@ -228,3 +228,32 @@ def test_apply_suggested_template(tmp_path):
     )
     assert success is True
     assert tpl_file.read_text(encoding="utf-8") == "new content"
+
+
+def test_domain_failure_hints_sqlite_and_forge():
+    hints_sqlite = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="Error: Meta database configuration missing SQLite file name"
+    )
+    assert "SQLITE CONFIGURATION ERROR" in hints_sqlite
+
+    hints_forge = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg=(
+            "error: can't setup globals: could not setup service manager: "
+            "forge not configured"
+        )
+    )
+    assert "FORGE / CI PREREQUISITE REQUIREMENT" in hints_forge
+
+
+def test_domain_failure_hints_source_build_and_podman_timing():
+    hints_build = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="failed to resolve source metadata for dockerfile: Dockerfile"
+    )
+    assert "SOURCE BUILD vs PRE-BUILT IMAGE" in hints_build
+
+    hints_podman = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="HTTP Probe failed after 75 attempts: connection refused",
+        container_logs="Starting immich postgres migrations...",
+        engine="PODMAN",
+    )
+    assert "PODMAN HEAVY STACK COLD-START NOTE" in hints_podman

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v1.15.0-ls169"
-# platform_notes: "Tested on Proxmox LXC: docker (v1.15.0-ls169, 2026-08-29), podman (v1.15.0-ls169, 2026-08-29); Proxmox VM: docker (v1.15.0-ls169, 2026-08-29), podman (v1.15.0-ls169, 2026-08-29)."
+# last_tested_version: "v1.15.0-ls170"
+# platform_notes: "Tested on Proxmox LXC: docker (v1.15.0-ls170, 2026-09-04), podman (v1.15.0-ls170, 2026-09-04); Proxmox VM: docker (v1.15.0-ls170, 2026-09-04), podman (v1.15.0-ls170, 2026-09-04)."
 # breaking_changes: none
 services:
   speedtest-tracker:

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "8.5.9"
-# platform_notes: "Tested on Proxmox LXC: docker (8.5.9, 2026-08-15), podman (10.11.18, 2026-08-15); Proxmox VM: docker (8.5.9, 2026-08-15), podman (8.5.9, 2026-08-15)."
+# last_tested_version: "10.11.19"
+# platform_notes: "Tested on Proxmox LXC: docker (10.11.19, 2026-09-05), podman (10.11.18, 2026-08-15); Proxmox VM: docker (8.5.10, 2026-09-04), podman (10.11.19, 2026-09-04)."
 # breaking_changes: "None"
 services:
   nextcloud-app:

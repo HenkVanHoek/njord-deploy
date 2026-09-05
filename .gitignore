@@ -9,9 +9,12 @@
 # Log and environment files (SECRETS!)
 #-----------------------------------------
 *.log
+logs/
 .env
 .env.*
 .envrc
+env/
+inventory/
 
 # Python-specific files
 #-----------------------------------------
@@ -53,9 +56,7 @@ node_modules/
 .agents/
 .agy/
 artifacts/
-tmp_proxmox_test/
-tmp_release_test/
-tmp_scratch/
+tmp_*/
 
 # Proxmox test run reports (dated)
 docs/PROXMOX_TESTS_*_*.md
@@ -63,6 +64,10 @@ docs/PROXMOX_TESTS_*_*.pdf
 docs/PROXMOX_TESTS_*_*runs_*.md
 docs/PROXMOX_TESTS_*_*runs_*.pdf
 docs/PROXMOX_TESTS_test-playwright_*.md
+docs/PROXMOX_PACKAGE_TESTS_*_*.md
+docs/PROXMOX_PACKAGE_TESTS_*_*.pdf
+docs/PROXMOX_PACKAGE_TESTS_*_*runs_*.md
+docs/PROXMOX_PACKAGE_TESTS_*_*runs_*.pdf
 docs/RELEASE_INSTALLER_TESTS_*_*.md
 docs/RELEASE_INSTALLER_TESTS_*_*.pdf
 

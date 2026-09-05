@@ -46,7 +46,9 @@
         if command -v cloud-init >/dev/null 2>&1; then
           cloud-init status --wait || true
         fi
-        while pgrep -x apt-get >/dev/null 2>&1 || pgrep -x dpkg >/dev/null 2>&1 || (command -v fuser >/dev/null 2>&1 && fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1); do
+        systemctl stop apt-daily.service apt-daily-upgrade.service apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service 2>/dev/null || true
+        systemctl disable --now apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service 2>/dev/null || true
+        while pgrep -x apt-get >/dev/null 2>&1 || pgrep -x dpkg >/dev/null 2>&1 || (command -v fuser >/dev/null 2>&1 && fuser /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/lib/apt/lists/lock /var/cache/apt/archives/lock >/dev/null 2>&1); do
           sleep 2
         done
       changed_when: false
@@ -58,30 +60,30 @@
           - ca-certificates
           - curl
         state: present
-        update_cache: yes
+        cache_valid_time: 3600
         lock_timeout: 600
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Ensure directory for Docker archive keyring exists
       ansible.builtin.file:
         path: /etc/apt/keyrings
         state: directory
         mode: "0755"
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Download Docker official GPG key
       ansible.builtin.get_url:
         url: "https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }}/gpg"
         dest: /etc/apt/keyrings/docker.asc
         mode: "0644"
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Add Docker repository to Apt sources
       ansible.builtin.apt_repository:
         repo: "deb [arch={{ debian_architecture_map[ansible_architecture] | default(ansible_architecture) }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_map[ansible_distribution | lower] | default(ansible_distribution | lower) }} {{ ansible_distribution_release }} stable"
         state: present
         filename: docker
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Ensure Docker CE and Compose plugin are installed
       ansible.builtin.apt:
@@ -91,16 +93,16 @@
           - containerd.io           # Official Containerd
           - docker-compose-plugin   # Official Docker Compose V2 plugin
         state: present
-        update_cache: yes
+        cache_valid_time: 3600
         lock_timeout: 600
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Ensure SSH user is in docker group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
-      when: container_engine == 'docker'
+      when: container_engine == 'docker' and not (skip_engine_provisioning | default(false) | bool)
 
     # --- PODMAN ROOTLESS PROVISIONING ---
     - name: Ensure Podman and Compose packages are installed
@@ -114,54 +116,68 @@
           - curl
           - ca-certificates
         state: present
-        update_cache: yes
+        cache_valid_time: 3600
         lock_timeout: 600
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Configure unprivileged port start for rootless Podman (DNS 53 and HTTP 80/443)
       ansible.builtin.copy:
         dest: /etc/sysctl.d/99-podman-ports.conf
         content: "net.ipv4.ip_unprivileged_port_start=53\n"
         mode: "0644"
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Apply sysctl configuration for Podman
       ansible.builtin.command:
         cmd: "sysctl -p /etc/sysctl.d/99-podman-ports.conf"
       changed_when: false
       failed_when: false
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Enable user lingering for rootless Podman session persistence
       ansible.builtin.command:
         cmd: "loginctl enable-linger {{ ansible_user }}"
       changed_when: false
       failed_when: false
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Configure unqualified search registries for Podman
       ansible.builtin.copy:
         dest: /etc/containers/registries.conf.d/00-default-registries.conf
-        content: "unqualified-search-registries = [\"docker.io\", \"quay.io\", \"ghcr.io\"]\n"
+        content: |
+          unqualified-search-registries = ["docker.io"]
+          short-name-mode = "disabled"
         mode: "0644"
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
-    - name: Configure cgroup manager and events logger for rootless Podman
+    - name: Configure events logger for rootless Podman
       ansible.builtin.copy:
         dest: /etc/containers/containers.conf
         content: |
           [engine]
-          cgroup_manager = "cgroupfs"
           events_logger = "file"
         mode: "0644"
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Enable and start Podman Docker-compatible API socket service
       ansible.builtin.systemd:
         name: podman.socket
         enabled: yes
         state: started
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
+
+    - name: Ensure Podman socket directory is traversable
+      ansible.builtin.file:
+        path: /run/podman
+        state: directory
+        mode: "0755"
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
+
+    - name: Ensure Podman socket is accessible
+      ansible.builtin.file:
+        path: /run/podman/podman.sock
+        mode: "0666"
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     - name: Create Docker socket symlink to Podman socket
       ansible.builtin.file:
@@ -169,7 +185,7 @@
         dest: /var/run/docker.sock
         state: link
         force: yes
-      when: container_engine == 'podman'
+      when: container_engine == 'podman' and not (skip_engine_provisioning | default(false) | bool)
 
     # --- DIRECTORY & FILE DEPLOYMENT ---
     - name: Ensure project directory exists
@@ -197,21 +213,42 @@
         group: "{{ ansible_user }}"
         mode: "preserve"
 
+    - name: Ensure permissive write permissions on deployment directories
+      ansible.builtin.file:
+        path: "{{ project_config_dir }}"
+        state: directory
+        recurse: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "u=rwX,g=rwX,o=rwX"
+
     - name: Perform Clean Install (Stop containers and remove volumes for selected components)
       ansible.builtin.command:
         cmd: "{{ compose_cmd }} rm -f -s -v {{ item }}"
         chdir: "{{ project_config_dir }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
       loop: "{{ components_to_clean | default([]) }}"
       when: components_to_clean is defined and components_to_clean | length > 0
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
 
     # --- CLI-BASED CONTAINER OPERATIONS ---
+    - name: Ensure Docker daemon is active and running
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+      when: container_engine == 'docker'
+
     - name: Ensure NjordDeploy network exists
       ansible.builtin.shell: |
-        {{ container_engine }} network create njorddeploy_net 2>/dev/null || true
-        if [ "{{ container_engine }}" = "podman" ] && [ -n "{{ ansible_user }}" ]; then
-          su - {{ ansible_user }} -c "podman network create njorddeploy_net 2>/dev/null || true"
+        if [ "{{ container_engine }}" = "podman" ]; then
+          podman network create --disable-dns njorddeploy_net 2>/dev/null || podman network create njorddeploy_net 2>/dev/null || true
+          if [ "{{ (podman_rootful | default(false)) | bool }}" = "False" ] && [ -n "{{ ansible_user }}" ]; then
+            su - {{ ansible_user }} -c "podman network create --disable-dns njorddeploy_net 2>/dev/null || podman network create njorddeploy_net 2>/dev/null || true"
+          fi
+        else
+          docker network create njorddeploy_net 2>/dev/null || true
         fi
       changed_when: false
 
@@ -226,32 +263,88 @@
       ansible.builtin.command:
         cmd: "podman-compose pull"
         chdir: "{{ project_config_dir }}"
+      environment: "{{ {'XDG_RUNTIME_DIR': '/run/user/' ~ (ansible_effective_user_id | default(ansible_user_uid | default('1000')))} if not (podman_rootful | default(false) | bool) else {} }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
       when: container_engine == 'podman'
       changed_when: "true"
 
     - name: Ensure container volume mount host directories exist
       ansible.builtin.shell: |
         if [ -f "{{ project_config_dir }}/docker-compose.yml" ]; then
-          grep -E '^\s*-\s+/[^:]+:' "{{ project_config_dir }}/docker-compose.yml" | sed -E 's/^\s*-\s+([^:]+):.*/\1/' | while read -r host_path; do
+          grep -E '^\s*-\s+["'\''"]?(\.\.?/|/|~)' "{{ project_config_dir }}/docker-compose.yml" | sed -E 's/^\s*-\s+["'\''"]?([^:]+):.*/\1/' | while read -r host_path; do
             clean_path=$(echo "$host_path" | tr -d '"' | tr -d "'")
             if [ -n "$clean_path" ]; then
-              if [ ! -e "$clean_path" ]; then
-                mkdir -p "$clean_path"
-                chmod 777 "$clean_path"
-              elif [ -d "$clean_path" ]; then
-                chmod 777 "$clean_path"
+              # Never chmod or modify permissions on critical OS system paths or rootfs
+              case "$clean_path" in
+                /|/etc|/etc/*|/sys|/sys/*|/proc|/proc/*|/dev|/dev/*|/run|/run/*|/var/run|/var/run/*|/var/lib/docker|/var/lib/docker/*|/boot|/boot/*|/lib|/lib/*|/usr|/usr/*|/root|/root/*)
+                  continue
+                  ;;
+                /*) target_dir="$clean_path" ;;
+                ../*) target_dir="{{ project_config_dir }}/$clean_path" ;;
+                ./*) target_dir="{{ project_config_dir }}/${clean_path#./}" ;;
+                *) target_dir="{{ project_config_dir }}/$clean_path" ;;
+              esac
+              # Only operate if path is located under project dir or explicit safe custom data root
+              mkdir -p "$target_dir" 2>/dev/null || true
+              chmod 777 "$target_dir" 2>/dev/null || true
+              chown {{ ansible_user }}:{{ ansible_user }} "$target_dir" 2>/dev/null || true
+              if [ "{{ container_engine }}" = "podman" ] && [ -n "{{ ansible_user }}" ]; then
+                su - {{ ansible_user }} -c "podman unshare chmod 777 '$target_dir' 2>/dev/null || true"
               fi
             fi
           done
+          # Defensive guard: Ensure SSH daemon private host keys remain strictly 0600
+          chmod 600 /etc/ssh/ssh_host_*_key 2>/dev/null || true
         fi
+      become: true
       changed_when: false
+
+    - name: Free host port 53 if DNS component is deployed
+      ansible.builtin.shell: |
+        if grep -q -E '53:53/(tcp|udp)|853:853/(tcp|udp)|5380:5380' "{{ project_config_dir }}/docker-compose.yml" 2>/dev/null; then
+          printf "[Resolve]\nDNSStubListener=no\nMulticastDNS=no\nLLMNR=no\n" > /etc/systemd/resolved.conf 2>/dev/null || true
+          chmod 000 /lib/systemd/systemd-resolved /usr/lib/systemd/systemd-resolved 2>/dev/null || true
+          pkill -9 -f systemd-resolve 2>/dev/null || true
+          pkill -9 -f dnsmasq 2>/dev/null || true
+          pkill -9 -f aardvark-dns 2>/dev/null || true
+          pkill -9 -f rootlessport 2>/dev/null || true
+          systemctl stop systemd-resolved systemd-resolved.socket 2>/dev/null || true
+          systemctl disable --now systemd-resolved systemd-resolved.socket 2>/dev/null || true
+          systemctl mask systemd-resolved systemd-resolved.socket 2>/dev/null || true
+          chattr -i /etc/resolv.conf 2>/dev/null || true
+          rm -f /etc/resolv.conf
+          printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" > /etc/resolv.conf
+          chattr +i /etc/resolv.conf 2>/dev/null || true
+          fuser -k 53/udp 53/tcp 2>/dev/null || true
+          for pid in $(ss -lpun 'sport = :53' 2>/dev/null | grep -oP 'pid=\K[0-9]+' ; ss -lptn 'sport = :53' 2>/dev/null | grep -oP 'pid=\K[0-9]+'); do
+            kill -9 "$pid" 2>/dev/null || true
+          done
+          sleep 1
+        fi
+      become: true
+      changed_when: false
+      failed_when: false
 
     - name: Deploy services with Compose
       ansible.builtin.command:
         cmd: "{{ compose_cmd }} up -d"
         chdir: "{{ project_config_dir }}"
+      environment: "{{ {'XDG_RUNTIME_DIR': '/run/user/' ~ (ansible_effective_user_id | default(ansible_user_uid | default('1000')))} if not (podman_rootful | default(false) | bool) else {} }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch
       changed_when: "true"
+
+    - name: Ensure all compose containers are started
+      ansible.builtin.shell: |
+        if [ "{{ container_engine }}" = "podman" ]; then
+          created_c=$(podman ps -a -q --filter status=created 2>/dev/null)
+          if [ -n "$created_c" ]; then
+            podman start $created_c 2>/dev/null || true
+          fi
+        fi
+      environment: "{{ {'XDG_RUNTIME_DIR': '/run/user/' ~ (ansible_effective_user_id | default(ansible_user_uid | default('1000')))} if not (podman_rootful | default(false) | bool) else {} }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
+      changed_when: false
 
     - name: Register Jitsi Meet moderator user if configured
       ansible.builtin.shell: |
@@ -272,6 +365,7 @@
       ansible.builtin.command:
         cmd: "{{ compose_cmd }} restart {{ item }}"
         chdir: "{{ project_config_dir }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
       loop: "{{ components_to_restart | default([]) }}"
       when: components_to_restart is defined and components_to_restart | length > 0
       # Mitigation: String "true" aligns types to prevent suspicious type mismatch

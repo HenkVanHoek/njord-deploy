@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "5.1.0-ls266"
-# platform_notes: "Tested on Proxmox LXC: docker (5.1.0-ls266, 2026-08-15), podman (5.1.0-ls266, 2026-08-15); Proxmox VM: docker (5.1.0-ls266, 2026-08-15), podman (5.1.0-ls266, 2026-08-15)."
+# last_tested_version: "5.1.2-ls271"
+# platform_notes: "Tested on Proxmox LXC: docker (5.1.2-ls271, 2026-09-04), podman (5.1.2-ls271, 2026-09-04); Proxmox VM: docker (5.1.2-ls271, 2026-09-04), podman (5.1.2-ls271, 2026-09-04)."
 # breaking_changes: "None"
 services:
   sabnzbd:

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v2.18.1-ls242"
-# platform_notes: "Tested on Proxmox LXC: docker (v2.18.1-ls242, 2026-08-29), podman (v2.18.1-ls242, 2026-08-29); Proxmox VM: docker (v2.18.1-ls242, 2026-08-29), podman (stable, 2026-08-29)."
+# last_tested_version: "v2.18.1-ls243"
+# platform_notes: "Tested on Proxmox LXC: docker (v2.18.1-ls243, 2026-09-04), podman (v2.18.1-ls243, 2026-09-04); Proxmox VM: docker (v2.18.1-ls243, 2026-09-04), podman (v2.18.1-ls243, 2026-09-04)."
 # breaking_changes: none
 services:
   tautulli:

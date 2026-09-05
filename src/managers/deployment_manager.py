@@ -115,20 +115,43 @@ class DeploymentManager:
                     or get_configured_engine()
                 )
 
+                # Check if any selected component requires root privileges under Podman
+                is_rootful_req = any(
+                    comp_data.get("requires_root") is True
+                    or comp_data.get("podman_mode") == "rootful"
+                    for comp_data in selected_components_data
+                )
+                podman_rootful = bool(
+                    global_vars.get("PODMAN_ROOTFUL")
+                    or device.get("podman_rootful")
+                    or is_rootful_req
+                )
+
                 # Prepare extravars for Ansible
                 extravars = {
                     "ansible_user": ssh_user,
                     "ansible_remote_tmp": "~/.ansible/tmp",
-                    "local_output_path": output_path,
+                    "local_output_path": str(Path(output_path).resolve()),
                     "components_to_clean": mapped_clean,
                     "components_to_restart": mapped_restart,
                     "selected_components_data": selected_components_data,
                     "global_vars": global_vars,
                     "container_engine": active_engine,
+                    "podman_rootful": podman_rootful,
+                    "skip_engine_provisioning": bool(
+                        global_vars.get("SKIP_ENGINE_PROVISIONING")
+                        or device.get("skip_engine_provisioning")
+                    ),
                 }
 
+                rootful_suffix = (
+                    " (Rootful mode)"
+                    if (active_engine == "podman" and podman_rootful)
+                    else ""
+                )
                 self.tasks[task_id]["logs"].append(
                     f"INFO: Using container engine: {active_engine.upper()}"
+                    f"{rootful_suffix}"
                 )
 
                 key_file = get_ssh_key_path()
@@ -144,8 +167,10 @@ class DeploymentManager:
                 extravars["ansible_ssh_retries"] = 3
                 extravars["ansible_ssh_common_args"] = (
                     "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "
-                    "-o IdentitiesOnly=yes -o ServerAliveInterval=15 "
-                    "-o ServerAliveCountMax=4 -o ConnectTimeout=30"
+                    "-o GlobalKnownHostsFile=/dev/null -o IdentitiesOnly=yes "
+                    "-o ControlMaster=auto -o ControlPersist=60s "
+                    "-o ServerAliveInterval=15 -o ServerAliveCountMax=4 "
+                    "-o ConnectTimeout=30"
                 )
 
                 # Log deployment manifest and docker-compose.yml contents

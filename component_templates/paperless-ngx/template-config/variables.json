@@ -22,14 +22,14 @@
             "type": "text"
         },
         {
-            "default": "j&p#2@i!o$L%k^J&h*G(f)D_s+A=q-W~e",
+            "default": "jp2ioLkJhGfDsAqWe123456_pgpass",
             "description": "The password for the PostgreSQL database user.",
             "id": "PAPERLESS_DBPASS",
             "label": "Paperless Database Password",
             "type": "password"
         },
         {
-            "default": "P@s$W0rD!1nC0mP1eX_K3yS3cR3t_L0nG_R@nD0m_S7r!nG_F0r_P@p3rL3sS",
+            "default": "PasW0rD1nC0mP1eX_K3yS3cR3t_L0nG_R@nD0m_S7r!nG_F0r_P@p3rL3sS",
             "description": "A unique secret key used for cryptographic signing in Paperless-ngx. Keep this secure.",
             "id": "PAPERLESS_SECRET_KEY",
             "label": "Paperless Secret Key",

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "0.8.10"
-# platform_notes: "Tested on Proxmox LXC: docker (1.27.5, 2026-08-29), podman (0.8.10, 2026-08-29); Proxmox VM: docker (1.27.5, 2026-08-29), podman (1.27.5, 2026-08-29)."
+# last_tested_version: "1.27.5"
+# platform_notes: "Tested on Proxmox LXC: docker (1.27.5, 2026-09-04), podman (0.8.10, 2026-09-04); Proxmox VM: docker (1.27.5, 2026-09-04), podman (1.27.5, 2026-09-04)."
 # breaking_changes: none
 services:
   excalidraw:

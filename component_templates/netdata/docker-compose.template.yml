@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "nightly"
-# platform_notes: "Tested on Proxmox LXC: docker (nightly, 2026-08-29), podman (nightly, 2026-08-29); Proxmox VM: docker (nightly, 2026-08-29), podman (nightly, 2026-08-29)."
+# platform_notes: "Tested on Proxmox LXC: docker (nightly, 2026-09-04), podman (nightly, 2026-09-04); Proxmox VM: docker (nightly, 2026-09-04), podman (nightly, 2026-09-04)."
 # breaking_changes: none
 services:
   netdata:

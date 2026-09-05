@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "22.04"
-# platform_notes: "Tested on Proxmox LXC: docker (2023-12-01-preview, 2026-08-28), podman (22.04, 2026-08-28); Proxmox VM: docker (2023-12-01-preview, 2026-08-28), podman (2023-12-01-preview, 2026-08-28)."
+# last_tested_version: "2023-12-01-preview"
+# platform_notes: "Tested on Proxmox LXC: docker (2023-12-01-preview, 2026-09-04), podman (22.04, 2026-08-28); Proxmox VM: docker (2023-12-01-preview, 2026-09-04), podman (2023-12-01-preview, 2026-09-03)."
 # breaking_changes: none
 services:
   librechat:

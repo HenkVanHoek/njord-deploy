@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "18.20.3"
-# platform_notes: "Tested on Proxmox LXC: docker (18.20.3, 2026-08-15), podman (18.20.3, 2026-08-15); Proxmox VM: docker (18.20.3, 2026-08-15), podman (18.20.3, 2026-08-15)."
+# last_tested_version: "1.22.19"
+# platform_notes: "Tested on Proxmox LXC: docker (1.22.19, 2026-09-05), podman (1.22.19, 2026-09-04); Proxmox VM: docker (18.20.3, 2026-09-04), podman (1.22.19, 2026-09-04)."
 # breaking_changes: "None"
 services:
   uptime-kuma:
@@ -12,3 +12,9 @@ services:
     ports:
       - "{{ UPTIME_KUMA_WEB_PORT }}:3001"
     restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

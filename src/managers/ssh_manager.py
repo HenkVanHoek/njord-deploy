@@ -10,6 +10,8 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from paramiko import Ed25519Key, SFTPClient, SSHClient
 
+from utils.security_utils import mask_passwords
+
 
 class TrustOnFirstUsePolicy(paramiko.MissingHostKeyPolicy):
     """
@@ -183,25 +185,29 @@ class SSHManager:
             channel.get_pty()  # Request a pseudo-terminal
             channel.exec_command(command)  # nosec B601
 
+            extra = [self.password] if self.password else None
             stdout_parts = []
             while not channel.exit_status_ready():
                 readq, _, _ = select.select([channel], [], [], 0.2)
                 if readq:
                     if channel.recv_ready():
                         chunk = channel.recv(4096).decode("utf-8", "ignore")
-                        stdout_parts.append(chunk)
-                        log_callback(chunk)
+                        masked_chunk = mask_passwords(chunk, extra_secrets=extra)
+                        stdout_parts.append(masked_chunk)
+                        log_callback(masked_chunk)
                     if channel.recv_stderr_ready():
                         chunk = channel.recv_stderr(4096).decode("utf-8", "ignore")
-                        stdout_parts.append(chunk)
-                        log_callback(chunk)
+                        masked_chunk = mask_passwords(chunk, extra_secrets=extra)
+                        stdout_parts.append(masked_chunk)
+                        log_callback(masked_chunk)
 
             exit_code = channel.recv_exit_status()
 
             if check_exit_code and exit_code != 0:
                 short_cmd = f"{command[:40]}..." if len(command) > 40 else command
+                masked_cmd = mask_passwords(short_cmd, extra_secrets=extra)
                 log_callback(
-                    f"ERROR: Command '{short_cmd}' failed with code {exit_code}\n"
+                    f"ERROR: Command '{masked_cmd}' failed with code {exit_code}\n"
                 )
 
             full_stdout = "".join(stdout_parts).strip()

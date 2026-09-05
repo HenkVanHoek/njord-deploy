@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "3.11.13"
-# platform_notes: "Tested on Proxmox LXC: docker (3.11.13, 2026-08-29), podman (3.11.13, 2026-08-29); Proxmox VM: docker (3.11.13, 2026-08-29), podman (3.11.13, 2026-08-29)."
+# last_tested_version: "3.13.15"
+# platform_notes: "Tested on Proxmox LXC: docker (3.13.15, 2026-09-04), podman (3.13.15, 2026-09-04); Proxmox VM: docker (3.13.15, 2026-09-04), podman (3.13.15, 2026-09-04)."
 # breaking_changes: none
 services:
   flatnotes:
@@ -14,7 +14,6 @@ services:
       - "{{ FLATNOTES_WEB_PORT }}:8080"
     volumes:
       - "{{ CONFIG_BASE_PATH }}/flatnotes/data:/data"
-    user: "0:0"
     networks:
       - njorddeploy_net
 

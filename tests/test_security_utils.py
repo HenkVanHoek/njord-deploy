@@ -2,7 +2,11 @@
 
 import unittest
 
-from utils.security_utils import build_safe_target_url, validate_and_sanitize_url
+from utils.security_utils import (
+    build_safe_target_url,
+    mask_passwords,
+    validate_and_sanitize_url,
+)
 
 
 class TestSecurityUtils(unittest.TestCase):
@@ -124,3 +128,43 @@ class TestSecurityUtils(unittest.TestCase):
         self.assertFalse(is_valid)
         self.assertIsNone(target)
         self.assertIn("Invalid URL scheme", err or "")
+
+    def test_mask_echo_sudo(self):
+        """Tests that passwords in echo ... | sudo -S are properly masked."""
+        cases = [
+            (
+                "echo 'SecretPass123!' | sudo -S podman ps -a",
+                "echo '*******' | sudo -S podman ps -a",
+            ),
+            (
+                'echo "SecretP@ss" | sudo -S systemctl restart docker',
+                "echo '*******' | sudo -S systemctl restart docker",
+            ),
+            (
+                "echo MyPlainSecret | sudo systemctl status",
+                "echo '*******' | sudo systemctl status",
+            ),
+            (
+                "--- Output of 'echo 'SecretPass123!' | sudo -S cat /etc/hosts' ---",
+                "--- Output of 'echo '*******' | sudo -S cat /etc/hosts' ---",
+            ),
+        ]
+        for raw, expected in cases:
+            self.assertEqual(mask_passwords(raw), expected)
+
+    def test_mask_password_params(self):
+        """Tests that password attributes in JSON or configs are masked."""
+        raw = '{"ansible_password": "SecretPass123!", "port": 8080}'
+        expected = '{"ansible_password": "*******", "port": 8080}'
+        self.assertEqual(mask_passwords(raw), expected)
+
+    def test_mask_extra_and_env_secrets(self):
+        """Tests explicit secrets and environment variables masking."""
+        raw = "Connecting with SuperSecretHostKey and custom token 999xyz"
+        masked = mask_passwords(
+            raw,
+            extra_secrets=["SuperSecretHostKey", "999xyz"],
+        )
+        self.assertNotIn("SuperSecretHostKey", masked)
+        self.assertNotIn("999xyz", masked)
+        self.assertEqual(masked, "Connecting with ******* and custom token *******")

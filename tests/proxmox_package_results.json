@@ -1,27 +1,363 @@
 [
     {
-        "package_id": "media-stack",
-        "package_name": "Media Stack",
+        "package_id": "caddy-filebrowser-stack",
+        "package_name": "Reverse Proxy & Remote Workspace",
         "status": "success",
-        "vmid": 111,
-        "ip": "192.168.178.132",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 109,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "caddy": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "filebrowser": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_084747.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "dns-shield-stack",
+        "package_name": "DNS & Ad-Blocking Privacy Shield",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "adguard-home": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": " HTTP Probe failed after 40 attempts: HTTPConnectionPool(host='10.99.0.199', port=80): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x7a453c25e0c0>: Failed to establish a new connection: [Errno 111] Connection refused'))",
+                "detected_version": null
+            },
+            "unbound": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "monitoring-stack",
+        "package_name": "Monitoring Stack",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "grafana": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "prometheus": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "digital-archive",
+        "package_name": "Digital Archive & Document Compliance",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "paperless-ngx": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "stirling-pdf": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "actual-budget": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nocodb": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "observability-analytics",
+        "package_name": "Observability & Privacy Analytics",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "beszel": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "prometheus": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "grafana": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "plausible": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "uptime-kuma": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "failed",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "failed",
+        "components": {},
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": "Package deployment failed: The deployment sequence failed. See the console logs for detailed execution output."
+    },
+    {
+        "package_id": "agile-ops",
+        "package_name": "Agile Operations & Secure Chat",
+        "status": "failed",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 109,
+        "ip": "10.99.0.199",
+        "deployment": "failed",
+        "components": {},
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_084747.md",
+        "error_message": "Package deployment failed: The deployment sequence failed. See the console logs for detailed execution output."
+    },
+    {
+        "package_id": "smarthome-stack",
+        "package_name": "Sovereign Smart Home Hub",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 106,
+        "ip": "192.168.178.36",
+        "deployment": "success",
+        "components": {
+            "homeassistant": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "esphome": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "node-red": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "scrypted": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "nextcloud-stack",
+        "package_name": "Nextcloud Stack",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "nextcloud": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db-dumper": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-redis": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "notify-push": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "modern-workplace",
+        "package_name": "The Modern Sovereign Workplace",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "nextcloud": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-redis": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db-dumper": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "notify-push": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "vaultwarden": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "media-stack",
+        "package_name": "Media Streaming & Servarr Suite",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 108,
+        "ip": "10.99.0.199",
         "deployment": "success",
         "components": {
             "jellyfin": {
-                "running": true,
-                "http_ok": true,
-                "logs_error": false,
-                "error_message": "",
-                "detected_version": null
-            },
-            "prowlarr": {
-                "running": true,
-                "http_ok": true,
-                "logs_error": false,
-                "error_message": "",
-                "detected_version": null
-            },
-            "qbittorrent": {
                 "running": true,
                 "http_ok": true,
                 "logs_error": false,
@@ -35,7 +371,206 @@
                 "error_message": "",
                 "detected_version": null
             },
-            "sabnzbd": {
+            "sonarr": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "prowlarr": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "jellyseerr": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "qbittorrent": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "bazarr": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_082638.md",
+        "error_message": ""
+    },
+    {
+        "package_id": "agile-ops",
+        "package_name": "Agile Operations & Secure Chat",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.144",
+        "deployment": "success",
+        "components": {
+            "vikunja": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "focalboard": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "gitea": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "conduit": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "memos": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "caddy-filebrowser-stack",
+        "package_name": "Reverse Proxy & Remote Workspace",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.147",
+        "deployment": "success",
+        "components": {
+            "caddy": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "filebrowser": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "digital-archive",
+        "package_name": "Digital Archive & Document Compliance",
+        "status": "failed",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.143",
+        "deployment": "success",
+        "components": {
+            "paperless-ngx": {
+                "running": true,
+                "http_ok": false,
+                "logs_error": false,
+                "error_message": " HTTP Probe failed after 75 attempts: HTTPConnectionPool(host='192.168.178.143', port=8000): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPConnection(host='192.168.178.143', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))",
+                "detected_version": null
+            },
+            "stirling-pdf": {
+                "running": true,
+                "http_ok": false,
+                "logs_error": false,
+                "error_message": " HTTP Probe failed after 75 attempts: HTTPConnectionPool(host='192.168.178.143', port=8080): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPConnection(host='192.168.178.143', port=8080): Failed to establish a new connection: [Errno 111] Connection refused\"))",
+                "detected_version": null
+            },
+            "actual-budget": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nocodb": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": "Successfully checked 4 components."
+    },
+    {
+        "package_id": "dns-shield-stack",
+        "package_name": "DNS & Ad-Blocking Privacy Shield",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.22",
+        "deployment": "success",
+        "components": {
+            "adguard-home": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": " HTTP Probe failed after 40 attempts: HTTPConnectionPool(host='192.168.178.22', port=80): Max retries exceeded with url: / (Caused by NewConnectionError(\"HTTPConnection(host='192.168.178.22', port=80): Failed to establish a new connection: [Errno 111] Connection refused\"))",
+                "detected_version": null
+            },
+            "unbound": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "media-stack",
+        "package_name": "Media Streaming & Servarr Suite",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.128",
+        "deployment": "success",
+        "components": {
+            "jellyfin": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "radarr": {
                 "running": true,
                 "http_ok": true,
                 "logs_error": false,
@@ -48,8 +583,366 @@
                 "logs_error": false,
                 "error_message": "",
                 "detected_version": null
+            },
+            "prowlarr": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "jellyseerr": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "qbittorrent": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "bazarr": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
             }
         },
         "error_message": ""
+    },
+    {
+        "package_id": "modern-workplace",
+        "package_name": "The Modern Sovereign Workplace",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.175",
+        "deployment": "success",
+        "components": {
+            "nextcloud": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-redis": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db-dumper": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "notify-push": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "vaultwarden": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "monitoring-stack",
+        "package_name": "Monitoring Stack",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.179",
+        "deployment": "success",
+        "components": {
+            "grafana": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "prometheus": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "nextcloud-stack",
+        "package_name": "Nextcloud Stack",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.168",
+        "deployment": "success",
+        "components": {
+            "nextcloud": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-db-dumper": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "nextcloud-redis": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "notify-push": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "observability-analytics",
+        "package_name": "Observability & Privacy Analytics",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.184",
+        "deployment": "success",
+        "components": {
+            "beszel": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "prometheus": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "grafana": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "plausible": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "uptime-kuma": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.178",
+        "deployment": "success",
+        "components": {
+            "ollama": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "smarthome-stack",
+        "package_name": "Sovereign Smart Home Hub",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 104,
+        "ip": "192.168.178.172",
+        "deployment": "success",
+        "components": {
+            "homeassistant": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "esphome": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "node-red": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            },
+            "scrypted": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null
+            }
+        },
+        "error_message": ""
+    },
+    {
+        "package_id": "agile-ops",
+        "package_name": "Agile Operations & Secure Chat",
+        "status": "failed",
+        "mode": "lxc",
+        "engine": "podman",
+        "vmid": 106,
+        "ip": "192.168.178.75",
+        "deployment": "success",
+        "components": {
+            "vikunja": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'vikunja'.",
+                "detected_version": null
+            },
+            "focalboard": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'focalboard'.",
+                "detected_version": null
+            },
+            "gitea": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'gitea'.",
+                "detected_version": null
+            },
+            "conduit": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'conduit'.",
+                "detected_version": null
+            },
+            "memos": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'memos'.",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
+        "error_message": "Successfully checked 5 components."
+    },
+    {
+        "package_id": "caddy-filebrowser-stack",
+        "package_name": "Reverse Proxy & Remote Workspace",
+        "status": "failed",
+        "mode": "lxc",
+        "engine": "podman",
+        "vmid": 106,
+        "ip": "192.168.178.75",
+        "deployment": "success",
+        "components": {
+            "caddy": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'caddy'.",
+                "detected_version": null
+            },
+            "filebrowser": {
+                "running": false,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "No running container found matching service 'filebrowser'.",
+                "detected_version": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_agile-ops_to_modern-workplace_11runs_20260905_073808.md",
+        "error_message": "Successfully checked 2 components."
     }
 ]

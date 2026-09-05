@@ -120,9 +120,29 @@ class ContainerEngine:
         if self.is_docker:
             commands = [
                 f"{cmd_prefix}apt-get update",
-                f"{cmd_prefix}apt-get install -y curl ca-certificates gnupg",
-                "curl -fsSL https://get.docker.com -o get-docker.sh",
-                f"{cmd_prefix}sh get-docker.sh",
+                (
+                    f"{cmd_prefix}apt-get install -y curl ca-certificates "
+                    "gnupg cloud-guest-utils fdisk parted e2fsprogs"
+                ),
+                f"{cmd_prefix}install -m 0755 -d /etc/apt/keyrings",
+                (
+                    f"{cmd_prefix}curl -fsSL "
+                    "https://download.docker.com/linux/debian/gpg "
+                    "-o /etc/apt/keyrings/docker.asc"
+                ),
+                f"{cmd_prefix}chmod a+r /etc/apt/keyrings/docker.asc",
+                (
+                    f"{cmd_prefix}sh -c 'echo \"deb [arch=amd64 "
+                    "signed-by=/etc/apt/keyrings/docker.asc] "
+                    "https://download.docker.com/linux/debian "
+                    "bookworm stable\" > /etc/apt/sources.list.d/docker.list'"
+                ),
+                f"{cmd_prefix}apt-get update",
+                (
+                    f"{cmd_prefix}env DEBIAN_FRONTEND=noninteractive "
+                    "apt-get install -y docker-ce docker-ce-cli "
+                    "containerd.io docker-compose-plugin"
+                ),
                 f"{cmd_prefix}systemctl enable --now docker",
             ]
             if not is_root:
@@ -134,8 +154,10 @@ class ContainerEngine:
         commands = [
             f"{cmd_prefix}apt-get update",
             (
-                f"{cmd_prefix}apt-get install -y podman podman-compose "
-                "slirp4netns uidmap dbus-user-session curl ca-certificates"
+                f"{cmd_prefix}env DEBIAN_FRONTEND=noninteractive apt-get install -y "
+                "podman podman-compose slirp4netns uidmap dbus-user-session "
+                "dbus-x11 curl ca-certificates psmisc cloud-guest-utils "
+                "fdisk parted e2fsprogs"
             ),
             # Configure unqualified search registries
             f"{cmd_prefix}mkdir -p /etc/containers/registries.conf.d",
@@ -145,11 +167,10 @@ class ContainerEngine:
                 '[\\"docker.io\\", \\"quay.io\\", \\"ghcr.io\\"]" '
                 "> /etc/containers/registries.conf.d/00-default-registries.conf'"
             ),
-            # Configure cgroup manager and events logger for rootless
+            # Configure events logger for rootless
             (
                 f"{cmd_prefix}sh -c 'printf \""
                 "[engine]\\n"
-                'cgroup_manager = \\"cgroupfs\\"\\n'
                 'events_logger = \\"file\\"\\n'
                 "\" > /etc/containers/containers.conf'"
             ),
@@ -176,8 +197,28 @@ class ContainerEngine:
                 f'{cmd_prefix}sh -c \'grep -q "^{username}:" /etc/subgid || '
                 f"usermod --add-subgids 100000-165535 {username}'"
             )
+            # Ensure user runtime directory exists
+            commands.append(
+                f"{cmd_prefix}mkdir -p /run/user/$(id -u {username}) && "
+                f"{cmd_prefix}chown {username}:{username} "
+                f"/run/user/$(id -u {username}) && "
+                f"{cmd_prefix}chmod 700 /run/user/$(id -u {username})"
+            )
 
-        commands.append(f"{cmd_prefix}podman network create njorddeploy_net")
+        if not is_root:
+            commands.append(
+                f"su - {username} -c "
+                "'podman network create --disable-dns njorddeploy_net "
+                "2>/dev/null || podman network create njorddeploy_net "
+                "2>/dev/null || true'"
+            )
+        else:
+            commands.append(
+                f"{cmd_prefix}podman network create --disable-dns njorddeploy_net "
+                f"2>/dev/null || "
+                f"{cmd_prefix}podman network create njorddeploy_net "
+                "2>/dev/null || true"
+            )
         return commands
 
     def to_dict(self) -> Dict[str, Any]:

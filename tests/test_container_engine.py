@@ -74,7 +74,7 @@ def test_container_engine_podman():
 def test_provisioning_commands_docker():
     engine = ContainerEngine("docker")
     root_cmds = engine.get_provisioning_commands("root")
-    assert any("get-docker.sh" in c for c in root_cmds)
+    assert any("docker-ce" in c for c in root_cmds)
     assert any("docker network create njorddeploy_net" in c for c in root_cmds)
 
     user_cmds = engine.get_provisioning_commands("pi")

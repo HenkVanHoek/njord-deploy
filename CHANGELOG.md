@@ -27,6 +27,15 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
   - Redesigned the public web portal to eliminate cognitive overload: clean single-demo viewport, 3 dedicated persona paths (Homelab, Developers, MSPs), interactive 100+ app directory, and decoupled technical documentation.
 
 ### Fixed
+- **Proxmox GUI Matrix Multi-Row Test Tracking & History Deduplication**:
+  - Resolved live table row overwriting during matrix test runs by enforcing matching across `(component_id, mode, engine)` in [`proxmox_gui.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/static/js/proxmox_gui.js).
+  - Pre-populates all matrix environment combinations as distinct pending rows upon test start (e.g. 4 rows per component in a 2×2 LXC/VM × Docker/Podman run) and preserves all distinct records in cumulative history.
+- **Proxmox Turnkey Stack Runner Test Subnet Alignment**:
+  - Updated [`proxmox_package_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_package_test_runner.py) to parse and apply `PROXMOX_TEST_IP`, `PROXMOX_GATEWAY`, `PROXMOX_BRIDGE`, and `PROXMOX_VLAN_TAG`, eliminating hardcoded DHCP on the default LAN and isolating stack runs to the dedicated test subnet across both LXC and VM environments.
+- **Proxmox GUI Scroll & High-Frequency Render Performance**:
+  - Implemented `requestAnimationFrame` throttled single-pass string-template rendering in `renderResultsTable()` and smooth RAF scrolling with compact DOM memory retention in `appendLog()`.
+  - Replaced repetitive per-row event listeners with centralized event delegation on `elements.resultsTableBody`.
+  - Added CSS `contain: content` and `contain: layout style` to scrollable containers (`.components-grid`, `.terminal-body`, `.results-table-wrapper`) for silky smooth 60 FPS interactions.
 - **Stripe Return URL WAF Filtering & Pro Celebration Modal**:
   - Resolved HTTP 403 Forbidden on Stripe checkout redirects by renaming the session parameter from `session_id` to `stripe_session_id`, preventing OWASP session fixation rule blocks at the reverse proxy (Caddy / WAF).
   - Added dedicated, accessible Pro Celebration Modal (`#proSuccessModal`) in `index.html` and `settings.html` with instant live plan badge refreshing and URL query cleanup.

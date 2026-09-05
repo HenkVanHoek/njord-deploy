@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "22.18.0"
-# platform_notes: "Tested on Proxmox LXC: docker (22.18.0, 2026-08-29), podman (22.18.0, 2026-08-29); Proxmox VM: docker (22.18.0, 2026-08-29), podman (22.18.0, 2026-08-29)."
+# platform_notes: "Tested on Proxmox LXC: docker (22.18.0, 2026-09-05), podman (22.18.0, 2026-09-04); Proxmox VM: docker (22.18.0, 2026-09-04), podman (22.18.0, 2026-09-04)."
 # breaking_changes: none
 services:
   jellyseerr:

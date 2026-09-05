@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "RELEASE.2025-09-07T16-13-09Z"
-# platform_notes: "Tested on Proxmox LXC: docker (RELEASE.2025-09-07T16-13-09Z, 2026-08-28), podman (RELEASE.2025-09-07T16-13-09Z, 2026-08-28); Proxmox VM: docker (RELEASE.2025-09-07T16-13-09Z, 2026-08-28), podman (RELEASE.2025-09-07T16-13-09Z, 2026-08-28)."
+# platform_notes: "Tested on Proxmox LXC: docker (RELEASE.2025-09-07T16-13-09Z, 2026-09-04), podman (RELEASE.2025-09-07T16-13-09Z, 2026-09-04); Proxmox VM: docker (RELEASE.2025-09-07T16-13-09Z, 2026-09-04), podman (RELEASE.2025-09-07T16-13-09Z, 2026-09-04)."
 # breaking_changes: none
 services:
   minio:

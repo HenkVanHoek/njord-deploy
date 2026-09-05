@@ -74,6 +74,23 @@ class ProxmoxClient:
             raise RuntimeError(f"{e} (Response: {response.text})") from e
         return response.json()
 
+    def put(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> dict:
+        """Executes a PUT request to the Proxmox API."""
+        url = f"{self.api_url}/{endpoint.lstrip('/')}"
+        response = requests.put(
+            url,
+            headers=self.headers,
+            data=data,
+            verify=self.verify_ssl,
+            timeout=15,
+        )
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as e:
+            logger.error(f"HTTP Error: {response.status_code} - {response.text}")
+            raise RuntimeError(f"{e} (Response: {response.text})") from e
+        return response.json()
+
     def delete(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> dict:
         """Executes a DELETE request to the Proxmox API."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"
@@ -107,10 +124,44 @@ class ProxmoxClient:
         }
         return self.post(endpoint, data=data)
 
+    def clone_lxc(
+        self,
+        node: str,
+        vmid: int,
+        newid: int,
+        hostname: Optional[str] = None,
+        full: bool = True,
+    ) -> dict:
+        """Triggers a clone of the source LXC container/Template."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/clone"
+        data: Dict[str, Any] = {
+            "newid": newid,
+            "full": 1 if full else 0,
+        }
+        if hostname:
+            data["hostname"] = hostname
+        return self.post(endpoint, data=data)
+
+    def create_lxc(self, node: str, config_data: Dict[str, Any]) -> dict:
+        """Creates a new LXC container."""
+        endpoint = f"nodes/{node}/lxc"
+        return self.post(endpoint, data=config_data)
+
+    def convert_to_template(self, node: str, vmid: int, is_lxc: bool = False) -> dict:
+        """Converts a VM or LXC container into a Proxmox template."""
+        resource_type = "lxc" if is_lxc else "qemu"
+        endpoint = f"nodes/{node}/{resource_type}/{vmid}/template"
+        return self.post(endpoint)
+
     def configure_vm(self, node: str, vmid: int, config_data: dict) -> dict:
         """Configures VM hardware and Cloud-Init parameters."""
         endpoint = f"nodes/{node}/qemu/{vmid}/config"
         return self.post(endpoint, data=config_data)
+
+    def configure_lxc(self, node: str, vmid: int, config_data: dict) -> dict:
+        """Configures LXC container parameters."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/config"
+        return self.put(endpoint, data=config_data)
 
     def start_vm(self, node: str, vmid: int) -> dict:
         """Starts the VM."""
@@ -122,10 +173,42 @@ class ProxmoxClient:
         endpoint = f"nodes/{node}/qemu/{vmid}/status/stop"
         return self.post(endpoint)
 
+    def start_lxc(self, node: str, vmid: int) -> dict:
+        """Starts the LXC container."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/status/start"
+        return self.post(endpoint)
+
+    def stop_lxc(self, node: str, vmid: int) -> dict:
+        """Stops the LXC container."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/status/stop"
+        return self.post(endpoint)
+
+    def reset_vm(self, node: str, vmid: int) -> dict:
+        """Resets the VM (hard hardware reset)."""
+        endpoint = f"nodes/{node}/qemu/{vmid}/status/reset"
+        return self.post(endpoint)
+
+    def get_vm_status(self, node: str, vmid: int) -> dict:
+        """Retrieves current VM status."""
+        endpoint = f"nodes/{node}/qemu/{vmid}/status/current"
+        return self.get(endpoint)
+
+    def get_lxc_status(self, node: str, vmid: int) -> dict:
+        """Retrieves current LXC container status."""
+        endpoint = f"nodes/{node}/lxc/{vmid}/status/current"
+        return self.get(endpoint)
+
     def destroy_vm(self, node: str, vmid: int) -> dict:
         """Destroys the VM (purging all associated resources)."""
         endpoint = f"nodes/{node}/qemu/{vmid}"
         return self.delete(endpoint, params={"purge": 1})
+
+    def destroy_lxc(self, node: str, vmid: int) -> dict:
+        """Destroys the LXC container (purging all associated resources)."""
+        endpoint = f"nodes/{node}/lxc/{vmid}"
+        return self.delete(
+            endpoint, params={"purge": 1, "destroy-unreferenced-disks": 1}
+        )
 
     def resize_vm_disk(self, node: str, vmid: int, disk: str, size: str) -> dict:
         """Resizes a VM disk (e.g. disk='scsi0', size='32G' or '+10G')."""
@@ -166,6 +249,20 @@ class ProxmoxClient:
         except Exception as e:
             logger.debug(f"Failed to query guest agent network interfaces: {e}")
         return None
+
+    def get_vm_list(self, node: str) -> list:
+        """
+        Returns a list of all QEMU virtual machines on the given node.
+
+        Each entry is a dict with at minimum:
+        ``vmid`` (int), ``name`` (str), ``status`` (str: running/stopped).
+        """
+        try:
+            res = self.get(f"nodes/{node}/qemu")
+            return res.get("data", [])
+        except Exception as e:
+            logger.warning(f"Failed to list QEMU VMs on node '{node}': {e}")
+            return []
 
     def get_lxc_list(self, node: str) -> list:
         """

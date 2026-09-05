@@ -19,8 +19,21 @@
           <span>Automated Component Integration & Provisioning Runner</span>
         </div>
       </div>
-      <div class="header-status">
-        <span id="app-status-badge" class="status-badge status-idle">IDLE</span>
+      <div class="header-actions">
+        <!-- AI Engine Selector Dropdown -->
+        <div class="header-ai-picker" id="header-ai-picker">
+          <label for="ai-provider-select" class="header-ai-label">
+            <span class="ai-sparkle-icon">✨</span> AI Model:
+          </label>
+          <div class="custom-ai-select-wrapper">
+            <select id="ai-provider-select" class="ai-provider-select" title="Active AI Engine for Test Diagnostics">
+              <option value="" disabled selected>Loading AIs...</option>
+            </select>
+          </div>
+        </div>
+        <div class="header-status">
+          <span id="app-status-badge" class="status-badge status-idle">IDLE</span>
+        </div>
       </div>
     </div>
   </header>
@@ -77,55 +90,125 @@
           <input type="text" id="template-id-input" class="text-input" placeholder="902" value="902" disabled />
         </div>
 
+        <!-- Network Bridge & Subnet (Isolated Test Network) -->
+        <div class="config-item">
+          <label>Test Network Subnet</label>
+          <div class="network-badge-display" id="network-badge-display" title="Active bridge and subnet for test execution">
+            <span class="net-bridge-tag">🌉 <strong id="config-bridge-label">vmbr1</strong></span>
+            <span class="net-ip-tag">🎯 <strong id="config-ip-label">10.99.0.199/24</strong></span>
+            <span class="net-status-badge" id="config-net-status">✅ Isolated Subnet</span>
+          </div>
+        </div>
+
       </div>
     </section>
 
-    <!-- Component Selector Panel -->
+    <!-- Component & Stack Selector Panel -->
     <section class="selector-panel">
-      <h2 class="card-title">📦 Component Selection</h2>
-
-      <!-- Search & Category Filters -->
-      <div class="search-toolbar">
-        <div class="search-box-wrapper">
-          <span class="search-icon">🔍</span>
-          <input
-            type="text"
-            id="search-input"
-            class="search-input"
-            placeholder="Search services (e.g. adguard, dns*, *vault*, pi*)..."
-            autocomplete="off"
-          />
-          <button type="button" id="search-clear-btn" class="search-clear-btn" title="Clear search">✕</button>
-        </div>
-
-        <div class="filter-pills">
-          <button type="button" class="filter-pill active" data-filter="all">All Services</button>
-          <button type="button" class="filter-pill" data-filter="testable">✅ Testable Only</button>
-          <button type="button" class="filter-pill" data-filter="untested">Untested Only</button>
-          <button type="button" class="filter-pill" data-filter="tested">Tested Only</button>
-          <button type="button" class="filter-pill" data-filter="ui">🌐 Web UI Only</button>
-          <button type="button" class="filter-pill" data-filter="untestable">⚠️ Untestable</button>
+      <div class="selector-header-row">
+        <h2 class="card-title" style="margin-bottom: 0;">📦 Test Target Selection</h2>
+        <div class="view-switch-container">
+          <div class="segmented-control selector-type-switch">
+            <button type="button" id="tab-services-btn" class="segmented-btn active">
+              <span>📦</span> Individual Services
+              <span id="services-count-badge" class="count-pill">0</span>
+            </button>
+            <button type="button" id="tab-packages-btn" class="segmented-btn">
+              <span>📚</span> 1-Click Stacks & Bundles
+              <span id="packages-count-badge" class="count-pill">0</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Action & Batch Selection Bar -->
-      <div class="action-bar">
-        <div class="selection-info">
-          <span>Selection:</span>
-          <span id="selection-count-badge" class="selection-count-badge">0 of 0 selected</span>
+      <!-- Services View Content -->
+      <div id="services-view" class="selector-view-content">
+        <!-- Search & Category Filters -->
+        <div class="search-toolbar">
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="search-input"
+              class="search-input"
+              placeholder="Search services (e.g. adguard, dns*, *vault*, pi*)..."
+              autocomplete="off"
+            />
+            <button type="button" id="search-clear-btn" class="search-clear-btn" title="Clear search">✕</button>
+          </div>
+
+          <div class="filter-pills">
+            <button type="button" class="filter-pill active" data-filter="all">All Services</button>
+            <button type="button" class="filter-pill" data-filter="testable">✅ Testable Only</button>
+            <button type="button" class="filter-pill" data-filter="untested">Untested Only</button>
+            <button type="button" class="filter-pill" data-filter="tested">Tested Only</button>
+            <button type="button" class="filter-pill" data-filter="ui">🌐 Web UI Only</button>
+            <button type="button" class="filter-pill" data-filter="untestable">⚠️ Untestable</button>
+          </div>
         </div>
-        <div class="batch-buttons">
-          <button type="button" id="select-all-filtered-btn" class="btn-secondary">Select All Filtered</button>
-          <button type="button" id="select-all-testable-btn" class="btn-secondary">Select All Testable</button>
-          <button type="button" id="deselect-untestable-btn" class="btn-secondary">Deselect Untestable</button>
-          <button type="button" id="deselect-all-filtered-btn" class="btn-secondary">Deselect Filtered</button>
-          <button type="button" id="clear-selection-btn" class="btn-secondary">Clear All</button>
+
+        <!-- Action & Batch Selection Bar -->
+        <div class="action-bar">
+          <div class="selection-info">
+            <span>Selection:</span>
+            <span id="selection-count-badge" class="selection-count-badge">0 of 0 selected</span>
+          </div>
+          <div class="batch-buttons">
+            <button type="button" id="select-all-filtered-btn" class="btn-secondary">Select All Filtered</button>
+            <button type="button" id="select-all-testable-btn" class="btn-secondary">Select All Testable</button>
+            <button type="button" id="deselect-untestable-btn" class="btn-secondary">Deselect Untestable</button>
+            <button type="button" id="deselect-all-filtered-btn" class="btn-secondary">Deselect Filtered</button>
+            <button type="button" id="clear-selection-btn" class="btn-secondary">Clear All</button>
+          </div>
+        </div>
+
+        <!-- Component Cards Grid -->
+        <div id="components-grid" class="components-grid">
+          <!-- Rendered dynamically by proxmox_gui.js -->
         </div>
       </div>
 
-      <!-- Component Cards Grid -->
-      <div id="components-grid" class="components-grid">
-        <!-- Rendered dynamically by proxmox_gui.js -->
+      <!-- 1-Click Packages & Stacks View Content -->
+      <div id="packages-view" class="selector-view-content" style="display: none;">
+        <!-- Search & Filter Bar for Packages -->
+        <div class="search-toolbar">
+          <div class="search-box-wrapper">
+            <span class="search-icon">🔍</span>
+            <input
+              type="text"
+              id="package-search-input"
+              class="search-input"
+              placeholder="Search 1-click stacks (e.g. workplace, media, archive, ai)..."
+              autocomplete="off"
+            />
+            <button type="button" id="package-search-clear-btn" class="search-clear-btn" title="Clear search">✕</button>
+          </div>
+
+          <div class="filter-pills" id="package-filter-pills">
+            <button type="button" class="filter-pill active" data-pkg-filter="all">All Stacks</button>
+            <button type="button" class="filter-pill" data-pkg-filter="msp">💼 MSP Turnkey Bundles</button>
+            <button type="button" class="filter-pill" data-pkg-filter="media-ai">🎬 Media & AI</button>
+            <button type="button" class="filter-pill" data-pkg-filter="security">🛡️ Security & DNS</button>
+            <button type="button" class="filter-pill" data-pkg-filter="productivity">📋 Productivity</button>
+          </div>
+        </div>
+
+        <!-- Action Bar for Packages -->
+        <div class="action-bar">
+          <div class="selection-info">
+            <span>Selection:</span>
+            <span id="package-selection-count-badge" class="selection-count-badge">0 of 0 stacks selected</span>
+          </div>
+          <div class="batch-buttons">
+            <button type="button" id="select-all-packages-btn" class="btn-secondary">Select All Filtered Stacks</button>
+            <button type="button" id="clear-packages-selection-btn" class="btn-secondary">Clear Stacks Selection</button>
+          </div>
+        </div>
+
+        <!-- Package Cards Grid -->
+        <div id="packages-grid" class="packages-grid">
+          <!-- Rendered dynamically by proxmox_gui.js -->
+        </div>
       </div>
 
       <!-- Execution Panel -->
@@ -138,6 +221,11 @@
         <button type="button" id="stop-run-btn" class="btn-danger" style="display: none;">
           <span>🛑</span>
           <span>Stop Execution</span>
+        </button>
+
+        <button type="button" id="maintain-templates-btn" class="btn-secondary" title="Build and maintain dedicated Proxmox test templates (911-914) with pre-cached images">
+          <span>🛠️</span>
+          <span>Maintain Templates</span>
         </button>
 
         <button type="button" id="view-report-btn" class="btn-secondary">
@@ -252,13 +340,19 @@
 
   <!-- Report Viewer Modal -->
   <div id="report-modal" class="modal-backdrop">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width: 900px; max-height: 85vh; display: flex; flex-direction: column;">
       <div class="modal-header">
-        <h3>📄 Latest Proxmox Test Report (PROXMOX_TESTS.md)</h3>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.25rem;">📄</span>
+          <h3 id="report-modal-title" style="margin: 0;">Test Report</h3>
+        </div>
         <button type="button" id="close-modal-btn" class="modal-close-btn">&times;</button>
       </div>
-      <div class="modal-body">
-        <pre id="report-content">Loading report...</pre>
+      <div class="modal-body" style="overflow-y: auto; flex: 1;">
+        <pre id="report-content" style="font-family: var(--font-mono); font-size: 0.85rem; white-space: pre-wrap; word-break: break-word; background: var(--bg-primary); padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); color: var(--text-primary); margin: 0;">Loading report...</pre>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <button type="button" id="report-modal-close-btn" class="btn-secondary">Close</button>
       </div>
     </div>
   </div>

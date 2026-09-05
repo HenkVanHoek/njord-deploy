@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "main-stable"
-# platform_notes: "Tested on Proxmox LXC: docker (2023-07-01-preview, 2026-08-15), podman (16.15-1.pgdg13+2, 2026-08-15); Proxmox VM: docker (2023-07-01-preview, 2026-08-15), podman (main-stable, 2026-08-15)."
+# last_tested_version: "2023-07-01-preview"
+# platform_notes: "Tested on Proxmox LXC: docker (2023-07-01-preview, 2026-09-05), podman (16.15-1.pgdg13+2, 2026-08-15); Proxmox VM: docker (2023-07-01-preview, 2026-09-04), podman (main-stable, 2026-09-03)."
 # breaking_changes: none
 services:
   litellm:

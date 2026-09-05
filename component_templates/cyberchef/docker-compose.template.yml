@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "1.30.4-alpine"
-# platform_notes: "Tested on Proxmox LXC: docker (1.30.4-alpine, 2026-08-29), podman (1.30.4-alpine, 2026-08-29); Proxmox VM: docker (1.30.4-alpine, 2026-08-29), podman (1.30.4-alpine, 2026-08-29)."
+# platform_notes: "Tested on Proxmox LXC: docker (1.30.4-alpine, 2026-09-04), podman (1.30.4-alpine, 2026-09-04); Proxmox VM: docker (1.30.4-alpine, 2026-09-04), podman (1.30.4-alpine, 2026-09-04)."
 # breaking_changes: none
 services:
   cyberchef:

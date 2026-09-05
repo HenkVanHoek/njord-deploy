@@ -661,3 +661,26 @@ class TestAIGeneratorEngine(unittest.TestCase):
             engine = AIGeneratorEngine(provider="anthropic", api_key=None)
             with self.assertRaises(ValueError):
                 engine.generate(prompt="Hello")
+
+    def test_run_security_checks_detects_malformed_sqlite_and_missing_forge(self):
+        """Verify _run_security_checks flags malformed SQLite and missing forge."""
+        generator = AIGenerator(api_key="test_api_key")
+        test_data = {
+            "metadata": {
+                "name": "Woodpecker and Noco",
+                "image_name": "woodpecker/woodpecker-server",
+                "has_ui": False,
+            },
+            "docker_compose": (
+                "services:\n"
+                "  woodpecker-server:\n"
+                "    image: woodpecker/woodpecker-server:latest\n"
+                "    environment:\n"
+                "      - NC_DB=sqlite3:///usr/app/data/noco.db\n"
+            ),
+            "variables": [],
+        }
+
+        warnings = generator._run_security_checks(test_data)
+        self.assertTrue(any("malformed SQLite URI" in w for w in warnings))
+        self.assertTrue(any("missing forge configuration" in w for w in warnings))

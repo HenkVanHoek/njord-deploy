@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v0.107.78"
-# platform_notes: "Tested on Proxmox LXC: docker (v0.107.78, 2026-08-15), podman (v0.107.78, 2026-08-15); Proxmox VM: docker (v0.107.78, 2026-08-15), podman (v0.107.78, 2026-08-15)."
+# last_tested_version: "v0.107.79"
+# platform_notes: "Tested on Proxmox LXC: docker (v0.107.79, 2026-09-05), podman (v0.107.79, 2026-09-04); Proxmox VM: docker (v0.107.79, 2026-09-04), podman (v0.107.79, 2026-09-04)."
 # breaking_changes: none
 services:
   adguardhome:

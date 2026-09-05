@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "0.16.1"
-# platform_notes: "Tested on Proxmox LXC: docker (0.16.1, 2026-08-15), podman (0.16.1, 2026-08-15); Proxmox VM: docker (0.16.1, 2026-08-15), podman (0.16.1, 2026-08-15)."
+# platform_notes: "Tested on Proxmox LXC: docker (0.16.1, 2026-09-04), podman (0.16.1, 2026-09-04); Proxmox VM: docker (0.16.1, 2026-09-04), podman (0.16.1, 2026-09-04)."
 # breaking_changes: "None"
 services:
   homarr:

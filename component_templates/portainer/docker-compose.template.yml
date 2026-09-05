@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "lts"
-# platform_notes: "Tested on Proxmox LXC: docker (lts, 2026-08-15), podman (lts, 2026-08-15); Proxmox VM: docker (lts, 2026-08-15), podman (lts, 2026-08-15)."
+# platform_notes: "Tested on Proxmox LXC: docker (lts, 2026-09-04), podman (lts, 2026-09-04); Proxmox VM: docker (lts, 2026-09-04), podman (lts, 2026-09-04)."
 # breaking_changes: "None"
 services:
   portainer:

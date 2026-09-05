@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "1.37.1"
-# platform_notes: "Tested on Proxmox LXC: docker (1.37.1, 2026-08-15), podman (1.37.1, 2026-08-15); Proxmox VM: docker (1.37.1, 2026-08-15), podman (1.37.1, 2026-08-15)."
+# last_tested_version: "1.37.2"
+# platform_notes: "Tested on Proxmox LXC: docker (1.37.2, 2026-09-05), podman (1.37.2, 2026-09-04); Proxmox VM: docker (1.37.2, 2026-09-04), podman (1.37.2, 2026-09-04)."
 # breaking_changes: "None"
 #
 # Docker Compose template for Vaultwarden

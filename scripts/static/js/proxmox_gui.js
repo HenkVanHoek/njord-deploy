@@ -8,10 +8,15 @@
 
   // Application State
   const state = {
+    targetType: "components", // 'components' | 'packages'
     components: [],
     selectedIds: new Set(),
-    activeFilter: "all", // 'all' | 'untested' | 'tested' | 'ui'
+    activeFilter: "all", // 'all' | 'testable' | 'untested' | 'tested' | 'ui' | 'untestable'
     searchQuery: "",
+    packages: [],
+    selectedPackageIds: new Set(),
+    activePackageFilter: "all", // 'all' | 'msp' | 'media-ai' | 'security' | 'productivity'
+    packageSearchQuery: "",
     mode: "lxc", // 'lxc' | 'vm' | 'both'
     engine: "docker", // 'docker' | 'podman' | 'both'
     isRunning: false,
@@ -19,10 +24,24 @@
     results: [],
     sortColumn: "timestamp",
     sortDirection: "desc",
+    activeAiProvider: "",
+    activeAiName: "",
+    activeAiModel: "",
   };
 
   // DOM Elements
   const elements = {
+    // Header AI Provider Selector
+    aiProviderSelect: document.getElementById("ai-provider-select"),
+
+    // Target Switcher Tabs & Views
+    tabServicesBtn: document.getElementById("tab-services-btn"),
+    tabPackagesBtn: document.getElementById("tab-packages-btn"),
+    servicesView: document.getElementById("services-view"),
+    packagesView: document.getElementById("packages-view"),
+    servicesCountBadge: document.getElementById("services-count-badge"),
+    packagesCountBadge: document.getElementById("packages-count-badge"),
+
     // Config elements
     modeLxcBtn: document.getElementById("mode-lxc-btn"),
     modeVmBtn: document.getElementById("mode-vm-btn"),
@@ -34,13 +53,13 @@
     templateIdInput: document.getElementById("template-id-input"),
     templateIdWrapper: document.getElementById("template-id-wrapper"),
 
-    // Filter & Search elements
+    // Filter & Search elements (Services)
     searchInput: document.getElementById("search-input"),
     searchClearBtn: document.getElementById("search-clear-btn"),
-    filterPills: document.querySelectorAll(".filter-pill"),
+    filterPills: document.querySelectorAll("#services-view .filter-pill"),
     componentsGrid: document.getElementById("components-grid"),
 
-    // Selection toolbar
+    // Selection toolbar (Services)
     selectionCountBadge: document.getElementById("selection-count-badge"),
     selectAllFilteredBtn: document.getElementById("select-all-filtered-btn"),
     selectAllTestableBtn: document.getElementById("select-all-testable-btn"),
@@ -48,9 +67,19 @@
     deselectAllFilteredBtn: document.getElementById("deselect-all-filtered-btn"),
     clearSelectionBtn: document.getElementById("clear-selection-btn"),
 
+    // Package search & filters
+    packageSearchInput: document.getElementById("package-search-input"),
+    packageSearchClearBtn: document.getElementById("package-search-clear-btn"),
+    packageFilterPills: document.querySelectorAll("#package-filter-pills .filter-pill"),
+    packagesGrid: document.getElementById("packages-grid"),
+    packageSelectionCountBadge: document.getElementById("package-selection-count-badge"),
+    selectAllPackagesBtn: document.getElementById("select-all-packages-btn"),
+    clearPackagesSelectionBtn: document.getElementById("clear-packages-selection-btn"),
+
     // Runner controls
     startRunBtn: document.getElementById("start-run-btn"),
     stopRunBtn: document.getElementById("stop-run-btn"),
+    maintainTemplatesBtn: document.getElementById("maintain-templates-btn"),
     startRunText: document.getElementById("start-run-text"),
     appStatusBadge: document.getElementById("app-status-badge"),
 
@@ -83,6 +112,7 @@
     // Report modal
     reportModal: document.getElementById("report-modal"),
     closeModalBtn: document.getElementById("close-modal-btn"),
+    reportModalCloseBtn: document.getElementById("report-modal-close-btn"),
     reportContent: document.getElementById("report-content"),
   };
 
@@ -159,21 +189,91 @@
   }
 
   /**
-   * Updates selection badge and start button state
+   * Evaluates whether a package matches the wildcard pattern and active filter
+   */
+  function matchesPackageFilter(pkg) {
+    const isMsp = (pkg.badge && pkg.badge.toLowerCase().includes("msp")) ||
+      pkg.id.includes("workplace") || pkg.id.includes("archive") ||
+      pkg.id.includes("agile") || pkg.id.includes("observability");
+    const isMediaAi = pkg.id.includes("media") || pkg.id.includes("ollama") ||
+      (pkg.badge && (pkg.badge.toLowerCase().includes("media") || pkg.badge.toLowerCase().includes("ai")));
+    const isSecurity = pkg.id.includes("dns") || pkg.id.includes("shield") ||
+      (pkg.badge && pkg.badge.toLowerCase().includes("security"));
+    const isProductivity = pkg.id.includes("agile") || pkg.id.includes("caddy") ||
+      pkg.id.includes("monitoring") || pkg.id.includes("smarthome");
+
+    if (state.activePackageFilter === "msp" && !isMsp) return false;
+    if (state.activePackageFilter === "media-ai" && !isMediaAi) return false;
+    if (state.activePackageFilter === "security" && !isSecurity) return false;
+    if (state.activePackageFilter === "productivity" && !isProductivity) return false;
+
+    const q = state.packageSearchQuery.trim();
+    if (!q) return true;
+
+    const regex = wildcardToRegex(q);
+    if (!regex) return true;
+
+    const compNames = (pkg.components_detail || []).map((c) => c.name || c.id).join(" ");
+    const targetFields = [
+      pkg.id || "",
+      pkg.name || "",
+      pkg.badge || "",
+      pkg.description || "",
+      compNames,
+    ];
+
+    return targetFields.some((field) => regex.test(field));
+  }
+
+  /**
+   * Get list of currently visible packages based on filter & search
+   */
+  function getFilteredPackages() {
+    return state.packages.filter(matchesPackageFilter);
+  }
+
+  /**
+   * Updates selection badges and start button state
    */
   function updateSelectionUI() {
-    const count = state.selectedIds.size;
-    const total = state.components.length;
-    elements.selectionCountBadge.textContent = `${count} of ${total} selected`;
+    const compCount = state.selectedIds.size;
+    const totalComps = state.components.length;
+    if (elements.selectionCountBadge) {
+      elements.selectionCountBadge.textContent = `${compCount} of ${totalComps} selected`;
+    }
+    if (elements.servicesCountBadge) {
+      elements.servicesCountBadge.textContent = String(totalComps);
+    }
 
-    if (count > 0) {
-      elements.startRunText.textContent = `Start Test Run (${count} ${
-        count === 1 ? "service" : "services"
-      })`;
-      elements.startRunBtn.disabled = state.isRunning;
+    const pkgCount = state.selectedPackageIds.size;
+    const totalPkgs = state.packages.length;
+    if (elements.packageSelectionCountBadge) {
+      elements.packageSelectionCountBadge.textContent = `${pkgCount} of ${totalPkgs} stacks selected`;
+    }
+    if (elements.packagesCountBadge) {
+      elements.packagesCountBadge.textContent = String(totalPkgs);
+    }
+
+    if (state.targetType === "packages") {
+      if (pkgCount > 0) {
+        elements.startRunText.textContent = `Start Stack Test Run (${pkgCount} ${
+          pkgCount === 1 ? "stack" : "stacks"
+        })`;
+        elements.startRunBtn.disabled = state.isRunning;
+      } else {
+        elements.startRunText.textContent = "Start Stack Test Run (Select stacks)";
+        elements.startRunBtn.disabled = true;
+      }
     } else {
-      elements.startRunText.textContent = "Start Test Run (Select services)";
-      elements.startRunBtn.disabled = true;
+      if (compCount > 0) {
+        elements.startRunText.textContent = `Start Test Run (${compCount} ${
+          compCount === 1 ? "service" : "services"
+        })`;
+        elements.startRunBtn.disabled = state.isRunning;
+      } else {
+        elements.startRunText.textContent = "Start Test Run (Select services)";
+        elements.startRunBtn.disabled = true;
+      }
     }
   }
 
@@ -181,93 +281,161 @@
    * Renders component cards into the grid
    */
   function renderComponents() {
-    elements.componentsGrid.innerHTML = "";
     const filtered = getFilteredComponents();
 
     if (filtered.length === 0) {
-      const emptyMsg = document.createElement("div");
-      emptyMsg.style.gridColumn = "1 / -1";
-      emptyMsg.style.padding = "2rem";
-      emptyMsg.style.textAlign = "center";
-      emptyMsg.style.color = "var(--text-muted)";
-      emptyMsg.textContent = "No components match your search or filter criteria.";
-      elements.componentsGrid.appendChild(emptyMsg);
+      elements.componentsGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted);">
+          No components match your search or filter criteria.
+        </div>
+      `;
       return;
     }
 
-    filtered.forEach((comp) => {
-      const card = document.createElement("div");
-      const isSelected = state.selectedIds.has(comp.id);
-      const isUntestable = Boolean(comp.is_untestable);
+    const cardsHtml = filtered
+      .map((comp) => {
+        const isSelected = state.selectedIds.has(comp.id);
+        const isUntestable = Boolean(comp.is_untestable);
+        const isTested = comp.status === "tested";
+        const statusClass = isTested ? "tag-tested" : "tag-untested";
+        const statusText = isTested ? "Tested" : "Untested";
 
-      card.className = `component-card ${isSelected ? "selected" : ""} ${
-        isUntestable ? "untestable" : ""
-      }`;
-      card.dataset.id = comp.id;
+        let tagsHtml = `<span class="tag ${statusClass}">${statusText}</span>`;
 
-      const isTested = comp.status === "tested";
-      const statusClass = isTested ? "tag-tested" : "tag-untested";
-      const statusText = isTested ? "Tested" : "Untested";
+        if (isUntestable) {
+          const reasonAttr = escapeHtml(
+            comp.untestable_reason || "Untestable / Skipped component"
+          );
+          tagsHtml += `<span class="tag tag-untestable" title="${reasonAttr}">⚠️ Untestable</span>`;
+        }
 
-      let tagsHtml = `
-        <span class="tag ${statusClass}">${statusText}</span>
-      `;
+        if (comp.has_ui) {
+          tagsHtml += '<span class="tag tag-ui">🌐 UI</span>';
+        }
 
-      if (isUntestable) {
-        const reasonAttr = escapeHtml(
-          comp.untestable_reason || "Untestable / Skipped component"
-        );
-        tagsHtml += `<span class="tag tag-untestable" title="${reasonAttr}">⚠️ Untestable</span>`;
-      }
+        if (comp.category) {
+          tagsHtml += `<span class="tag tag-category">${escapeHtml(comp.category)}</span>`;
+        }
 
-      if (comp.has_ui) {
-        tagsHtml += '<span class="tag tag-ui">🌐 UI</span>';
-      }
+        const compName = escapeHtml(comp.name || comp.id);
+        const compId = escapeHtml(comp.id);
 
-      if (comp.category) {
-        tagsHtml += `<span class="tag tag-category">${comp.category}</span>`;
-      }
+        return `
+          <div class="component-card ${isSelected ? "selected" : ""} ${
+          isUntestable ? "untestable" : ""
+        }" data-id="${compId}" data-component-id="${compId}">
+            <input type="checkbox" class="component-checkbox" ${
+              isSelected ? "checked" : ""
+            } />
+            <div class="component-info">
+              <div class="component-name">${compName}</div>
+              <div class="component-id">${compId}</div>
+              <div class="component-tags">${tagsHtml}</div>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
 
-      card.innerHTML = `
-        <input type="checkbox" class="component-checkbox" ${
-          isSelected ? "checked" : ""
-        } />
-        <div class="component-info">
-          <div class="component-name">${comp.name || comp.id}</div>
-          <div class="component-id">${comp.id}</div>
-          <div class="component-tags">${tagsHtml}</div>
+    elements.componentsGrid.innerHTML = cardsHtml;
+  }
+
+  /**
+   * Renders package cards into the packages grid
+   */
+  function renderPackages() {
+    if (!elements.packagesGrid) return;
+    const filtered = getFilteredPackages();
+
+    if (filtered.length === 0) {
+      elements.packagesGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted);">
+          No 1-click stacks match your search or filter criteria.
         </div>
       `;
+      return;
+    }
 
-      // Event listener to toggle selection
-      const checkbox = card.querySelector(".component-checkbox");
-      card.addEventListener("click", (e) => {
-        if (e.target !== checkbox) {
-          checkbox.checked = !checkbox.checked;
-        }
-        if (checkbox.checked) {
-          state.selectedIds.add(comp.id);
-          card.classList.add("selected");
-        } else {
-          state.selectedIds.delete(comp.id);
-          card.classList.remove("selected");
-        }
-        updateSelectionUI();
-      });
+    const cardsHtml = filtered
+      .map((pkg) => {
+        const isSelected = state.selectedPackageIds.has(pkg.id);
+        const isTested = pkg.status === "success" || pkg.status === "tested";
+        const statusClass = isTested ? "tag-tested" : "tag-untested";
+        const statusText = isTested ? "Tested ✅" : "Untested ⚪";
 
-      checkbox.addEventListener("change", () => {
-        if (checkbox.checked) {
-          state.selectedIds.add(comp.id);
-          card.classList.add("selected");
-        } else {
-          state.selectedIds.delete(comp.id);
-          card.classList.remove("selected");
-        }
-        updateSelectionUI();
-      });
+        let badgeClass = "package-badge-curated";
+        const lowerBadge = (pkg.badge || "").toLowerCase();
+        if (lowerBadge.includes("msp")) badgeClass = "package-badge-msp";
+        else if (lowerBadge.includes("media")) badgeClass = "package-badge-media";
+        else if (lowerBadge.includes("security")) badgeClass = "package-badge-security";
+        else if (lowerBadge.includes("ai")) badgeClass = "package-badge-ai";
 
-      elements.componentsGrid.appendChild(card);
-    });
+        const appsHtml = (pkg.components_detail || [])
+          .map(
+            (c) => `
+            <span class="package-app-tag" title="${escapeHtml(c.id)}">
+              <span>📦</span> ${escapeHtml(c.name || c.id)}
+            </span>
+          `
+          )
+          .join("");
+
+        const pkgId = escapeHtml(pkg.id);
+        const pkgName = escapeHtml(pkg.name || pkg.id);
+        const pkgBadge = escapeHtml(pkg.badge || "Stack");
+        const appCount = pkg.app_count || (pkg.components || []).length;
+        const pkgDesc = escapeHtml(
+          pkg.description || "A pre-configured turnkey stack of services."
+        );
+
+        return `
+          <div class="package-card ${isSelected ? "selected" : ""}" data-package-id="${pkgId}">
+            <div class="package-card-header">
+              <span class="package-badge ${badgeClass}">${pkgBadge}</span>
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="tag tag-category">${appCount} Apps</span>
+                <input type="checkbox" class="package-checkbox" ${
+                  isSelected ? "checked" : ""
+                } />
+              </div>
+            </div>
+            <div class="package-card-title">
+              <span class="package-card-title-icon">📚</span>
+              <span>${pkgName}</span>
+            </div>
+            <div class="package-card-desc">${pkgDesc}</div>
+            <div class="package-apps-container">
+              ${appsHtml}
+            </div>
+            <div class="package-card-footer">
+              <span style="font-family: var(--font-mono); color: var(--text-muted);">${pkgId}</span>
+              <span class="tag ${statusClass}">${statusText}</span>
+            </div>
+          </div>
+        `;
+      })
+      .join("");
+
+    elements.packagesGrid.innerHTML = cardsHtml;
+  }
+
+  /**
+   * Switches active target selection view (Services vs Packages)
+   */
+  function switchTargetType(type) {
+    state.targetType = type;
+    if (type === "packages") {
+      if (elements.tabPackagesBtn) elements.tabPackagesBtn.classList.add("active");
+      if (elements.tabServicesBtn) elements.tabServicesBtn.classList.remove("active");
+      if (elements.packagesView) elements.packagesView.style.display = "block";
+      if (elements.servicesView) elements.servicesView.style.display = "none";
+    } else {
+      if (elements.tabServicesBtn) elements.tabServicesBtn.classList.add("active");
+      if (elements.tabPackagesBtn) elements.tabPackagesBtn.classList.remove("active");
+      if (elements.servicesView) elements.servicesView.style.display = "block";
+      if (elements.packagesView) elements.packagesView.style.display = "none";
+    }
+    updateSelectionUI();
   }
 
   /**
@@ -336,14 +504,41 @@
   }
 
   /**
-   * Append a log line to the live terminal
+   * Append a log line to the live terminal with high-throughput RAF batching
    */
+  const terminalBuffer = [];
+  let terminalFlushPending = false;
+
   function appendLog(line) {
-    const lineDiv = document.createElement("div");
-    lineDiv.className = "terminal-line";
-    lineDiv.innerHTML = ansiToHtml(line);
-    elements.terminalBody.appendChild(lineDiv);
-    elements.terminalBody.scrollTop = elements.terminalBody.scrollHeight;
+    terminalBuffer.push(line);
+    if (!terminalFlushPending) {
+      terminalFlushPending = true;
+      requestAnimationFrame(() => {
+        terminalFlushPending = false;
+        if (!elements.terminalBody || terminalBuffer.length === 0) return;
+
+        const fragment = document.createDocumentFragment();
+        while (terminalBuffer.length > 0) {
+          const l = terminalBuffer.shift();
+          const lineDiv = document.createElement("div");
+          lineDiv.className = "terminal-line";
+          lineDiv.innerHTML = ansiToHtml(l);
+          fragment.appendChild(lineDiv);
+        }
+        elements.terminalBody.appendChild(fragment);
+
+        const excess = elements.terminalBody.childElementCount - 400;
+        if (excess > 0) {
+          for (let i = 0; i < excess; i++) {
+            if (elements.terminalBody.firstChild) {
+              elements.terminalBody.removeChild(elements.terminalBody.firstChild);
+            }
+          }
+        }
+
+        elements.terminalBody.scrollTop = elements.terminalBody.scrollHeight;
+      });
+    }
   }
 
   /**
@@ -463,17 +658,18 @@
   }
 
   /**
-   * Opens Gemini AI single failure diagnosis modal
+   * Opens AI single failure diagnosis modal with selected provider
    */
   async function openAiSingleDiagnosis(record) {
     if (!record) return;
     activePatchData = null;
     elements.aiModalApplyBtn.style.display = "none";
-    elements.aiModalTitle.textContent = `✨ Gemini AI Diagnosis: ${record.component_id} (${record.mode || ""}/${record.engine || ""})`;
+    const aiLabel = state.activeAiName || "AI";
+    elements.aiModalTitle.textContent = `✨ ${aiLabel} Diagnosis: ${record.component_id} (${record.mode || ""}/${record.engine || ""})`;
     elements.aiModalBody.innerHTML = `
       <div style="text-align: center; padding: 2rem;">
         <div style="font-size: 2rem; margin-bottom: 0.75rem;">⏳</div>
-        <div><strong>Analyzing failure with Gemini AI...</strong></div>
+        <div><strong>Analyzing failure with ${escapeHtml(aiLabel)}...</strong></div>
         <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
           Inspecting error logs, container status, and docker-compose template...
         </div>
@@ -488,6 +684,7 @@
         body: JSON.stringify({
           component_id: record.component_id,
           record: record,
+          provider: state.activeAiProvider || undefined,
         }),
       });
       const data = await res.json();
@@ -537,6 +734,23 @@
           ${diag.patch_notes ? `<p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;"><em>Note: ${escapeHtml(diag.patch_notes)}</em></p>` : ""}
         </div>
       `;
+
+      if (diag.suggested_root_mode) {
+        const rootMode = diag.suggested_root_mode;
+        bodyHtml += `
+          <div class="ai-card" style="border-left: 3px solid #eab308;">
+            <div class="ai-card-title" style="color: #fde047;">🛡️ Recommended Root Privilege Mode</div>
+            <div style="font-size: 0.88rem; margin-bottom: 0.5rem;">
+              <div><strong>Podman Mode:</strong> <code>${escapeHtml(rootMode.podman_mode || "rootful")}</code></div>
+              <div style="margin-top: 0.25rem;"><strong>Requires Root:</strong> <code>true</code></div>
+              ${rootMode.reason ? `<div style="margin-top: 0.4rem; color: var(--text-secondary);"><em>${escapeHtml(rootMode.reason)}</em></div>` : ""}
+            </div>
+            <button type="button" class="btn btn-warning btn-sm" id="applyRootModeBtn" style="margin-top: 0.5rem;">
+              Apply Root Mode to Metadata
+            </button>
+          </div>
+        `;
+      }
 
       if (targetType === "MATRIX_CONSTRAINT" && diag.suggested_matrix) {
         const smModes = (diag.suggested_matrix.modes || []).map(m => `<span class="tag tag-category">${escapeHtml(m.toUpperCase())}</span>`).join(" ");
@@ -611,6 +825,37 @@
         });
       }
 
+      const applyRootModeBtn = document.getElementById("applyRootModeBtn");
+      if (applyRootModeBtn && diag.suggested_root_mode) {
+        applyRootModeBtn.addEventListener("click", async () => {
+          applyRootModeBtn.disabled = true;
+          applyRootModeBtn.textContent = "Applying...";
+          try {
+            const res = await fetch("/api/ai/apply-root-mode", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                component_id: record.component_id,
+                requires_root: diag.suggested_root_mode.requires_root !== false,
+                podman_mode: diag.suggested_root_mode.podman_mode || "rootful",
+              }),
+            });
+            const resData = await res.json();
+            if (res.ok && resData.success) {
+              applyRootModeBtn.textContent = "✅ Applied to Metadata!";
+              applyRootModeBtn.classList.remove("btn-warning");
+              applyRootModeBtn.classList.add("btn-success");
+            } else {
+              applyRootModeBtn.textContent = `❌ Error: ${resData.error || "Failed"}`;
+              applyRootModeBtn.disabled = false;
+            }
+          } catch (err) {
+            applyRootModeBtn.textContent = `❌ Error: ${err.message}`;
+            applyRootModeBtn.disabled = false;
+          }
+        });
+      }
+
       const applyConstraintBtn = document.getElementById("applyMatrixConstraintBtn");
       if (applyConstraintBtn && diag.suggested_matrix) {
         applyConstraintBtn.addEventListener("click", async () => {
@@ -664,16 +909,17 @@
   }
 
   /**
-   * Opens Gemini AI batch systemic failure analysis modal
+   * Opens AI batch systemic failure analysis modal with selected provider
    */
   async function openAiBatchDiagnosis() {
     activePatchData = null;
     elements.aiModalApplyBtn.style.display = "none";
-    elements.aiModalTitle.textContent = "✨ Gemini AI Systemic Batch Analysis";
+    const aiLabel = state.activeAiName || "AI";
+    elements.aiModalTitle.textContent = `✨ ${aiLabel} Systemic Batch Analysis`;
     elements.aiModalBody.innerHTML = `
       <div style="text-align: center; padding: 2rem;">
         <div style="font-size: 2rem; margin-bottom: 0.75rem;">⏳</div>
-        <div><strong>Analyzing all test failures for systemic patterns with Gemini AI...</strong></div>
+        <div><strong>Analyzing all test failures for systemic patterns with ${escapeHtml(aiLabel)}...</strong></div>
         <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">
           Clustering errors by root causes, environment dependencies, and compose behaviors...
         </div>
@@ -689,6 +935,7 @@
         body: JSON.stringify({
           batch: true,
           records: failedRecords,
+          provider: state.activeAiProvider || undefined,
         }),
       });
       const data = await res.json();
@@ -818,9 +1065,19 @@
   }
 
   /**
-   * Renders the complete results and history table
+   * Renders the complete results and history table with RAF batching
    */
+  let renderTablePending = false;
   function renderResultsTable() {
+    if (renderTablePending) return;
+    renderTablePending = true;
+    requestAnimationFrame(() => {
+      renderTablePending = false;
+      _doRenderResultsTable();
+    });
+  }
+
+  function _doRenderResultsTable() {
     updateTableHeaderSortUI();
 
     const failedRecords = (state.results || []).filter(
@@ -849,9 +1106,11 @@
     }
 
     const sorted = sortResults(state.results, state.sortColumn, state.sortDirection);
-    elements.resultsTableBody.innerHTML = "";
+    const maxRender = 50;
+    const toRender = sorted.slice(0, maxRender);
 
-    sorted.forEach((record) => {
+    let rowsHtml = "";
+    toRender.forEach((record) => {
       const recTime = record.timestamp || getTimestamp();
       const recMode = (
         record.mode || (state.mode === "both" ? "LXC" : state.mode)
@@ -873,41 +1132,65 @@
         ? '<span class="tag tag-category">⚪ PENDING</span>'
         : '<span class="tag tag-untested">❌ FAIL</span>';
 
-      const httpBadge =
-        record.http_ok === null || record.http_ok === undefined
-          ? "N/A"
-          : record.http_ok
-          ? '<span style="color: var(--accent-green); font-weight: 600;">OK</span>'
-          : '<span style="color: var(--accent-red); font-weight: 600;">FAIL</span>';
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><small style="color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(recTime)}</small></td>
-        <td><strong>${escapeHtml(record.component_id || "—")}</strong></td>
-        <td><span class="tag ${recMode === "LXC" ? "tag-category" : "tag-ui"}">${escapeHtml(recMode)}</span></td>
-        <td><code>${escapeHtml(recEngine)}</code></td>
-        <td>${escapeHtml(String(record.vmid || "—"))}</td>
-        <td><code>${escapeHtml(record.ip || "—")}</code></td>
-        <td>${escapeHtml(record.deployment || "—")}</td>
-        <td>${record.running ? "Running" : "Stopped"}</td>
-        <td>${httpBadge}</td>
-        <td>${statusBadge}</td>
-        <td>
-          ${
-            isFail
-              ? `<button type="button" class="btn-ai-fix" data-comp="${escapeHtml(record.component_id || "")}"><span>✨</span> AI Fix</button>`
-              : '<span style="color: var(--text-muted);">—</span>'
-          }
-        </td>
-      `;
-
-      const aiBtn = tr.querySelector(".btn-ai-fix");
-      if (aiBtn) {
-        aiBtn.addEventListener("click", () => openAiSingleDiagnosis(record));
+      let portLabel = "";
+      if (record.port) {
+        portLabel = `:${record.port} `;
+      } else if (record.http_url) {
+        try {
+          const parsedUrl = new URL(record.http_url);
+          portLabel = parsedUrl.port ? `:${parsedUrl.port} ` : "";
+        } catch (e) {
+          // Ignore URL parse error
+        }
       }
 
-      elements.resultsTableBody.appendChild(tr);
+      let httpBadge = '<span style="color: var(--text-muted);">—</span>';
+      if (record.http_ok === true) {
+        httpBadge = `<span class="tag tag-tested" style="font-size: 0.75rem; font-weight: 600;" title="HTTP probe successful">🌐 ${escapeHtml(portLabel)}[OK]</span>`;
+      } else if (record.http_ok === false) {
+        httpBadge = `<span class="tag tag-untested" style="font-size: 0.75rem; font-weight: 600;" title="HTTP probe failed">🌐 ${escapeHtml(portLabel)}[FAIL]</span>`;
+      }
+
+      let compLabel = `<strong>${escapeHtml(record.component_id || "—")}</strong>`;
+      if (record.is_package) {
+        const pkgName = record.package_name || record.component_id;
+        compLabel = `<span class="tag tag-package" style="margin-right: 0.35rem;">📚 STACK</span><strong>${escapeHtml(pkgName)}</strong> <small style="color: var(--text-muted); font-family: var(--font-mono);">(${escapeHtml(record.component_id)})</small>`;
+      }
+
+      const containersVal = record.running_details
+        ? escapeHtml(record.running_details)
+        : (record.running ? "Running" : "Stopped");
+
+      const reportFile = record.report_file || "";
+      const compId = record.component_id || "";
+
+      rowsHtml += `
+        <tr>
+          <td><small style="color: var(--text-muted); font-family: var(--font-mono);">${escapeHtml(recTime)}</small></td>
+          <td>${compLabel}</td>
+          <td><span class="tag ${recMode === "LXC" ? "tag-category" : "tag-ui"}">${escapeHtml(recMode)}</span></td>
+          <td><code>${escapeHtml(recEngine)}</code></td>
+          <td>${escapeHtml(String(record.vmid || "—"))}</td>
+          <td><code>${escapeHtml(record.ip || "—")}</code></td>
+          <td>${escapeHtml(record.deployment || "—")}</td>
+          <td>${containersVal}</td>
+          <td>${httpBadge}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display: inline-flex; gap: 0.35rem; align-items: center; justify-content: flex-start; flex-wrap: wrap;">
+              <button type="button" class="btn-report-doc" data-file="${escapeHtml(reportFile)}" data-comp="${escapeHtml(compId)}" title="Open test report document"><span>📄</span> Report</button>
+              ${
+                isFail && !record.is_package
+                  ? `<button type="button" class="btn-ai-fix" data-comp="${escapeHtml(compId)}" data-mode="${escapeHtml(recMode)}" data-engine="${escapeHtml(recEngine)}" title="AI Diagnosis & Auto-Fix"><span>✨</span> AI Fix</button>`
+                  : ""
+              }
+            </div>
+          </td>
+        </tr>
+      `;
     });
+
+    elements.resultsTableBody.innerHTML = rowsHtml;
   }
 
   /**
@@ -922,7 +1205,7 @@
           const histRecords = historyData.map((rec, idx) => ({
             ...rec,
             is_history: true,
-            _id: `hist-${idx}-${rec.component_id}-${rec.timestamp}`,
+            _id: `hist-${idx}-${rec.component_id}-${(rec.mode || "").toUpperCase()}-${(rec.engine || "").toUpperCase()}-${rec.timestamp}`,
           }));
 
           // Preserve live records and merge with history safely
@@ -930,18 +1213,18 @@
           const historyKeySet = new Set(
             histRecords.map(
               (r) =>
-                `${r.component_id}_${r.timestamp}_${r.mode || ""}_${
-                  r.engine || ""
-                }`
+                `${r.component_id}_${r.timestamp}_${(
+                  r.mode || ""
+                ).toUpperCase()}_${(r.engine || "").toUpperCase()}`
             )
           );
 
           const pendingLive = currentLive.filter(
             (r) =>
               !historyKeySet.has(
-                `${r.component_id}_${r.timestamp}_${r.mode || ""}_${
-                  r.engine || ""
-                }`
+                `${r.component_id}_${r.timestamp}_${(
+                  r.mode || ""
+                ).toUpperCase()}_${(r.engine || "").toUpperCase()}`
               )
           );
 
@@ -983,16 +1266,25 @@
       appendLog(msgData.content);
     } else if (msgData.type === "record" && msgData.record) {
       const rec = msgData.record;
-      // Find matching live record
+      const recMode = (rec.mode || "").toUpperCase();
+      const recEngine = (rec.engine || "").toUpperCase();
+
+      // Find matching live record matching component_id, mode, and engine
       const match =
         state.results.find(
           (r) =>
             !r.is_history &&
             r.component_id === rec.component_id &&
+            (r.mode || "").toUpperCase() === recMode &&
+            (r.engine || "").toUpperCase() === recEngine &&
             (r.status === "pending" || r.status === "running")
         ) ||
         state.results.find(
-          (r) => !r.is_history && r.component_id === rec.component_id
+          (r) =>
+            !r.is_history &&
+            r.component_id === rec.component_id &&
+            (r.mode || "").toUpperCase() === recMode &&
+            (r.engine || "").toUpperCase() === recEngine
         );
 
       if (match) {
@@ -1003,7 +1295,7 @@
           ...rec,
           timestamp: rec.timestamp || getTimestamp(),
           is_history: false,
-          _id: `live-${rec.component_id}-${Date.now()}`,
+          _id: `live-${rec.component_id}-${recMode}-${recEngine}-${Date.now()}`,
         });
       }
       renderResultsTable();
@@ -1023,8 +1315,9 @@
           state.eventSource.close();
           state.eventSource = null;
         }
-        // Refresh component cards to show updated tested status tags
+        // Refresh component cards and package cards to show updated tested status tags
         fetchComponents();
+        fetchPackages();
         // Reload complete persisted history from server
         loadTestHistory();
       }
@@ -1060,92 +1353,218 @@
   }
 
   /**
-   * Starts tests for selected components
+   * Starts tests for selected components or packages
    */
   async function startTests() {
-    if (state.selectedIds.size === 0) return;
+    if (state.targetType === "packages") {
+      if (state.selectedPackageIds.size === 0) return;
 
-    state.isRunning = true;
-    elements.startRunBtn.disabled = true;
-    elements.stopRunBtn.style.display = "inline-flex";
-    setStatus("running", "Executing Test Run(s)...");
+      state.isRunning = true;
+      elements.startRunBtn.disabled = true;
+      elements.stopRunBtn.style.display = "inline-flex";
+      setStatus("running", "Executing 1-Click Stack Test Run(s)...");
 
-    const ts = getTimestamp();
-    const numModes = state.mode === "both" ? 2 : 1;
-    const numEngines = state.engine === "both" ? 2 : 1;
-    const totalRuns = state.selectedIds.size * numModes * numEngines;
-    const modeLabel =
-      state.mode === "both" ? "LXC + VM (Matrix)" : state.mode.toUpperCase();
-    const engineLabel =
-      state.engine === "both"
-        ? "DOCKER + PODMAN (Matrix)"
-        : state.engine.toUpperCase();
+      const ts = getTimestamp();
+      const numModes =
+        state.mode === "both" || state.mode === "all" ? 2 : 1;
+      const numEngines =
+        state.engine === "both" || state.engine === "all" ? 2 : 1;
+      const totalRuns = state.selectedPackageIds.size * numModes * numEngines;
+      const modeLabel =
+        state.mode === "both" || state.mode === "all"
+          ? "LXC + VM (Matrix)"
+          : state.mode.toUpperCase();
+      const engineLabel =
+        state.engine === "both" || state.engine === "all"
+          ? "DOCKER + PODMAN (Matrix)"
+          : state.engine.toUpperCase();
 
-    appendLog(
-      `\n======================================================================`
-    );
-    appendLog(
-      `[${ts}] [GUI] EXECUTING TEST RUN(S): ${state.selectedIds.size} SERVICES (${totalRuns} TOTAL EXECUTIONS)`
-    );
-    appendLog(`[${ts}] [GUI] Target: ${modeLabel} | Engine: ${engineLabel}`);
-    appendLog(
-      `======================================================================\n`
-    );
+      appendLog(
+        `\n======================================================================`
+      );
+      appendLog(
+        `[${ts}] [GUI] EXECUTING 1-CLICK STACK TEST RUN(S): ${state.selectedPackageIds.size} STACKS (${totalRuns} TOTAL EXECUTIONS)`
+      );
+      appendLog(`[${ts}] [GUI] Target: ${modeLabel} | Engine: ${engineLabel}`);
+      appendLog(
+        `======================================================================\n`
+      );
 
-    // Pre-populate results table with pending rows (newest timestamp)
-    state.selectedIds.forEach((cid) => {
-      state.results.unshift({
-        timestamp: ts,
-        component_id: cid,
-        mode: state.mode === "both" ? "LXC" : state.mode.toUpperCase(),
-        engine: state.engine === "both" ? "DOCKER" : state.engine.toUpperCase(),
-        status: "pending",
-        deployment: "Pending",
-        running: false,
-        vmid: "—",
-        ip: "—",
-        http_ok: null,
-        is_history: false,
-        _id: `live-${cid}-${Date.now()}-${Math.random()}`,
+      const activeModes =
+        state.mode === "both" || state.mode === "all"
+          ? ["LXC", "VM"]
+          : [state.mode.toUpperCase()];
+      const activeEngines =
+        state.engine === "both" || state.engine === "all"
+          ? ["DOCKER", "PODMAN"]
+          : [state.engine.toUpperCase()];
+
+      // Pre-populate results table with pending rows for every matrix combination
+      activeModes.forEach((m) => {
+        activeEngines.forEach((e) => {
+          state.selectedPackageIds.forEach((pkgId) => {
+            const pkgObj = state.packages.find((p) => p.id === pkgId);
+            state.results.unshift({
+              timestamp: ts,
+              component_id: pkgId,
+              package_name: pkgObj ? pkgObj.name : pkgId,
+              mode: m,
+              engine: e,
+              status: "pending",
+              deployment: "Pending",
+              running: false,
+              running_details: "Pending",
+              vmid: "—",
+              ip: "—",
+              http_ok: null,
+              is_package: true,
+              is_history: false,
+              _id: `live-pkg-${pkgId}-${m}-${e}-${Date.now()}-${Math.random()}`,
+            });
+          });
+        });
       });
-    });
-    renderResultsTable();
+      renderResultsTable();
 
-    try {
-      const payload = {
-        components: Array.from(state.selectedIds),
-        engine: state.engine,
-        mode: state.mode,
-        node: elements.nodeInput.value.trim() || "pve",
-        template_id: elements.templateIdInput.value.trim() || "902",
-      };
+      try {
+        const payload = {
+          target_type: "packages",
+          packages: Array.from(state.selectedPackageIds),
+          engine: state.engine,
+          mode: state.mode,
+          node: elements.nodeInput.value.trim() || "pve",
+          template_id: elements.templateIdInput.value.trim() || "902",
+        };
 
-      const response = await fetch("/api/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
 
-      const result = await response.json();
-      if (!response.ok || !result.success) {
-        appendLog(
-          `[ERROR] Failed to start test run: ${result.error || "Unknown error"}`
-        );
-        setStatus("failed", "Failed to Start");
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          appendLog(
+            `[ERROR] Failed to start package test run: ${result.error || "Unknown error"}`
+          );
+          setStatus("failed", "Failed to Start");
+          state.isRunning = false;
+          elements.startRunBtn.disabled = false;
+          elements.stopRunBtn.style.display = "none";
+          return;
+        }
+
+        connectStream();
+      } catch (err) {
+        appendLog(`[ERROR] Network error starting package tests: ${err.message}`);
+        setStatus("failed", "Error");
         state.isRunning = false;
         elements.startRunBtn.disabled = false;
         elements.stopRunBtn.style.display = "none";
-        return;
       }
+    } else {
+      if (state.selectedIds.size === 0) return;
 
-      // Connect to SSE stream
-      connectStream();
-    } catch (err) {
-      appendLog(`[ERROR] Network error starting tests: ${err.message}`);
-      setStatus("failed", "Error");
-      state.isRunning = false;
-      elements.startRunBtn.disabled = false;
-      elements.stopRunBtn.style.display = "none";
+      state.isRunning = true;
+      elements.startRunBtn.disabled = true;
+      elements.stopRunBtn.style.display = "inline-flex";
+      setStatus("running", "Executing Test Run(s)...");
+
+      const ts = getTimestamp();
+      const numModes =
+        state.mode === "both" || state.mode === "all" ? 2 : 1;
+      const numEngines =
+        state.engine === "both" || state.engine === "all" ? 2 : 1;
+      const totalRuns = state.selectedIds.size * numModes * numEngines;
+      const modeLabel =
+        state.mode === "both" || state.mode === "all"
+          ? "LXC + VM (Matrix)"
+          : state.mode.toUpperCase();
+      const engineLabel =
+        state.engine === "both" || state.engine === "all"
+          ? "DOCKER + PODMAN (Matrix)"
+          : state.engine.toUpperCase();
+
+      appendLog(
+        `\n======================================================================`
+      );
+      appendLog(
+        `[${ts}] [GUI] EXECUTING TEST RUN(S): ${state.selectedIds.size} SERVICES (${totalRuns} TOTAL EXECUTIONS)`
+      );
+      appendLog(`[${ts}] [GUI] Target: ${modeLabel} | Engine: ${engineLabel}`);
+      appendLog(
+        `======================================================================\n`
+      );
+
+      const activeModes =
+        state.mode === "both" || state.mode === "all"
+          ? ["LXC", "VM"]
+          : [state.mode.toUpperCase()];
+      const activeEngines =
+        state.engine === "both" || state.engine === "all"
+          ? ["DOCKER", "PODMAN"]
+          : [state.engine.toUpperCase()];
+
+      // Pre-populate results table with pending rows for every matrix combination
+      activeModes.forEach((m) => {
+        activeEngines.forEach((e) => {
+          state.selectedIds.forEach((cid) => {
+            state.results.unshift({
+              timestamp: ts,
+              component_id: cid,
+              mode: m,
+              engine: e,
+              status: "pending",
+              deployment: "Pending",
+              running: false,
+              vmid: "—",
+              ip: "—",
+              http_ok: null,
+              is_package: false,
+              is_history: false,
+              _id: `live-${cid}-${m}-${e}-${Date.now()}-${Math.random()}`,
+            });
+          });
+        });
+      });
+      renderResultsTable();
+
+      try {
+        const payload = {
+          target_type: "components",
+          components: Array.from(state.selectedIds),
+          engine: state.engine,
+          mode: state.mode,
+          node: elements.nodeInput.value.trim() || "pve",
+          template_id: elements.templateIdInput.value.trim() || "902",
+        };
+
+        const response = await fetch("/api/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+          appendLog(
+            `[ERROR] Failed to start test run: ${result.error || "Unknown error"}`
+          );
+          setStatus("failed", "Failed to Start");
+          state.isRunning = false;
+          elements.startRunBtn.disabled = false;
+          elements.stopRunBtn.style.display = "none";
+          return;
+        }
+
+        connectStream();
+      } catch (err) {
+        appendLog(`[ERROR] Network error starting tests: ${err.message}`);
+        setStatus("failed", "Error");
+        state.isRunning = false;
+        elements.startRunBtn.disabled = false;
+        elements.stopRunBtn.style.display = "none";
+      }
     }
   }
 
@@ -1180,14 +1599,82 @@
   }
 
   /**
-   * Fetches latest markdown test report
+   * Builds and maintains dedicated Proxmox test templates (911-914)
    */
-  async function loadReport() {
+  async function maintainTemplates() {
+    if (state.isRunning) return;
+    const confirmMaintenance = confirm(
+      "🛠️ Build / Refresh dedicated Proxmox templates (911-914)?\n\n" +
+      "This will build/update Docker & Podman templates on VM and LXC and pre-cache common container base images."
+    );
+    if (!confirmMaintenance) return;
+
+    state.isRunning = true;
+    elements.startRunBtn.disabled = true;
+    if (elements.maintainTemplatesBtn) elements.maintainTemplatesBtn.disabled = true;
+    elements.stopRunBtn.style.display = "inline-flex";
+    setStatus("running", "Maintaining Proxmox Test Templates...");
+
+    const ts = getTimestamp();
+    appendLog(`\n======================================================================`);
+    appendLog(`[${ts}] [GUI] BUILDING / REFRESHING DEDICATED PROXMOX TEST TEMPLATES (911-914)`);
+    appendLog(`======================================================================\n`);
+
+    try {
+      const payload = {
+        target_type: "templates",
+        components: ["all"],
+        node: elements.nodeInput.value.trim() || "pve",
+      };
+
+      const response = await fetch("/api/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error || "Failed to start template maintenance");
+      }
+
+      connectStream();
+    } catch (err) {
+      appendLog(`[ERROR] Failed to start template maintenance: ${err.message}`);
+      setStatus("error", "Failed to start template maintenance");
+      state.isRunning = false;
+      elements.startRunBtn.disabled = false;
+      if (elements.maintainTemplatesBtn) elements.maintainTemplatesBtn.disabled = false;
+      elements.stopRunBtn.style.display = "none";
+    }
+  }
+
+  /**
+   * Fetches specific or latest markdown test report
+   */
+  async function loadReport(targetFile = null, compId = null) {
     try {
       elements.reportContent.textContent = "Loading report...";
       elements.reportModal.classList.add("open");
-      const res = await fetch("/api/report");
+
+      let query = "";
+      if (targetFile) {
+        query = `file=${encodeURIComponent(targetFile)}`;
+      } else if (compId) {
+        query = `component=${encodeURIComponent(compId)}`;
+      } else {
+        const reportType = state.targetType === "packages" ? "package" : "latest";
+        query = `type=${reportType}`;
+      }
+
+      const res = await fetch(`/api/report?${query}`);
       const data = await res.json();
+      const modalTitle = document.getElementById("report-modal-title");
+      if (modalTitle) {
+        modalTitle.textContent = data.filename
+          ? `📄 Test Report (${data.filename})`
+          : "📄 Test Report";
+      }
       if (data.report) {
         elements.reportContent.textContent = data.report;
       } else {
@@ -1208,7 +1695,7 @@
     tableThead.innerHTML = `
       <tr>
         <th data-sort="timestamp" class="sortable">Date / Time <span class="sort-icon"></span></th>
-        <th data-sort="component_id" class="sortable">Component <span class="sort-icon"></span></th>
+        <th data-sort="component_id" class="sortable">Target / Component <span class="sort-icon"></span></th>
         <th data-sort="mode" class="sortable">Target <span class="sort-icon"></span></th>
         <th data-sort="engine" class="sortable">Engine <span class="sort-icon"></span></th>
         <th data-sort="vmid" class="sortable">VM ID <span class="sort-icon"></span></th>
@@ -1238,11 +1725,97 @@
   }
 
   async function fetchComponents() {
-    const compRes = await fetch("/api/components");
-    if (compRes.ok) {
-      state.components = await compRes.json();
-      renderComponents();
-      updateSelectionUI();
+    try {
+      const compRes = await fetch("/api/components");
+      if (compRes.ok) {
+        state.components = await compRes.json();
+        renderComponents();
+        updateSelectionUI();
+      }
+    } catch (err) {
+      console.error("Failed to fetch components:", err);
+    }
+  }
+
+  async function fetchPackages() {
+    try {
+      const pkgRes = await fetch("/api/packages");
+      if (pkgRes.ok) {
+        state.packages = await pkgRes.json();
+        renderPackages();
+        updateSelectionUI();
+      }
+    } catch (err) {
+      console.error("Failed to fetch packages:", err);
+    }
+  }
+
+  /**
+   * Initializes AI provider selector dropdown from API
+   */
+  async function initAiProviderSelector() {
+    if (!elements.aiProviderSelect) return;
+
+    try {
+      const res = await fetch("/api/ai/providers");
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.providers)) return;
+
+      const providers = data.providers;
+      let activeProvider = data.active_provider || "gemini";
+
+      // Check localStorage override
+      const savedProvider = localStorage.getItem("njorddeploy_proxmox_ai_provider");
+      if (savedProvider && providers.some((p) => p.id === savedProvider)) {
+        activeProvider = savedProvider;
+      }
+
+      elements.aiProviderSelect.innerHTML = "";
+      providers.forEach((p) => {
+        const option = document.createElement("option");
+        option.value = p.id;
+        const icon = p.configured ? "🟢" : "⚪";
+        const modelStr = p.model ? ` (${p.model})` : "";
+        option.textContent = `${icon} ${p.name}${modelStr}`;
+        if (p.id === activeProvider) {
+          option.selected = true;
+          state.activeAiProvider = p.id;
+          state.activeAiName = p.name;
+          state.activeAiModel = p.model;
+        }
+        elements.aiProviderSelect.appendChild(option);
+      });
+
+      // Update dropdown title/tooltip
+      const activeObj = providers.find((p) => p.id === state.activeAiProvider);
+      if (activeObj) {
+        elements.aiProviderSelect.title = `Active AI: ${activeObj.name} (${activeObj.model || "default"})`;
+      }
+
+      elements.aiProviderSelect.addEventListener("change", async (e) => {
+        const chosenId = e.target.value;
+        const chosenObj = providers.find((p) => p.id === chosenId);
+        state.activeAiProvider = chosenId;
+        if (chosenObj) {
+          state.activeAiName = chosenObj.name;
+          state.activeAiModel = chosenObj.model;
+          elements.aiProviderSelect.title = `Active AI: ${chosenObj.name} (${chosenObj.model || "default"})`;
+        }
+        localStorage.setItem("njorddeploy_proxmox_ai_provider", chosenId);
+
+        try {
+          await fetch("/api/ai/select-provider", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ provider: chosenId }),
+          });
+        } catch (err) {
+          console.warn("Failed to persist AI provider selection to backend:", err);
+        }
+      });
+    } catch (err) {
+      console.error("Failed to load AI providers:", err);
     }
   }
 
@@ -1251,42 +1824,143 @@
    */
   async function init() {
     initTableSorting();
+    setupEventListeners();
 
     try {
-      // 1. Fetch initial configuration
-      const configRes = await fetch("/api/config");
-      if (configRes.ok) {
-        const config = await configRes.json();
-        if (config.node) elements.nodeInput.value = config.node;
-        if (config.template_id) elements.templateIdInput.value = config.template_id;
-        if (config.engine) {
-          state.engine = config.engine.toLowerCase();
-          if (state.engine === "podman") {
-            elements.enginePodmanBtn.classList.add("active", "engine-podman");
-            elements.engineDockerBtn.classList.remove("active");
+      // 1. Fetch initial configuration & AI providers in parallel
+      await Promise.all([
+        (async () => {
+          const configRes = await fetch("/api/config");
+          if (configRes.ok) {
+            const config = await configRes.json();
+            if (config.node) elements.nodeInput.value = config.node;
+            if (config.template_id) elements.templateIdInput.value = config.template_id;
+            if (config.engine) {
+              state.engine = config.engine.toLowerCase();
+              if (state.engine === "podman") {
+                elements.enginePodmanBtn.classList.add("active", "engine-podman");
+                elements.engineDockerBtn.classList.remove("active");
+              }
+            }
+            const bridgeLabel = document.getElementById("config-bridge-label");
+            const ipLabel = document.getElementById("config-ip-label");
+            const netStatus = document.getElementById("config-net-status");
+            if (bridgeLabel && config.bridge) bridgeLabel.textContent = config.bridge;
+            if (ipLabel && config.test_ip) {
+              const cidr = config.test_ip.includes("/") ? config.test_ip : `${config.test_ip}/24`;
+              ipLabel.textContent = cidr;
+            }
+            if (netStatus) {
+              if (config.bridge === "vmbr1" || (config.test_ip && config.test_ip.startsWith("10.99."))) {
+                netStatus.textContent = "✅ Isolated Subnet Active";
+                netStatus.style.color = "var(--accent-green)";
+              } else {
+                netStatus.textContent = "⚠️ LAN Bridge (vmbr0)";
+                netStatus.style.color = "var(--accent-amber)";
+              }
+            }
+          }
+        })(),
+        initAiProviderSelector(),
+      ]);
+
+      // 2. Fetch components and packages in parallel
+      await Promise.all([fetchComponents(), fetchPackages()]);
+
+      // 3. Fetch cumulative test history in requestAnimationFrame to preserve smooth UI
+      requestAnimationFrame(() => {
+        loadTestHistory();
+      });
+
+      // 4. Check if a test run is actively in progress and attach live stream
+      try {
+        const statusRes = await fetch("/api/status");
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData.is_running) {
+            state.isRunning = true;
+            elements.startRunBtn.disabled = true;
+            elements.stopRunBtn.style.display = "inline-flex";
+            const comp = statusData.current_component || "Active Service";
+            setStatus("running", `Active Run in Progress: ${comp} ⏳`);
+            connectStream();
           }
         }
+      } catch (statusErr) {
+        console.warn("Could not check initial status:", statusErr);
       }
-
-      // 2. Fetch components
-      await fetchComponents();
-
-      // 3. Fetch cumulative test history
-      await loadTestHistory();
     } catch (err) {
       console.error("Initialization error:", err);
     }
+  }
 
-    // Attach Event Listeners
+  /**
+   * Sets up all interactive DOM event listeners immediately upon DOM ready
+   */
+  function setupEventListeners() {
+    // Centralized Event Delegation for Component Selection
+    elements.componentsGrid.addEventListener("click", (e) => {
+      const card = e.target.closest(".component-card");
+      if (!card) return;
+      const compId = card.dataset.componentId || card.dataset.id;
+      if (!compId) return;
+      const checkbox = card.querySelector(".component-checkbox");
+      if (e.target !== checkbox && checkbox) {
+        checkbox.checked = !checkbox.checked;
+      }
+      if (checkbox && checkbox.checked) {
+        state.selectedIds.add(compId);
+        card.classList.add("selected");
+      } else {
+        state.selectedIds.delete(compId);
+        card.classList.remove("selected");
+      }
+      updateSelectionUI();
+    });
 
-    // Search bar with live wildcard matching
+    // Centralized Event Delegation for Package Selection
+    if (elements.packagesGrid) {
+      elements.packagesGrid.addEventListener("click", (e) => {
+        const card = e.target.closest(".package-card");
+        if (!card) return;
+        const pkgId = card.dataset.packageId;
+        if (!pkgId) return;
+        const checkbox = card.querySelector(".package-checkbox");
+        if (e.target !== checkbox && checkbox) {
+          checkbox.checked = !checkbox.checked;
+        }
+        if (checkbox && checkbox.checked) {
+          state.selectedPackageIds.add(pkgId);
+          card.classList.add("selected");
+        } else {
+          state.selectedPackageIds.delete(pkgId);
+          card.classList.remove("selected");
+        }
+        updateSelectionUI();
+      });
+    }
+
+    // Target View switch buttons (Services vs Packages)
+    if (elements.tabServicesBtn) {
+      elements.tabServicesBtn.addEventListener("click", () => switchTargetType("components"));
+    }
+    if (elements.tabPackagesBtn) {
+      elements.tabPackagesBtn.addEventListener("click", () => switchTargetType("packages"));
+    }
+
+    // Search bar with live wildcard matching (Services, debounced)
+    let searchDebounceTimer = null;
     elements.searchInput.addEventListener("input", (e) => {
       state.searchQuery = e.target.value;
       elements.searchClearBtn.style.display = state.searchQuery ? "block" : "none";
-      renderComponents();
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        renderComponents();
+      }, 120);
     });
 
     elements.searchClearBtn.addEventListener("click", () => {
+      clearTimeout(searchDebounceTimer);
       elements.searchInput.value = "";
       state.searchQuery = "";
       elements.searchClearBtn.style.display = "none";
@@ -1294,13 +1968,49 @@
       elements.searchInput.focus();
     });
 
-    // Category / Status Filter pills
+    // Package search bar with live wildcard matching (debounced)
+    let pkgSearchDebounceTimer = null;
+    if (elements.packageSearchInput) {
+      elements.packageSearchInput.addEventListener("input", (e) => {
+        state.packageSearchQuery = e.target.value;
+        if (elements.packageSearchClearBtn) {
+          elements.packageSearchClearBtn.style.display = state.packageSearchQuery ? "block" : "none";
+        }
+        clearTimeout(pkgSearchDebounceTimer);
+        pkgSearchDebounceTimer = setTimeout(() => {
+          renderPackages();
+        }, 120);
+      });
+    }
+
+    if (elements.packageSearchClearBtn) {
+      elements.packageSearchClearBtn.addEventListener("click", () => {
+        clearTimeout(pkgSearchDebounceTimer);
+        elements.packageSearchInput.value = "";
+        state.packageSearchQuery = "";
+        elements.packageSearchClearBtn.style.display = "none";
+        renderPackages();
+        elements.packageSearchInput.focus();
+      });
+    }
+
+    // Category / Status Filter pills (Services)
     elements.filterPills.forEach((pill) => {
       pill.addEventListener("click", () => {
         elements.filterPills.forEach((p) => p.classList.remove("active"));
         pill.classList.add("active");
         state.activeFilter = pill.dataset.filter;
         renderComponents();
+      });
+    });
+
+    // Filter pills (Packages)
+    elements.packageFilterPills.forEach((pill) => {
+      pill.addEventListener("click", () => {
+        elements.packageFilterPills.forEach((p) => p.classList.remove("active"));
+        pill.classList.add("active");
+        state.activePackageFilter = pill.dataset.pkgFilter || "all";
+        renderPackages();
       });
     });
 
@@ -1358,7 +2068,7 @@
       });
     }
 
-    // Batch selection buttons
+    // Batch selection buttons (Services)
     elements.selectAllFilteredBtn.addEventListener("click", () => {
       const filtered = getFilteredComponents();
       filtered.forEach((c) => state.selectedIds.add(c.id));
@@ -1404,9 +2114,30 @@
       updateSelectionUI();
     });
 
+    // Batch selection buttons (Packages)
+    if (elements.selectAllPackagesBtn) {
+      elements.selectAllPackagesBtn.addEventListener("click", () => {
+        const filtered = getFilteredPackages();
+        filtered.forEach((p) => state.selectedPackageIds.add(p.id));
+        renderPackages();
+        updateSelectionUI();
+      });
+    }
+
+    if (elements.clearPackagesSelectionBtn) {
+      elements.clearPackagesSelectionBtn.addEventListener("click", () => {
+        state.selectedPackageIds.clear();
+        renderPackages();
+        updateSelectionUI();
+      });
+    }
+
     // Runner triggers
     elements.startRunBtn.addEventListener("click", startTests);
     elements.stopRunBtn.addEventListener("click", stopTests);
+    if (elements.maintainTemplatesBtn) {
+      elements.maintainTemplatesBtn.addEventListener("click", maintainTemplates);
+    }
 
     // Terminal controls
     elements.clearTerminalBtn.addEventListener("click", () => {
@@ -1420,6 +2151,36 @@
         elements.copyTerminalBtn.textContent = "Copy Logs";
       }, 1500);
     });
+
+    // Table Action Event Delegation (Report and AI Fix)
+    if (elements.resultsTableBody) {
+      elements.resultsTableBody.addEventListener("click", (e) => {
+        const reportBtn = e.target.closest(".btn-report-doc");
+        if (reportBtn) {
+          const file = reportBtn.getAttribute("data-file") || "";
+          const comp = reportBtn.getAttribute("data-comp") || "";
+          loadReport(file, comp);
+          return;
+        }
+
+        const aiBtn = e.target.closest(".btn-ai-fix");
+        if (aiBtn) {
+          const compId = aiBtn.getAttribute("data-comp") || "";
+          const mode = aiBtn.getAttribute("data-mode") || "";
+          const engine = aiBtn.getAttribute("data-engine") || "";
+          const record =
+            state.results.find(
+              (r) =>
+                r.component_id === compId &&
+                (r.mode || "").toUpperCase() === mode.toUpperCase() &&
+                (r.engine || "").toUpperCase() === engine.toUpperCase()
+            ) || state.results.find((r) => r.component_id === compId);
+          if (record) {
+            openAiSingleDiagnosis(record);
+          }
+        }
+      });
+    }
 
     // Clear History Modal controls
     elements.clearHistoryBtn.addEventListener("click", () => {
@@ -1443,10 +2204,15 @@
     });
 
     // Report modal
-    elements.viewReportBtn.addEventListener("click", loadReport);
+    elements.viewReportBtn.addEventListener("click", () => loadReport());
     elements.closeModalBtn.addEventListener("click", () => {
       elements.reportModal.classList.remove("open");
     });
+    if (elements.reportModalCloseBtn) {
+      elements.reportModalCloseBtn.addEventListener("click", () => {
+        elements.reportModal.classList.remove("open");
+      });
+    }
 
     elements.reportModal.addEventListener("click", (e) => {
       if (e.target === elements.reportModal) {

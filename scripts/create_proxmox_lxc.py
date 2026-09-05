@@ -170,7 +170,7 @@ def main():
         description="Creates and provisions a Proxmox LXC container for NjordDeploy."
     )
     parser.add_argument("--cores", type=int, default=4, help="Number of CPU cores")
-    parser.add_argument("--memory", type=int, default=8192, help="Memory size in MB")
+    parser.add_argument("--memory", type=int, default=4096, help="Memory size in MB")
     parser.add_argument(
         "--storage-size", type=str, default="40", help="Disk size in GB"
     )
@@ -284,13 +284,9 @@ def main():
     logger.info(f"Using template: {ostemplate}")
 
     # 4. Define creation parameters
-    net_config = "name=eth0,bridge=vmbr0,firewall=0,ip=dhcp"
+    bridge_name = os.getenv("PROXMOX_BRIDGE", "vmbr0")
+    net_config = f"name=eth0,bridge={bridge_name},firewall=0,ip=dhcp"
     rootfs_config = f"{args.storage_name}:{args.storage_size}"
-
-    # Features: nesting=1 is required to run Docker inside LXC.
-    # Note: keyctl=1 is omitted because Proxmox API tokens are
-    # not allowed to change non-nesting feature flags.
-    features_config = "nesting=1"
 
     data = {
         "vmid": vmid,
@@ -300,8 +296,8 @@ def main():
         "swap": 512,
         "rootfs": rootfs_config,
         "net0": net_config,
-        "features": features_config,
         "unprivileged": 1,
+        "features": "nesting=1",
         "password": args.password,
         "ssh-public-keys": pubkey,
         "start": 1,
@@ -347,6 +343,15 @@ def main():
     if not connected:
         logger.error(f"Failed to connect to container via SSH: {conn_msg}")
         sys.exit(1)
+
+    # Optimize PAM & systemd-logind to eliminate 25s timeouts on LXC
+    ssh.execute_command(
+        "sed -i 's/^session.*pam_systemd.so/# &/' /etc/pam.d/common-session "
+        "/etc/pam.d/sshd 2>/dev/null || true; "
+        "systemctl mask systemd-logind.service 2>/dev/null || true",
+        log_callback=ssh_log,
+        check_exit_code=False,
+    )
 
     # Execution commands to install container engine and setup default network
     engine_helper = ContainerEngine(args.engine)

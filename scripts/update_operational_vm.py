@@ -353,7 +353,7 @@ def main():
     )
     parser.add_argument(
         "--password",
-        default=os.getenv("PROXMOX_VM_PASSWORD") or "SaxGitaar31!",
+        default=os.getenv("PROXMOX_VM_PASSWORD") or "",
         help="SSH password",
     )
     parser.add_argument(

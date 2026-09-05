@@ -64,7 +64,7 @@
             "type": "string"
         },
         {
-            "default": "{{ 'openssl rand -base64 12' | password_hash }}",
+            "default": "AdminPassword123!",
             "description": "The password for the DNS web console admin user. This is set on first run.",
             "id": "DNS_ADMIN_PASSWORD",
             "label": "DNS Web Console Admin Password",

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "8.10.0"
-# platform_notes: "Tested on Proxmox LXC: docker (8.10.0, 2026-08-15), podman (8.10.0, 2026-08-15); Proxmox VM: docker (8.10.0, 2026-08-15), podman (8.10.0, 2026-08-15)."
+# last_tested_version: "8.10.1"
+# platform_notes: "Tested on Proxmox LXC: docker (8.10.1, 2026-09-05), podman (8.10.1, 2026-09-04); Proxmox VM: docker (8.10.1, 2026-09-04), podman (8.10.1, 2026-09-04)."
 # breaking_changes: "None"
 services:
   nextcloud-redis:

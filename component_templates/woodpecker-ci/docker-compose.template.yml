@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "3.18.0"
-# platform_notes: "Tested on Proxmox LXC: docker (3.18.0, 2026-08-29), podman (3.18.0, 2026-08-29); Proxmox VM: docker (3.18.0, 2026-08-29), podman (stable, 2026-08-29)."
+# platform_notes: "Tested on Proxmox LXC: docker (3.18.0, 2026-09-04), podman (3.18.0, 2026-08-29); Proxmox VM: docker (3.18.0, 2026-09-03), podman (3.18.0, 2026-09-03)."
 # breaking_changes: none
 services:
   woodpecker-ci:
@@ -9,9 +9,11 @@ services:
     restart: unless-stopped
     environment:
       - "WOODPECKER_OPEN=true"
-      - "WOODPECKER_HOST=http://localhost:9005"
+      - "WOODPECKER_HOST=http://localhost:{{ WOODPECKER_WEB_PORT | default('9005') }}"
       - "WOODPECKER_STORAGE_DRIVER=sqlite3"
       - "WOODPECKER_STORAGE_DATASOURCE=/var/lib/woodpecker/woodpecker.sqlite"
+      - "WOODPECKER_GITEA=true"
+      - "WOODPECKER_GITEA_URL=http://gitea:3000"
     ports:
       - "{{ WOODPECKER_WEB_PORT }}:8000"
     volumes:

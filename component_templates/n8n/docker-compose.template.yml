@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "2.34.6"
-# platform_notes: "Tested on Proxmox LXC: docker (2.34.6, 2026-08-15), podman (2.34.6, 2026-08-15); Proxmox VM: docker (2.34.6, 2026-08-15), podman (2.34.6, 2026-08-15)."
+# last_tested_version: "2.37.10"
+# platform_notes: "Tested on Proxmox LXC: docker (2.37.10, 2026-09-04), podman (2.37.10, 2026-09-04); Proxmox VM: docker (2.37.10, 2026-09-04), podman (2.37.10, 2026-09-04)."
 # breaking_changes: none
 services:
   n8n:

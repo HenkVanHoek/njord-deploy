@@ -70,7 +70,7 @@ if __name__ == "__main__":
         threading.Timer(1.2, open_browser, args=[url]).start()
 
     try:
-        serve(app, host=host, port=port, threads=6)
+        serve(app, host=host, port=port, threads=16)
     except OSError as err:
         if "already in use" in str(err).lower() or getattr(err, "errno", None) in (
             98,

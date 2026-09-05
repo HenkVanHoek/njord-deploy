@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "0.6.27-ls398"
-# platform_notes: "Tested on Proxmox LXC: docker (0.6.27-ls398, 2026-08-28), podman (0.6.27-ls398, 2026-08-28); Proxmox VM: docker (0.6.27-ls398, 2026-08-28), podman (0.6.27-ls398, 2026-08-28)."
+# last_tested_version: "0.6.27-ls399"
+# platform_notes: "Tested on Proxmox LXC: docker (0.6.27-ls399, 2026-09-04), podman (0.6.27-ls399, 2026-09-04); Proxmox VM: docker (0.6.27-ls399, 2026-09-04), podman (0.6.27-ls399, 2026-09-04)."
 # breaking_changes: none
 services:
   calibre-web:

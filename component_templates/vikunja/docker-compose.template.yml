@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "2.5.0"
-# platform_notes: "Tested on Proxmox LXC: docker (2.5.0, 2026-08-29), podman (2.5.0, 2026-08-29); Proxmox VM: docker (2.5.0, 2026-08-29), podman (stable, 2026-08-29)."
+# last_tested_version: "2.6.0"
+# platform_notes: "Tested on Proxmox LXC: docker (2.6.0, 2026-09-05), podman (2.6.0, 2026-09-04); Proxmox VM: docker (2.6.0, 2026-09-04), podman (2.6.0, 2026-09-04)."
 # breaking_changes: none
 services:
   vikunja:
