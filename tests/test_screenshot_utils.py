@@ -5,7 +5,20 @@ import sys
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from utils.screenshot_utils import capture_service_screenshot
+
+# noinspection PyBroadException
+try:
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as _p:
+        _b = _p.chromium.launch(headless=True)
+        _b.close()
+    PLAYWRIGHT_AVAILABLE = True
+except Exception:
+    PLAYWRIGHT_AVAILABLE = False
 
 
 def test_capture_service_screenshot_empty_url(tmp_path: Path):
@@ -29,6 +42,10 @@ def test_capture_service_screenshot_import_error(tmp_path: Path):
             assert res is None
 
 
+@pytest.mark.skipif(
+    not PLAYWRIGHT_AVAILABLE,
+    reason="Playwright Chromium browser is not installed or available",
+)
 def test_capture_service_screenshot_navigation_failure(tmp_path: Path):
     """Verifies that network/connection failure returns None without crashing."""
     dest = tmp_path / "test.png"
@@ -38,6 +55,10 @@ def test_capture_service_screenshot_navigation_failure(tmp_path: Path):
     assert not dest.exists()
 
 
+@pytest.mark.skipif(
+    not PLAYWRIGHT_AVAILABLE,
+    reason="Playwright Chromium browser is not installed or available",
+)
 def test_capture_service_screenshot_success(tmp_path: Path):
     """Verifies successful capture of a local webpage."""
     dest = tmp_path / "subfolder" / "success.png"

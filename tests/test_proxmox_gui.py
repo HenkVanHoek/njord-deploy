@@ -131,6 +131,11 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     assert res_trav.json.get("report") == "# Test Report"
 
     # 5b. Test PDF export API
+    dummy_pdf = b"%PDF-1.4 " + b"0" * 1024
+    monkeypatch.setattr(
+        "scripts.proxmox_gui.render_markdown_to_pdf",
+        lambda _content, _docs: dummy_pdf,
+    )
     res_pdf = client.get("/api/report/pdf")
     assert res_pdf.status_code == 200
     assert res_pdf.content_type == "application/pdf"
@@ -146,6 +151,15 @@ def test_proxmox_gui_app_routes(tmp_path, monkeypatch):
     assert "PROXMOX_TESTS_web-notepad_20260904_151908.pdf" in res_file_pdf.headers.get(
         "Content-Disposition", ""
     )
+
+    # PDF generation error handling
+    monkeypatch.setattr(
+        "scripts.proxmox_gui.render_markdown_to_pdf",
+        lambda _content, _docs: None,
+    )
+    res_pdf_err = client.get("/api/report/pdf")
+    assert res_pdf_err.status_code == 500
+    assert res_pdf_err.json.get("error") == "Failed to generate PDF"
 
     # 6. Test stream API endpoint headers
     res_stream = client.get("/api/stream")

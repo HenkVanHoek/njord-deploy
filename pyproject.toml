@@ -45,7 +45,8 @@ dependencies = [
     "cryptography>=50.0.1",
     "bcrypt>=4.2.0",
     "openai>=1.50.0",
-    "stripe>=15.6.0"
+    "stripe>=15.6.0",
+    "mistune>=3.0.0"
 ]
 
 [tool.setuptools]
