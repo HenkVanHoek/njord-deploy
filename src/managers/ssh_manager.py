@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import serialization as crypto_serialization
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from paramiko import Ed25519Key, SFTPClient, SSHClient
 
-from utils.security_utils import mask_passwords
+from utils.security_utils import redact_credentials
 
 
 class TrustOnFirstUsePolicy(paramiko.MissingHostKeyPolicy):
@@ -192,12 +192,12 @@ class SSHManager:
                 if readq:
                     if channel.recv_ready():
                         chunk = channel.recv(4096).decode("utf-8", "ignore")
-                        masked_chunk = mask_passwords(chunk, extra_secrets=extra)
+                        masked_chunk = redact_credentials(chunk, extra_secrets=extra)
                         stdout_parts.append(masked_chunk)
                         log_callback(masked_chunk)
                     if channel.recv_stderr_ready():
                         chunk = channel.recv_stderr(4096).decode("utf-8", "ignore")
-                        masked_chunk = mask_passwords(chunk, extra_secrets=extra)
+                        masked_chunk = redact_credentials(chunk, extra_secrets=extra)
                         stdout_parts.append(masked_chunk)
                         log_callback(masked_chunk)
 
@@ -205,7 +205,7 @@ class SSHManager:
 
             if check_exit_code and exit_code != 0:
                 short_cmd = f"{command[:40]}..." if len(command) > 40 else command
-                masked_cmd = mask_passwords(short_cmd, extra_secrets=extra)
+                masked_cmd = redact_credentials(short_cmd, extra_secrets=extra)
                 log_callback(
                     f"ERROR: Command '{masked_cmd}' failed with code {exit_code}\n"
                 )

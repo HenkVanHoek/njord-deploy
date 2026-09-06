@@ -53,7 +53,7 @@ from utils.ai_failure_diagnoser import (  # noqa: E402
 )
 from utils.container_engine import get_configured_engine  # noqa: E402
 from utils.failed_components import load_untestable_components  # noqa: E402
-from utils.security_utils import mask_passwords  # noqa: E402
+from utils.security_utils import redact_credentials  # noqa: E402
 
 logging.basicConfig(
     level=logging.INFO,
@@ -260,7 +260,7 @@ class TestRunnerManager:
                             clean_line = line.rstrip("\r\n")
 
                         if clean_line:
-                            safe_line = mask_passwords(clean_line)
+                            safe_line = redact_credentials(clean_line)
                             self.log_queue.put({"type": "log", "content": safe_line})
                             self._inspect_log_line(safe_line, _engine=engine)
 
@@ -1309,7 +1309,7 @@ def create_app() -> Flask:
                                 rec_copy["is_package"] = False
                                 err_msg = rec_copy.get("error_message")
                                 if isinstance(err_msg, str):
-                                    masked_err = mask_passwords(err_msg)
+                                    masked_err = redact_credentials(err_msg)
                                     if len(masked_err) > 200:
                                         rec_copy["error_message"] = (
                                             masked_err[:200] + "... (truncated)"

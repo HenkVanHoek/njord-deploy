@@ -24,7 +24,7 @@ from managers.setup_manager import SetupManager  # noqa: E402
 from managers.ssh_manager import SSHManager  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
 from utils.screenshot_utils import capture_service_screenshot  # noqa: E402
-from utils.security_utils import mask_passwords  # noqa: E402
+from utils.security_utils import redact_credentials  # noqa: E402
 from utils.template_header import update_template_header_content  # noqa: E402
 
 logging.basicConfig(
@@ -847,7 +847,7 @@ def _save_incremental_package_result(test_record: Dict[str, Any]) -> None:
         clean_record = dict(test_record)
         for key in ("error_message", "details", "running_details"):
             if key in clean_record and isinstance(clean_record[key], str):
-                clean_record[key] = mask_passwords(clean_record[key])
+                clean_record[key] = redact_credentials(clean_record[key])
 
         updated = False
         for idx, rec in enumerate(history):
