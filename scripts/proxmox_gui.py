@@ -1292,7 +1292,7 @@ def create_app() -> Flask:
         if not requested_path.is_file():
             return jsonify({"error": "Image not found"}), 404
         rel_path = requested_path.relative_to(images_dir)
-        return send_from_directory(images_dir, str(rel_path))
+        return send_from_directory(images_dir, rel_path.as_posix())
 
     @app.route("/api/results", methods=["GET"])
     def get_results() -> Response:

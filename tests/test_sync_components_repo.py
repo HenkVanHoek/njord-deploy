@@ -26,7 +26,7 @@ def test_get_default_target_dir() -> None:
     source_root = Path("/fake/path/njord-deploy")
     with patch.dict("os.environ", {}, clear=True):
         target = get_default_target_dir(source_root)
-        assert target == Path("/fake/path/njord-deploy-components")
+        assert target == (source_root.parent / "njord-deploy-components").resolve()
 
     with patch.dict("os.environ", {"COMPONENTS_REPO_PATH": "/custom/path"}):
         target = get_default_target_dir(source_root)
