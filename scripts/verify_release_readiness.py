@@ -26,6 +26,7 @@ from scripts.fetch_github_security_alerts import (  # noqa: E402
     fetch_dependabot_alerts,
     get_auth_token,
     get_git_repo_name,
+    wait_for_pending_security_scans,
 )
 
 
@@ -88,12 +89,18 @@ def check_git_status() -> bool:
     return True
 
 
-def check_github_security_gate(repo: str, token: Optional[str] = None) -> bool:
+def check_github_security_gate(
+    repo: str, token: Optional[str] = None, head_sha: Optional[str] = None
+) -> bool:
     """
-    Verifies that zero open security alerts exist on GitHub.
+    Verifies that zero open security alerts exist on GitHub, waiting for any
+    in-progress QC / CodeQL scans to finish first.
     """
     print("\n▶ Running Gate: GitHub Security Alerts (CodeQL, Dependabot, Secrets)...")
     try:
+        # Wait for any active GitHub Actions QC / CodeQL runs for this commit
+        wait_for_pending_security_scans(repo, token, head_sha=head_sha)
+
         cs_alerts = fetch_code_scanning_alerts(repo, token, state="open")
         dep_alerts = fetch_dependabot_alerts(repo, token, state="open")
         sec_alerts = fetch_credential_audit_alerts(repo, token, state="open")
@@ -170,7 +177,16 @@ def main() -> None:
         sys.exit(1)
 
     # 2. GitHub Security Alerts Gate
-    if not check_github_security_gate(args.repo, token):
+    res = subprocess.run(  # nosec B603 B607
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    head_sha = res.stdout.strip() or None
+
+    if not check_github_security_gate(args.repo, token, head_sha=head_sha):
         print("\n❌ PRE-RELEASE CHECK FAILED AT GITHUB SECURITY GATE.")
         print("Resolve all open security alerts on GitHub before releasing.")
         sys.exit(1)

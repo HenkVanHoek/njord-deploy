@@ -12,6 +12,7 @@ import json
 import os
 import subprocess  # nosec B404
 import sys
+import time
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -124,6 +125,77 @@ def make_request(
         return response.status_code, data
     except Exception as e:
         return 0, {"message": str(e)}
+
+
+def get_pending_workflow_runs(
+    repo: str,
+    token: Optional[str],
+    head_sha: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """
+    Returns list of active (queued or in_progress) GitHub Actions workflow runs.
+    """
+    params = {"per_page": 20}
+    status, data = make_request(f"repos/{repo}/actions/runs", token, params)
+    if status != 200 or not isinstance(data, dict):
+        return []
+
+    runs = data.get("workflow_runs", [])
+    pending: List[Dict[str, Any]] = []
+    for r in runs:
+        if not isinstance(r, dict):
+            continue
+        run_status = r.get("status")
+        if run_status in ("queued", "in_progress"):
+            if head_sha:
+                sha = str(r.get("head_sha", ""))
+                if sha == head_sha or sha.startswith(head_sha):
+                    pending.append(r)
+            else:
+                pending.append(r)
+    return pending
+
+
+def wait_for_pending_security_scans(
+    repo: str,
+    token: Optional[str],
+    head_sha: Optional[str] = None,
+    timeout_seconds: int = 180,
+    poll_interval: int = 10,
+) -> bool:
+    """
+    Polls GitHub Actions until all pending QC / CodeQL runs for the target
+    commit complete, preventing premature evaluation before results are ingested.
+    """
+    start_time = time.time()
+    first_wait = True
+    while time.time() - start_time < timeout_seconds:
+        pending = get_pending_workflow_runs(repo, token, head_sha)
+        if not pending:
+            if not first_wait:
+                print("✅ GitHub Actions QC / CodeQL analysis completed.")
+            return True
+
+        if first_wait:
+            names = ", ".join(
+                f"{r.get('name')} (#{r.get('run_number')})" for r in pending
+            )
+            target = f" for commit {head_sha[:7]}" if head_sha else ""
+            print(
+                f"\n⏳ GitHub QC / CodeQL analysis currently running{target}:\n"
+                f"   Workflows: {names}\n"
+                f"   Waiting for completion before evaluating security gate "
+                f"(timeout: {timeout_seconds}s)..."
+            )
+            first_wait = False
+
+        time.sleep(poll_interval)
+
+    print(
+        f"⚠️ Warning: Timed out after {timeout_seconds}s waiting for "
+        "GitHub QC analysis."
+    )
+    return False
 
 
 def fetch_code_scanning_alerts(
@@ -364,9 +436,23 @@ def main() -> None:
         action="store_true",
         help="Exit with non-zero status code (1) if open security alerts are found",
     )
+    parser.add_argument(
+        "--wait",
+        action="store_true",
+        help="Wait for active GitHub QC / CodeQL runs to complete before querying",
+    )
+    parser.add_argument(
+        "--sha",
+        type=str,
+        default=None,
+        help="Target commit SHA to wait for when using --wait",
+    )
 
     args = parser.parse_args()
     token = get_auth_token(args.token)
+
+    if args.wait:
+        wait_for_pending_security_scans(args.repo, token, args.sha)
 
     if not token:
         print("⚠️ Warning: No GitHub token provided or found in environment.")
