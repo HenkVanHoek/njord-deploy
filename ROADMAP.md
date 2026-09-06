@@ -89,7 +89,9 @@ This milestone elevates NjordDeploy into a complete, enterprise-grade, multi-ten
 *   **[✅] 100% Package Integration Matrix & Autonomous Proxmox Autopilot**:
     *   **Why?**: To validate all 11 curated Turnkey Application Packages with zero failures across all 4 target quadrants (44 total test executions) under zero-token autonomous supervision.
     *   **Implementation**: Built `scripts/proxmox_autopilot.py` watchdog daemon with fail-fast abort, automated SSH root-cause diagnostics, and Signal mobile notifications. Solved the unprivileged LXC Podman DNS limitation via a `/usr/bin/systemd-run` wrapper, achieving 44/44 passing tests (100% score) across LXC Docker, LXC Podman, VM Docker, and VM Podman.
-
+*   **[✅] Zero-Vulnerability Security Baseline & Pre-Release Readiness Gates (v1.0.0-RC4)**:
+    *   **Why?**: To achieve and maintain zero open security alerts across GitHub CodeQL (Code Scanning), Dependabot, and Secret Scanning, guaranteeing that releases and production environments are strictly verified.
+    *   **Implementation**: Remediated all 16 CodeQL alerts (strict dictionary whitelist for path containment in `proxmox_gui.py`, origin validation for client/server open redirects, and credential redaction eliminating CodeQL AST heuristic false-positives). Built automated pre-release verification gates (`scripts/verify_release_readiness.py`) enforcing clean git working trees, zero open GitHub security alerts, linter and unit test suite passes, and GitHub Actions QC polling awareness before releasing.
 
 ---
 
