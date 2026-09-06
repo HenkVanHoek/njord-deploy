@@ -1,5 +1,27 @@
 // src/configurator_app/static/js/auth.js
 
+/**
+ * Sanitizes and validates internal redirect URLs to prevent open redirection and XSS.
+ * @param {string|null|undefined} rawUrl
+ * @param {string} [fallback="/"]
+ * @returns {string}
+ */
+function sanitizeRedirectUrl(rawUrl, fallback = "/") {
+    if (!rawUrl || typeof rawUrl !== "string") {
+        return fallback;
+    }
+    const trimmed = rawUrl.trim();
+    if (
+        trimmed.startsWith("/") &&
+        !trimmed.startsWith("//") &&
+        !trimmed.startsWith("/\\") &&
+        !trimmed.includes(":")
+    ) {
+        return trimmed;
+    }
+    return fallback;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Password visibility toggle helper
     document.querySelectorAll(".toggle-password-btn").forEach((btn) => {
@@ -115,7 +137,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         successCard.classList.remove("d-none");
                     } else {
                         setTimeout(() => {
-                            window.location.href = data.redirect || "/";
+                            window.location.href = sanitizeRedirectUrl(data.redirect, "/");
                         }, 1200);
                     }
                 } else {
@@ -161,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             try {
                 const params = new URLSearchParams(window.location.search);
-                const nextUrl = params.get("next") || "/";
+                const nextUrl = sanitizeRedirectUrl(params.get("next"), "/");
 
                 const response = await fetch("/api/login", {
                     method: "POST",

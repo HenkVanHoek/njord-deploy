@@ -38,6 +38,7 @@ from utils.auth_utils import (
     verify_credentials,
 )
 from utils.resource_utils import get_components_paths
+from utils.security_utils import is_safe_redirect_url
 
 logging.basicConfig(level=logging.INFO)
 
@@ -290,7 +291,9 @@ def create_app(test_config=None):
         if not is_admin_configured() and is_auth_enabled():
             return redirect(url_for("setup_wizard"))
         if session.get("logged_in") and session.get("user"):
-            next_url = request.args.get("next") or url_for("index")
+            next_url = request.args.get("next")
+            if not next_url or not is_safe_redirect_url(next_url):
+                next_url = url_for("index")
             return redirect(next_url)
         return render_template("login.html")
 

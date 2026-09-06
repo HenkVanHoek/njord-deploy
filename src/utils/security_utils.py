@@ -66,6 +66,44 @@ def validate_and_sanitize_url(
     return True, clean_url, None
 
 
+def is_safe_redirect_url(target: Optional[str]) -> bool:
+    """Validates that a URL is safe for internal redirection (prevents open redirects).
+
+    Ensures the target is a relative path starting with '/', does not start with
+    '//' or '/\\', contains no backslashes, and has no scheme or netloc.
+
+    Args:
+        target: The untrusted redirect target URL.
+
+    Returns:
+        True if safe for redirect, False otherwise.
+    """
+    if not target or not isinstance(target, str):
+        return False
+
+    cleaned = target.strip()
+    if not cleaned or not cleaned.startswith("/"):
+        return False
+
+    # Disallow protocol-relative URLs (//evil.com) and backslash escapes (/\\evil.com)
+    if cleaned.startswith("//") or cleaned.startswith("/\\"):
+        return False
+
+    # Disallow backslashes anywhere in path
+    if "\\" in cleaned:
+        return False
+
+    # noinspection PyBroadException
+    try:
+        sanitized = cleaned.replace("\\", "")
+        parsed = urllib.parse.urlsplit(sanitized)
+        if parsed.scheme or parsed.netloc:
+            return False
+        return True
+    except Exception:
+        return False
+
+
 def build_safe_target_url(
     base_url: Optional[str],
     target_endpoint: str,

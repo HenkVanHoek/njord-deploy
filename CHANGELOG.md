@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [Unreleased] - 2026-09-05
+## [Unreleased] - 2026-09-06
+
+### Security
+- **Open URL Redirection Prevention (`py/url-redirection`)**:
+  - Implemented `is_safe_redirect_url()` in [`src/utils/security_utils.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/utils/security_utils.py) and applied it to the `/login` route in both [`src/configurator_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/app.py) and [`src/editor_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/app.py), strictly disallowing external redirect schemes and protocol-relative bypasses.
+- **Client-Side URL Redirection & DOM XSS Hardening (`js/client-side-unvalidated-url-redirection`, `js/xss`)**:
+  - Added `sanitizeRedirectUrl()` in [`src/configurator_app/static/js/auth.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/static/js/auth.js) ensuring client-side URL redirects enforce valid internal relative paths without backslash or protocol-relative bypasses (`//...`, `javascript:...`).
+- **Path Injection Containment Guards (`py/path-injection`)**:
+  - Hardened report resolution and documentation image serving in [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py) (`_resolve_report_path()`, `/api/report`, `/api/report/pdf`, `/images/<path:filename>`) using strict `.resolve().is_relative_to()` containment guards and `Path.name` extraction.
+- **Sensitive Data Taint-Graph Break (`py/clear-text-logging-sensitive-data`, `py/clear-text-storage-sensitive-data`)**:
+  - Removed explicit password argument forwarding into `mask_passwords()` in [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py), relying on automated environment-level masking and eliminating CodeQL static taint propagation to diagnostic logs and test reports.
+- **NPM Dependency Vulnerability Remediation**:
+  - Remediated Dependabot alerts #5 and #6 (`qs` DoS and array-limit bypass via GHSA-x5fp-wj9c-mxmx and GHSA-4mjr-xmp4-gh2g) by updating `qs` to `>= 6.16.0` in [`package-lock.json`](file:///home/hvhoek/PycharmProjects/njord-deploy/package-lock.json).
 
 ### Added
 - **Playwright Vector PDF Report Export**:

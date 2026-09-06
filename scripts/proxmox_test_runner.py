@@ -352,9 +352,9 @@ def verify_service_health(
                 _, dout = ssh_mgr.execute_command(
                     dcmd, lambda x: None, check_exit_code=False
                 )
-                safe_cmd = mask_passwords(dcmd, extra_secrets=[vm_pass])
+                safe_cmd = mask_passwords(dcmd)
                 if dout and dout.strip():
-                    safe_dout = mask_passwords(dout, extra_secrets=[vm_pass])
+                    safe_dout = mask_passwords(dout)
                     results[
                         "details"
                     ] += f"\n--- Output of '{safe_cmd}' ---\n{safe_dout}"

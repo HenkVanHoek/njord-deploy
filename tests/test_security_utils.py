@@ -4,6 +4,7 @@ import unittest
 
 from utils.security_utils import (
     build_safe_target_url,
+    is_safe_redirect_url,
     mask_passwords,
     validate_and_sanitize_url,
 )
@@ -168,3 +169,38 @@ class TestSecurityUtils(unittest.TestCase):
         self.assertNotIn("SuperSecretHostKey", masked)
         self.assertNotIn("999xyz", masked)
         self.assertEqual(masked, "Connecting with ******* and custom token *******")
+
+    def test_is_safe_redirect_url(self):
+        """Tests that open redirects are rejected and internal paths allowed."""
+        safe_targets = [
+            "/",
+            "/index",
+            "/services/adguard-home",
+            "/setup?step=2",
+            "/api/status?format=json",
+        ]
+        for target in safe_targets:
+            self.assertTrue(
+                is_safe_redirect_url(target),
+                f"Expected '{target}' to be recognized as safe",
+            )
+
+        unsafe_targets = [
+            None,
+            "",
+            "   ",
+            "https://evil.com",
+            "http://evil.com/phish",
+            "//evil.com",
+            "/\\evil.com",
+            "\\\\evil.com",
+            "javascript:alert(1)",
+            "data:text/html,<html>alert</html>",
+            "http://localhost:5000",
+            "/path/with/\\backslash",
+        ]
+        for target in unsafe_targets:
+            self.assertFalse(
+                is_safe_redirect_url(target),
+                f"Expected '{target}' to be rejected as unsafe",
+            )
