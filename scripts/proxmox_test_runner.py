@@ -30,7 +30,7 @@ from utils.failed_components import (  # noqa: E402
 )
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
 from utils.screenshot_utils import capture_service_screenshot  # noqa: E402
-from utils.security_utils import mask_passwords  # noqa: E402
+from utils.security_utils import redact_credentials  # noqa: E402
 from utils.template_header import update_template_header_content  # noqa: E402
 
 logging.basicConfig(
@@ -87,7 +87,7 @@ def _save_incremental_test_result(test_record: Dict[str, Any]) -> None:
         clean_record = dict(test_record)
         for key in ("error_message", "details", "running_details"):
             if key in clean_record and isinstance(clean_record[key], str):
-                clean_record[key] = mask_passwords(clean_record[key])
+                clean_record[key] = redact_credentials(clean_record[key])
 
         updated = False
         for idx, rec in enumerate(history):
@@ -351,9 +351,9 @@ def verify_service_health(
                 _, dout = ssh_mgr.execute_command(
                     dcmd, lambda x: None, check_exit_code=False
                 )
-                safe_cmd = mask_passwords(dcmd)
+                safe_cmd = redact_credentials(dcmd)
                 if dout and dout.strip():
-                    safe_dout = mask_passwords(dout)
+                    safe_dout = redact_credentials(dout)
                     results[
                         "details"
                     ] += f"\n--- Output of '{safe_cmd}' ---\n{safe_dout}"
@@ -2661,7 +2661,7 @@ def run_proxmox_tests(cli_args) -> int:
             res_rec["report_file"] = report_filename
         for key in ("error_message", "details", "running_details"):
             if key in res_rec and isinstance(res_rec[key], str):
-                res_rec[key] = mask_passwords(res_rec[key])
+                res_rec[key] = redact_credentials(res_rec[key])
         updated = False
         for idx, h_rec in enumerate(history):
             if (

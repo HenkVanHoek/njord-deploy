@@ -196,7 +196,7 @@ PASSWORD_PARAM_PATTERN = re.compile(
 )
 
 
-def mask_passwords(
+def redact_credentials(
     text: str,
     extra_secrets: Optional[Iterable[str]] = None,
     mask: str = "*******",
@@ -248,3 +248,6 @@ def mask_passwords(
         sanitized = sanitized.replace(secret, mask)
 
     return sanitized
+
+
+mask_passwords = redact_credentials
