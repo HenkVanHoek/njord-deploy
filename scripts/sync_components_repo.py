@@ -8,7 +8,6 @@ njord-deploy-components repository.
 """
 
 import argparse
-import filecmp
 import json
 import logging
 import os
@@ -89,6 +88,13 @@ def validate_metadata_file(metadata_path: Path) -> dict:
     return data
 
 
+def _files_differ(file_a: Path, file_b: Path) -> bool:
+    """Checks if two files differ in content, avoiding mtime cache artifacts."""
+    if file_a.stat().st_size != file_b.stat().st_size:
+        return True
+    return file_a.read_bytes() != file_b.read_bytes()
+
+
 def sync_templates(
     src_dir: Path, dst_dir: Path, check_only: bool = False
 ) -> tuple[int, int, int]:
@@ -116,7 +122,7 @@ def sync_templates(
             needs_copy = False
             if not dst_file.exists():
                 needs_copy = True
-            elif not filecmp.cmp(src_file, dst_file, shallow=False):
+            elif _files_differ(src_file, dst_file):
                 needs_copy = True
 
             if needs_copy:
@@ -163,7 +169,7 @@ def sync_metadata(src_file: Path, dst_file: Path, check_only: bool = False) -> b
     needs_copy = False
     if not dst_file.exists():
         needs_copy = True
-    elif not filecmp.cmp(src_file, dst_file, shallow=False):
+    elif _files_differ(src_file, dst_file):
         needs_copy = True
 
     if needs_copy and not check_only:

@@ -10,6 +10,8 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - **Cross-Platform Path Handling on Windows Runners**:
   - Resolved image serving 404 error on Windows in [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py) by formatting relative image paths as POSIX paths (`rel_path.as_posix()`) for Flask's `send_from_directory`.
   - Resolved drive-letter path mismatch on Windows runners in [`tests/test_sync_components_repo.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/tests/test_sync_components_repo.py) by resolving expected directories dynamically with `.resolve()`.
+- **Content-Based File Comparison in Component Sync**:
+  - Replaced `filecmp.cmp` with content-based byte comparison in [`scripts/sync_components_repo.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/sync_components_repo.py), eliminating race conditions caused by sub-second filesystem mtime granularity and `filecmp` cache retention during rapid test execution.
 
 ## [1.0.0-RC2] - 2026-09-06
 
