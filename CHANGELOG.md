@@ -17,6 +17,11 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
   - Removed explicit password argument forwarding into `mask_passwords()` in [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py), relying on automated environment-level masking and eliminating CodeQL static taint propagation to diagnostic logs and test reports.
 - **NPM Dependency Vulnerability Remediation**:
   - Remediated Dependabot alerts #5 and #6 (`qs` DoS and array-limit bypass via GHSA-x5fp-wj9c-mxmx and GHSA-4mjr-xmp4-gh2g) by updating `qs` to `>= 6.16.0` in [`package-lock.json`](file:///home/hvhoek/PycharmProjects/njord-deploy/package-lock.json).
+- **Python Dependency Vulnerability Remediation**:
+  - Updated `mistune` to `>= 3.3.4` in [`pyproject.toml`](file:///home/hvhoek/PycharmProjects/njord-deploy/pyproject.toml) to address known security vulnerabilities.
+- **Operational VM Dynamic IP Resolution & Auto-Start**:
+  - Enhanced [`scripts/update_operational_vm.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/update_operational_vm.py) with dynamic Proxmox VM IP discovery via `get_operational_ip()` and automated VM boot orchestration if stopped.
+  - Added `utils.screenshot_utils` to PyInstaller hidden imports in [`NjordDeployProxmoxTest.spec`](file:///home/hvhoek/PycharmProjects/njord-deploy/NjordDeployProxmoxTest.spec) ensuring standalone execution of the Proxmox Test Suite.
 
 ### Added
 - **Playwright Vector PDF Report Export**:

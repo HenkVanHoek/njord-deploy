@@ -379,8 +379,42 @@ def main():
 
     args = parser.parse_args()
 
+    target_host = args.host
+    pve_client = None
+    if os.getenv("PROXMOX_HOST") and os.getenv("PROXMOX_TOKEN_ID"):
+        # noinspection PyBroadException
+        try:
+            pve_client = ProxmoxClient(
+                host=os.getenv("PROXMOX_HOST", ""),
+                user=os.getenv("PROXMOX_USER", "root@pam"),
+                token_id=os.getenv("PROXMOX_TOKEN_ID", ""),
+                token_secret=os.getenv("PROXMOX_TOKEN_SECRET", ""),
+            )
+        except Exception as e:
+            logger.debug(f"Proxmox client initialization error: {e}")
+
+    node = os.getenv("PROXMOX_NODE", "pve")
+    if pve_client:
+        # noinspection PyBroadException
+        try:
+            vm_st = pve_client.get_vm_status(node, DEFAULT_VMID).get("data", {})
+            if vm_st.get("status") == "stopped":
+                logger.info(f"VM {DEFAULT_VMID} is stopped. Starting VM...")
+                pve_client.start_vm(node, DEFAULT_VMID)
+                for _ in range(20):
+                    time.sleep(2)
+                    cur_st = pve_client.get_vm_status(node, DEFAULT_VMID).get(
+                        "data", {}
+                    )
+                    if cur_st.get("status") == "running":
+                        break
+        except Exception as e:
+            logger.debug(f"Could not verify VM status via Proxmox API: {e}")
+
+    target_host = get_operational_ip(pve_client, node, DEFAULT_VMID, target_host)
+
     success = update_operational_environment(
-        target_ip=args.host,
+        target_ip=target_host,
         user=args.user,
         password=args.password,
         force_build=args.build,
