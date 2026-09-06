@@ -359,6 +359,11 @@ def main() -> None:
         action="store_true",
         help="Output raw JSON instead of formatted text",
     )
+    parser.add_argument(
+        "--fail-on-alert",
+        action="store_true",
+        help="Exit with non-zero status code (1) if open security alerts are found",
+    )
 
     args = parser.parse_args()
     token = get_auth_token(args.token)
@@ -395,14 +400,23 @@ def main() -> None:
             args.repo, token, args.state
         )
 
+    total_alerts = (
+        len(results["code_scanning"])
+        + len(results["dependabot"])
+        + len(results["credential_audit"])
+    )
+
     if args.json:
         safe_output = {
             "repo": str(args.repo),
             "code_scanning": results["code_scanning"],
             "dependabot": results["dependabot"],
             "credential_audit": results["credential_audit"],
+            "total_alerts": total_alerts,
         }
         sys.stdout.write(json.dumps(safe_output, indent=2) + "\n")
+        if args.fail_on_alert and total_alerts > 0:
+            sys.exit(1)
         return
 
     print(f"\n🔎 GitHub Security Alerts Report for: {args.repo}")
@@ -415,14 +429,13 @@ def main() -> None:
     if args.type in ("all", "secret-scanning", "credential-audit"):
         display_credential_audit_alerts(results["credential_audit"])
 
-    total_alerts = (
-        len(results["code_scanning"])
-        + len(results["dependabot"])
-        + len(results["credential_audit"])
-    )
     print(f"\n{'='*70}")
     print(f"Total Open Security Alerts: {total_alerts}")
     print(f"{'='*70}\n")
+
+    if args.fail_on_alert and total_alerts > 0:
+        print(f"❌ Security Quality Gate Failed: {total_alerts} open alert(s) found.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
