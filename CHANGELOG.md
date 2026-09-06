@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [Unreleased] - 2026-09-06
+## [1.0.0-RC2] - 2026-09-06
 
 ### Security
 - **Open URL Redirection Prevention (`py/url-redirection`)**:
