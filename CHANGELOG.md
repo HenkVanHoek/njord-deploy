@@ -6,6 +6,18 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [1.0.0-RC3] - 2026-09-06
 
+### Security
+- **Path Injection Elimination (`py/path-injection`)**:
+  - Remediated CodeQL alerts #86, #90, #95, #96, #97, #98, #99, #100, #101, and #102 in [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py).
+  - Enforced strict dictionary whitelist lookup against existing files (`iterdir()`) in `_resolve_report_path()`, preventing any path interpolation from user query parameters.
+  - Hardened `serve_docs_image()` using Werkzeug's `safe_join()` combined with normalized prefix containment (`normpath.startswith()`).
+- **Clear-Text Sensitive Data Logging & Storage Remediation (`py/clear-text-logging-sensitive-data`, `py/clear-text-storage-sensitive-data`)**:
+  - Remediated CodeQL alerts #81, #82, and #94 in [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py).
+  - Removed `cat /opt/njorddeploy/docker-compose.yml` from remote host failure diagnostics, eliminating credentials exposure in diagnostic logs and test reports.
+- **Client-Side & Server-Side Open Redirect Remediation (`js/client-side-unvalidated-url-redirection`, `py/url-redirection`)**:
+  - Remediated CodeQL alert #78 in [`src/configurator_app/static/js/auth.js`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/static/js/auth.js) by strictly enforcing origin matching and extracting `.pathname` via native `URL` parsing.
+  - Remediated CodeQL alerts #76 and #77 in [`src/configurator_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/configurator_app/app.py) and [`src/editor_app/app.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/src/editor_app/app.py) via `get_safe_redirect_target()`, validating and reconstructing internal redirect paths without taint propagation.
+
 ### Fixed
 - **Cross-Platform Path Handling on Windows Runners**:
   - Resolved image serving 404 error on Windows in [`scripts/proxmox_gui.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_gui.py) by formatting relative image paths as POSIX paths (`rel_path.as_posix()`) for Flask's `send_from_directory`.

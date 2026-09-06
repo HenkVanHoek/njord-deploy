@@ -335,7 +335,6 @@ def verify_service_health(
             cd_cmd = f"sh -c 'cd /opt/njorddeploy 2>/dev/null && {cont_cli}-compose"
             diag_cmds = [
                 f"{cli_prefix}{cont_cli} ps -a",
-                f"{cli_prefix}cat /opt/njorddeploy/docker-compose.yml 2>/dev/null",
                 f"{cli_prefix}ss -lptun 2>/dev/null",
                 f"{cli_prefix}{cd_cmd} logs'",
                 f"{cli_prefix}{cd_cmd} ps'",

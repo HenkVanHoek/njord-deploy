@@ -4,6 +4,7 @@ import unittest
 
 from utils.security_utils import (
     build_safe_target_url,
+    get_safe_redirect_target,
     is_safe_redirect_url,
     mask_passwords,
     validate_and_sanitize_url,
@@ -204,3 +205,16 @@ class TestSecurityUtils(unittest.TestCase):
                 is_safe_redirect_url(target),
                 f"Expected '{target}' to be rejected as unsafe",
             )
+
+    def test_get_safe_redirect_target(self):
+        """Tests that get_safe_redirect_target returns sanitized paths."""
+        self.assertEqual(get_safe_redirect_target("/dashboard"), "/dashboard")
+        self.assertEqual(get_safe_redirect_target("/setup?step=1"), "/setup")
+        self.assertEqual(get_safe_redirect_target("https://evil.com"), "/")
+        self.assertEqual(
+            get_safe_redirect_target("https://evil.com", default_target="/index"),
+            "/index",
+        )
+        self.assertEqual(get_safe_redirect_target(None), "/")
+        self.assertEqual(get_safe_redirect_target("//evil.com"), "/")
+        self.assertEqual(get_safe_redirect_target("/\\evil.com"), "/")

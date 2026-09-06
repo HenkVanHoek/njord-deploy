@@ -104,6 +104,32 @@ def is_safe_redirect_url(target: Optional[str]) -> bool:
         return False
 
 
+def get_safe_redirect_target(target: Optional[str], default_target: str = "/") -> str:
+    """Returns a sanitized, safe relative path for redirection.
+
+    Extracts only the path component, ensuring it starts with '/' and never
+    contains schemes, hostnames, protocol-relative prefixes, or backslashes.
+    Falls back to default_target if unsafe or invalid.
+    """
+    if not is_safe_redirect_url(target):
+        return default_target
+
+    # noinspection PyBroadException
+    try:
+        parsed = urllib.parse.urlsplit(str(target).strip())
+        path = parsed.path
+        if (
+            path
+            and path.startswith("/")
+            and not path.startswith("//")
+            and "\\" not in path
+        ):
+            return path
+    except Exception:
+        return default_target
+    return default_target
+
+
 def build_safe_target_url(
     base_url: Optional[str],
     target_endpoint: str,

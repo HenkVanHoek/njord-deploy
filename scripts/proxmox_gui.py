@@ -28,6 +28,7 @@ from flask import (
     request,
     send_from_directory,
 )
+from werkzeug.utils import safe_join
 
 
 def get_project_root() -> Path:
@@ -753,59 +754,60 @@ def _resolve_report_path(
 ) -> Optional[Path]:
     """Resolves target markdown report path based on query parameters."""
     docs_resolved = docs_dir.resolve()
+    valid_reports = {
+        f.name: f
+        for f in docs_resolved.iterdir()
+        if f.is_file() and f.name.endswith(".md")
+    }
+
     if target_file:
-        safe_name = Path(target_file).name
-        candidate = (docs_resolved / safe_name).resolve()
-        if candidate.is_relative_to(docs_resolved) and candidate.is_file():
-            return candidate
+        clean_name = os.path.basename(target_file)
+        if clean_name in valid_reports:
+            return valid_reports[clean_name]
 
     if comp_id:
         clean_comp_id = re.sub(r"[^a-zA-Z0-9_-]", "", comp_id)
         if clean_comp_id:
             matching = sorted(
-                docs_dir.glob(f"PROXMOX_*_{clean_comp_id}_*.md"),
+                [
+                    f
+                    for f in valid_reports.values()
+                    if f.name.startswith("PROXMOX_") and clean_comp_id in f.name
+                ],
                 key=lambda p: p.stat().st_mtime,
                 reverse=True,
             )
-            if not matching:
-                matching = sorted(
-                    docs_dir.glob(f"PROXMOX_*{clean_comp_id}*.md"),
-                    key=lambda p: p.stat().st_mtime,
-                    reverse=True,
-                )
-            if matching:
-                cand = next(iter(matching), None)
-                if cand and cand.resolve().is_relative_to(docs_resolved):
-                    return cand
+            cand = next(iter(matching), None)
+            if cand:
+                return cand
 
     package_reports = sorted(
-        docs_dir.glob("PROXMOX_PACKAGE_TESTS_*.md"),
+        [
+            f
+            for f in valid_reports.values()
+            if f.name.startswith("PROXMOX_PACKAGE_TESTS_")
+        ],
         key=lambda p: p.stat().st_mtime,
         reverse=True,
     )
-    component_report = docs_dir / "PROXMOX_TESTS.md"
-    package_summary = docs_dir / "PROXMOX_PACKAGE_TESTS.md"
+    component_report = valid_reports.get("PROXMOX_TESTS.md")
+    package_summary = valid_reports.get("PROXMOX_PACKAGE_TESTS.md")
 
     if report_type == "package":
-        return next(
-            iter(package_reports),
-            package_summary if package_summary.exists() else None,
-        )
+        return next(iter(package_reports), package_summary)
     if report_type == "component":
-        if component_report.exists():
-            return component_report
-        return None
+        return component_report
 
     latest_pkg = next(iter(package_reports), None)
-    if latest_pkg and component_report.exists():
+    if latest_pkg and component_report:
         if latest_pkg.stat().st_mtime > component_report.stat().st_mtime:
             return latest_pkg
         return component_report
     if latest_pkg:
         return latest_pkg
-    if component_report.exists():
+    if component_report:
         return component_report
-    if package_summary.exists():
+    if package_summary:
         return package_summary
     return None
 
@@ -1233,12 +1235,7 @@ def create_app() -> Flask:
             comp_id=comp_id,
         )
 
-        docs_resolved = docs_dir.resolve()
-        if (
-            target_path
-            and target_path.resolve().is_relative_to(docs_resolved)
-            and target_path.is_file()
-        ):
+        if target_path and target_path.is_file():
             content = target_path.read_text(encoding="utf-8")
             return jsonify(
                 {"report": content, "filename": target_path.name, "success": True}
@@ -1260,12 +1257,7 @@ def create_app() -> Flask:
             comp_id=comp_id,
         )
 
-        docs_resolved = docs_dir.resolve()
-        if (
-            not target_path
-            or not target_path.resolve().is_relative_to(docs_resolved)
-            or not target_path.is_file()
-        ):
+        if not target_path or not target_path.is_file():
             return jsonify({"error": "Report file not found"}), 404
 
         content = target_path.read_text(encoding="utf-8")
@@ -1284,15 +1276,17 @@ def create_app() -> Flask:
     @app.route("/docs/images/<path:filename>", methods=["GET"])
     def serve_docs_image(filename: str) -> Union[Response, Tuple[Response, int]]:
         """Securely serves image assets and test screenshots from docs/images."""
-        images_dir = (project_root / "docs" / "images").resolve()
-        requested_path = (images_dir / filename).resolve()
-        # Prevent directory traversal attacks
-        if not requested_path.is_relative_to(images_dir):
+        images_dir = os.path.abspath(str((project_root / "docs" / "images").resolve()))
+        safe_path = safe_join(images_dir, filename)
+        if not safe_path:
             return jsonify({"error": "Access denied"}), 403
-        if not requested_path.is_file():
+        norm_path = os.path.normpath(safe_path)
+        if not norm_path.startswith(images_dir + os.sep) or not os.path.isfile(
+            norm_path
+        ):
             return jsonify({"error": "Image not found"}), 404
-        rel_path = requested_path.relative_to(images_dir)
-        return send_from_directory(images_dir, rel_path.as_posix())
+        rel_posix = Path(os.path.relpath(norm_path, images_dir)).as_posix()
+        return send_from_directory(images_dir, rel_posix)
 
     @app.route("/api/results", methods=["GET"])
     def get_results() -> Response:

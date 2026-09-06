@@ -10,14 +10,17 @@ function sanitizeRedirectUrl(rawUrl, fallback = "/") {
     if (!rawUrl || typeof rawUrl !== "string") {
         return fallback;
     }
-    const trimmed = rawUrl.trim();
-    if (
-        trimmed.startsWith("/") &&
-        !trimmed.startsWith("//") &&
-        !trimmed.startsWith("/\\") &&
-        !trimmed.includes(":")
-    ) {
-        return trimmed;
+    try {
+        const parsed = new URL(rawUrl, window.location.origin);
+        if (
+            parsed.origin === window.location.origin &&
+            parsed.pathname.startsWith("/") &&
+            !parsed.pathname.startsWith("//")
+        ) {
+            return parsed.pathname;
+        }
+    } catch {
+        return fallback;
     }
     return fallback;
 }
