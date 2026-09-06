@@ -21,7 +21,7 @@ filterwarnings = [
 
 [project]
 name = "NjordDeploy"
-version = "1.0.0-RC3"
+version = "1.0.0-RC4"
 description = "A project to self-host services on a Raspberry Pi."
 authors = [{ name = "Henk van Hoek" }]
 license = { text = "Business Source License 1.1 (BSL-1.1)" }
@@ -70,7 +70,7 @@ dev = [
 ]
 
 [tool.bumpversion]
-current_version = "1.0.0-RC3"
+current_version = "1.0.0-RC4"
 commit = true
 tag = true
 commit_args = "--no-verify"
