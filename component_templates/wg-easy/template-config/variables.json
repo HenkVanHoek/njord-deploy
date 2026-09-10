@@ -1,0 +1,39 @@
+{
+    "variables": [
+        {
+            "id": "WG_EASY_WEB_PORT",
+            "label": "Web UI Port",
+            "type": "port",
+            "default": "51821",
+            "description": "Host port used to access the WireGuard Easy administration web interface."
+        },
+        {
+            "id": "WG_EASY_PORT",
+            "label": "WireGuard UDP Port",
+            "type": "port",
+            "default": "51820",
+            "description": "Public UDP port on which WireGuard VPN traffic will be received."
+        },
+        {
+            "id": "WG_HOST",
+            "label": "Public Host / IP",
+            "type": "text",
+            "default": "vpn.example.com",
+            "description": "Public domain name or external IP address that WireGuard clients will use to connect."
+        },
+        {
+            "id": "WG_PASSWORD_HASH",
+            "label": "Admin Web UI Password Hash (bcrypt)",
+            "type": "password",
+            "default": "$2b$12$$EIo48nMxDtA344BrYKRqpO2upZR4EMxB0BsS4f3iQ2pLZ/11A7LOK",
+            "description": "Bcrypt password hash used to log in to the WireGuard Easy web management interface (default: SaxGitaar31!)."
+        },
+        {
+            "id": "WG_DEFAULT_DNS",
+            "label": "Default Client DNS",
+            "type": "text",
+            "default": "1.1.1.1",
+            "description": "DNS server provided to connecting WireGuard clients."
+        }
+    ]
+}

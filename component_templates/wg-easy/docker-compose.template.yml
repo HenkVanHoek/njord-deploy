@@ -1,0 +1,35 @@
+# status: beta
+# last_tested_version: latest
+# platform_notes: Requires rootful mode, NET_ADMIN capability, and host WireGuard kernel support.
+# breaking_changes: none
+
+services:
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:{{ component_version }}
+    container_name: njorddeploy-wg-easy
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+      - NET_RAW
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+    environment:
+      - "WG_HOST={{ WG_HOST }}"
+      - "PASSWORD_HASH={{ WG_PASSWORD_HASH }}"
+      - "PORT=51821"
+      - "WG_PORT={{ WG_EASY_PORT }}"
+      - "WG_DEFAULT_DNS={{ WG_DEFAULT_DNS }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/wg-easy/wireguard:/etc/wireguard"
+      - "/lib/modules:/lib/modules:ro"
+    ports:
+      - "{{ WG_EASY_PORT }}:51820/udp"
+      - "{{ WG_EASY_WEB_PORT }}:51821/tcp"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

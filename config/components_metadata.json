@@ -101,7 +101,8 @@
             "cyberchef",
             "wallabag",
             "woodpecker-ci",
-            "pgadmin4"
+            "pgadmin4",
+            "wg-easy"
         ],
         "default_group": "general",
         "global_variables": [
@@ -3201,6 +3202,31 @@
             ],
             "traefik_internal_port": null,
             "ui_port_variable": "ZIGBEE2MQTT_FRONTEND_PORT"
+        },
+        "wg-easy": {
+            "name": "WireGuard Easy",
+            "description": "All-in-one WireGuard VPN server with a web UI for managing clients and configuration. Requires root privileges with NET_ADMIN and SYS_MODULE capabilities for managing kernel network devices.",
+            "group": "Network",
+            "image_name": "ghcr.io/wg-easy/wg-easy",
+            "component_version": "latest",
+            "docker_service_name": "wg-easy",
+            "has_ui": true,
+            "ui_port_variable": "WG_EASY_WEB_PORT",
+            "protocol": "http",
+            "has_configuration": true,
+            "has_traefik_support": false,
+            "traefik_internal_port": 51821,
+            "requires_root": true,
+            "podman_mode": "rootful",
+            "depends_on": [],
+            "conflicts_with": [],
+            "tags": [
+                "vpn",
+                "wireguard",
+                "network",
+                "remote-access"
+            ],
+            "ai_instructions": "Ensure WireGuard port 51820 UDP and Web UI port 51821 TCP are configured with sensible defaults."
         }
     },
     "packages": {
