@@ -241,3 +241,9 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | pgAdmin 4 | Comprehensive open source administration and management tool for PostgreSQL databases. | N/A |
+
+## Network
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| WireGuard Easy | All-in-one WireGuard VPN server with a web UI for managing clients and configuration. Requires root privileges with NET_ADMIN and SYS_MODULE capabilities for managing kernel network devices. | N/A |

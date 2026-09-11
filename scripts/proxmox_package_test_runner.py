@@ -4,6 +4,7 @@ import base64
 import json
 import logging
 import os
+import re
 import shutil
 import signal
 import sys
@@ -411,7 +412,13 @@ def verify_package_health(
                             urllib3.exceptions.InsecureRequestWarning
                         )
                         protocol = comp.get("protocol", "http")
-                        url = f"{protocol}://{vm_ip}:{port}"
+                        raw_ui_path = comp.get("ui_path") or (
+                            "/admin" if comp_id == "pi-hole" else ""
+                        )
+                        clean_ui_path = (
+                            f"/{raw_ui_path.lstrip('/')}" if raw_ui_path else ""
+                        )
+                        url = f"{protocol}://{vm_ip}:{port}{clean_ui_path}"
                         logger.info(
                             f"Probing HTTP UI for {comp_id} at {url} "
                             f"(retrying up to {max_retries} times)..."
@@ -434,10 +441,34 @@ def verify_package_health(
                                 res = requests.get(
                                     url, timeout=probe_timeout, verify=False
                                 )  # nosec B501
-                                if res.status_code in [200, 301, 302, 401, 403]:
+                                if res.status_code in [200, 301, 302, 401]:
                                     comp_http_ok = True
                                     probe_success = True
                                     break
+                                elif (
+                                    res.status_code == 403
+                                    and not clean_ui_path
+                                    and "dashboard" in res.text.lower()
+                                ):
+                                    admin_url = f"{protocol}://{vm_ip}:{port}/admin"
+                                    try:
+                                        admin_res = requests.get(
+                                            admin_url,
+                                            timeout=probe_timeout,
+                                            verify=False,
+                                        )  # nosec B501
+                                        if admin_res.status_code in [
+                                            200,
+                                            301,
+                                            302,
+                                            401,
+                                        ]:
+                                            comp_http_ok = True
+                                            probe_success = True
+                                            url = admin_url
+                                            break
+                                    except Exception:  # nosec B110
+                                        pass
                                 else:
                                     comp_http_ok = False
                                     if attempt < max_retries:
@@ -464,7 +495,7 @@ def verify_package_health(
                                     timeout=probe_timeout,
                                     verify=False,
                                 )  # nosec B501
-                                if res.status_code in [200, 301, 302, 401, 403]:
+                                if res.status_code in [200, 301, 302, 401]:
                                     comp_http_ok = True
                                     probe_success = True
                             except Exception:  # nosec B110
@@ -475,7 +506,7 @@ def verify_package_health(
                                 fallback_url
                                 if (
                                     comp_id in ["adguard-home", "adguardhome"]
-                                    and res.status_code not in [200, 301, 302, 401, 403]
+                                    and res.status_code not in [200, 301, 302, 401]
                                 )
                                 else url
                             )
@@ -558,6 +589,35 @@ def verify_package_health(
                                     f"\nStack diagnostics:\n{tail_str}"
                                 )
 
+            # Validate first_run_info & extract initial setup token if required
+            comp_first_run_info = comp.get("first_run_info")
+            comp_first_run_token = None
+            comp_first_run_auth_type = None
+            if isinstance(comp_first_run_info, dict):
+                comp_first_run_auth_type = comp_first_run_info.get("auth_type", "none")
+                token_regex = comp_first_run_info.get("log_token_regex")
+                token_label = comp_first_run_info.get("token_label", "Setup Key")
+                if comp_first_run_auth_type == "log_token" and token_regex:
+                    raw_logs_str = "\n".join(comp_logs)
+                    match = re.search(token_regex, raw_logs_str)
+                    if match:
+                        groups = list(match.groups())
+                        token_val = (
+                            next(iter(groups), match.group(0))
+                            if groups
+                            else match.group(0)
+                        )
+                        comp_first_run_token = token_val
+                        logger.info(
+                            f"🔑 [FIRST-RUN] Extracted {token_label} for "
+                            f"{comp_id}: {token_val}"
+                        )
+                    else:
+                        logger.warning(
+                            f"⚠️ [FIRST-RUN] Setup token not found in "
+                            f"{comp_id} logs with regex: {token_regex}"
+                        )
+
             comp_record = {
                 "running": is_running,
                 "http_ok": comp_http_ok,
@@ -566,6 +626,8 @@ def verify_package_health(
                 "detected_version": comp_detected_version,
                 "screenshot_path": comp_record_screenshot,
                 "http_url": comp_record_url,
+                "first_run_auth_type": comp_first_run_auth_type,
+                "first_run_token": comp_first_run_token,
             }
             component_status[comp_id] = comp_record
 
@@ -1182,8 +1244,13 @@ def execute_target_cleanup(
         f"  (cd /opt/njorddeploy && {clean_cli}-compose down -v "
         "--remove-orphans 2>/dev/null || true); "
         "fi; "
-        f"{clean_cli} stop -a -t 2 2>/dev/null || true; "
-        f"{clean_cli} rm -fa 2>/dev/null || true; "
+        f'if [ "{clean_cli}" = "podman" ]; then '
+        "  podman stop -a -t 2 2>/dev/null || true; "
+        "  podman rm -fa 2>/dev/null || true; "
+        "else "
+        "  docker stop $(docker ps -q) 2>/dev/null || true; "
+        "  docker rm -f $(docker ps -aq) 2>/dev/null || true; "
+        "fi; "
         f"{clean_cli} volume prune -f 2>/dev/null || true; "
         f"{clean_cli} image prune -a -f 2>/dev/null || true; "
         f"{clean_cli} builder prune -a -f 2>/dev/null || true; "
@@ -1372,14 +1439,14 @@ def run_package_environment_tests(
                         node=node,
                         vmid=shared_lxc_vmid,
                         disk="rootfs",
-                        size="+40G",
+                        size="+80G",
                     )
                     r_upid = resize_res.get("data")
                     if isinstance(r_upid, str):
                         wait_for_proxmox_task(proxmox_client, node, r_upid)
                     logger.info(
                         f"Expanded LXC {shared_lxc_vmid} rootfs disk "
-                        f"(+40G to ~60GB)."
+                        f"(+80G to ~100GB)."
                     )
                 except Exception as r_err:
                     logger.warning(f"Could not resize LXC rootfs disk: {r_err}")
@@ -2340,6 +2407,47 @@ def write_markdown_report(
                     md_lines.append("")
                     md_lines.append(f"![{cid} Web UI]({crec['screenshot_path']})")
                     md_lines.append("")
+
+            # First-Run Setup & Credentials Section for Package Components
+            first_run_entries = [
+                (cid, crec)
+                for cid, crec in components_data.items()
+                if crec.get("first_run_token") or crec.get("first_run_auth_type")
+            ]
+            if first_run_entries:
+                md_lines.append("")
+                md_lines.append(
+                    "#### 🔑 First-Run Credentials & Onboarding Verification:"
+                )
+                md_lines.append("")
+                md_lines.append(
+                    "| Component ID | Auth Type | "
+                    "Extracted Setup Key / Token | Status |"
+                )
+                md_lines.append("| :--- | :--- | :--- | :--- |")
+                for cid, crec in first_run_entries:
+                    atype = crec.get("first_run_auth_type") or "none"
+                    token = crec.get("first_run_token")
+                    display_text: str = ""
+                    if token:
+                        display_text = f"`{token}`"
+                        f_status = "✅ EXTRACTED"
+                    elif atype == "wizard":
+                        display_text = "*Onboarding Wizard*"
+                        f_status = "ℹ️ WIZARD"
+                    elif atype == "preconfigured":
+                        display_text = "*Preconfigured in variables*"
+                        f_status = "ℹ️ PRECONFIGURED"
+                    elif atype == "log_token":
+                        display_text = "*Missing in container logs*"
+                        f_status = "⚠️ TOKEN MISSING"
+                    else:
+                        display_text = "—"
+                        f_status = "ℹ️ NONE"
+                    md_lines.append(
+                        f"| `{cid}` | `{atype}` | {display_text} | {f_status} |"
+                    )
+                md_lines.append("")
 
         if record.get("error_message"):
             md_lines.append("")

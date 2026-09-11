@@ -2890,6 +2890,10 @@ def create_app(test_config=None):
         log_text = "\n".join(logs_list)
         status_str = task.get("status", "failed")
         exit_code = 0 if status_str == "completed" else 1
+        first_run_info = None
+        comp_details = component_manager.get_component_details(component_name)
+        if isinstance(comp_details, dict):
+            first_run_info = comp_details.get("first_run_info")
 
         result = evaluate_deployment(
             component_name=component_name,
@@ -2897,6 +2901,7 @@ def create_app(test_config=None):
             exit_code=exit_code,
             container_status={"running": exit_code == 0},
             use_ai=use_ai,
+            first_run_info=first_run_info,
         )
         return jsonify(result)
 

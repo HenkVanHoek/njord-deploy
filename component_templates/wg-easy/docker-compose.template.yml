@@ -1,6 +1,6 @@
-# status: beta
-# last_tested_version: latest
-# platform_notes: Requires rootful mode, NET_ADMIN capability, and host WireGuard kernel support.
+# status: "tested"
+# last_tested_version: "22.16.0"
+# platform_notes: "Tested on Proxmox LXC: docker (22.16.0, 2026-09-12)."
 # breaking_changes: none
 
 services:

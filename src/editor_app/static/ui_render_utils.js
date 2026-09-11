@@ -533,6 +533,7 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
             </div>
             <div>
                 <strong><i class="bi bi-patch-check me-1"></i> Laatst getest:</strong> <span id="comp-tested-date-label">${escapeHtml(formattedTested)}</span>
+                ${details.last_tested_version ? `<span class="badge bg-success ms-1"><i class="bi bi-tag-fill me-1"></i>v${escapeHtml(details.last_tested_version)}</span>` : ''}
             </div>
         </div>
         <div class="mt-2 text-end">
@@ -549,6 +550,14 @@ export function renderEditor(details, componentData, markTabDirtyCallback, handl
         'comp-ui-port-variable',
         'UI Port Variable (for Configurator Access Links)',
         details.ui_port_variable || ''
+    ));
+
+    // --- UI Path / Subpath ---
+    metadataPane.appendChild(renderMetadataField(
+        'text',
+        'comp-ui-path',
+        'UI Subpath (optional subfolder, e.g. /admin for Pi-hole)',
+        details.ui_path || ''
     ));
 
     // --- Traefik Support Checkbox ---

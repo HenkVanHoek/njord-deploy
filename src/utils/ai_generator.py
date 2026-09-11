@@ -913,4 +913,35 @@ class AIGenerator:
                             "or ensure the repository is public."
                         )
 
+        # 5. Check first_run_info consistency
+        if isinstance(metadata, dict) and "first_run_info" in metadata:
+            fri = metadata.get("first_run_info")
+            if isinstance(fri, dict):
+                auth_type = fri.get("auth_type", "none")
+                token_regex = fri.get("log_token_regex")
+                guidance = fri.get("guidance", "")
+                if auth_type == "log_token" and not token_regex:
+                    warnings.append(
+                        "Component specifies auth_type 'log_token' but is missing "
+                        "'log_token_regex' in first_run_info."
+                    )
+                if auth_type in ("preconfigured", "wizard") and not guidance:
+                    warnings.append(
+                        f"Component specifies auth_type '{auth_type}' but is missing "
+                        "'guidance' in first_run_info."
+                    )
+            elif fri is not None:
+                warnings.append(
+                    "Invalid 'first_run_info' in metadata. Expected an object/dict."
+                )
+
+        # 6. Check known services requiring a specific UI subpath
+        if isinstance(metadata, dict) and metadata.get("has_ui"):
+            ui_path = metadata.get("ui_path")
+            img = str(metadata.get("image_name", "")).lower()
+            name = str(metadata.get("name", "")).lower()
+            if "pihole" in img or "pi-hole" in name:
+                if not ui_path or ui_path.strip().rstrip("/") != "/admin":
+                    metadata["ui_path"] = "/admin"
+
         return warnings

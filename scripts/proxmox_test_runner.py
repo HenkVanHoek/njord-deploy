@@ -1,5 +1,6 @@
 # scripts/proxmox_test_runner.py
 import argparse
+import base64
 import json
 import logging
 import os
@@ -174,6 +175,9 @@ def verify_service_health(
         "details": "",
         "logs_error": False,
         "detected_version": None,
+        "first_run_auth_type": None,
+        "first_run_token": None,
+        "first_run_token_missing": False,
     }
 
     # Initialize SSHManager to run checks with retry resilience
@@ -460,7 +464,11 @@ def verify_service_health(
 
                 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
                 protocol = component_details.get("protocol", "http")
-                url = f"{protocol}://{vm_ip}:{port}"
+                raw_ui_path = component_details.get("ui_path") or (
+                    "/admin" if _component_id == "pi-hole" else ""
+                )
+                clean_ui_path = f"/{raw_ui_path.lstrip('/')}" if raw_ui_path else ""
+                url = f"{protocol}://{vm_ip}:{port}{clean_ui_path}"
                 results["http_url"] = url
                 heavy_stack_ids = {
                     "immich",
@@ -502,7 +510,8 @@ def verify_service_health(
                         res = requests.get(
                             url, timeout=probe_timeout, verify=False
                         )  # nosec B501
-                        if res.status_code in [200, 301, 302, 401, 403, 404]:
+                        # Strictly accept only 200, 301, 302, or 401 (Auth required)
+                        if res.status_code in [200, 301, 302, 401]:
                             results["http_ok"] = True
                             results["running"] = True
                             results[
@@ -512,6 +521,33 @@ def verify_service_health(
                                 f"🌐 HTTP Probe SUCCESS: {res.status_code} ({url})"
                             )
                             break
+                        # If 403 occurs on root URL, check if /admin
+                        # provides the dashboard
+                        elif (
+                            res.status_code == 403
+                            and not clean_ui_path
+                            and "dashboard" in res.text.lower()
+                        ):
+                            admin_url = f"{protocol}://{vm_ip}:{port}/admin"
+                            try:
+                                admin_res = requests.get(
+                                    admin_url, timeout=probe_timeout, verify=False
+                                )  # nosec B501
+                                if admin_res.status_code in [200, 301, 302, 401]:
+                                    results["http_ok"] = True
+                                    results["running"] = True
+                                    results["http_url"] = admin_url
+                                    results["details"] += (
+                                        f"\nHTTP Probe (/admin dashboard): "
+                                        f"{admin_res.status_code} ({admin_url})"
+                                    )
+                                    logger.info(
+                                        f"🌐 HTTP Probe SUCCESS (/admin dashboard): "
+                                        f"{admin_res.status_code} ({admin_url})"
+                                    )
+                                    break
+                            except Exception:  # nosec B110
+                                pass
                         elif _component_id == "adguard-home":
                             alt_url = f"http://{vm_ip}:3000"
                             try:
@@ -523,8 +559,6 @@ def verify_service_health(
                                     301,
                                     302,
                                     401,
-                                    403,
-                                    404,
                                 ]:
                                     results["http_ok"] = True
                                     results["running"] = True
@@ -536,6 +570,28 @@ def verify_service_health(
                                     logger.info(
                                         f"🌐 HTTP Probe SUCCESS (port 3000): "
                                         f"{alt_res.status_code} ({alt_url})"
+                                    )
+                                    break
+                            # noinspection PyBroadException
+                            except Exception:  # nosec B110
+                                pass
+                        elif _component_id == "shlink":
+                            shlink_health = f"{url.rstrip('/')}/rest/v3/health"
+                            try:
+                                shlink_res = requests.get(
+                                    shlink_health, timeout=5, verify=False
+                                )  # nosec B501
+                                if shlink_res.status_code == 200:
+                                    results["http_ok"] = True
+                                    results["running"] = True
+                                    results["http_url"] = shlink_health
+                                    results["details"] += (
+                                        f"\nHTTP Probe (Shlink health endpoint): "
+                                        f"{shlink_res.status_code} ({shlink_health})"
+                                    )
+                                    logger.info(
+                                        f"🌐 HTTP Probe SUCCESS (Shlink health): "
+                                        f"{shlink_res.status_code} ({shlink_health})"
                                     )
                                     break
                             # noinspection PyBroadException
@@ -596,7 +652,7 @@ def verify_service_health(
                         res = requests.get(
                             fallback_url, timeout=5, verify=False
                         )  # nosec B501
-                        if res.status_code in [200, 301, 302, 401, 403]:
+                        if res.status_code in [200, 301, 302, 401]:
                             results["http_ok"] = True
                             results["http_url"] = fallback_url
                             results["details"] += (
@@ -631,10 +687,37 @@ def verify_service_health(
                     f"🌐 HTTP Probe SKIPPED: Component {_component_id} has "
                     "no Web UI port configured"
                 )
-        else:
-            logger.info(
-                f"🌐 HTTP Probe SKIPPED: Component {_component_id} has no Web UI"
-            )
+        # Validate first_run_info & extract initial setup token if required
+        first_run_info = component_details.get("first_run_info")
+        if isinstance(first_run_info, dict):
+            auth_type = first_run_info.get("auth_type", "none")
+            results["first_run_auth_type"] = auth_type
+            token_regex = first_run_info.get("log_token_regex")
+            token_label = first_run_info.get("token_label", "Setup Key")
+
+            if auth_type == "log_token" and token_regex:
+                raw_logs_str = "\n".join(log_lines)
+                match = re.search(token_regex, raw_logs_str)
+                if match:
+                    groups = list(match.groups())
+                    token_val = (
+                        next(iter(groups), match.group(0)) if groups else match.group(0)
+                    )
+                    results["first_run_token"] = token_val
+                    logger.info(
+                        f"🔑 [FIRST-RUN] Extracted {token_label} for "
+                        f"{_component_id}: {token_val}"
+                    )
+                else:
+                    results["first_run_token_missing"] = True
+                    results["details"] += (
+                        f"\n⚠️ First-run setup key missing: regex '{token_regex}' "
+                        f"did not match container logs."
+                    )
+                    logger.warning(
+                        f"⚠️ [FIRST-RUN] Required setup token not found in "
+                        f"{_component_id} logs with regex: {token_regex}"
+                    )
 
     finally:
         ssh_mgr.close()
@@ -683,6 +766,8 @@ def categorize_failure(
         return "Permissie Fout (Volume / Bestand)"
     if dep_status == "success" and not is_running:
         return "Container Crash / Exited"
+    if "first-run setup key missing" in text or "token missing" in text:
+        return "First-Run Setup Key Ontbreekt"
     if dep_status == "success" and is_running and http_ok is False:
         return "HTTP UI Probe Timeout"
     if "yaml" in text or "syntax" in text:
@@ -1187,13 +1272,13 @@ def provision_shared_test_instance(
                     node=node,
                     vmid=shared_lxc_vmid,
                     disk="rootfs",
-                    size="+40G",
+                    size="+80G",
                 )
                 r_upid = resize_res.get("data")
                 if isinstance(r_upid, str):
                     wait_for_proxmox_task(proxmox_client, node, r_upid)
                 logger.info(
-                    f"Expanded LXC {shared_lxc_vmid} rootfs disk (+40G to ~60GB)."
+                    f"Expanded LXC {shared_lxc_vmid} rootfs disk (+80G to ~100GB)."
                 )
             except Exception as r_err:
                 logger.warning(f"Could not resize LXC rootfs disk: {r_err}")
@@ -1902,6 +1987,9 @@ def run_environment_tests(
                 "report_file": report_filename,
                 "error_logs": False,
                 "error_message": "",
+                "first_run_auth_type": None,
+                "first_run_token": None,
+                "first_run_token_missing": False,
             }
 
             # Check supported_matrix constraints before executing deployment
@@ -2078,8 +2166,13 @@ def run_environment_tests(
                     f"  (cd /opt/njorddeploy && {clean_cli}-compose down -v "
                     "--remove-orphans 2>/dev/null || true); "
                     "fi; "
-                    f"{clean_cli} stop -a 2>/dev/null || true; "
-                    f"{clean_cli} rm -fa 2>/dev/null || true; "
+                    f'if [ "{clean_cli}" = "podman" ]; then '
+                    "  podman stop -a 2>/dev/null || true; "
+                    "  podman rm -fa 2>/dev/null || true; "
+                    "else "
+                    "  docker stop $(docker ps -q) 2>/dev/null || true; "
+                    "  docker rm -f $(docker ps -aq) 2>/dev/null || true; "
+                    "fi; "
                     f"{clean_cli} volume prune -f 2>/dev/null || true; "
                     f"{clean_cli} system prune -af --volumes 2>/dev/null || true; "
                     f"{user_clean}"
@@ -2109,10 +2202,16 @@ def run_environment_tests(
                     "/var/cache/apt/archives/* /tmp/containerd* "
                     "/tmp/.ansible/* 2>/dev/null || true"
                 )
+                b64_clean = base64.b64encode(cleanup_script.encode("utf-8")).decode(
+                    "ascii"
+                )
                 if is_lxc or ssh_user == "root":
-                    clean_cmd = f"sh -c '{cleanup_script}'"
+                    clean_cmd = f"bash -c 'echo {b64_clean} | base64 -d | bash'"
                 else:
-                    clean_cmd = f"echo '{vm_pass}' | sudo -S sh -c '{cleanup_script}'"
+                    clean_cmd = (
+                        f"echo '{vm_pass}' | sudo -S "
+                        f"bash -c 'echo {b64_clean} | base64 -d | bash'"
+                    )
 
                 cleanup_ssh.execute_command(
                     clean_cmd, lambda msg: None, check_exit_code=False
@@ -2181,6 +2280,9 @@ def run_environment_tests(
                 user_vars["TARGET_MODE"] = mode.lower()
                 if engine.lower() == "podman":
                     user_vars["PODMAN_ROOTFUL"] = True
+                last_v = comp.get("last_tested_version")
+                if last_v and comp.get("default_version") == "latest":
+                    user_vars["component_version"] = last_v
 
                 comp_mgr.generate_deployment_artifacts(
                     selected_components_data=all_selected_data,
@@ -2214,7 +2316,10 @@ def run_environment_tests(
                         f"{dns_clean_pfx}sh -c \"for pid in $(ss -lpun 'sport = :53' "
                         "2>/dev/null | grep -oP 'pid=\\K[0-9]+' ; ss -lptn "
                         "'sport = :53' 2>/dev/null | grep -oP 'pid=\\K[0-9]+'); "
-                        'do kill -9 \\$pid 2>/dev/null || true; done"'
+                        'do kill -9 \\$pid 2>/dev/null || true; done"; '
+                        f"{dns_clean_pfx}docker stop $(docker ps -aq) "
+                        "2>/dev/null || true; "
+                        f"{dns_clean_pfx}podman stop -a 2>/dev/null || true"
                     )
                     cleanup_ssh.execute_command(
                         kill_cmd,
@@ -2279,9 +2384,17 @@ def run_environment_tests(
                 test_record["http_ok"] = health["http_ok"]
                 test_record["http_url"] = health.get("http_url")
                 test_record["error_logs"] = health["logs_error"]
+                test_record["first_run_auth_type"] = health.get("first_run_auth_type")
+                test_record["first_run_token"] = health.get("first_run_token")
+                test_record["first_run_token_missing"] = health.get(
+                    "first_run_token_missing", False
+                )
 
-                is_success = health["running"] and (
-                    health["http_ok"] is True or health["http_ok"] is None
+                token_missing = health.get("first_run_token_missing", False)
+                is_success = (
+                    health["running"]
+                    and (health["http_ok"] is True or health["http_ok"] is None)
+                    and not token_missing
                 )
 
                 if is_success:
@@ -2341,6 +2454,24 @@ def run_environment_tests(
                         engine=engine.lower(),
                         test_date=time.strftime("%Y-%m-%d"),
                     )
+                    # Update verified version in components_metadata.json
+                    try:
+                        comp_mgr.update_component_metadata(
+                            comp_id,
+                            {
+                                "last_tested_version": version_to_record,
+                                "test_status": "tested",
+                            },
+                        )
+                        logger.info(
+                            f"Updated metadata last_tested_version for "
+                            f"{comp_id}: {version_to_record}"
+                        )
+                    except Exception as meta_ex:
+                        logger.warning(
+                            f"Failed to update metadata version for {comp_id}: "
+                            f"{meta_ex}"
+                        )
                 else:
                     test_record["status"] = "failed"
                     test_record["error_message"] = health["details"]
@@ -2847,6 +2978,50 @@ def write_markdown_report(
             md_lines.append("")
             md_lines.append(f"![{cid} Web UI]({s_rec['screenshot_path']})")
             md_lines.append("")
+
+    # First-Run Setup & Credentials Section
+    first_run_records = [
+        r for r in results if r.get("first_run_token") or r.get("first_run_auth_type")
+    ]
+    if first_run_records:
+        md_lines.append("")
+        md_lines.append("## 🔑 First-Run Credentials & Onboarding Verification")
+        md_lines.append("")
+        md_lines.append(
+            "| Component ID | Target | Engine | Auth Type | "
+            "Extracted Setup Key / Token | Status |"
+        )
+        md_lines.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
+        for f_rec in first_run_records:
+            cid = f_rec.get("component_id", "service")
+            fmode = (f_rec.get("mode") or "LXC").upper()
+            fengine = (f_rec.get("engine") or engine).upper()
+            atype = f_rec.get("first_run_auth_type") or "none"
+            token = f_rec.get("first_run_token")
+            missing = f_rec.get("first_run_token_missing", False)
+            display_text: str = ""
+            if token:
+                display_text = f"`{token}`"
+                f_status = "✅ EXTRACTED"
+            elif missing:
+                display_text = "*Missing in container logs*"
+                f_status = "⚠️ TOKEN MISSING"
+            elif atype == "wizard":
+                display_text = "*Onboarding Wizard*"
+                f_status = "ℹ️ WIZARD"
+            elif atype == "preconfigured":
+                display_text = "*Preconfigured in variables*"
+                f_status = "ℹ️ PRECONFIGURED"
+            else:
+                display_text = "—"
+                f_status = "ℹ️ NONE"
+
+            row_str = (
+                f"| `{cid}` | `{fmode}` | `{fengine}` | `{atype}` | "
+                f"{display_text} | {f_status} |"
+            )
+            md_lines.append(row_str)
+        md_lines.append("")
 
     md_lines.append("")
     md_lines.append("## Details & Failures")

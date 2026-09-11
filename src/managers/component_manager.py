@@ -567,7 +567,8 @@ class ComponentManager:
         context["has_traefik_support"] = has_traefik_support
         context["component_id"] = component_id
         context["component_version"] = (
-            component_details.get("component_version")
+            context.get("component_version")
+            or component_details.get("component_version")
             or component_details.get("default_version")
             or "latest"
         )

@@ -83,6 +83,7 @@ class TestRunnerManager:
         self.current_run_passed: int = 0
         self.current_http_ok: Optional[bool] = None
         self.current_http_url: Optional[str] = None
+        self.current_first_run_token: Optional[str] = None
         self.current_report_file: Optional[str] = None
         self.last_failed_key: Optional[str] = None
         self.results_history: List[Dict[str, Any]] = []
@@ -114,6 +115,7 @@ class TestRunnerManager:
             self.current_vmid = None
             self.current_http_ok = None
             self.current_http_url = None
+            self.current_first_run_token = None
             self.current_report_file = None
             self.last_failed_key = None
             self.current_engine = (
@@ -353,8 +355,6 @@ class TestRunnerManager:
             or "HTTP Probe: 301" in line
             or "HTTP Probe: 302" in line
             or "HTTP Probe: 401" in line
-            or "HTTP Probe: 403" in line
-            or "HTTP Probe: 404" in line
         ):
             self.current_http_ok = True
         elif "HTTP Probe FAILED" in line or "HTTP Probe failed after" in line:
@@ -386,6 +386,16 @@ class TestRunnerManager:
             except Exception:  # nosec B110
                 pass
 
+        # Detect first-run setup key extraction:
+        # "🔑 [FIRST-RUN] Extracted <label> for <id>: <token>"
+        if "🔑 [FIRST-RUN] Extracted" in line and ":" in line:
+            # noinspection PyBroadException
+            try:
+                _, token_part = line.split(":", 1)
+                self.current_first_run_token = token_part.strip()
+            except Exception:  # nosec B110
+                pass
+
         # Detect package start: "Testing package: <id> (<name>)"
         if "Testing package:" in line:
             _, pkg_part = line.split("Testing package:", 1)
@@ -394,6 +404,7 @@ class TestRunnerManager:
             self.current_component = pkg_id
             self.current_http_ok = None
             self.current_http_url = None
+            self.current_first_run_token = None
             self.last_failed_key = None
 
             current_engine = self.current_engine
@@ -441,6 +452,7 @@ class TestRunnerManager:
             self.current_component = comp_id
             self.current_http_ok = None
             self.current_http_url = None
+            self.current_first_run_token = None
             self.last_failed_key = None
 
             current_engine = self.current_engine
@@ -548,6 +560,7 @@ class TestRunnerManager:
                         "running": True,
                         "http_ok": self.current_http_ok,
                         "http_url": self.current_http_url,
+                        "first_run_token": self.current_first_run_token,
                         "report_file": self.current_report_file,
                         "is_package": False,
                     },

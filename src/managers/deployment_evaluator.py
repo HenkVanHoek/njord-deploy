@@ -45,13 +45,53 @@ class DeploymentEvaluator:
         log_text: str,
         exit_code: int,
         container_status: Dict[str, Any],
+        first_run_info: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Deterministic rule-based log analysis when AI is offline or disabled."""
         sanitized = sanitize_logs(log_text)
         is_running = container_status.get("running", True)
 
+        extracted_token: Optional[str] = None
+        first_run_guidance = ""
+        token_missing = False
+
+        if isinstance(first_run_info, dict):
+            auth_type = first_run_info.get("auth_type", "none")
+            token_regex = first_run_info.get("log_token_regex")
+            token_label = first_run_info.get("token_label", "Setup Key")
+            first_run_guidance = first_run_info.get("onboarding_guide", "")
+
+            if auth_type == "log_token" and token_regex:
+                # Search unsanitized log_text to avoid masking the real setup token
+                match = re.search(token_regex, log_text)
+                if match:
+                    # Unpacking-First Mandate for match groups
+                    groups = list(match.groups())
+                    extracted_token = (
+                        next(iter(groups), match.group(0)) if groups else match.group(0)
+                    )
+                else:
+                    token_missing = True
+
         if exit_code == 0 and is_running and "error" not in sanitized.lower():
-            return {
+            if token_missing:
+                return {
+                    "status": "YELLOW",
+                    "summary": (
+                        f"Component '{component_name}' was deployed, but the required "
+                        f"initial setup token could not be found in the container logs."
+                    ),
+                    "user_action": (
+                        "Check container logs manually or allow another minute "
+                        "for the initial startup sequence to output the setup key."
+                    ),
+                    "doc_anchor": "",
+                    "github_keywords": "",
+                    "extracted_token": None,
+                    "first_run_guidance": first_run_guidance,
+                }
+
+            res: Dict[str, Any] = {
                 "status": "GREEN",
                 "summary": (
                     f"Component '{component_name}' was deployed successfully and "
@@ -61,6 +101,12 @@ class DeploymentEvaluator:
                 "doc_anchor": "",
                 "github_keywords": "",
             }
+            if extracted_token:
+                res["extracted_token"] = extracted_token
+                res["token_label"] = token_label
+            if first_run_guidance:
+                res["first_run_guidance"] = first_run_guidance
+            return res
 
         # Check for user cancellation or process abort
         if (
@@ -180,6 +226,8 @@ class DeploymentEvaluator:
         log_text: str,
         exit_code: int,
         container_status: Dict[str, Any],
+        first_run_info: Optional[Dict[str, Any]] = None,
+        ui_path: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Evaluates deployment logs using the configured AI provider engine."""
         sanitized_logs = sanitize_logs(log_text)
@@ -197,10 +245,18 @@ class DeploymentEvaluator:
             '"doc_anchor": "...", "github_keywords": "..."}'
         )
 
+        fri_str = (
+            f"\nFirst-Run Config: {json.dumps(first_run_info)}"
+            if first_run_info
+            else ""
+        )
+        path_str = f"\nUI Subpath: {ui_path}" if ui_path else ""
         user_prompt = (
             f"Component: {component_name}\n"
             f"Exit Code: {exit_code}\n"
-            f"Container Status: {container_status}\n"
+            f"Container Status: {container_status}"
+            f"{fri_str}"
+            f"{path_str}\n"
             f"Sanitized Logs (last 100 lines):\n{sanitized_logs[-3000:]}"
         )
 
@@ -235,6 +291,8 @@ def evaluate_deployment(
     exit_code: int = 0,
     container_status: Optional[Dict[str, Any]] = None,
     use_ai: bool = True,
+    first_run_info: Optional[Dict[str, Any]] = None,
+    ui_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Main entry point for evaluating a deployment session result."""
     status_dict = container_status or {"running": exit_code == 0}
@@ -253,17 +311,36 @@ def evaluate_deployment(
             log_text=log_text,
             exit_code=exit_code,
             container_status=status_dict,
+            first_run_info=first_run_info,
         )
 
     if use_ai:
         # noinspection PyBroadException
         try:
-            return evaluator.evaluate_with_ai(
+            ai_result = evaluator.evaluate_with_ai(
                 component_name=component_name,
                 log_text=log_text,
                 exit_code=exit_code,
                 container_status=status_dict,
+                first_run_info=first_run_info,
+                ui_path=ui_path,
             )
+            # If deployment succeeded or is clean, augment with extracted setup tokens
+            if ai_result.get("status") == "GREEN" and isinstance(first_run_info, dict):
+                rule_res = evaluator.evaluate_with_rules(
+                    component_name=component_name,
+                    log_text=log_text,
+                    exit_code=exit_code,
+                    container_status=status_dict,
+                    first_run_info=first_run_info,
+                )
+                if rule_res.get("status") == "YELLOW":
+                    return rule_res
+                if "extracted_token" in rule_res:
+                    ai_result["extracted_token"] = rule_res["extracted_token"]
+                if "first_run_guidance" in rule_res:
+                    ai_result["first_run_guidance"] = rule_res["first_run_guidance"]
+            return ai_result
         except Exception as err:
             logger.warning(
                 f"AI evaluation failed or unavailable: {err}. "
@@ -275,4 +352,5 @@ def evaluate_deployment(
         log_text=log_text,
         exit_code=exit_code,
         container_status=status_dict,
+        first_run_info=first_run_info,
     )

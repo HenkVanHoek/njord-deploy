@@ -276,6 +276,9 @@ document.addEventListener('DOMContentLoaded', () => {
             ui_port_variable: uiPortInput
                 ? (uiPortInput.value.trim() || null)
                 : null,
+            ui_path: document.getElementById('comp-ui-path')
+                ? (document.getElementById('comp-ui-path').value.trim() || null)
+                : null,
             traefik_internal_port: portInput.disabled
                 ? null
                 : parseInt(portInput.value) || null,
@@ -1776,6 +1779,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         has_configuration: generatedData.has_configuration || false,
                         has_traefik_support: generatedData.has_traefik_support || false,
                         ui_port_variable: generatedData.ui_port_variable || null,
+                        ui_path: generatedData.ui_path || null,
                         traefik_internal_port: generatedData.traefik_internal_port || null
                     };
                 } else {

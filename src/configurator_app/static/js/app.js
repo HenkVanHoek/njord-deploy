@@ -2528,9 +2528,12 @@
                     const finalActions = document.getElementById('final-actions-container');
                     if (finalActions) {
                         finalActions.innerHTML = `
-                            <div class="sticky-action-bar d-flex gap-2 justify-content-center">
+                            <div class="sticky-action-bar d-flex gap-2 justify-content-center flex-wrap">
                                  <button id="show-summary-btn" class="btn btn-info btn-lg">
                                     <i class="fa-solid fa-list-check me-2"></i>Access Your Services
+                                 </button>
+                                 <button id="show-dossier-btn" class="btn btn-outline-success btn-lg">
+                                    <i class="fa-solid fa-file-shield me-2"></i>Handover Dossier
                                  </button>
                                  <button id="ai-eval-btn" class="btn btn-primary btn-lg">
                                     <i class="fa-solid fa-robot me-2"></i>AI Health Report
@@ -2538,6 +2541,9 @@
                             </div>`;
                         document.getElementById('show-summary-btn').addEventListener('click', async () => {
                             await showServicesSummary(taskId);
+                        });
+                        document.getElementById('show-dossier-btn').addEventListener('click', async () => {
+                            await showHandoverDossier(taskId);
                         });
                         document.getElementById('ai-eval-btn').addEventListener('click', async () => {
                             await triggerDeploymentEvaluation(taskId);
@@ -2650,10 +2656,12 @@
                             port = String(comp.ui_port_variable).trim();
                         }
                         const protocol = comp.protocol || 'http';
+                        const uiPath = comp.ui_path || (comp.id === 'pi-hole' ? '/admin' : '');
+                        const cleanPath = uiPath ? `/${uiPath.replace(/^\/+/, '')}` : '';
                         if (port) {
                             allLinks.push({
                                 name: comp.name,
-                                url: `${protocol}://${piIp}:${port}`
+                                url: `${protocol}://${piIp}:${port}${cleanPath}`
                             });
                         }
                     }
@@ -2688,6 +2696,145 @@
             console.error("Failed to show summary:", error);
             setButtonState(summaryBtn, false, {text: 'Error Loading Summary'});
         }
+    };
+
+    /**
+     * Renders and displays the Printable Handover Dossier modal.
+     * @param {string} taskId
+     * @param {Object.<string, string>} [extractedTokens={}] Optional map of component name -> setup token
+     */
+    const showHandoverDossier = async (taskId, extractedTokens = {}) => {
+        const modalEl = document.getElementById('handoverDossierModal');
+        if (!modalEl) return;
+
+        // @ts-ignore
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        const dateEl = document.getElementById('dossier-date');
+        const targetNodeEl = document.getElementById('dossier-target-node');
+        const servicesListEl = document.getElementById('dossier-services-list');
+
+        if (dateEl) {
+            const now = new Date();
+            dateEl.textContent = now.toLocaleDateString(undefined, {
+                year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        const managedIps = typeof managedDeviceCache !== 'undefined' ? Object.keys(managedDeviceCache) : [];
+        const piIp = (typeof finalVariablesCache !== 'undefined' && finalVariablesCache['PISelfhosting_HOST_IP'])
+            ? finalVariablesCache['PISelfhosting_HOST_IP']
+            : (managedIps.length > 0 ? managedIps[0] : window.location.hostname);
+
+        if (targetNodeEl) {
+            targetNodeEl.textContent = piIp || 'Localhost / Target Node';
+        }
+
+        if (servicesListEl) {
+            servicesListEl.innerHTML = '<div class="text-muted small">Loading installed services...</div>';
+            let services = [];
+
+            if (typeof selectedComponentsCache !== 'undefined' && typeof allSoftwareCache !== 'undefined') {
+                selectedComponentsCache.forEach(compId => {
+                    const comp = allSoftwareCache.find(c => c.id === compId);
+                    if (comp) {
+                        let port = null;
+                        if (comp.ui_port_variable) {
+                            port = typeof finalVariablesCache !== 'undefined' ? finalVariablesCache[comp.ui_port_variable] : null;
+                            if (!port && comp.required_variables) {
+                                const varDef = comp.required_variables.find(v => v.id === comp.ui_port_variable);
+                                if (varDef) port = varDef.default;
+                            }
+                            if (!port && /^\d+$/.test(String(comp.ui_port_variable).trim())) {
+                                port = String(comp.ui_port_variable).trim();
+                            }
+                        }
+                        const protocol = comp.protocol || 'http';
+                        const uiPath = comp.ui_path || (comp.id === 'pi-hole' ? '/admin' : '');
+                        const cleanPath = uiPath ? `/${uiPath.replace(/^\/+/, '')}` : '';
+                        const url = port ? `${protocol}://${piIp}:${port}${cleanPath}` : null;
+                        const token = extractedTokens[comp.name] || extractedTokens[comp.id] || null;
+
+                        services.push({
+                            id: comp.id,
+                            name: comp.name,
+                            description: comp.description || '',
+                            url: url,
+                            first_run_info: comp.first_run_info || null,
+                            token: token,
+                            last_tested_version: comp.last_tested_version || null
+                        });
+                    }
+                });
+            }
+
+            if (services.length === 0) {
+                servicesListEl.innerHTML = '<div class="alert alert-secondary small">No specific services identified for this deployment.</div>';
+            } else {
+                let html = '';
+                services.forEach(svc => {
+                    const fri = svc.first_run_info || {};
+                    const authType = fri.auth_type || 'none';
+                    const defaultUser = fri.default_username || 'N/A';
+                    const tokenLabel = fri.token_label || 'Setup Key / Token';
+                    const onboardingGuide = fri.onboarding_guide || 'Follow the on-screen configuration prompts.';
+                    const docUrl = fri.doc_url || null;
+
+                    let authBadge = '<span class="badge bg-secondary">Geen verificatie</span>';
+                    if (authType === 'log_token') {
+                        authBadge = '<span class="badge bg-warning text-dark"><i class="fa-solid fa-key me-1"></i>Setup Sleutel in Log</span>';
+                    } else if (authType === 'wizard') {
+                        authBadge = '<span class="badge bg-info text-dark"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>Eerste-Run Wizard</span>';
+                    } else if (authType === 'preconfigured') {
+                        authBadge = '<span class="badge bg-success"><i class="fa-solid fa-lock me-1"></i>Voorgeconfigureerd Wachtwoord</span>';
+                    }
+
+                    let tokenSection = '';
+                    if (svc.token) {
+                        tokenSection = `
+                        <div class="mt-2 p-2 bg-body-secondary rounded border">
+                            <div class="small fw-bold text-success"><i class="fa-solid fa-key me-1"></i>${escapeHTML(tokenLabel)}:</div>
+                            <code class="d-block p-1 bg-dark text-success rounded text-break fw-bold">${escapeHTML(svc.token)}</code>
+                        </div>`;
+                    }
+
+                    let urlSection = svc.url
+                        ? `<div><a href="${escapeHTML(svc.url)}" target="_blank" class="fw-bold text-decoration-none">${escapeHTML(svc.url)}</a></div>`
+                        : `<div class="text-muted small">Achtergrondservice / Geen directe web UI</div>`;
+
+                    let userSection = fri.default_username
+                        ? `<div class="small mt-1"><strong>Standaard Gebruikersnaam:</strong> <code>${escapeHTML(defaultUser)}</code></div>`
+                        : '';
+
+                    let docSection = docUrl
+                        ? `<div class="small mt-1"><a href="${escapeHTML(docUrl)}" target="_blank" class="text-decoration-none"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i>Documentatie</a></div>`
+                        : '';
+
+                    html += `
+                    <div class="card mb-3 border shadow-sm">
+                        <div class="card-header bg-body-tertiary d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <strong class="text-primary fs-6">${escapeHTML(svc.name)}</strong>
+                                ${svc.last_tested_version ? `<span class="badge bg-secondary ms-2" title="Geverifieerde upstream versie"><i class="fa-solid fa-tag me-1"></i>v${escapeHTML(svc.last_tested_version)}</span>` : ''}
+                            </div>
+                            <div>${authBadge}</div>
+                        </div>
+                        <div class="card-body py-2">
+                            ${urlSection}
+                            ${userSection}
+                            <div class="small text-muted mt-1">
+                                <strong>Instructie:</strong> ${escapeHTML(onboardingGuide)}
+                            </div>
+                            ${tokenSection}
+                            ${docSection}
+                        </div>
+                    </div>`;
+                });
+                servicesListEl.innerHTML = html;
+            }
+        }
+
+        modal.show();
     };
 
     const setupStep1 = () => {
@@ -3282,6 +3429,53 @@
             const res = await response.json();
 
             if (summary) summary.textContent = res.summary || 'No summary provided.';
+
+            // --- First-Run Setup & Credentials Token Card ---
+            const evalTokenCard = document.getElementById('evalTokenCard');
+            const evalTokenContainer = document.getElementById('evalTokenContainer');
+            const evalTokenLabel = document.getElementById('evalTokenLabel');
+            const evalTokenValue = document.getElementById('evalTokenValue');
+            const evalGuidance = document.getElementById('evalFirstRunGuidanceText');
+            const btnCopyToken = document.getElementById('btn-copy-eval-token');
+            const btnOpenDossierFromEval = document.getElementById('btn-open-dossier-from-eval');
+
+            if (btnOpenDossierFromEval) {
+                btnOpenDossierFromEval.onclick = () => {
+                    modal.hide();
+                    showHandoverDossier(taskId, res.extracted_token ? { [componentName]: res.extracted_token } : {});
+                };
+            }
+
+            if (res.first_run_guidance || res.extracted_token) {
+                if (evalTokenCard) evalTokenCard.classList.remove('d-none');
+                if (evalGuidance) {
+                    evalGuidance.textContent = res.first_run_guidance || 'First-run configuration needed for this service.';
+                }
+                if (res.extracted_token && evalTokenContainer && evalTokenValue) {
+                    evalTokenContainer.classList.remove('d-none');
+                    evalTokenValue.textContent = res.extracted_token;
+                    if (evalTokenLabel && res.token_label) {
+                        evalTokenLabel.textContent = `${res.token_label}:`;
+                    }
+                    if (btnCopyToken) {
+                        btnCopyToken.onclick = async () => {
+                            try {
+                                await navigator.clipboard.writeText(res.extracted_token);
+                                btnCopyToken.innerHTML = '<i class="fa-solid fa-check me-1"></i>Copied!';
+                                setTimeout(() => {
+                                    btnCopyToken.innerHTML = '<i class="fa-solid fa-copy me-1"></i>Copy Key';
+                                }, 2000);
+                            } catch (e) {
+                                console.warn('Clipboard write failed:', e);
+                            }
+                        };
+                    }
+                } else if (evalTokenContainer) {
+                    evalTokenContainer.classList.add('d-none');
+                }
+            } else if (evalTokenCard) {
+                evalTokenCard.classList.add('d-none');
+            }
 
             if (res.status === 'GREEN') {
                 if (banner) banner.className = 'alert alert-success d-flex align-items-center mb-3';

@@ -133,3 +133,47 @@ def test_evaluate_deployment_user_abort_no_bug_report():
         "no error report" in res["user_action"].lower()
         or "no action" in res["user_action"].lower()
     )
+
+
+def test_evaluate_deployment_extracts_log_token():
+    logs = (
+        "Starting OctoPrint server daemon...\n"
+        "Initial Setup Key: abcd-1234-xyz-99\n"
+        "Listening on 0.0.0.0:5000\n"
+    )
+    first_run_info = {
+        "auth_type": "log_token",
+        "log_token_regex": r"(?:Setup Key):\s*([A-Za-z0-9-]+)",
+        "token_label": "Initial Setup Key",
+        "onboarding_guide": "Paste key into the setup wizard.",
+    }
+    res = evaluate_deployment(
+        component_name="octoprint",
+        log_text=logs,
+        exit_code=0,
+        container_status={"running": True},
+        use_ai=False,
+        first_run_info=first_run_info,
+    )
+    assert res["status"] == "GREEN"
+    assert res.get("extracted_token") == "abcd-1234-xyz-99"
+    assert res.get("first_run_guidance") == "Paste key into the setup wizard."
+
+
+def test_evaluate_deployment_warns_when_log_token_missing():
+    logs = "Starting OctoPrint server daemon...\n" "Daemon running without setup key.\n"
+    first_run_info = {
+        "auth_type": "log_token",
+        "log_token_regex": r"(?:Setup Key):\s*([A-Za-z0-9-]+)",
+        "token_label": "Initial Setup Key",
+    }
+    res = evaluate_deployment(
+        component_name="octoprint",
+        log_text=logs,
+        exit_code=0,
+        container_status={"running": True},
+        use_ai=False,
+        first_run_info=first_run_info,
+    )
+    assert res["status"] == "YELLOW"
+    assert "token could not be found" in res["summary"]

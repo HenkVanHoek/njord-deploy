@@ -61,6 +61,7 @@ This contract defines the structure for a single component element within the
 | `has_ui`                      | `boolean`                | No       | If true, the component has a web interface and the backend should attempt to generate a service link.                                    |
 | `ui_port_variable`            | `string`                 | No       | The ID of the variable containing the component's external UI host port. Preferred over `ui_port`.                                       |
 | `ui_port`                     | `integer`                | No       | The default or fixed external UI host port, used if `ui_port_variable` is absent.                                                        |
+| `ui_path`                     | `string`                 | No       | **(New)** Relative subpath to the web dashboard or UI endpoint (e.g. `"/admin"` for Pi-hole). Appended to host:port link. Defaults to `""`. |
 | `protocol`                    | `string`                 | No       | The protocol for the UI link (`http` or `https`). Defaults to `http`.                                                                    |
 | `has_configuration`           | `boolean`                | Yes      | If true, a `template-config/variables.json` file is expected.                                                                            |
 | `docker_service_name`         | `string`                 | No       | The primary service name in the docker-compose file. Used to distinguish main containers from init containers. Defaults to component ID. |
@@ -71,12 +72,26 @@ This contract defines the structure for a single component element within the
 | `other_files`                 | `array<OtherFileConfig>` | No       | A list of configuration files to be generated, other than the main Docker Compose file. (`OtherFileConfig` schema defined below).        |
 | `config_templates`            | `object`                 | No       | A dictionary mapping a template filename (string) to a destination path (string). Used for rendering additional configuration files from `template-config/` into the deployment package. |
 | `package_id`                  | `string`                 | No       | The ID of the Package this component belongs to. Defaults to `"general-stack"` when not set.                                             |
-| `component_version`           | `string`                 | No       | **(New)** The specific version of the component (e.g., `"latest"` or a specific release tag).                                            |
+| `component_version`           | `string`                 | No       | The specific Docker image tag used for deployment (e.g., `"latest"` or a specific release tag).                                            |
+| `last_tested_version`         | `string`                 | No       | **(New)** The verified upstream semantic version extracted during automated test runs (e.g., `"2026.07.2"`, `"v0.107.79"`).                |
+| `last_tested`                 | `string`                 | No       | ISO 8601 timestamp of the last successful test run.                                                                                        |
 | `project_url`                 | `string`                 | No       | **(New)** The URL of the official homepage or codebase repository for the service.                                                       |
 | `resource_profile`            | `object`                 | No       | **(New)** Resource requirements profile, specifying keys like `cpu`, `ram`, `storage_type`, `recommended_cores`, `recommended_ram_mb`, `recommended_storage_gb`. |
 | `tags`                        | `array<string>`          | No       | **(New)** A list of searchable/filterable keyword tags associated with the component.                                                    |
 | `traefik_host_variable`       | `string`                 | No       | **(New)** Specifies a custom variable ID that holds the hostname routing for Traefik.                                                    |
 | `post_install_restart_option` | `string`                 | No       | **(New)** Custom configuration instruction specifying container restart options post-deployment.                                         |
+| `first_run_info`              | `object`                 | No       | **(New)** Information and instructions for initial onboarding, default credentials, and automated setup key extraction from container logs. |
+
+#### `first_run_info` Object Schema
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `auth_type` | `string` | Yes | Authentication & onboarding type: `'log_token'`, `'preconfigured'`, `'wizard'`, or `'none'`. |
+| `log_token_regex` | `string` | No | Python/JS compatible regex used to extract a setup key or initial password from container logs. |
+| `token_label` | `string` | No | Human-readable label for the token (e.g. `'Initial Setup Key'`, `'Admin Password'`). |
+| `default_username` | `string` | No | Default or suggested initial administrator username (e.g. `'admin'`, `'pi'`). |
+| `onboarding_guide` | `string` | No | Concise user-facing instruction on what to do upon opening the application for the first time. |
+| `doc_url` | `string` | No | Link to the official first-run setup or authentication documentation. |
 
 ### Component Details Output Contract (`get_all_components` / `get_component_details` return)
 

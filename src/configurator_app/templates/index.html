@@ -107,6 +107,36 @@
         html[data-theme="high-contrast-dark"] .sticky-action-bar {
             border-top: 1px solid rgba(255, 255, 255, 0.15);
         }
+
+        /* Print styles for Handover Dossier */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #handoverDossierModal,
+            #handoverDossierModal * {
+                visibility: visible;
+            }
+            #handoverDossierModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            #handoverDossierModal .modal-dialog {
+                max-width: 100%;
+                margin: 0;
+            }
+            #handoverDossierModal .modal-content {
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
     </style>
     <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
 </head>
@@ -487,6 +517,22 @@
                     </div>
                 </div>
 
+                <div class="card border-success mb-3 d-none" id="evalTokenCard">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-success mb-2"><i class="fa-solid fa-key me-2"></i>First-Run Setup &amp; Credentials</h6>
+                        <p class="mb-2 small" id="evalFirstRunGuidanceText"></p>
+                        <div id="evalTokenContainer" class="p-2 bg-body-secondary rounded border mb-2 d-none">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-bold text-muted" id="evalTokenLabel">Initial Setup Key:</span>
+                                <button class="btn btn-sm btn-outline-success" id="btn-copy-eval-token">
+                                    <i class="fa-solid fa-copy me-1"></i>Copy Key
+                                </button>
+                            </div>
+                            <code class="d-block p-2 bg-dark text-success rounded fs-6 fw-bold text-break" id="evalTokenValue"></code>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="card border-warning mb-3 d-none" id="evalActionCard">
                     <div class="card-body">
                         <h6 class="fw-bold text-warning mb-2"><i class="fa-solid fa-wrench me-2"></i>Recommended Action</h6>
@@ -514,8 +560,71 @@
                     </div>
                 </div>
             </div>
-            <div class="modal-footer border-0 pt-0">
+            <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-open-dossier-from-eval">
+                    <i class="fa-solid fa-print me-1"></i> Printable Handover Dossier
+                </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Printable Handover Dossier Modal -->
+<div class="modal fade" id="handoverDossierModal" tabindex="-1" aria-labelledby="handoverDossierModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header border-bottom bg-light no-print">
+                <h5 class="modal-title fw-bold text-primary" id="handoverDossierModalLabel">
+                    <i class="fa-solid fa-file-shield me-2"></i> Deployment Handover Dossier
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 text-start" id="handover-dossier-content">
+                <!-- Printable document header -->
+                <div class="d-flex align-items-center justify-content-between pb-3 mb-4 border-bottom">
+                    <div>
+                        <h3 class="fw-bold text-primary mb-1">NjordDeploy Handover Dossier</h3>
+                        <p class="text-muted small mb-0">System Deployment &amp; Initial Service Credentials</p>
+                    </div>
+                    <div class="text-end text-muted small">
+                        <div id="dossier-date"></div>
+                        <div>Target Node: <strong id="dossier-target-node"></strong></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info border-info d-flex align-items-center mb-4 no-print">
+                    <i class="fa-solid fa-circle-info fs-4 me-3 text-info"></i>
+                    <div class="small">
+                        Dit document bevat de URL's, aanbevolen gebruikersnamen en setup-sleutels van de zojuist geïnstalleerde services. U kunt dit dossier afdrukken (Ctrl+P) of opslaan als PDF voor uw administratie.
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                    <i class="fa-solid fa-layer-group me-2 text-primary"></i> Geïnstalleerde Services &amp; Toegang
+                </h5>
+                <div id="dossier-services-list" class="mb-4">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                    <i class="fa-solid fa-shield-halved me-2 text-primary"></i> Veiligheid &amp; Vervolgstappen
+                </h5>
+                <ul class="small text-muted mb-4">
+                    <li class="mb-1">Wijzig initiële wachtwoorden en setup-sleutels direct na eerste aanmelding.</li>
+                    <li class="mb-1">Bewaar eventuele two-factor recovery codes op een veilige plek.</li>
+                    <li class="mb-1">Voor services die een setup-wizard vereisen, voltooit u de configuratiestappen via de opgegeven browser-link.</li>
+                </ul>
+
+                <div class="pt-3 border-top text-center text-muted small">
+                    Gegenereerd door <strong>NjordDeploy Orchestration Engine</strong> &bull; https://njorddeploy.com
+                </div>
+            </div>
+            <div class="modal-footer border-top bg-light no-print">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Sluiten</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="fa-solid fa-print me-1"></i> Dossier Afdrukken (Print / PDF)
+                </button>
             </div>
         </div>
     </div>

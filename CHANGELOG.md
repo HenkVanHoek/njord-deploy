@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [1.0.0-RC4] - 2026-09-06
+## [1.0.0-RC4] - 2026-09-12
+
+### Fixed
+- **Proxmox Multi-Component Test Runner Teardown & Expansion**:
+  - Repaired container teardown command syntax in [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py) and [`scripts/proxmox_package_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_package_test_runner.py) for Docker (`docker stop $(docker ps -q)` / `docker rm -f $(docker ps -aq)`), eliminating container accumulation, port binding collisions, and disk exhaustion aborts.
+  - Safe Base64 encoding for cleanup execution over SSH, preventing nested quote parse errors in remote subshells.
+  - Expanded LXC test container rootfs resize to +80G (~100GB total) on thin-provisioned storage pools, providing ample headroom for heavy multi-gigabyte models (Ollama).
+  - Resolved MinIO Docker registry pull failures by switching to official Quay.io mirror (`quay.io/minio/minio`).
+  - Added HTTP healthcheck fallback for Shlink (`/rest/v3/health`).
+  - Verified 96 self-hosted component definitions with 100% passing automated test status across Proxmox LXC/Docker.
 
 ### Security
 - **Path Injection Elimination (`py/path-injection`)**:
