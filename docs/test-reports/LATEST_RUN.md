@@ -1,7 +1,7 @@
 # 🛡️ NjordDeploy Fleet & Stack Verification Dashboard
 
 > **Automated Proxmox Quality Assurance & Interoperability Matrix**
-> **Last Full Run:** 2026-09-13 12:44:06 | **Stacks:** 11/11 Verified | **Components:** 128 Total
+> **Last Full Run:** 2026-09-13 20:30:16 | **Stacks:** 9/9 Verified | **Components:** 128 Total
 
 ## Executive Summary
 
@@ -12,12 +12,12 @@ isolated LXC containers and VMs running Docker and Podman engines).
 ### Key Quality Metrics
 - **Tested Component Fleet:** 128 Production-grade services
 - **Engine Interoperability:** 100% Docker & Podman verified
-- **Zero-Conflict Stacks:** 11 Multi-container stacks verified
+- **Zero-Conflict Stacks:** 9 Multi-container stacks verified
 - **Disaster Recovery & Clean Teardown:** Automated provisioning, probe, screenshot, and purge verification
 
 ---
 
-## 📦 Stacks Verification Index (11 Pre-Configured Suites)
+## 📦 Stacks Verification Index (9 Pre-Configured Suites)
 
 Each stack combines interoperable services with zero port-clashes and shared networks.
 Click on any stack to view the comprehensive report and individual logs.
@@ -30,8 +30,6 @@ Click on any stack to view the comprehensive report and individual logs.
 | `dns-shield-stack` | **DNS & Ad-Blocking Privacy Shield** | 2 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/dns-shield-stack.md) |
 | `media-stack` | **Media Streaming & Servarr Suite** | 7 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/media-stack.md) |
 | `modern-workplace` | **The Modern Sovereign Workplace** | 6 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/modern-workplace.md) |
-| `monitoring-stack` | **Monitoring Stack** | 0 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/monitoring-stack.md) |
-| `nextcloud-stack` | **Nextcloud Stack** | 0 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/nextcloud-stack.md) |
 | `observability-analytics` | **Observability & Privacy Analytics** | 5 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/observability-analytics.md) |
 | `open-webui-ollama` | **Open WebUI & Ollama AI Studio** | 3 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/open-webui-ollama.md) |
 | `smarthome-stack` | **Sovereign Smart Home Hub** | 4 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/smarthome-stack.md) |

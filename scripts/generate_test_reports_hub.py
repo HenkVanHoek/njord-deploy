@@ -270,8 +270,11 @@ def generate_master_hub_report(
         "# 🛡️ NjordDeploy Fleet & Stack Verification Dashboard",
         "",
         "> **Automated Proxmox Quality Assurance & Interoperability Matrix**  ",
-        f"> **Last Full Run:** {timestamp} | **Stacks:** {total_stacks}/11 Verified "
-        f"| **Components:** {total_components} Total",
+        (
+            f"> **Last Full Run:** {timestamp} | "
+            f"**Stacks:** {total_stacks}/{total_stacks} Verified | "
+            f"**Components:** {total_components} Total"
+        ),
         "",
         "## Executive Summary",
         "",
@@ -288,7 +291,7 @@ def generate_master_hub_report(
         "",
         "---",
         "",
-        "## 📦 Stacks Verification Index (11 Pre-Configured Suites)",
+        f"## 📦 Stacks Verification Index ({total_stacks} Pre-Configured Suites)",
         "",
         "Each stack combines interoperable services with zero port-clashes and "
         "shared networks.",

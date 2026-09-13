@@ -11,7 +11,7 @@
   [![Docker & Podman](https://img.shields.io/badge/Container-Docker%20%7C%20Rootless%20Podman-2496ED.svg?logo=docker&logoColor=white)](docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md)
   [![Website](https://img.shields.io/badge/Website-njorddeploy.com-10b981.svg)](https://njorddeploy.com)
   [![Catalog](https://img.shields.io/badge/Catalog-128%20Services-purple.svg)](docs/SUPPORTED_SERVICES.md)
-  [![Stack Verification](https://img.shields.io/badge/Fleet%20Health-11%2F11%20Stacks%20Passed-10b981.svg)](docs/test-reports/LATEST_RUN.md)
+  [![Stack Verification](https://img.shields.io/badge/Fleet%20Health-9%2F9%20Stacks%20Passed-10b981.svg)](docs/test-reports/LATEST_RUN.md)
 
   <p align="center">
     Deploy 128+ verified, privacy-first applications to any Raspberry Pi, Proxmox VM, or Linux server in minutes.<br>
