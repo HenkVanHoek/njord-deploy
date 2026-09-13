@@ -1,7 +1,7 @@
 # 🛡️ NjordDeploy Fleet & Stack Verification Dashboard
 
 > **Automated Proxmox Quality Assurance & Interoperability Matrix**
-> **Last Full Run:** 2026-09-13 21:05:06 | **Stacks:** 9/9 Verified | **Components:** 127 Total
+> **Last Full Run:** 2026-09-13 21:10:50 | **Stacks:** 9/9 Verified | **Components:** 126 Total
 
 ## Executive Summary
 
@@ -10,7 +10,7 @@ automated end-to-end testing against clean **Proxmox VE** environments (both
 isolated LXC containers and VMs running Docker and Podman engines).
 
 ### Key Quality Metrics
-- **Tested Component Fleet:** 127 Production-grade services
+- **Tested Component Fleet:** 126 Production-grade services
 - **Engine Interoperability:** 100% Docker & Podman verified
 - **Zero-Conflict Stacks:** 9 Multi-container stacks verified
 - **Disaster Recovery & Clean Teardown:** Automated provisioning, probe, screenshot, and purge verification
@@ -38,7 +38,7 @@ Click on any stack to view the comprehensive report and individual logs.
 
 ## 🔬 Component Coverage & Health Summary
 
-NjordDeploy provides **127** self-hosted services ready to deploy with one click.
+NjordDeploy provides **126** self-hosted services ready to deploy with one click.
 For deep-dive individual component test logs across all targets (LXC Docker, LXC Podman, VM Docker, VM Podman), see:
 - [Proxmox All-Components Master Matrix (492 runs)](../PROXMOX_TESTS.md)
 - [Proxmox Package Multi-Environment Runs](../PROXMOX_PACKAGE_TESTS.md)

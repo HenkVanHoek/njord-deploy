@@ -28,7 +28,6 @@
             "nextcloud-db-dumper",
             "nextcloud-redis",
             "nginx-proxy-manager",
-            "njorddeploy-service-maintenance",
             "notify-push",
             "octoprint",
             "ollama",
@@ -2462,7 +2461,9 @@
             },
             "tags": [],
             "traefik_internal_port": null,
-            "ui_port_variable": "CHIRPSTACK_WEB_UI_PORT"
+            "ui_port_variable": "CHIRPSTACK_WEB_UI_PORT",
+            "hardware_required": true,
+            "test_status": "hardware_dependent"
         },
         "mealie": {
             "ai_instructions": "Self-hosted recipe manager and meal planner. Image ghcr.io/mealie-recipes/mealie:latest. Port MEALIE_WEB_PORT: 9925 (container port 9000). Volume /app/data/. Group: Productivity.",
@@ -3020,41 +3021,6 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null
-        },
-        "njorddeploy-service-maintenance": {
-            "component_version": "0.1.0",
-            "conflicts_with": [],
-            "default": false,
-            "depends_on": [],
-            "description": "A system management component for monitoring service health, checking software updates, and auditing container vulnerabilities across NjordDeploy services.",
-            "first_run_info": {
-                "auth_type": "wizard",
-                "default_username": null,
-                "doc_url": "https://github.com/HenkVanHoek/njord-deploy",
-                "log_token_regex": null,
-                "onboarding_guide": "Open Service Maintenance web UI and complete the initial onboarding setup.",
-                "token_label": null
-            },
-            "group": "System Tools",
-            "has_configuration": false,
-            "has_traefik_support": false,
-            "has_ui": true,
-            "image_name": "henkvanhoek/njorddeploy-service-maintenance",
-            "intent_questions": [],
-            "name": "Service Maintenance",
-            "package_id": null,
-            "project_url": "https://github.com/HenkVanHoek/njord-deploy",
-            "protocol": "http",
-            "resource_profile": {
-                "cpu": "medium",
-                "ram": "medium",
-                "storage_type": "persistent"
-            },
-            "tags": [
-                "self-hosted"
-            ],
-            "traefik_internal_port": null,
-            "ui_port_variable": "PISELFHOSTING_SERVICE_MAINTENANCE_WEB_PORT"
         },
         "nocodb": {
             "category": "Development",
@@ -5293,7 +5259,9 @@
                 "self-hosted"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "ZIGBEE2MQTT_FRONTEND_PORT"
+            "ui_port_variable": "ZIGBEE2MQTT_FRONTEND_PORT",
+            "hardware_required": true,
+            "test_status": "hardware_dependent"
         }
     },
     "packages": {
