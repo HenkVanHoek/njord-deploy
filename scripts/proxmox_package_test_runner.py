@@ -941,6 +941,16 @@ def _save_incremental_package_result(test_record: Dict[str, Any]) -> None:
         latest_report_path = docs_dir / "PROXMOX_PACKAGE_TESTS.md"
         hist_failed = sum(1 for r in history if r.get("status") != "success")
         write_markdown_report(latest_report_path, history, hist_failed)
+
+        # Automatically update Hub-and-Spoke stack reports
+        # noinspection PyBroadException
+        try:
+            from scripts.generate_test_reports_hub import main as generate_hub
+
+            generate_hub()
+            logger.info("Updated Hub-and-Spoke stack reports in docs/test-reports/")
+        except Exception as hub_err:
+            logger.debug(f"Could not auto-generate test reports hub: {hub_err}")
     except Exception as save_err:
         logger.warning(f"Failed to incrementally save package test result: {save_err}")
 

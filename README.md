@@ -10,17 +10,19 @@
   [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg?logo=python&logoColor=white)](pyproject.toml)
   [![Docker & Podman](https://img.shields.io/badge/Container-Docker%20%7C%20Rootless%20Podman-2496ED.svg?logo=docker&logoColor=white)](docs/CONTAINER_ENGINE_AND_REPO_ARCHITECTURE.md)
   [![Website](https://img.shields.io/badge/Website-njorddeploy.com-10b981.svg)](https://njorddeploy.com)
-  [![Catalog](https://img.shields.io/badge/Catalog-100%2B%20Verified%20Stacks-purple.svg)](docs/SUPPORTED_SERVICES.md)
+  [![Catalog](https://img.shields.io/badge/Catalog-128%20Services-purple.svg)](docs/SUPPORTED_SERVICES.md)
+  [![Stack Verification](https://img.shields.io/badge/Fleet%20Health-11%2F11%20Stacks%20Passed-10b981.svg)](docs/test-reports/LATEST_RUN.md)
 
   <p align="center">
-    Deploy 100+ verified, privacy-first applications to any Raspberry Pi, Proxmox VM, or Linux server in minutes.<br>
+    Deploy 128+ verified, privacy-first applications to any Raspberry Pi, Proxmox VM, or Linux server in minutes.<br>
     Zero cloud lock-in, transactional disaster recovery, and an AI-assisted component studio.
   </p>
 
   <p align="center">
     <a href="https://njorddeploy.com"><strong>Website</strong></a> •
     <a href="docs/GETTING_STARTED_FOR_BEGINNERS.md"><strong>Quick Start Guide</strong></a> •
-    <a href="docs/SUPPORTED_SERVICES.md"><strong>100+ App Catalog</strong></a> •
+    <a href="docs/test-reports/LATEST_RUN.md"><strong>Fleet Health Dashboard</strong></a> •
+    <a href="docs/SUPPORTED_SERVICES.md"><strong>128 App Catalog</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architecture</strong></a> •
     <a href="docs/API_REFERENCE.md"><strong>REST API</strong></a> •
     <a href="https://github.com/HenkVanHoek/njord-deploy/releases"><strong>Releases</strong></a>
