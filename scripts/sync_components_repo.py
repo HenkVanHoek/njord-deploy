@@ -62,6 +62,17 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Custom commit message.",
     )
+    parser.add_argument(
+        "--sync-site",
+        action="store_true",
+        help="Also sync metadata and SUPPORTED_SERVICES.md to njord-deploy-site.",
+    )
+    parser.add_argument(
+        "--site-dir",
+        type=Path,
+        default=None,
+        help="Path to the njord-deploy-site repository.",
+    )
     return parser.parse_args()
 
 
@@ -71,6 +82,14 @@ def get_default_target_dir(source_root: Path) -> Path:
     if env_path:
         return Path(env_path).resolve()
     return (source_root.parent / "njord-deploy-components").resolve()
+
+
+def get_default_site_dir(source_root: Path) -> Path:
+    """Resolves the default directory for njord-deploy-site."""
+    env_path = os.environ.get("SITE_REPO_PATH")
+    if env_path:
+        return Path(env_path).resolve()
+    return (source_root.parent / "njord-deploy-site").resolve()
 
 
 def validate_metadata_file(metadata_path: Path) -> dict:
@@ -226,6 +245,78 @@ def commit_and_push(
         logger.info("Successfully pushed to origin/%s.", active_branch)
 
 
+def sync_site_repo(
+    source_root: Path,
+    site_repo: Path,
+    check_only: bool = False,
+    commit: bool = False,
+    push: bool = False,
+    custom_msg: Optional[str] = None,
+) -> None:
+    """Synchronizes metadata and documentation to the njord-deploy-site repository."""
+    if not site_repo.exists() or not (site_repo / ".git").exists():
+        logger.warning(
+            "Site repository does not exist or is not a git repo: %s", site_repo
+        )
+        return
+
+    logger.info("Synchronizing with site repository: %s", site_repo)
+    source_metadata = source_root / "config" / "components_metadata.json"
+    target_metadata = (
+        site_repo / "src" / "site_app" / "static" / "components_metadata.json"
+    )
+
+    metadata_updated = sync_metadata(
+        source_metadata, target_metadata, check_only=check_only
+    )
+    if metadata_updated:
+        action = "Would update" if check_only else "Updated"
+        logger.info("%s site components_metadata.json", action)
+
+    # Sync docs/SUPPORTED_SERVICES.md if present
+    source_supported = source_root / "docs" / "SUPPORTED_SERVICES.md"
+    target_supported = (
+        site_repo / "src" / "site_app" / "static" / "docs" / "SUPPORTED_SERVICES.md"
+    )
+    if source_supported.exists():
+        doc_updated = sync_metadata(
+            source_supported, target_supported, check_only=check_only
+        )
+        if doc_updated:
+            action = "Would update" if check_only else "Updated"
+            logger.info("%s site SUPPORTED_SERVICES.md", action)
+
+    if check_only:
+        return
+
+    if commit or push:
+        rel_files = [
+            str(target_metadata.relative_to(site_repo)),
+            str(target_supported.relative_to(site_repo)),
+        ]
+        run_git_command(["add"] + rel_files, cwd=site_repo)
+        status_res = run_git_command(["status", "--porcelain"], cwd=site_repo)
+        if not status_res.stdout.strip():
+            logger.info("No changes to commit in site repository.")
+            return
+
+        msg = (
+            custom_msg
+            or "chore(site): sync verified metadata and docs from njord-deploy"
+        )
+        run_git_command(["commit", "-m", msg], cwd=site_repo)
+        logger.info("Committed changes in site repository: %s", msg)
+
+        if push:
+            branch_res = run_git_command(
+                ["rev-parse", "--abbrev-ref", "HEAD"], cwd=site_repo
+            )
+            branch = branch_res.stdout.strip() or "master"
+            logger.info("Pushing to site remote origin/%s...", branch)
+            run_git_command(["push", "origin", branch], cwd=site_repo)
+            logger.info("Successfully pushed site repository.")
+
+
 def main() -> int:
     """Main execution entry point."""
     args = parse_args()
@@ -279,17 +370,29 @@ def main() -> int:
         unchanged,
     )
 
-    if args.check:
-        logger.info("Check complete (dry-run mode). No files were modified.")
-        return 0
-
-    # Commit and push if requested
-    if args.commit or args.push:
+    # Commit and push components repo if requested
+    if not args.check and (args.commit or args.push):
         commit_and_push(
             target_repo=target_repo,
             commit_msg=args.message,
             push=args.push,
         )
+
+    # Optionally sync site repository
+    if args.sync_site:
+        site_repo = args.site_dir or get_default_site_dir(source_root)
+        sync_site_repo(
+            source_root=source_root,
+            site_repo=site_repo,
+            check_only=args.check,
+            commit=args.commit,
+            push=args.push,
+            custom_msg=args.message,
+        )
+
+    if args.check:
+        logger.info("Check complete (dry-run mode). No files were modified.")
+        return 0
 
     logger.info("Components synchronization finished successfully.")
     return 0

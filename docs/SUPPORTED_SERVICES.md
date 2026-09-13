@@ -32,9 +32,13 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Eclipse Mosquitto | Lightweight and widely used open source MQTT message broker for IoT, Home Assistant, and smart home sensor integration. | [Link](https://mosquitto.org/) |
+| evcc | Extensible EV Charge Controller with support for solar/PV charging and dynamic tariffs. | [Link](https://evcc.io/) |
 | Frigate | A high-performance Network Video Recorder (NVR) with local, real-time AI object detection using Coral TPU or CPU for IP security cameras. | [Link](https://docs.frigate.video/) |
 | Home Assistant | Open source home automation that puts local control and privacy first. | [Link](https://www.home-assistant.io/) |
+| Homebridge | Lightweight NodeJS server that emulates the iOS HomeKit API for non-supported smart home accessories. | [Link](https://homebridge.io/) |
 | Scrypted | A high-performance smart home video integration platform that bridges IP camera feeds to Apple HomeKit, Google Home, and Alexa with hardware acceleration. | [Link](https://www.scrypted.app/) |
+| TeslaMate | Self-hosted data logger for your Tesla vehicle with detailed driving, battery, and charging analytics. | [Link](https://docs.teslamate.org/) |
 | UniFi Controller | A centralized management software suite for configuring, monitoring, and updating Ubiquiti UniFi network devices such as access points, switches, and gateways. | [Link](https://ui.com/wi-fi) |
 | Zigbee2MQTT | A lightweight bridge that connects Zigbee smart home devices directly to an MQTT broker, enabling local control via Home Assistant or custom automation software. | [Link](https://www.zigbee2mqtt.io/) |
 
@@ -100,7 +104,6 @@ This document is automatically generated from the project metadata. It lists the
 | Portainer | A powerful, user-friendly management UI that simplifies configuring, monitoring, and deploying Docker containers, stacks, and persistent volumes. | [Link](https://www.portainer.io/) |
 | Prometheus Stack | Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring. | [Link](https://prometheus.io/) |
 | Semaphore UI | Modern UI for Ansible, Terraform/OpenTofu/Terragrunt, PowerShell and other DevOps tools. | [Link](https://semaphoreui.com/) |
-| Service Maintenance | A system management component for monitoring service health, checking software updates, and auditing container vulnerabilities across NjordDeploy services. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 | Uptime Kuma | A feature-rich, self-hosted monitoring tool providing real-time status pages, HTTP/ping health checks, and alerts via multiple notification channels. | [Link](https://uptime.kuma.pet/) |
 
 ## Security & Utilities
@@ -150,8 +153,12 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Actual Budget | Privacy-first personal finance and envelope budgeting app. It is 100% free and open-source, written in NodeJS, it has a synchronization element so that all your changes can move between devices without any heavy lifting. The application stores its data in the /data volume. | N/A |
+| BookStack | Simple, self-hosted, easy-to-use platform for organizing and storing documentation and wikis in book format. | [Link](https://www.bookstackapp.com/) |
+| Docmost | Modern open-source collaborative wiki and knowledge-base alternative to Notion and Confluence. | [Link](https://docmost.com/) |
 | Draw.io | Security-first diagramming application for creating architecture diagrams, flowcharts, and mind maps. | N/A |
+| Etherpad Lite | Highly customizable open source online editor providing collaborative real-time editing. | [Link](https://etherpad.org/) |
 | Excalidraw | Virtual collaborative whiteboard for sketching diagrams with a hand-drawn, paper-like feel. | N/A |
+| Firefly III | Free and open source personal finance manager to track expenses, income, budgets, and bank accounts. | [Link](https://www.firefly-iii.org/) |
 | Flatnotes | A self-hosted, database-less flat-file markdown note taking web app with fast search and wikilinks. | N/A |
 | Focalboard | Open source, multilingual project management and personal task board alternative to Trello, Notion, and Asana. | N/A |
 | IT Tools | Useful web tools for developers and sysadmins. | N/A |
@@ -160,11 +167,12 @@ This document is automatically generated from the project metadata. It lists the
 | n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | [Link](https://n8n.io/) |
 | Nextcloud | A comprehensive self-hosted productivity and collaboration suite offering secure file storage, online document editing, calendar, and contacts synchronization. | [Link](https://nextcloud.com/) |
 | Paperless-ngx | A document management system that transforms your physical documents into a searchable online archive so you can keep, well, less paper. It automatically imports, tags, and archives your scanned documents. | N/A |
+| SilverBullet | Extensible, open-source personal knowledge management system written in clean TypeScript. | [Link](https://silverbullet.md/) |
 | Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | [Link](https://stirlingpdf.com/) |
 | Trilium Next | Hierarchical note taking application with focus on building large personal knowledge bases. | N/A |
 | Vikunja | The to-do app to organize your life with Kanban boards, Gantt charts, lists and table views. | N/A |
-| Voicebox | The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine. | [Link](https://github.com/HenkVanHoek/njord-deploy) |
 | Wallabag | Self-hosted application for saving web pages and articles to read later on any device. | N/A |
+| Wallos | Open-source, self-hosted personal subscription tracker to monitor recurring payments and costs. | [Link](https://github.com/ellite/Wallos) |
 
 ## Media Servers
 
@@ -241,6 +249,48 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | pgAdmin 4 | Comprehensive open source administration and management tool for PostgreSQL databases. | N/A |
+
+## System & Tools
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Apprise API | Push notification gateway for over 90 notification services (Telegram, Discord, Pushover, etc.). | [Link](https://github.com/caronc/apprise-api) |
+| Diun (Update Notifier) | CLI application to analyze Docker images and send notifications when image updates are published. | [Link](https://crazymax.dev/diun/) |
+| Dozzle | Real-time, lightweight log viewer for Docker containers with web UI and live search. | [Link](https://dozzle.dev/) |
+| PrivateBin | Zero-knowledge, client-side encrypted minimalist pastebin application. | [Link](https://privatebin.info/) |
+| RustDesk Server | Self-hosted rendezvous and relay server for RustDesk remote desktop clients. | [Link](https://rustdesk.com/) |
+| Scrutiny | WebUI for smartd S.M.A.R.T. monitoring and hard drive health inspection. | [Link](https://github.com/AnalogJ/scrutiny) |
+
+## Dashboards
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Dashdot | Modern server dashboard for displaying CPU, RAM, storage, and network statistics. | [Link](https://getdashdot.com/) |
+| Glance Dashboard | Extremely fast, self-contained dashboard written in Go for server feeds, weather, bookmarks, and services. | [Link](https://github.com/glanceapp/glance) |
+
+## Cloud & Storage
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Duplicati | Encrypted, incremental, and deduplicated backup client for cloud storage and local drives. | [Link](https://www.duplicati.com/) |
+| PairDrop | Local file sharing in your browser across devices, fully compatible with Apple AirDrop workflows. | [Link](https://pairdrop.net/) |
+| SFTPGo | Fully featured and highly configurable event-driven SFTP, FTP, and WebDAV server. | [Link](https://sftpgo.com/) |
+
+## Media & Streaming
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Komga | Free and open source media server for your comics, mangas, BDs, and book collections. | [Link](https://komga.org/) |
+| MeTube | Web GUI for yt-dlp with playlist support and audio/video download format selection. | [Link](https://github.com/alexta69/metube) |
+| Transmission | Fast, lightweight, and reliable BitTorrent client with a clean web interface. | [Link](https://transmissionbt.com/) |
+| Unpackerr | Automatically extracts downloaded archives for Radarr, Sonarr, Lidarr, and torrent downloads. | [Link](https://unpackerr.zip/) |
+
+## News & Bookmarks
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| linkding | Minimal, fast, and privacy-focused bookmark manager designed for speed. | [Link](https://github.com/sissbruecker/linkding) |
+| Miniflux | Minimalist, fast, and opinionated RSS feed reader written in Go. | [Link](https://miniflux.app/) |
 
 ## Network
 
