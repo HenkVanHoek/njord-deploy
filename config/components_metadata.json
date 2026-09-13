@@ -56,7 +56,6 @@
             "unifi-controller",
             "uptime-kuma",
             "vaultwarden",
-            "voicebox",
             "web-notepad",
             "zigbee2mqtt",
             "it-tools",
@@ -5080,48 +5079,6 @@
             "requires_root": false,
             "test_status": "tested",
             "ui_port_variable": "VIKUNJA_WEB_PORT"
-        },
-        "voicebox": {
-            "component_version": "latest",
-            "conflicts_with": [],
-            "depends_on": [],
-            "description": "The open-source AI voice studio. Clone any voice. Generate speech. Dictate into any app. Talk to agents in voices you own. The full voice I/O stack, running locally on your machine.",
-            "docker_service_name": "voicebox",
-            "first_run_info": {
-                "auth_type": "wizard",
-                "default_username": null,
-                "doc_url": "https://github.com/HenkVanHoek/njord-deploy",
-                "log_token_regex": null,
-                "onboarding_guide": "Open Voicebox web UI and complete the initial onboarding setup.",
-                "token_label": null
-            },
-            "group": "Productivity",
-            "has_configuration": true,
-            "has_ui": true,
-            "image_name": "ghcr.io/jamiepine/voicebox",
-            "last_tested": "2026-08-14T19:42:15.343332+00:00",
-            "last_tested_version": "3.11.16",
-            "last_updated": "2026-09-11T19:39:16.052399+00:00",
-            "name": "Voicebox",
-            "project_url": "https://github.com/HenkVanHoek/njord-deploy",
-            "protocol": "http",
-            "resource_profile": {
-                "cpu": "4",
-                "ram": "8G",
-                "recommended_cores": 4,
-                "recommended_ram_mb": 8192,
-                "recommended_storage_gb": 20,
-                "storage_type": "ssd"
-            },
-            "tags": [
-                "AI",
-                "Voice",
-                "Speech-to-Text",
-                "Text-to-Speech",
-                "Voice Cloning"
-            ],
-            "test_status": "tested",
-            "ui_port_variable": "VOICEBOX_WEB_PORT"
         },
         "wallabag": {
             "category": "Productivity",
