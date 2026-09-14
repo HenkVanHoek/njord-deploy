@@ -12,6 +12,7 @@ import asyncio
 import json
 import math
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -68,16 +69,14 @@ def get_existing_components() -> set[str]:
     return existing
 
 
+DOCKER_HUB_REPO_REGEX = re.compile(r"^[a-zA-Z0-9_-]+/[a-zA-Z0-9._-]+$")
+
+
 async def fetch_docker_hub_stats(
     session: aiohttp.ClientSession, docker_repo: str
 ) -> Dict[str, Any]:
     """Fetch pull count, star count, and last updated timestamp from Docker Hub."""
-    is_external = (
-        not docker_repo
-        or docker_repo.startswith("ghcr.io/")
-        or docker_repo.startswith("codeberg.org/")
-    )
-    if is_external:
+    if not docker_repo or not DOCKER_HUB_REPO_REGEX.match(docker_repo):
         return {"pulls": 0, "stars": 0, "last_updated": None, "source": "external"}
 
     parts = docker_repo.split("/")
