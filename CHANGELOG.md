@@ -4,7 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [1.0.0-RC4] - 2026-09-12
+## [1.0.0-RC4] - 2026-09-14
+
+### Added
+- **Fleet Update Management System (FUMS) Architectural Specification (`docs/FLEET_UPDATE_MANAGEMENT_SPEC.md`)**:
+  - Engineered architectural blueprint for central fleet management on VM 140 (`njorddeploy-vm`).
+  - Integrated **Release Intelligence AI Agent (RISA)** to parse upstream release notes, breaking changes, and git-diffs.
+  - Implemented **Dual-Mode Proxmox Staging Sandbox ("De Proeftuin")**:
+    - *Mode A (Gatekeeper)*: Fully automated ephemeral container staging test verifying database schema migrations before customer notifications.
+    - *Mode B (Interactive Customer Training & UAT)*: On-demand customer sandboxes with masked data for staff training and formal user acceptance sign-off.
+  - Designed atomic database rollback safeguards (`pg_dump` + hard restore) preventing old containers from running against migrated schemas.
+  - Added strict Signal REST API & Matrix identity validation with 72-hour token TTLs and 2.5x disk space pre-flight checks.
+- **Proxmox Multi-Target 100% Test Fleet Verification & Hub-and-Spoke Reports**:
+  - Full automated validation of all 126 self-hosted component definitions across all 4 environments (LXC Docker, LXC Podman, VM Docker, VM Podman) resulting in **487 PASS, 5 Skipped (untestable/deprecated), 0 Failures** (492 total runs).
+  - Regenerated complete Hub-and-Spoke verification reports ([`docs/test-reports/LATEST_RUN.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/test-reports/LATEST_RUN.md)) and all 9 stack verification dashboards in [`docs/test-reports/stacks/`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/test-reports/stacks/).
 
 ### Fixed
 - **Proxmox Multi-Component Test Runner Teardown & Expansion**:

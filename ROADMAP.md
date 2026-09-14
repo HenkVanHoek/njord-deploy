@@ -100,6 +100,9 @@ This milestone elevates NjordDeploy into a complete, enterprise-grade, multi-ten
 This is a collection of ideas that are being considered for future minor/major iterations.
 
 *   **[✅] PostgreSQL Support**: Fully integrated PostgreSQL and pgAdmin 4 components with automated volume persistence and database administration.
+*   **[In Progress] Fleet Update Management System (FUMS) & AI Release Intelligence**:
+    *   **Why?**: To provide enterprise paying clients and Sovereign Stack users with controlled, scheduled, and risk-vetted updates without unexpected downtime or database corruption.
+    *   **Implementation**: Central update hub on VM 140 (`njorddeploy-vm`) featuring DIUN upstream registry monitoring, RISA AI agent for changelog/diff mining, Dual-Mode Proxmox Staging Sandbox ("De Proeftuin" for automated gatekeeper migrations and on-demand customer staff training/UAT), atomic database rollbacks, and multi-channel client approval (Signal, Matrix, signed email tokens). Specified in [`docs/FLEET_UPDATE_MANAGEMENT_SPEC.md`](docs/FLEET_UPDATE_MANAGEMENT_SPEC.md).
 *   **Provider-Agnostic Off-site Backups**: Enhance the Backup & Restore tool with an automated off-site capability using a generic tool like `rclone`. This will allow users to send encrypted backups to any of the 70+ cloud storage providers `rclone` supports.
 *   **Plugin Marketplace**: An interface where the community can submit new component templates for easy inclusion.
 *   **Multi-Node/Clustering Support**: The ability to deploy services across multiple Raspberry Pi devices and distributed nodes.

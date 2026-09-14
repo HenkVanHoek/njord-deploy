@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "3.3.3"
+# platform_notes: "Tested on Proxmox LXC: docker (3.3.3, 2026-09-14), podman (3.3.3, 2026-09-14); Proxmox VM: docker (3.3.3, 2026-09-14), podman (3.3.3, 2026-09-14)."
+# breaking_changes: none
+services:
+  etherpad:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-etherpad
+    restart: unless-stopped
+    ports:
+      - "{{ ETHERPAD_WEB_PORT }}:9001"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/etherpad/data:/opt/etherpad-lite/var"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

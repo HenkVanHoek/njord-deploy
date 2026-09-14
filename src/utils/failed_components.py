@@ -45,7 +45,11 @@ def load_untestable_components(
 
         # Check section header
         if stripped.startswith("## "):
-            if "Skipped" in stripped or "Untestable" in stripped:
+            header_lower = stripped.lower()
+            if any(
+                keyword in header_lower
+                for keyword in ("skipped", "untestable", "hardware", "specialized")
+            ):
                 in_skipped_section = True
             else:
                 if current_id and in_skipped_section:
@@ -87,8 +91,13 @@ def load_untestable_components(
                 current_data["date"] = stripped.split("**Date**:", 1)[1].strip()
             elif "**Reason**:" in stripped:
                 current_data["reason"] = stripped.split("**Reason**:", 1)[1].strip()
+            elif "**Constraint**:" in stripped:
+                current_data["reason"] = stripped.split("**Constraint**:", 1)[1].strip()
             elif "**Action**:" in stripped:
                 current_data["action"] = stripped.split("**Action**:", 1)[1].strip()
+            elif "**Description**:" in stripped and not current_data.get("action"):
+                desc_text = stripped.split("**Description**:", 1)[1].strip()
+                current_data["action"] = desc_text
             elif "**Status**:" in stripped:
                 current_data["status"] = stripped.split("**Status**:", 1)[1].strip()
 
@@ -130,7 +139,11 @@ def remove_untestable_component(
         stripped = line.strip()
 
         if stripped.startswith("## "):
-            in_skipped_section = "Skipped" in stripped or "Untestable" in stripped
+            header_lower = stripped.lower()
+            in_skipped_section = any(
+                keyword in header_lower
+                for keyword in ("skipped", "untestable", "hardware", "specialized")
+            )
             skipping_current_comp = False
             new_lines.append(line)
             continue

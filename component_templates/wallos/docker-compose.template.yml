@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "5.7.1"
+# platform_notes: "Tested on Proxmox LXC: docker (5.7.1, 2026-09-14), podman (5.7.1, 2026-09-14); Proxmox VM: docker (5.7.1, 2026-09-14), podman (5.7.1, 2026-09-14)."
+# breaking_changes: none
+services:
+  wallos:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-wallos
+    restart: unless-stopped
+    ports:
+      - "{{ WALLOS_WEB_PORT }}:80"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/wallos/db:/var/www/html/db"
+      - "{{ CONFIG_BASE_PATH }}/wallos/logos:/var/www/html/images/uploads/logos"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

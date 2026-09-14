@@ -1,0 +1,19 @@
+# Glance Default Configuration for NjordDeploy
+pages:
+  - name: Home
+    columns:
+      - size: small
+        widgets:
+          - type: calendar
+            first-day-of-week: monday
+      - size: full
+        widgets:
+          - type: search
+            autofocus: true
+          - type: bookmarks
+            groups:
+              - title: Homelab Services
+                links:
+                  - title: NjordDeploy
+                    url: http://localhost:8102
+                    icon: si:server

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8107",
+            "description": "linkding web interface port.",
+            "id": "LINKDING_WEB_PORT",
+            "label": "linkding Port",
+            "type": "port"
+        }
+    ]
+}

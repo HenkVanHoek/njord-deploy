@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8112",
+            "description": "Diun (Update Notifier) web interface port.",
+            "id": "DIUN_PROMETHEUS_PORT",
+            "label": "Diun (Update Notifier) Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "2.0.6"
+# platform_notes: "Tested on Proxmox LXC: docker (2.0.6, 2026-09-14), podman (2.0.6, 2026-09-14); Proxmox VM: docker (2.0.6, 2026-09-14), podman (2.0.6, 2026-09-14)."
+# breaking_changes: none
+services:
+  privatebin:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-privatebin
+    restart: unless-stopped
+    ports:
+      - "{{ PRIVATEBIN_WEB_PORT }}:8080"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/privatebin/data:/srv/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

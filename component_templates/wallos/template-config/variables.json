@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8119",
+            "description": "Wallos web interface port.",
+            "id": "WALLOS_WEB_PORT",
+            "label": "Wallos Port",
+            "type": "port"
+        }
+    ]
+}

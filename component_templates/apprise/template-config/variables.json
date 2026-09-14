@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8113",
+            "description": "Apprise API web interface port.",
+            "id": "APPRISE_WEB_PORT",
+            "label": "Apprise API Port",
+            "type": "port"
+        }
+    ]
+}

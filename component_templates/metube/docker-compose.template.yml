@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "3.13.15"
+# platform_notes: "Tested on Proxmox LXC: docker (3.13.15, 2026-09-14), podman (3.13.15, 2026-09-14); Proxmox VM: docker (3.13.15, 2026-09-14), podman (3.13.15, 2026-09-14)."
+# breaking_changes: none
+services:
+  metube:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-metube
+    restart: unless-stopped
+    ports:
+      - "{{ METUBE_WEB_PORT }}:8081"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/metube/downloads:/downloads"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

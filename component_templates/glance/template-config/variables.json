@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8102",
+            "description": "Glance Dashboard web interface port.",
+            "id": "GLANCE_WEB_PORT",
+            "label": "Glance Dashboard Port",
+            "type": "port"
+        }
+    ]
+}

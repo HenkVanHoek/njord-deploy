@@ -1,0 +1,36 @@
+# status: "tested"
+# last_tested_version: "1.1.16"
+# platform_notes: "Tested on Proxmox LXC: docker (1.1.16, 2026-09-14), podman (1.1.16, 2026-09-14); Proxmox VM: docker (1.1.16, 2026-09-14), podman (1.1.16, 2026-09-14)."
+# breaking_changes: none
+services:
+  hbbs:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-rustdesk-hbbs
+    command: hbbs
+    restart: unless-stopped
+    ports:
+      - "21115:21115"
+      - "21116:21116"
+      - "21116:21116/udp"
+      - "21118:21118"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/rustdesk:/root"
+    networks:
+      - njorddeploy_net
+
+  hbbr:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-rustdesk-hbbr
+    command: hbbr
+    restart: unless-stopped
+    ports:
+      - "21117:21117"
+      - "21119:21119"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/rustdesk:/root"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

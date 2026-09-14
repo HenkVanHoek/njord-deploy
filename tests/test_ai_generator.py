@@ -684,3 +684,88 @@ class TestAIGeneratorEngine(unittest.TestCase):
         warnings = generator._run_security_checks(test_data)
         self.assertTrue(any("malformed SQLite URI" in w for w in warnings))
         self.assertTrue(any("missing forge configuration" in w for w in warnings))
+
+    def test_run_security_checks_detects_missing_laravel_app_key(self):
+        """Verify _run_security_checks flags Laravel apps without APP_KEY."""
+        generator = AIGenerator(api_key="test_api_key")
+        test_data_missing = {
+            "metadata": {
+                "name": "BookStack",
+                "image_name": "lscr.io/linuxserver/bookstack",
+                "has_ui": False,
+            },
+            "docker_compose": (
+                "services:\n"
+                "  bookstack:\n"
+                "    image: lscr.io/linuxserver/bookstack:latest\n"
+                "    environment:\n"
+                "      - APP_URL=http://localhost:8115\n"
+            ),
+            "variables": [],
+        }
+
+        warnings = generator._run_security_checks(test_data_missing)
+        warning_target = "missing mandatory environment variable 'APP_KEY'"
+        self.assertTrue(any(warning_target in w for w in warnings))
+
+        test_data_ok = {
+            "metadata": {
+                "name": "BookStack",
+                "image_name": "lscr.io/linuxserver/bookstack",
+                "has_ui": False,
+            },
+            "docker_compose": (
+                "services:\n"
+                "  bookstack:\n"
+                "    image: lscr.io/linuxserver/bookstack:latest\n"
+                "    environment:\n"
+                '      - "APP_KEY=base64:J8e0Kz+z56fG0B/1Y76LqQ+2n9NqK48x/'
+                '5H9mH7vV4A="\n'
+            ),
+            "variables": [],
+        }
+
+        warnings_ok = generator._run_security_checks(test_data_ok)
+        self.assertFalse(any(warning_target in w for w in warnings_ok))
+
+    def test_run_security_checks_detects_missing_duplicati_key(self):
+        """Verify _run_security_checks flags Duplicati without encryption key."""
+        generator = AIGenerator(api_key="test_api_key")
+        test_data_missing = {
+            "metadata": {
+                "name": "Duplicati",
+                "image_name": "lscr.io/linuxserver/duplicati",
+                "has_ui": False,
+            },
+            "docker_compose": (
+                "services:\n"
+                "  duplicati:\n"
+                "    image: lscr.io/linuxserver/duplicati:latest\n"
+                "    environment:\n"
+                "      - PUID=1000\n"
+            ),
+            "variables": [],
+        }
+
+        warnings = generator._run_security_checks(test_data_missing)
+        dup_target = "missing mandatory environment variable 'SETTINGS_ENCRYPTION_KEY'"
+        self.assertTrue(any(dup_target in w for w in warnings))
+
+        test_data_ok = {
+            "metadata": {
+                "name": "Duplicati",
+                "image_name": "lscr.io/linuxserver/duplicati",
+                "has_ui": False,
+            },
+            "docker_compose": (
+                "services:\n"
+                "  duplicati:\n"
+                "    image: lscr.io/linuxserver/duplicati:latest\n"
+                "    environment:\n"
+                '      - "SETTINGS_ENCRYPTION_KEY=SecretKey123!"\n'
+            ),
+            "variables": [],
+        }
+
+        warnings_ok = generator._run_security_checks(test_data_ok)
+        self.assertFalse(any(dup_target in w for w in warnings_ok))

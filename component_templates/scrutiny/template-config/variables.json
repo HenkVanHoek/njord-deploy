@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8110",
+            "description": "Scrutiny web interface port.",
+            "id": "SCRUTINY_WEB_PORT",
+            "label": "Scrutiny Port",
+            "type": "port"
+        }
+    ]
+}

@@ -452,3 +452,52 @@ def test_ai_endpoints_mocked(tmp_path, monkeypatch):
     )
     assert res_root.status_code == 200
     assert res_root.json.get("success") is True
+
+
+def test_runner_manager_subscribers_and_vmid_detection():
+    """Tests SSE pub/sub queue broadcasting and log VMID extraction."""
+    mgr = TestRunnerManager()
+
+    # Test subscriber registration and event broadcast
+    sub1 = mgr.register_subscriber()
+    sub2 = mgr.register_subscriber()
+
+    event = {"type": "log", "content": "Test line"}
+    mgr.emit_event(event)
+
+    assert not sub1.empty()
+    assert not sub2.empty()
+    assert sub1.get_nowait() == event
+    assert sub2.get_nowait() == event
+    # Backward compatibility with log_queue
+    assert not mgr.log_queue.empty()
+    assert mgr.log_queue.get_nowait() == event
+
+    mgr.unregister_subscriber(sub1)
+    mgr.emit_event({"type": "log", "content": "Second line"})
+    assert sub1.empty()
+    assert not sub2.empty()
+    mgr.unregister_subscriber(sub2)
+
+    # Test VMID extraction from LXC container creation log
+    mgr._inspect_log_line("Creating shared LXC container 104 on node 'pve'...")
+    assert mgr.current_vmid == "104"
+
+    # Test component start and component success events
+    mgr._inspect_log_line("Testing component: adminer (Engine: PODMAN, Mode: LXC)")
+    assert mgr.current_component == "adminer"
+    assert mgr.current_mode == "LXC"
+    assert mgr.current_engine == "PODMAN"
+
+    sub3 = mgr.register_subscriber()
+    mgr._inspect_log_line("✅ Component adminer verified successfully!")
+    assert not sub3.empty()
+    rec_event = sub3.get_nowait()
+    assert rec_event["type"] == "record"
+    rec = rec_event["record"]
+    assert rec["component_id"] == "adminer"
+    assert rec["status"] == "success"
+    assert rec["vmid"] == "104"
+    assert rec["mode"] == "LXC"
+    assert rec["engine"] == "PODMAN"
+    mgr.unregister_subscriber(sub3)

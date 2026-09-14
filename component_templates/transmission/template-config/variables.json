@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "9091",
+            "description": "Transmission web interface port.",
+            "id": "TRANSMISSION_WEB_PORT",
+            "label": "Transmission Port",
+            "type": "port"
+        }
+    ]
+}

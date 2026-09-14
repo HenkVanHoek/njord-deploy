@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "2.10.0-runtime-api"
+# platform_notes: "Tested on Proxmox LXC: docker (2.10.0-runtime-api, 2026-09-14), podman (2.10.0-runtime-api, 2026-09-14); Proxmox VM: docker (2.10.0-runtime-api, 2026-09-14), podman (2.10.0-runtime-api, 2026-09-14)."
+# breaking_changes: none
+services:
+  silverbullet:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-silverbullet
+    restart: unless-stopped
+    ports:
+      - "{{ SILVERBULLET_WEB_PORT }}:3000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/silverbullet/space:/space"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

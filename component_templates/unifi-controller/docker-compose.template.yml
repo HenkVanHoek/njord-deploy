@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "8.0.24-ls221"
-# platform_notes: "Tested on Proxmox LXC: docker (8.0.24-ls221, 2026-09-12), podman (8.0.24-ls221, 2026-09-04); Proxmox VM: docker (8.0.24-ls221, 2026-09-04), podman (8.0.24-ls221, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (8.0.24-ls221, 2026-09-14), podman (8.0.24-ls221, 2026-09-14); Proxmox VM: docker (8.0.24-ls221, 2026-09-14), podman (8.0.24-ls221, 2026-09-14)."
 # breaking_changes: "None"
 services:
   unifi-controller:

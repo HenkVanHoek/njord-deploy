@@ -1,0 +1,46 @@
+# status: "tested"
+# last_tested_version: "11.8.8-r0-ls230"
+# platform_notes: "Tested on Proxmox LXC: docker (v26.05.4-ls283, 2026-09-14), podman (11.8.8-r0-ls230, 2026-09-14); Proxmox VM: docker (v26.05.4-ls283, 2026-09-14), podman (11.8.8-r0-ls230, 2026-09-14)."
+# breaking_changes: none
+services:
+  bookstack:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-bookstack
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - "APP_KEY=base64:J8e0Kz+z56fG0B/1Y76LqQ+2n9NqK48x/5H9mH7vV4A="
+      - DB_HOST=bookstack_db
+      - DB_PORT=3306
+      - DB_USERNAME=bookstack
+      - DB_PASSWORD=bookstackpassword
+      - DB_DATABASE=bookstackapp
+    ports:
+      - "{{ BOOKSTACK_WEB_PORT }}:80"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/bookstack/config:/config"
+    depends_on:
+      - bookstack_db
+    networks:
+      - njorddeploy_net
+
+  bookstack_db:
+    image: linuxserver/mariadb:latest
+    container_name: njorddeploy-bookstack-db
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_ROOT_PASSWORD=mariadbrootpassword
+      - MYSQL_DATABASE=bookstackapp
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=bookstackpassword
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/bookstack/db:/config"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

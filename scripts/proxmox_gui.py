@@ -86,8 +86,37 @@ class TestRunnerManager:
         self.current_first_run_token: Optional[str] = None
         self.current_report_file: Optional[str] = None
         self.last_failed_key: Optional[str] = None
-        self.results_history: List[Dict[str, Any]] = []
         self.lock = threading.Lock()
+        self.results_history: List[Dict[str, Any]] = []
+        self.subscribers: List[queue.Queue] = []
+        self.subscribers_lock = threading.Lock()
+
+    def register_subscriber(self) -> queue.Queue:
+        """Registers a new SSE client subscriber queue."""
+        q: queue.Queue = queue.Queue(maxsize=1000)
+        with self.subscribers_lock:
+            self.subscribers.append(q)
+        return q
+
+    def unregister_subscriber(self, q: queue.Queue) -> None:
+        """Unregisters an SSE client subscriber queue."""
+        with self.subscribers_lock:
+            if q in self.subscribers:
+                self.subscribers.remove(q)
+
+    def emit_event(self, item: Dict[str, Any]) -> None:
+        """Broadcasts event to all active subscriber queues and log_queue."""
+        # noinspection PyBroadException
+        try:
+            self.log_queue.put_nowait(item)
+        except Exception:  # nosec B110
+            pass
+        with self.subscribers_lock:
+            for q in list(self.subscribers):
+                try:
+                    q.put_nowait(item)
+                except queue.Full:
+                    pass
 
     def start_test(
         self,
@@ -242,7 +271,7 @@ class TestRunnerManager:
                 )
                 self.process = running_proc
 
-                self.log_queue.put(
+                self.emit_event(
                     {
                         "type": "status",
                         "status": "running",
@@ -263,13 +292,13 @@ class TestRunnerManager:
 
                         if clean_line:
                             safe_line = redact_credentials(clean_line)
-                            self.log_queue.put({"type": "log", "content": safe_line})
+                            self.emit_event({"type": "log", "content": safe_line})
                             self._inspect_log_line(safe_line, _engine=engine)
 
                 running_proc.wait()
             except Exception as exc:
                 logger.error(f"Error running test process: {exc}")
-                self.log_queue.put({"type": "log", "content": f"ERROR: {exc}"})
+                self.emit_event({"type": "log", "content": f"ERROR: {exc}"})
             finally:
                 exit_code = 0
                 if self.process is not None:
@@ -285,7 +314,7 @@ class TestRunnerManager:
                     failed_count = 1
                 passed_count = self.current_run_passed
 
-                self.log_queue.put(
+                self.emit_event(
                     {
                         "type": "status",
                         "status": "completed",
@@ -318,6 +347,12 @@ class TestRunnerManager:
                     self.current_vmid = tokens[idx + 1]
                 elif tok == "at" and idx + 1 < len(tokens):
                     self.current_ip = tokens[idx + 1]
+
+        vmid_match = re.search(
+            r"(?:container|VM|vmid)\s+(\d{3,6})", line, re.IGNORECASE
+        )
+        if vmid_match:
+            self.current_vmid = vmid_match.group(1)
 
         # Extract environment mode & engine if logged
         if "Target Environment:" in line:
@@ -423,7 +458,7 @@ class TestRunnerManager:
             self.current_engine = current_engine
             self.current_mode = current_mode
 
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "record",
                     "record": {
@@ -477,7 +512,7 @@ class TestRunnerManager:
             self.current_engine = current_engine
             self.current_mode = current_mode
 
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "record",
                     "record": {
@@ -518,7 +553,7 @@ class TestRunnerManager:
                     pass
             self.current_mode = mode_val
             self.current_engine = engine_val
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "record",
                     "record": {
@@ -545,7 +580,7 @@ class TestRunnerManager:
             _, comp_part = line.split("Component", 1)
             comp_words = comp_part.strip().split()
             comp_id = next(iter(comp_words), "unknown")
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "record",
                     "record": {
@@ -583,8 +618,11 @@ class TestRunnerManager:
                     bracket_content = line.rsplit("[", 1)[1].split("]", 1)[0]
                     if "/" in bracket_content:
                         m_tok, e_tok = bracket_content.split("/", 1)
-                        mode_val = m_tok.strip().upper()
-                        engine_val = e_tok.strip().upper()
+                        clean_m = m_tok.strip().upper()
+                        clean_e = e_tok.strip().upper()
+                        if clean_m in ("LXC", "VM") and clean_e in ("DOCKER", "PODMAN"):
+                            mode_val = clean_m
+                            engine_val = clean_e
                 except Exception:  # nosec B110
                     pass
             self.current_mode = mode_val
@@ -598,7 +636,7 @@ class TestRunnerManager:
                 if ":" in line:
                     _, err_msg = line.split(":", 1)
                     err_msg = err_msg.strip()
-                self.log_queue.put(
+                self.emit_event(
                     {
                         "type": "record",
                         "record": {
@@ -625,7 +663,7 @@ class TestRunnerManager:
             cat = "Onbekend"
             if "[" in line and "]" in line:
                 cat = line.split("[", 1)[1].split("]", 1)[0].strip()
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "log",
                     "content": f"🏷️ [Diagnose Categorie] {cat}",
@@ -634,25 +672,25 @@ class TestRunnerManager:
 
         # Detect milestones in Ansible execution
         elif "TASK [Pull latest service images" in line:
-            self.log_queue.put(
+            self.emit_event(
                 {"type": "log", "content": "📥 [Fase] Container images ophalen..."}
             )
         elif "TASK [Ensure container volume" in line:
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "log",
                     "content": "📁 [Fase] Volume directory structuur voorbereiden...",
                 }
             )
         elif "TASK [Deploy services with Compose]" in line:
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "log",
                     "content": "🚀 [Fase] Containers starten via Compose...",
                 }
             )
         elif "Running service health verification probe..." in line:
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "log",
                     "content": "🌐 [Fase] Service healthcheck & HTTP Web UI testen...",
@@ -664,7 +702,7 @@ class TestRunnerManager:
             _, skip_part = line.split("Skipping", 1)
             skip_words = skip_part.strip().split()
             comp_id = next(iter(skip_words), "unknown").strip(":")
-            self.log_queue.put(
+            self.emit_event(
                 {
                     "type": "record",
                     "record": {
@@ -744,7 +782,7 @@ class TestRunnerManager:
                     target=_force_kill, args=(proc, pgid), daemon=True
                 ).start()
 
-                self.log_queue.put(
+                self.emit_event(
                     {
                         "type": "log",
                         "content": (
@@ -1213,16 +1251,20 @@ def create_app() -> Flask:
 
     @app.route("/api/stream", methods=["GET"])
     def stream_logs() -> Response:
-        """Server-Sent Events endpoint for real-time log output."""
+        """Server-Sent Events endpoint with per-client subscriber queue."""
+        client_queue = runner_mgr.register_subscriber()
 
         def event_stream():
-            while True:
-                try:
-                    item = runner_mgr.log_queue.get(timeout=1.0)
-                    yield f"data: {json.dumps(item)}\n\n"
-                except queue.Empty:
-                    # Heartbeat comment to prevent client timeout
-                    yield ": heartbeat\n\n"
+            try:
+                while True:
+                    try:
+                        item = client_queue.get(timeout=1.0)
+                        yield f"data: {json.dumps(item)}\n\n"
+                    except queue.Empty:
+                        # Heartbeat comment to prevent client timeout
+                        yield ": heartbeat\n\n"
+            finally:
+                runner_mgr.unregister_subscriber(client_queue)
 
         return Response(
             event_stream(),

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8104",
+            "description": "Komga web interface port.",
+            "id": "KOMGA_WEB_PORT",
+            "label": "Komga Port",
+            "type": "port"
+        }
+    ]
+}

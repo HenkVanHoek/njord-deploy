@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8114",
+            "description": "Unpackerr web interface port.",
+            "id": "UNPACKERR_METRICS_PORT",
+            "label": "Unpackerr Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,21 @@
+# status: "tested"
+# last_tested_version: "26.04"
+# platform_notes: "Tested on Proxmox LXC: docker (26.04, 2026-09-14), podman (26.04, 2026-09-14); Proxmox VM: docker (26.04, 2026-09-14), podman (26.04, 2026-09-14)."
+# breaking_changes: none
+services:
+  komga:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-komga
+    restart: unless-stopped
+    user: "1000:1000"
+    ports:
+      - "{{ KOMGA_WEB_PORT }}:25600"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/komga/config:/config"
+      - "{{ CONFIG_BASE_PATH }}/komga/data:/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Reverse Proxy & Remote Workspace
 
-> **Stack ID:** `caddy-filebrowser-stack` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:34:24
+> **Stack ID:** `caddy-filebrowser-stack` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Caddy automated HTTPS reverse proxy paired with FileBrowser for instant web-base
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 2 modular containers
 
@@ -41,7 +41,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/caddy`)
 
 #### Web UI Screenshot:
-![Caddy Web UI](../../images/test_screenshots/pkg_caddy_vm_podman_20260913_103523.png)
+![Caddy Web UI](../../images/test_screenshots/caddy_vm_podman_20260914_122645.png)
 
 
 ```yaml
@@ -69,7 +69,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/filebrowser`)
 
 #### Web UI Screenshot:
-![Filebrowser Web UI](../../images/test_screenshots/pkg_filebrowser_vm_podman_20260913_103525.png)
+![Filebrowser Web UI](../../images/test_screenshots/filebrowser_vm_podman_20260914_123632.png)
 
 
 ```yaml
@@ -89,12 +89,12 @@ The following live screenshots were automatically captured during the test run:
 ### Caddy (`caddy`)
 - **Endpoint:** [http://10.99.0.199:80](http://10.99.0.199:80)
 
-![Caddy Web UI](../../images/test_screenshots/pkg_caddy_vm_podman_20260913_103523.png)
+![Caddy Web UI](../../images/test_screenshots/caddy_vm_podman_20260914_122645.png)
 
 ### Filebrowser (`filebrowser`)
 - **Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
 
-![Filebrowser Web UI](../../images/test_screenshots/pkg_filebrowser_vm_podman_20260913_103525.png)
+![Filebrowser Web UI](../../images/test_screenshots/filebrowser_vm_podman_20260914_123632.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

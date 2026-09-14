@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "21116",
+            "description": "RustDesk Server web interface port.",
+            "id": "RUSTDESK_HBBS_PORT",
+            "label": "RustDesk Server Port",
+            "type": "port"
+        }
+    ]
+}

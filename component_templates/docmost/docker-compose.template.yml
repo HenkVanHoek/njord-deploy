@@ -1,0 +1,47 @@
+# status: "tested"
+# last_tested_version: "1.19"
+# platform_notes: "Tested on Proxmox LXC: docker (1.19, 2026-09-14), podman (16.15, 2026-09-14); Proxmox VM: docker (16.15, 2026-09-14), podman (1.19, 2026-09-14)."
+# breaking_changes: none
+services:
+  docmost:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-docmost
+    restart: unless-stopped
+    environment:
+      - APP_URL=http://localhost:8116
+      - APP_SECRET=ChangeMeToSuperSecretString64BytesLong1234567890abcdefghijklm
+      - DATABASE_URL=postgresql://docmost:docmostpw@docmost_db:5432/docmost?sslmode=disable
+      - REDIS_URL=redis://docmost_redis:6379
+    ports:
+      - "{{ DOCMOST_WEB_PORT }}:3000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/docmost/data:/app/data/storage"
+    depends_on:
+      - docmost_db
+      - docmost_redis
+    networks:
+      - njorddeploy_net
+
+  docmost_db:
+    image: postgres:16-alpine
+    container_name: njorddeploy-docmost-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=docmost
+      - POSTGRES_PASSWORD=docmostpw
+      - POSTGRES_DB=docmost
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/docmost/db:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+
+  docmost_redis:
+    image: redis:7-alpine
+    container_name: njorddeploy-docmost-redis
+    restart: unless-stopped
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

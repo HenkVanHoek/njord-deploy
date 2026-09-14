@@ -63,6 +63,8 @@ TEST_PORT_OVERRIDES = {
     "ADGUARDHOME_DNS_PORT_TCP": "5353",
     "ADGUARDHOME_DNS_PORT_UDP": "5353",
     "PIHOLE_DNS_PORT": "5353",
+    "DNS_UDP_PORT": "5353",
+    "DNS_TCP_PORT": "5353",
 }
 
 
@@ -365,76 +367,79 @@ def verify_service_health(
 
         # Inspect container config to get the actual version
         if matched_container:
-            cmd_inspect = (
+            cmd_labels = (
                 f"{cli_prefix}{cont_cli} inspect {matched_container} "
-                f"'--format' '{{{{json .Config}}}}'"
+                f"'--format' '{{{{json .Config.Labels}}}}'"
             )
-            inspect_exit, inspect_out = ssh_mgr.execute_command(
-                cmd_inspect,
+            labels_exit, labels_out = ssh_mgr.execute_command(
+                cmd_labels,
                 lambda x: None,
                 check_exit_code=False,
             )
-            if inspect_exit == 0 and inspect_out is not None:
+            ver: str | None = None
+            if labels_exit == 0 and labels_out is not None:
+                # noinspection PyBroadException
                 try:
                     import json
 
-                    inspect_str = inspect_out.strip()
-                    config_data = json.loads(inspect_str)
-                    labels = config_data.get("Labels") or {}
-                    env_list = config_data.get("Env") or []
-
-                    # 1. Check container labels
-                    ver: str | None = (
+                    labels = json.loads(labels_out.strip()) or {}
+                    ver = (
                         labels.get("org.opencontainers.image.version")
                         or labels.get("version")
                         or labels.get("image.version")
                         or labels.get("org.label-schema.version")
                         or labels.get("build_version")
                     )
-                    # 2. Check env variables
-                    if not ver:
-                        for env in env_list:
-                            if "=" in env:
-                                k, v = env.split("=", 1)
-                                k_upper = k.upper()
-                                if k_upper in [
-                                    "VERSION",
-                                    "CADDY_VERSION",
-                                    "RADARR_VERSION",
-                                    "SONARR_VERSION",
-                                    "HA_VERSION",
-                                    "APP_VERSION",
-                                    "ADGUARD_VERSION",
-                                    "PIHOLE_VERSION",
-                                    "IMMICH_VERSION",
-                                    "JELLYFIN_VERSION",
-                                    "NEXTCLOUD_VERSION",
-                                ] or k_upper.endswith("_VERSION"):
-                                    if v and v.lower() not in (
-                                        "latest",
-                                        "none",
-                                        "unknown",
-                                    ):
-                                        ver = v
-                                        break
+                except Exception:  # nosec B110
+                    pass
 
-                    if ver is not None and ver.strip():
-                        clean_ver = ver.strip()
-                        # Clean LinuxServer.io build version string if present
-                        if "version:-" in clean_ver:
-                            clean_ver = (
-                                clean_ver.split("version:-")[1].split()[0].strip()
-                            )
-                        if clean_ver.lower() not in (
-                            "latest",
-                            "none",
-                            "unknown",
-                        ):
-                            results["detected_version"] = clean_ver
-                except Exception as inspect_ex:
-                    logger.warning(
-                        f"Failed to parse docker inspect output: {inspect_ex}"
-                    )
+            if not ver:
+                # Check environment variables directly if no label was found
+                cmd_env = (
+                    f"{cli_prefix}{cont_cli} inspect {matched_container} "
+                    f"'--format' '{{{{range .Config.Env}}}}{{{{.}}}}\\n{{{{end}}}}'"
+                )
+                env_exit, env_out = ssh_mgr.execute_command(
+                    cmd_env,
+                    lambda x: None,
+                    check_exit_code=False,
+                )
+                if env_exit == 0 and env_out is not None:
+                    for line in env_out.splitlines():
+                        if "=" in line:
+                            k, v = line.split("=", 1)
+                            k_upper = k.upper()
+                            if k_upper in [
+                                "VERSION",
+                                "CADDY_VERSION",
+                                "RADARR_VERSION",
+                                "SONARR_VERSION",
+                                "HA_VERSION",
+                                "APP_VERSION",
+                                "ADGUARD_VERSION",
+                                "PIHOLE_VERSION",
+                                "IMMICH_VERSION",
+                                "JELLYFIN_VERSION",
+                                "NEXTCLOUD_VERSION",
+                            ] or k_upper.endswith("_VERSION"):
+                                if v and v.lower() not in (
+                                    "latest",
+                                    "none",
+                                    "unknown",
+                                ):
+                                    ver = v
+                                    break
+
+            if ver is not None and ver.strip():
+                clean_ver = ver.strip()
+                if "version:-" in clean_ver:
+                    clean_ver = clean_ver.split("version:-")[1].split()[0].strip()
+                if clean_ver.lower() not in (
+                    "latest",
+                    "none",
+                    "unknown",
+                ):
+                    results["detected_version"] = clean_ver
 
         # Check UI access if applicable
         if component_details.get("has_ui", False):
@@ -483,6 +488,7 @@ def verify_service_health(
                     "focalboard",
                     "nocodb",
                     "woodpecker-ci",
+                    "firefly-iii",
                 }
                 max_retries = (
                     75
@@ -508,10 +514,13 @@ def verify_service_health(
                 for attempt in range(1, max_retries + 1):
                     try:
                         res = requests.get(
-                            url, timeout=probe_timeout, verify=False
+                            url,
+                            timeout=probe_timeout,
+                            verify=False,
+                            allow_redirects=False,
                         )  # nosec B501
-                        # Strictly accept only 200, 301, 302, or 401 (Auth required)
-                        if res.status_code in [200, 301, 302, 401]:
+                        # Strictly accept only 200, 301, 302, 303, 307, 308, or 401
+                        if res.status_code in [200, 301, 302, 303, 307, 308, 401]:
                             results["http_ok"] = True
                             results["running"] = True
                             results[
@@ -1666,6 +1675,10 @@ def provision_shared_test_instance(
                 f"{sudo_pfx}sh -c \"printf 'nameserver 1.1.1.1\\n"
                 "nameserver 8.8.8.8\\n' > /etc/resolv.conf\" 2>/dev/null || true; "
                 f"{sudo_pfx}chattr +i /etc/resolv.conf 2>/dev/null || true; "
+                f"{sudo_pfx}systemctl enable --now podman.socket 2>/dev/null || true; "
+                f"{sudo_pfx}systemctl restart podman.socket 2>/dev/null || true; "
+                f"{sudo_pfx}ln -sf /run/podman/podman.sock "
+                "/var/run/docker.sock 2>/dev/null || true; "
                 f"{sudo_pfx}mkdir -p /tmp/.ansible && "
                 f"{sudo_pfx}chmod 1777 /tmp/.ansible"
             )
@@ -1817,6 +1830,7 @@ def run_environment_tests(
     keep: bool = False,
     report_filename: Optional[str] = None,
     skip_passed: bool = False,
+    cli_args: Any = None,
 ) -> List[Dict[str, Any]]:
     """Runs test cycle on a specific (mode, engine) environment."""
     is_lxc = mode == "lxc"
@@ -1991,6 +2005,23 @@ def run_environment_tests(
                 "first_run_token": None,
                 "first_run_token_missing": False,
             }
+
+            # Check untestable_map (docs/FAILED_COMPONENTS.md) constraints
+            untestable_doc = project_root / "docs" / "FAILED_COMPONENTS.md"
+            untestable_map = load_untestable_components(untestable_doc)
+            include_untestable = getattr(cli_args, "include_untestable", False)
+            if comp_id in untestable_map and not include_untestable:
+                skip_reason = (
+                    untestable_map[comp_id].get("reason")
+                    or "Physical hardware or kernel device required"
+                )
+                logger.info(f"⏭️ Skipping {comp_id}: {skip_reason}")
+                test_record["status"] = "skipped"
+                test_record["deployment"] = "skipped"
+                test_record["error_message"] = f"Skipped: {skip_reason}"
+                env_results.append(test_record)
+                _save_incremental_test_result(test_record)
+                continue
 
             # Check supported_matrix constraints before executing deployment
             if not comp_mgr.is_mode_supported(comp_id, mode):
@@ -2189,6 +2220,11 @@ def run_environment_tests(
                     '  done\\n  exec /usr/bin/systemd-run.real "${args[@]}"\\n'
                     'else\\n  exec /usr/bin/systemd-run.real "$@"\\nfi\\n\' '
                     "> /usr/bin/systemd-run && chmod +x /usr/bin/systemd-run; fi; "
+                    "systemctl start podman.socket 2>/dev/null || true; "
+                    "if [ -S /run/podman/podman.sock ] && "
+                    "[ ! -S /var/run/docker.sock ]; then "
+                    "ln -sf /run/podman/podman.sock "
+                    "/var/run/docker.sock 2>/dev/null || true; fi; "
                     "if podman network inspect njorddeploy_net 2>/dev/null | "
                     "grep -q '\"dns_enabled\": false'; then "
                     "podman network rm -f njorddeploy_net 2>/dev/null || true; fi; "
@@ -2280,9 +2316,6 @@ def run_environment_tests(
                 user_vars["TARGET_MODE"] = mode.lower()
                 if engine.lower() == "podman":
                     user_vars["PODMAN_ROOTFUL"] = True
-                last_v = comp.get("last_tested_version")
-                if last_v and comp.get("default_version") == "latest":
-                    user_vars["component_version"] = last_v
 
                 comp_mgr.generate_deployment_artifacts(
                     selected_components_data=all_selected_data,
@@ -2443,9 +2476,12 @@ def run_environment_tests(
                             detected_version
                             and detected_version.lower()
                             not in ("none", "latest", "unknown")
+                            and "{" not in detected_version
                         )
                         else comp.get("component_version", "latest")
                     )
+                    if "{" in str(version_to_record):
+                        version_to_record = "latest"
                     update_template_status(
                         templates_path=project_root / "component_templates",
                         component_id=comp_id,
@@ -2746,6 +2782,7 @@ def run_proxmox_tests(cli_args) -> int:
             keep=bool(getattr(cli_args, "keep", False)),
             report_filename=report_filename,
             skip_passed=bool(getattr(cli_args, "skip_passed", False)),
+            cli_args=cli_args,
         )
         results_summary.extend(env_results)
 

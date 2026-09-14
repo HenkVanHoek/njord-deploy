@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8108",
+            "description": "PairDrop web interface port.",
+            "id": "PAIRDROP_WEB_PORT",
+            "label": "PairDrop Port",
+            "type": "port"
+        }
+    ]
+}

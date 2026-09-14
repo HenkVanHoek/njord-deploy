@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8109",
+            "description": "SFTPGo web interface port.",
+            "id": "SFTPGO_WEB_PORT",
+            "label": "SFTPGo Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8101",
+            "description": "Dozzle web interface port.",
+            "id": "DOZZLE_WEB_PORT",
+            "label": "Dozzle Port",
+            "type": "port"
+        }
+    ]
+}

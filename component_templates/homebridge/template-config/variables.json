@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8581",
+            "description": "Homebridge web interface port.",
+            "id": "HOMEBRIDGE_WEB_PORT",
+            "label": "Homebridge Port",
+            "type": "port"
+        }
+    ]
+}

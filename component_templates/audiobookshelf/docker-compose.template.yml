@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "2.36.0"
-# platform_notes: "Tested on Proxmox LXC: docker (2.36.0, 2026-09-11), podman (2.36.0, 2026-09-04); Proxmox VM: docker (2.36.0, 2026-09-04), podman (2.36.0, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (2.36.0, 2026-09-14), podman (2.36.0, 2026-09-14); Proxmox VM: docker (2.36.0, 2026-09-14), podman (2.36.0, 2026-09-14)."
 # breaking_changes: none
 services:
   audiobookshelf:

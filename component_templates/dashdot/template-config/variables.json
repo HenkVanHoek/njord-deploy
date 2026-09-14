@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8111",
+            "description": "Dashdot web interface port.",
+            "id": "DASHDOT_WEB_PORT",
+            "label": "Dashdot Port",
+            "type": "port"
+        }
+    ]
+}

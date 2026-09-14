@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8118",
+            "description": "Etherpad Lite web interface port.",
+            "id": "ETHERPAD_WEB_PORT",
+            "label": "Etherpad Lite Port",
+            "type": "port"
+        }
+    ]
+}

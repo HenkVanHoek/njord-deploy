@@ -1,0 +1,26 @@
+# status: "tested"
+# last_tested_version: "v2.4.0.0_stable_2026-09-03-ls308"
+# platform_notes: "Tested on Proxmox LXC: docker (v2.4.0.0_stable_2026-09-03-ls308, 2026-09-14), podman (v2.4.0.0_stable_2026-09-03-ls308, 2026-09-14); Proxmox VM: docker (v2.4.0.0_stable_2026-09-03-ls308, 2026-09-14), podman (v2.4.0.0_stable_2026-09-03-ls308, 2026-09-14)."
+# breaking_changes: none
+services:
+  duplicati:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-duplicati
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+      - "SETTINGS_ENCRYPTION_KEY=DuplicatiSecretKey2026NjordDeploy!"
+    ports:
+      - "{{ DUPLICATI_WEB_PORT }}:8200"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/duplicati/config:/config"
+      - "{{ CONFIG_BASE_PATH }}:/source:ro"
+      - "{{ CONFIG_BASE_PATH }}/duplicati/backups:/backups"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

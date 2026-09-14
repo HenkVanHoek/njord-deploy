@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Digital Archive & Document Compliance
 
-> **Stack ID:** `digital-archive` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:35:32
+> **Stack ID:** `digital-archive` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Paperless office and compliance workstation bundling Paperless-ngx automated OCR
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 4 modular containers
 
@@ -42,7 +42,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/paperless-ngx`)
 
 #### Web UI Screenshot:
-![Paperless-ngx Web UI](../../images/test_screenshots/pkg_paperless-ngx_vm_podman_20260913_103833.png)
+![Paperless-ngx Web UI](../../images/test_screenshots/paperless-ngx_vm_podman_20260914_131930.png)
 
 
 ```yaml
@@ -69,7 +69,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/stirling-pdf`)
 
 #### Web UI Screenshot:
-![Stirling PDF Web UI](../../images/test_screenshots/pkg_stirling-pdf_vm_podman_20260913_103836.png)
+![Stirling PDF Web UI](../../images/test_screenshots/stirling-pdf_vm_podman_20260914_133525.png)
 
 
 ```yaml
@@ -95,7 +95,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/actual-budget`)
 
 #### Web UI Screenshot:
-![Actual Budget Web UI](../../images/test_screenshots/pkg_actual-budget_vm_podman_20260913_103839.png)
+![Actual Budget Web UI](../../images/test_screenshots/actual-budget_vm_podman_20260914_122010.png)
 
 
 ```yaml
@@ -121,7 +121,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/nocodb`)
 
 #### Web UI Screenshot:
-![NocoDB Web UI](../../images/test_screenshots/pkg_nocodb_vm_podman_20260913_103842.png)
+![NocoDB Web UI](../../images/test_screenshots/nocodb_vm_podman_20260914_131045.png)
 
 
 ```yaml
@@ -141,22 +141,22 @@ The following live screenshots were automatically captured during the test run:
 ### Paperless-ngx (`paperless-ngx`)
 - **Endpoint:** [http://10.99.0.199:8000](http://10.99.0.199:8000)
 
-![Paperless-ngx Web UI](../../images/test_screenshots/pkg_paperless-ngx_vm_podman_20260913_103833.png)
+![Paperless-ngx Web UI](../../images/test_screenshots/paperless-ngx_vm_podman_20260914_131930.png)
 
 ### Stirling PDF (`stirling-pdf`)
 - **Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
 
-![Stirling PDF Web UI](../../images/test_screenshots/pkg_stirling-pdf_vm_podman_20260913_103836.png)
+![Stirling PDF Web UI](../../images/test_screenshots/stirling-pdf_vm_podman_20260914_133525.png)
 
 ### Actual Budget (`actual-budget`)
 - **Endpoint:** [http://10.99.0.199:5006](http://10.99.0.199:5006)
 
-![Actual Budget Web UI](../../images/test_screenshots/pkg_actual-budget_vm_podman_20260913_103839.png)
+![Actual Budget Web UI](../../images/test_screenshots/actual-budget_vm_podman_20260914_122010.png)
 
 ### NocoDB (`nocodb`)
 - **Endpoint:** [http://10.99.0.199:8098](http://10.99.0.199:8098)
 
-![NocoDB Web UI](../../images/test_screenshots/pkg_nocodb_vm_podman_20260913_103842.png)
+![NocoDB Web UI](../../images/test_screenshots/nocodb_vm_podman_20260914_131045.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

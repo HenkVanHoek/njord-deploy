@@ -264,6 +264,31 @@
       <div id="terminal-body" class="terminal-body">Ready to start test run. Select components and click 'Start Test Run'.</div>
     </section>
 
+    <!-- Visual Matrix Execution Progress Bar -->
+    <section class="progress-card" id="execution-progress-card">
+      <div class="progress-header">
+        <div class="progress-title-wrapper">
+          <span class="progress-icon">⚡</span>
+          <span class="progress-title">Test Execution Progress</span>
+          <span id="progress-stats-badge" class="progress-stats-badge">0 / 0 Executions (0%)</span>
+        </div>
+        <div class="progress-legend">
+          <span class="legend-item"><span class="legend-dot dot-pending"></span> Wachten</span>
+          <span class="legend-item"><span class="legend-dot dot-running"></span> Bezig</span>
+          <span class="legend-item"><span class="legend-dot dot-success"></span> Succes</span>
+          <span class="legend-item"><span class="legend-dot dot-failed"></span> Fout</span>
+          <span class="legend-item"><span class="legend-dot dot-skipped"></span> Overgeslagen</span>
+        </div>
+      </div>
+      <div class="progress-track-wrapper">
+        <div id="progress-blocks-track" class="progress-blocks-track">
+          <!-- Dynamically populated test blocks -->
+        </div>
+      </div>
+      <!-- Interactive popover tooltip for mouse-over on blocks -->
+      <div id="progress-tooltip" class="progress-tooltip" style="display: none;"></div>
+    </section>
+
     <!-- Results Table Card -->
     <section class="config-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">

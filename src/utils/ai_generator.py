@@ -255,6 +255,11 @@ class AIGenerator:
 
                 # Normalize requires_root and podman_mode
                 docker_comp_text = str(data.get("docker_compose", ""))
+                if "STORAGE_BASE_PATH" in docker_comp_text:
+                    docker_comp_text = docker_comp_text.replace(
+                        "STORAGE_BASE_PATH", "CONFIG_BASE_PATH"
+                    )
+                    data["docker_compose"] = docker_comp_text
                 has_root_reqs = any(
                     sig in docker_comp_text
                     for sig in [
@@ -794,6 +799,52 @@ class AIGenerator:
                                     "'WOODPECKER_GITEA=true', "
                                     "'WOODPECKER_GITEA_URL=http://gitea:3000')."
                                 )
+
+                        # Check Laravel / PHP applications for missing APP_KEY
+                        is_laravel = any(
+                            k in service_lower or k in image_lower
+                            for k in [
+                                "bookstack",
+                                "firefly",
+                                "speedtest-tracker",
+                                "laravel",
+                                "monica",
+                                "koillection",
+                                "grocy",
+                                "pixelfed",
+                                "invoiceninja",
+                            ]
+                        )
+                        if is_laravel:
+                            has_app_key = any("APP_KEY" in e for e in env_list)
+                            if not has_app_key:
+                                warnings.append(
+                                    f"Service '{service_name}' appears to be a "
+                                    "Laravel application but is missing mandatory "
+                                    "environment variable 'APP_KEY'. Provide a "
+                                    "valid 32-byte key (e.g. '- \"APP_KEY="
+                                    "base64:J8e0Kz+z56fG0B/1Y76LqQ+2n9NqK48x/"
+                                    "5H9mH7vV4A=\"') to prevent container "
+                                    "initialization from halting."
+                                )
+
+                        # Check Duplicati for missing SETTINGS_ENCRYPTION_KEY
+                        is_duplicati = (
+                            "duplicati" in service_lower or "duplicati" in image_lower
+                        )
+                        if is_duplicati:
+                            has_settings_key = any(
+                                "SETTINGS_ENCRYPTION_KEY" in e for e in env_list
+                            )
+                            if not has_settings_key:
+                                warnings.append(
+                                    f"Service '{service_name}' appears to be "
+                                    "Duplicati but is missing mandatory "
+                                    "environment variable 'SETTINGS_ENCRYPTION_KEY'. "
+                                    "Provide an encryption key (e.g. "
+                                    '\'- "SETTINGS_ENCRYPTION_KEY=DuplicatiKey!") '
+                                    "to prevent container startup from halting."
+                                )
             except Exception as e:
                 warnings.append(
                     f"Failed to parse Docker Compose for security checks: {e}"
@@ -826,6 +877,22 @@ class AIGenerator:
             jinja_vars = set(
                 re.findall(r"\{\{\s*([a-zA-Z0-9_]+)\s*\}\}", docker_compose_str)
             )
+
+            # Explicit check for disallowed/hallucinated path variables
+            disallowed_path_vars = [
+                "STORAGE_BASE_PATH",
+                "DATA_PATH",
+                "APP_DATA",
+                "HOST_PATH",
+            ]
+            for bad_var in disallowed_path_vars:
+                if bad_var in jinja_vars:
+                    warnings.append(
+                        f"Template uses invalid path variable '{{{{ {bad_var} }}}}'. "
+                        "NjordDeploy exclusively uses '{{ CONFIG_BASE_PATH }}' "
+                        "for persistent storage volumes and '{{ DATA_ROOT }}' "
+                        "for configuration templates."
+                    )
             system_vars = {
                 "DATA_ROOT",
                 "DOMAIN",

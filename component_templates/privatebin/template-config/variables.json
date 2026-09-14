@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8106",
+            "description": "PrivateBin web interface port.",
+            "id": "PRIVATEBIN_WEB_PORT",
+            "label": "PrivateBin Port",
+            "type": "port"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8103",
+            "description": "Firefly III web interface port.",
+            "id": "FIREFLY_III_WEB_PORT",
+            "label": "Firefly III Port",
+            "type": "port"
+        }
+    ]
+}

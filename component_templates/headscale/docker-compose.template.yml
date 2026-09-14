@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "stable"
-# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-09-11), podman (stable, 2026-09-04); Proxmox VM: docker (stable, 2026-09-04), podman (stable, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-09-14), podman (stable, 2026-09-14); Proxmox VM: docker (stable, 2026-09-14), podman (stable, 2026-09-14)."
 # breaking_changes: none
 services:
   headscale:

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "4000",
+            "description": "TeslaMate web interface port.",
+            "id": "TESLAMATE_WEB_PORT",
+            "label": "TeslaMate Port",
+            "type": "port"
+        }
+    ]
+}

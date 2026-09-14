@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Observability & Privacy Analytics
 
-> **Stack ID:** `observability-analytics` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:50:36
+> **Stack ID:** `observability-analytics` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Full-stack server fleet observability and GDPR-compliant website analytics bundl
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 5 modular containers
 
@@ -43,7 +43,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/beszel`)
 
 #### Web UI Screenshot:
-![Beszel Web UI](../../images/test_screenshots/pkg_beszel_vm_podman_20260913_105215.png)
+![Beszel Web UI](../../images/test_screenshots/beszel_vm_podman_20260914_122504.png)
 
 
 ```yaml
@@ -70,7 +70,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/prometheus`)
 
 #### Web UI Screenshot:
-![Prometheus Stack Web UI](../../images/test_screenshots/pkg_prometheus_vm_podman_20260913_105217.png)
+![Prometheus Stack Web UI](../../images/test_screenshots/prometheus_vm_podman_20260914_132415.png)
 
 
 ```yaml
@@ -98,7 +98,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/grafana`)
 
 #### Web UI Screenshot:
-![Grafana Stack Web UI](../../images/test_screenshots/pkg_grafana_vm_podman_20260913_105220.png)
+![Grafana Stack Web UI](../../images/test_screenshots/grafana_vm_podman_20260914_124354.png)
 
 
 ```yaml
@@ -125,7 +125,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/plausible`)
 
 #### Web UI Screenshot:
-![Plausible Analytics Web UI](../../images/test_screenshots/pkg_plausible_vm_podman_20260913_105230.png)
+![Plausible Analytics Web UI](../../images/test_screenshots/plausible_vm_podman_20260914_132244.png)
 
 
 ```yaml
@@ -153,7 +153,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/uptime-kuma`)
 
 #### Web UI Screenshot:
-![Uptime Kuma Web UI](../../images/test_screenshots/pkg_uptime-kuma_vm_podman_20260913_105232.png)
+![Uptime Kuma Web UI](../../images/test_screenshots/uptime-kuma_vm_podman_20260914_134158.png)
 
 
 ```yaml
@@ -173,27 +173,27 @@ The following live screenshots were automatically captured during the test run:
 ### Beszel (`beszel`)
 - **Endpoint:** [http://10.99.0.199:8095](http://10.99.0.199:8095)
 
-![Beszel Web UI](../../images/test_screenshots/pkg_beszel_vm_podman_20260913_105215.png)
+![Beszel Web UI](../../images/test_screenshots/beszel_vm_podman_20260914_122504.png)
 
 ### Prometheus Stack (`prometheus`)
 - **Endpoint:** [http://10.99.0.199:9090](http://10.99.0.199:9090)
 
-![Prometheus Stack Web UI](../../images/test_screenshots/pkg_prometheus_vm_podman_20260913_105217.png)
+![Prometheus Stack Web UI](../../images/test_screenshots/prometheus_vm_podman_20260914_132415.png)
 
 ### Grafana Stack (`grafana`)
 - **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
 
-![Grafana Stack Web UI](../../images/test_screenshots/pkg_grafana_vm_podman_20260913_105220.png)
+![Grafana Stack Web UI](../../images/test_screenshots/grafana_vm_podman_20260914_124354.png)
 
 ### Plausible Analytics (`plausible`)
 - **Endpoint:** [http://10.99.0.199:8000](http://10.99.0.199:8000)
 
-![Plausible Analytics Web UI](../../images/test_screenshots/pkg_plausible_vm_podman_20260913_105230.png)
+![Plausible Analytics Web UI](../../images/test_screenshots/plausible_vm_podman_20260914_132244.png)
 
 ### Uptime Kuma (`uptime-kuma`)
 - **Endpoint:** [http://10.99.0.199:3001](http://10.99.0.199:3001)
 
-![Uptime Kuma Web UI](../../images/test_screenshots/pkg_uptime-kuma_vm_podman_20260913_105232.png)
+![Uptime Kuma Web UI](../../images/test_screenshots/uptime-kuma_vm_podman_20260914_134158.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

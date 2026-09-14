@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "7070",
+            "description": "evcc web interface port.",
+            "id": "EVCC_WEB_PORT",
+            "label": "evcc Port",
+            "type": "port"
+        }
+    ]
+}

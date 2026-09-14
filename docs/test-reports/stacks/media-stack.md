@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Media Streaming & Servarr Suite
 
-> **Stack ID:** `media-stack` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:43:06
+> **Stack ID:** `media-stack` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Unified sovereign media streaming pipeline bundling Jellyfin media server, Radar
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 7 modular containers
 
@@ -46,7 +46,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/jellyfin`)
 
 #### Web UI Screenshot:
-![Jellyfin Web UI](../../images/test_screenshots/pkg_jellyfin_vm_podman_20260913_104524.png)
+![Jellyfin Web UI](../../images/test_screenshots/jellyfin_vm_podman_20260914_125128.png)
 
 
 ```yaml
@@ -73,7 +73,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/radarr`)
 
 #### Web UI Screenshot:
-![Radarr Web UI](../../images/test_screenshots/pkg_radarr_vm_podman_20260913_104527.png)
+![Radarr Web UI](../../images/test_screenshots/radarr_vm_podman_20260914_132554.png)
 
 
 ```yaml
@@ -100,7 +100,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/sonarr`)
 
 #### Web UI Screenshot:
-![Sonarr Web UI](../../images/test_screenshots/pkg_sonarr_vm_podman_20260913_104530.png)
+![Sonarr Web UI](../../images/test_screenshots/sonarr_vm_podman_20260914_133335.png)
 
 
 ```yaml
@@ -127,7 +127,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/prowlarr`)
 
 #### Web UI Screenshot:
-![Prowlarr Web UI](../../images/test_screenshots/pkg_prowlarr_vm_podman_20260913_104533.png)
+![Prowlarr Web UI](../../images/test_screenshots/prowlarr_vm_podman_20260914_132457.png)
 
 
 ```yaml
@@ -153,7 +153,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/jellyseerr`)
 
 #### Web UI Screenshot:
-![Jellyseerr Web UI](../../images/test_screenshots/pkg_jellyseerr_vm_podman_20260913_104536.png)
+![Jellyseerr Web UI](../../images/test_screenshots/jellyseerr_vm_podman_20260914_125211.png)
 
 
 ```yaml
@@ -180,7 +180,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/qbittorrent`)
 
 #### Web UI Screenshot:
-![qBittorrent Web UI](../../images/test_screenshots/pkg_qbittorrent_vm_podman_20260913_104540.png)
+![qBittorrent Web UI](../../images/test_screenshots/qbittorrent_vm_podman_20260914_132522.png)
 
 
 ```yaml
@@ -206,7 +206,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/bazarr`)
 
 #### Web UI Screenshot:
-![Bazarr Web UI](../../images/test_screenshots/pkg_bazarr_vm_podman_20260913_104542.png)
+![Bazarr Web UI](../../images/test_screenshots/bazarr_vm_podman_20260914_122433.png)
 
 
 ```yaml
@@ -226,37 +226,37 @@ The following live screenshots were automatically captured during the test run:
 ### Jellyfin (`jellyfin`)
 - **Endpoint:** [http://10.99.0.199:8096](http://10.99.0.199:8096)
 
-![Jellyfin Web UI](../../images/test_screenshots/pkg_jellyfin_vm_podman_20260913_104524.png)
+![Jellyfin Web UI](../../images/test_screenshots/jellyfin_vm_podman_20260914_125128.png)
 
 ### Radarr (`radarr`)
 - **Endpoint:** [http://10.99.0.199:7878](http://10.99.0.199:7878)
 
-![Radarr Web UI](../../images/test_screenshots/pkg_radarr_vm_podman_20260913_104527.png)
+![Radarr Web UI](../../images/test_screenshots/radarr_vm_podman_20260914_132554.png)
 
 ### Sonarr (`sonarr`)
 - **Endpoint:** [http://10.99.0.199:8989](http://10.99.0.199:8989)
 
-![Sonarr Web UI](../../images/test_screenshots/pkg_sonarr_vm_podman_20260913_104530.png)
+![Sonarr Web UI](../../images/test_screenshots/sonarr_vm_podman_20260914_133335.png)
 
 ### Prowlarr (`prowlarr`)
 - **Endpoint:** [http://10.99.0.199:9696](http://10.99.0.199:9696)
 
-![Prowlarr Web UI](../../images/test_screenshots/pkg_prowlarr_vm_podman_20260913_104533.png)
+![Prowlarr Web UI](../../images/test_screenshots/prowlarr_vm_podman_20260914_132457.png)
 
 ### Jellyseerr (`jellyseerr`)
 - **Endpoint:** [http://10.99.0.199:5055](http://10.99.0.199:5055)
 
-![Jellyseerr Web UI](../../images/test_screenshots/pkg_jellyseerr_vm_podman_20260913_104536.png)
+![Jellyseerr Web UI](../../images/test_screenshots/jellyseerr_vm_podman_20260914_125211.png)
 
 ### qBittorrent (`qbittorrent`)
 - **Endpoint:** [http://10.99.0.199:8084](http://10.99.0.199:8084)
 
-![qBittorrent Web UI](../../images/test_screenshots/pkg_qbittorrent_vm_podman_20260913_104540.png)
+![qBittorrent Web UI](../../images/test_screenshots/qbittorrent_vm_podman_20260914_132522.png)
 
 ### Bazarr (`bazarr`)
 - **Endpoint:** [http://10.99.0.199:6767](http://10.99.0.199:6767)
 
-![Bazarr Web UI](../../images/test_screenshots/pkg_bazarr_vm_podman_20260913_104542.png)
+![Bazarr Web UI](../../images/test_screenshots/bazarr_vm_podman_20260914_122433.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

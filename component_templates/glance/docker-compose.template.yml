@@ -1,0 +1,21 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-09-14), podman (latest, 2026-09-14); Proxmox VM: docker (latest, 2026-09-14), podman (latest, 2026-09-14)."
+# breaking_changes: none
+services:
+  glance:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-glance
+    restart: unless-stopped
+    ports:
+      - "{{ GLANCE_WEB_PORT }}:8080"
+    volumes:
+      - "{{ DATA_ROOT }}/glance:/app/config"
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

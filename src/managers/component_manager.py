@@ -548,6 +548,9 @@ class ComponentManager:
         if "CONFIG_BASE_PATH" not in context:
             context["CONFIG_BASE_PATH"] = "../njorddeploy_data"
 
+        if "STORAGE_BASE_PATH" not in context:
+            context["STORAGE_BASE_PATH"] = context["CONFIG_BASE_PATH"]
+
         if "DATA_ROOT" not in context:
             context["DATA_ROOT"] = "/opt/njorddeploy/data"
 
@@ -632,6 +635,10 @@ class ComponentManager:
                 )
                 base_path = str(context.get("CONFIG_BASE_PATH", "../njorddeploy_data"))
                 rendered = rendered.replace("{{ CONFIG_BASE_PATH }}", base_path)
+
+            if "{{ STORAGE_BASE_PATH }}" in rendered:
+                base_path = str(context.get("CONFIG_BASE_PATH", "../njorddeploy_data"))
+                rendered = rendered.replace("{{ STORAGE_BASE_PATH }}", base_path)
 
             return rendered
         except Exception as e:

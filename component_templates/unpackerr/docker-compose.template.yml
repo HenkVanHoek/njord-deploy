@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "0.16.1"
+# platform_notes: "Tested on Proxmox LXC: docker (0.16.1, 2026-09-14), podman (0.16.1, 2026-09-14); Proxmox VM: docker (0.16.1, 2026-09-14), podman (0.16.1, 2026-09-14)."
+# breaking_changes: none
+services:
+  unpackerr:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-unpackerr
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/transmission/downloads:/downloads"
+      - "{{ CONFIG_BASE_PATH }}/qbittorrent/downloads:/downloads_qbit"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

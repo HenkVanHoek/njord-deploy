@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "3.13.7"
+# platform_notes: "Tested on Proxmox LXC: docker (3.13.7, 2026-09-14), podman (3.13.7, 2026-09-14); Proxmox VM: docker (3.13.7, 2026-09-14), podman (3.13.7, 2026-09-14)."
+# breaking_changes: none
+services:
+  linkding:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-linkding
+    restart: unless-stopped
+    ports:
+      - "{{ LINKDING_WEB_PORT }}:9090"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/linkding/data:/etc/linkding/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

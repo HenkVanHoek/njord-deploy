@@ -1,0 +1,21 @@
+# status: "tested"
+# last_tested_version: "v1.11.2-ls144"
+# platform_notes: "Tested on Proxmox LXC: docker (v1.11.2-ls144, 2026-09-14), podman (v1.11.2-ls144, 2026-09-14); Proxmox VM: docker (v1.11.2-ls144, 2026-09-14), podman (v1.11.2-ls144, 2026-09-14)."
+# breaking_changes: none
+services:
+  pairdrop:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-pairdrop
+    restart: unless-stopped
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=UTC
+    ports:
+      - "{{ PAIRDROP_WEB_PORT }}:3000"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

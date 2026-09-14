@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: The Modern Sovereign Workplace
 
-> **Stack ID:** `modern-workplace` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:45:49
+> **Stack ID:** `modern-workplace` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Turnkey Microsoft 365 & Google Workspace alternative bundling enterprise Nextclo
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 6 modular containers
 
@@ -46,7 +46,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/nextcloud`)
 
 #### Web UI Screenshot:
-![Nextcloud Web UI](../../images/test_screenshots/pkg_nextcloud_vm_podman_20260913_104710.png)
+![Nextcloud Web UI](../../images/test_screenshots/nextcloud_vm_podman_20260914_130757.png)
 
 
 ```yaml
@@ -162,7 +162,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/vaultwarden`)
 
 #### Web UI Screenshot:
-![Vaultwarden Web UI](../../images/test_screenshots/pkg_vaultwarden_vm_podman_20260913_104714.png)
+![Vaultwarden Web UI](../../images/test_screenshots/vaultwarden_vm_podman_20260914_134229.png)
 
 
 ```yaml
@@ -182,12 +182,12 @@ The following live screenshots were automatically captured during the test run:
 ### Nextcloud (`nextcloud`)
 - **Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
 
-![Nextcloud Web UI](../../images/test_screenshots/pkg_nextcloud_vm_podman_20260913_104710.png)
+![Nextcloud Web UI](../../images/test_screenshots/nextcloud_vm_podman_20260914_130757.png)
 
 ### Vaultwarden (`vaultwarden`)
 - **Endpoint:** [http://10.99.0.199:8088](http://10.99.0.199:8088)
 
-![Vaultwarden Web UI](../../images/test_screenshots/pkg_vaultwarden_vm_podman_20260913_104714.png)
+![Vaultwarden Web UI](../../images/test_screenshots/vaultwarden_vm_podman_20260914_134229.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8117",
+            "description": "SilverBullet web interface port.",
+            "id": "SILVERBULLET_WEB_PORT",
+            "label": "SilverBullet Port",
+            "type": "port"
+        }
+    ]
+}

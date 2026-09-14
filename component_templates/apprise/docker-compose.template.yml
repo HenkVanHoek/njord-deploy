@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "1.5.4"
+# platform_notes: "Tested on Proxmox LXC: docker (1.5.4, 2026-09-14), podman (1.5.4, 2026-09-14); Proxmox VM: docker (1.5.4, 2026-09-14), podman (1.5.4, 2026-09-14)."
+# breaking_changes: none
+services:
+  apprise:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-apprise
+    restart: unless-stopped
+    ports:
+      - "{{ APPRISE_WEB_PORT }}:8000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/apprise/config:/config"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

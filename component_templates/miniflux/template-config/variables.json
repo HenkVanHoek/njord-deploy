@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8105",
+            "description": "Miniflux web interface port.",
+            "id": "MINIFLUX_WEB_PORT",
+            "label": "Miniflux Port",
+            "type": "port"
+        }
+    ]
+}

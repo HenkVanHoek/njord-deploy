@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "7.0"
-# platform_notes: "Tested on Proxmox LXC: docker (7.0, 2026-09-11), podman (7.0, 2026-09-04); Proxmox VM: docker (7.0, 2026-09-04), podman (7.0, 2026-09-04)."
+# last_tested_version: "8.0"
+# platform_notes: "Tested on Proxmox LXC: docker (stable, 2026-09-14), podman (8.0, 2026-09-14); Proxmox VM: docker (stable, 2026-09-14), podman (8.0, 2026-09-14)."
 # breaking_changes: "None"
 services:
   frigate-configurator:

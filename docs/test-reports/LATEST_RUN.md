@@ -1,7 +1,7 @@
 # 🛡️ NjordDeploy Fleet & Stack Verification Dashboard
 
 > **Automated Proxmox Quality Assurance & Interoperability Matrix**
-> **Last Full Run:** 2026-09-13 21:10:50 | **Stacks:** 9/9 Verified | **Components:** 126 Total
+> **Last Full Run:** 2026-09-14 14:19:50 | **Stacks:** 9/9 Verified | **Components:** 126 Total
 
 ## Executive Summary
 
@@ -24,15 +24,15 @@ Click on any stack to view the comprehensive report and individual logs.
 
 | Stack ID | Stack Name | Included Services | Engine | Status | Detailed Report |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| `agile-ops` | **Agile Operations & Secure Chat** | 5 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/agile-ops.md) |
-| `caddy-filebrowser-stack` | **Reverse Proxy & Remote Workspace** | 2 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/caddy-filebrowser-stack.md) |
-| `digital-archive` | **Digital Archive & Document Compliance** | 4 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/digital-archive.md) |
-| `dns-shield-stack` | **DNS & Ad-Blocking Privacy Shield** | 2 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/dns-shield-stack.md) |
-| `media-stack` | **Media Streaming & Servarr Suite** | 7 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/media-stack.md) |
-| `modern-workplace` | **The Modern Sovereign Workplace** | 6 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/modern-workplace.md) |
-| `observability-analytics` | **Observability & Privacy Analytics** | 5 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/observability-analytics.md) |
-| `open-webui-ollama` | **Open WebUI & Ollama AI Studio** | 3 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/open-webui-ollama.md) |
-| `smarthome-stack` | **Sovereign Smart Home Hub** | 4 services | `PODMAN` | ✅ Passed | [View Report ↗️](stacks/smarthome-stack.md) |
+| `agile-ops` | **Agile Operations & Secure Chat** | 5 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/agile-ops.md) |
+| `caddy-filebrowser-stack` | **Reverse Proxy & Remote Workspace** | 2 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/caddy-filebrowser-stack.md) |
+| `digital-archive` | **Digital Archive & Document Compliance** | 4 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/digital-archive.md) |
+| `dns-shield-stack` | **DNS & Ad-Blocking Privacy Shield** | 2 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/dns-shield-stack.md) |
+| `media-stack` | **Media Streaming & Servarr Suite** | 7 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/media-stack.md) |
+| `modern-workplace` | **The Modern Sovereign Workplace** | 6 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/modern-workplace.md) |
+| `observability-analytics` | **Observability & Privacy Analytics** | 5 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/observability-analytics.md) |
+| `open-webui-ollama` | **Open WebUI & Ollama AI Studio** | 3 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/open-webui-ollama.md) |
+| `smarthome-stack` | **Sovereign Smart Home Hub** | 4 services | `DOCKER/PODMAN` | ✅ Verified | [View Report ↗️](stacks/smarthome-stack.md) |
 
 ---
 

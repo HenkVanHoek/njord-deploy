@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Sovereign Smart Home Hub
 
-> **Stack ID:** `smarthome-stack` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:56:36
+> **Stack ID:** `smarthome-stack` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Local home automation workstation combining Home Assistant, ESPHome firmware bui
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 4 modular containers
 
@@ -44,7 +44,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/homeassistant`)
 
 #### Web UI Screenshot:
-![Home Assistant Web UI](../../images/test_screenshots/pkg_homeassistant_vm_podman_20260913_105835.png)
+![Home Assistant Web UI](../../images/test_screenshots/homeassistant_vm_podman_20260914_124707.png)
 
 
 ```yaml
@@ -70,7 +70,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/esphome`)
 
 #### Web UI Screenshot:
-![ESPHome Web UI](../../images/test_screenshots/pkg_esphome_vm_podman_20260913_105837.png)
+![ESPHome Web UI](../../images/test_screenshots/esphome_vm_podman_20260914_123453.png)
 
 
 ```yaml
@@ -96,7 +96,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/node-red`)
 
 #### Web UI Screenshot:
-![Node-RED Web UI](../../images/test_screenshots/pkg_node-red_vm_podman_20260913_105840.png)
+![Node-RED Web UI](../../images/test_screenshots/node-red_vm_podman_20260914_131121.png)
 
 
 ```yaml
@@ -123,7 +123,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/scrypted`)
 
 #### Web UI Screenshot:
-![Scrypted Web UI](../../images/test_screenshots/pkg_scrypted_vm_podman_20260913_105846.png)
+![Scrypted Web UI](../../images/test_screenshots/scrypted_vm_podman_20260914_132901.png)
 
 
 ```yaml
@@ -143,22 +143,22 @@ The following live screenshots were automatically captured during the test run:
 ### Home Assistant (`homeassistant`)
 - **Endpoint:** [http://10.99.0.199:8123](http://10.99.0.199:8123)
 
-![Home Assistant Web UI](../../images/test_screenshots/pkg_homeassistant_vm_podman_20260913_105835.png)
+![Home Assistant Web UI](../../images/test_screenshots/homeassistant_vm_podman_20260914_124707.png)
 
 ### ESPHome (`esphome`)
 - **Endpoint:** [http://10.99.0.199:6052](http://10.99.0.199:6052)
 
-![ESPHome Web UI](../../images/test_screenshots/pkg_esphome_vm_podman_20260913_105837.png)
+![ESPHome Web UI](../../images/test_screenshots/esphome_vm_podman_20260914_123453.png)
 
 ### Node-RED (`node-red`)
 - **Endpoint:** [http://10.99.0.199:1880](http://10.99.0.199:1880)
 
-![Node-RED Web UI](../../images/test_screenshots/pkg_node-red_vm_podman_20260913_105840.png)
+![Node-RED Web UI](../../images/test_screenshots/node-red_vm_podman_20260914_131121.png)
 
 ### Scrypted (`scrypted`)
 - **Endpoint:** [https://10.99.0.199:10443](https://10.99.0.199:10443)
 
-![Scrypted Web UI](../../images/test_screenshots/pkg_scrypted_vm_podman_20260913_105846.png)
+![Scrypted Web UI](../../images/test_screenshots/scrypted_vm_podman_20260914_132901.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

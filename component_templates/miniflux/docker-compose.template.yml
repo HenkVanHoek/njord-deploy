@@ -1,0 +1,38 @@
+# status: "tested"
+# last_tested_version: "1.19"
+# platform_notes: "Tested on Proxmox LXC: docker (1.19, 2026-09-14), podman (16.15, 2026-09-14); Proxmox VM: docker (16.15, 2026-09-14), podman (1.19, 2026-09-14)."
+# breaking_changes: none
+services:
+  miniflux:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-miniflux
+    restart: unless-stopped
+    environment:
+      - RUN_MIGRATIONS=1
+      - DATABASE_URL=postgres://miniflux:minifluxpassword@miniflux_db/miniflux?sslmode=disable
+      - CREATE_ADMIN=1
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=adminpassword
+    ports:
+      - "{{ MINIFLUX_WEB_PORT }}:8080"
+    depends_on:
+      - miniflux_db
+    networks:
+      - njorddeploy_net
+
+  miniflux_db:
+    image: postgres:16-alpine
+    container_name: njorddeploy-miniflux-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=miniflux
+      - POSTGRES_PASSWORD=minifluxpassword
+      - POSTGRES_DB=miniflux
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/miniflux/db:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

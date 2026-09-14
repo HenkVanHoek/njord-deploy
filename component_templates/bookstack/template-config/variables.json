@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8115",
+            "description": "BookStack web interface port.",
+            "id": "BOOKSTACK_WEB_PORT",
+            "label": "BookStack Port",
+            "type": "port"
+        }
+    ]
+}

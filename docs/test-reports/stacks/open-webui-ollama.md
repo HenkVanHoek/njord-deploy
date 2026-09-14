@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Open WebUI & Ollama AI Studio
 
-> **Stack ID:** `open-webui-ollama` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:52:39
+> **Stack ID:** `open-webui-ollama` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Integrated sovereign AI chatbot and inference platform combining Open WebUI with
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 3 modular containers
 
@@ -64,7 +64,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/open-webui`)
 
 #### Web UI Screenshot:
-![Open WebUI Web UI](../../images/test_screenshots/pkg_open-webui_vm_podman_20260913_105626.png)
+![Open WebUI Web UI](../../images/test_screenshots/open-webui_vm_podman_20260914_131654.png)
 
 
 ```yaml
@@ -91,7 +91,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/litellm`)
 
 #### Web UI Screenshot:
-![LiteLLM AI Gateway Web UI](../../images/test_screenshots/pkg_litellm_vm_podman_20260913_105629.png)
+![LiteLLM AI Gateway Web UI](../../images/test_screenshots/litellm_vm_podman_20260914_130145.png)
 
 
 ```yaml
@@ -111,12 +111,12 @@ The following live screenshots were automatically captured during the test run:
 ### Open WebUI (`open-webui`)
 - **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
 
-![Open WebUI Web UI](../../images/test_screenshots/pkg_open-webui_vm_podman_20260913_105626.png)
+![Open WebUI Web UI](../../images/test_screenshots/open-webui_vm_podman_20260914_131654.png)
 
 ### LiteLLM AI Gateway (`litellm`)
 - **Endpoint:** [http://10.99.0.199:4000](http://10.99.0.199:4000)
 
-![LiteLLM AI Gateway Web UI](../../images/test_screenshots/pkg_litellm_vm_podman_20260913_105629.png)
+![LiteLLM AI Gateway Web UI](../../images/test_screenshots/litellm_vm_podman_20260914_130145.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

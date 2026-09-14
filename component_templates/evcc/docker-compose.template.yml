@@ -1,0 +1,20 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Tested on Proxmox LXC: docker (latest, 2026-09-14), podman (latest, 2026-09-14); Proxmox VM: docker (latest, 2026-09-14), podman (latest, 2026-09-14)."
+# breaking_changes: none
+services:
+  evcc:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-evcc
+    restart: unless-stopped
+    ports:
+      - "{{ EVCC_WEB_PORT }}:7070"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/evcc/evcc.yaml:/etc/evcc.yaml"
+      - "{{ CONFIG_BASE_PATH }}/evcc/data:/root/.evcc"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

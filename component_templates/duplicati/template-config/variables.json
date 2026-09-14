@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8200",
+            "description": "Duplicati web interface port.",
+            "id": "DUPLICATI_WEB_PORT",
+            "label": "Duplicati Port",
+            "type": "port"
+        }
+    ]
+}

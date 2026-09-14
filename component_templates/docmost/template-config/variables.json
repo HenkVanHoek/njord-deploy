@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8116",
+            "description": "Docmost web interface port.",
+            "id": "DOCMOST_WEB_PORT",
+            "label": "Docmost Port",
+            "type": "port"
+        }
+    ]
+}

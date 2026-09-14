@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: DNS & Ad-Blocking Privacy Shield
 
-> **Stack ID:** `dns-shield-stack` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:38:50
+> **Stack ID:** `dns-shield-stack` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Network-wide privacy barrier bundling AdGuard Home DNS sinkhole with Unbound rec
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 2 modular containers
 
@@ -37,9 +37,13 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 
 #### Deployment Runtime Parameters:
 - **Port Bindings:** `Host/Standard`
-- **Web UI Endpoint:** `http://10.99.0.199:80`
+- **Web UI Endpoint:** `http://10.99.0.199:3000`
 - **Onboarding / Auth Protocol:** `wizard`
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/adguard-home`)
+
+#### Web UI Screenshot:
+![AdGuard Home Web UI](../../images/test_screenshots/adguard-home_vm_podman_20260914_122029.png)
+
 
 ```yaml
 # NjordDeploy verified configuration preview for adguard-home
@@ -71,6 +75,17 @@ status: healthy
 restart_policy: unless-stopped
 ```
 </details>
+
+---
+
+## 🖼️ Verified Web UI Screenshots Gallery
+
+The following live screenshots were automatically captured during the test run:
+
+### AdGuard Home (`adguard-home`)
+- **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
+
+![AdGuard Home Web UI](../../images/test_screenshots/adguard-home_vm_podman_20260914_122029.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

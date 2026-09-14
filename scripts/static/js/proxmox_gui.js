@@ -29,6 +29,7 @@
     activeAiModel: "",
     currentReportFile: "",
     currentCompId: "",
+    currentRunItems: null,
   };
 
   // DOM Elements
@@ -97,6 +98,12 @@
     copyTerminalBtn: document.getElementById("copy-terminal-btn"),
     viewReportBtn: document.getElementById("view-report-btn"),
     exportLatestPdfBtn: document.getElementById("export-latest-pdf-btn"),
+
+    // Matrix Execution Progress Bar elements
+    progressCard: document.getElementById("execution-progress-card"),
+    progressBlocksTrack: document.getElementById("progress-blocks-track"),
+    progressStatsBadge: document.getElementById("progress-stats-badge"),
+    progressTooltip: document.getElementById("progress-tooltip"),
 
     // Results & History table
     resultsTableBody: document.getElementById("results-table-body"),
@@ -1176,6 +1183,171 @@
   }
 
   /**
+   * Summarizes an error message into a concise, readable single-line reason
+   */
+  function summarizeError(errMsg) {
+    if (!errMsg || typeof errMsg !== "string") return "Onbekende fout";
+    const clean = errMsg.replace(/\s+/g, " ").trim();
+    if (clean.includes("no such file or directory")) {
+      const match = clean.match(/"([^"]+)": no such file or directory/i);
+      return match ? `Ontbrekend apparaat/bestand: ${match[1]}` : "Apparaat of bestand ontbreekt op host";
+    }
+    if (clean.includes("/dev/net/tun")) return "Kernel /dev/net/tun ontbreekt (VPN vereiste)";
+    if (clean.includes("error connecting to server")) return "Verbinding met afhankelijke server geweigerd";
+    if (clean.includes("port is already allocated") || clean.includes("address already in use")) {
+      return "Poortconflict op doelhost";
+    }
+    if (clean.includes("pull access denied") || clean.includes("repository does not exist")) {
+      return "Container image niet gevonden / pull geweigerd";
+    }
+    if (clean.includes("connection timed out") || clean.includes("timed out")) {
+      return "Time-out tijdens opstarten of health probe";
+    }
+    if (clean.length > 95) {
+      return clean.slice(0, 92) + "...";
+    }
+    return clean;
+  }
+
+  /**
+   * Renders the dynamic matrix execution progress bar with 100+ blocks and tooltips
+   */
+  function renderProgressBar() {
+    if (!elements.progressBlocksTrack) return;
+
+    // Prioritize currentRunItems if available, otherwise filter active execution items
+    let items = state.currentRunItems;
+    if (!Array.isArray(items) || items.length === 0) {
+      items = state.results.filter((r) => !r.is_history);
+    }
+
+    if (!items || items.length === 0) {
+      elements.progressBlocksTrack.innerHTML = `
+        <div style="width: 100%; text-align: center; color: var(--text-muted); font-size: 0.78rem; padding: 0.25rem 0;">
+          Selecteer componenten en start een testrun om de realtime voortgangsbalk te zien.
+        </div>
+      `;
+      if (elements.progressStatsBadge) {
+        elements.progressStatsBadge.textContent = "0 / 0 Executies (0%)";
+      }
+      return;
+    }
+
+    // Always keep chronological queue order (first test = index 0 = leftmost block)
+    const displayItems = [...items];
+
+    const total = displayItems.length;
+    const completed = displayItems.filter(
+      (r) => r.status === "success" || r.status === "failed" || r.status === "skipped"
+    ).length;
+    const failedCount = displayItems.filter((r) => r.status === "failed").length;
+    const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    if (elements.progressStatsBadge) {
+      const failTag = failedCount > 0 ? ` • ${failedCount} Fout` : "";
+      elements.progressStatsBadge.textContent = `${completed} / ${total} Executies (${pct}%)${failTag}`;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    displayItems.forEach((rec, idx) => {
+      const block = document.createElement("div");
+      const status = (rec.status || "pending").toLowerCase();
+      block.className = `progress-block status-${status}`;
+      block.dataset.index = idx;
+      block.dataset.comp = rec.component_id || "unknown";
+      block.dataset.mode = (rec.mode || "LXC").toUpperCase();
+      block.dataset.engine = (rec.engine || "DOCKER").toUpperCase();
+      block.dataset.status = status;
+      if (rec.error_message) {
+        block.dataset.error = rec.error_message;
+      }
+
+      // Mouse-over event handler for interactive tooltip
+      block.addEventListener("mouseenter", (e) => {
+        showProgressTooltip(e, rec);
+      });
+      block.addEventListener("mouseleave", () => {
+        hideProgressTooltip();
+      });
+      block.addEventListener("mousemove", (e) => {
+        positionProgressTooltip(e);
+      });
+
+      fragment.appendChild(block);
+    });
+
+    elements.progressBlocksTrack.innerHTML = "";
+    elements.progressBlocksTrack.appendChild(fragment);
+  }
+
+  /**
+   * Tooltip display management
+   */
+  function showProgressTooltip(event, record) {
+    if (!elements.progressTooltip) return;
+
+    const compId = record.component_id || "Onbekend";
+    const mode = (record.mode || "LXC").toUpperCase();
+    const engine = (record.engine || "DOCKER").toUpperCase();
+    const status = (record.status || "pending").toLowerCase();
+    const isFailed = status === "failed";
+
+    let statusLabel = "⚪ In de wachtrij (wachten)";
+    if (status === "running") statusLabel = "🟠 Bezig met uitvoeren...";
+    else if (status === "success") statusLabel = "🟢 Succesvol geslaagd";
+    else if (status === "failed") statusLabel = "🔴 Fout opgetreden";
+    else if (status === "skipped") statusLabel = "⚪ Overgeslagen";
+
+    let errorHtml = "";
+    if (isFailed && record.error_message) {
+      const summary = summarizeError(record.error_message);
+      errorHtml = `
+        <div class="progress-tooltip-error">
+          <strong>Foutoorzaak:</strong> ${escapeHtml(summary)}
+        </div>
+      `;
+    }
+
+    elements.progressTooltip.className = `progress-tooltip ${isFailed ? "tooltip-failed" : ""}`;
+    elements.progressTooltip.innerHTML = `
+      <div class="progress-tooltip-header">
+        <span>📦 ${escapeHtml(compId)}</span>
+        <span>${statusLabel}</span>
+      </div>
+      <div class="progress-tooltip-meta">
+        Modus: <strong>${escapeHtml(mode)}</strong> | Engine: <strong>${escapeHtml(engine)}</strong>
+        ${record.vmid ? ` | VMID: ${record.vmid}` : ""}
+      </div>
+      ${errorHtml}
+    `;
+
+    elements.progressTooltip.style.display = "block";
+    positionProgressTooltip(event);
+  }
+
+  function positionProgressTooltip(event) {
+    if (!elements.progressTooltip || elements.progressTooltip.style.display === "none") return;
+    const x = event.clientX;
+    const y = event.clientY - 12;
+
+    // Boundary check so tooltip does not flow outside viewport
+    const tooltipWidth = elements.progressTooltip.offsetWidth || 280;
+    const maxX = window.innerWidth - tooltipWidth / 2 - 16;
+    const minX = tooltipWidth / 2 + 16;
+    const safeX = Math.max(minX, Math.min(maxX, x));
+
+    elements.progressTooltip.style.left = `${safeX}px`;
+    elements.progressTooltip.style.top = `${y}px`;
+  }
+
+  function hideProgressTooltip() {
+    if (elements.progressTooltip) {
+      elements.progressTooltip.style.display = "none";
+    }
+  }
+
+  /**
    * Renders the complete results and history table with RAF batching
    */
   let renderTablePending = false;
@@ -1185,6 +1357,7 @@
     requestAnimationFrame(() => {
       renderTablePending = false;
       _doRenderResultsTable();
+      renderProgressBar();
     });
   }
 
@@ -1320,27 +1493,43 @@
             _id: `hist-${idx}-${rec.component_id}-${(rec.mode || "").toUpperCase()}-${(rec.engine || "").toUpperCase()}-${rec.timestamp}`,
           }));
 
-          // Preserve live records and merge with history safely
-          const currentLive = state.results.filter((r) => !r.is_history);
-          const historyKeySet = new Set(
-            histRecords.map(
-              (r) =>
-                `${r.component_id}_${r.timestamp}_${(
-                  r.mode || ""
-                ).toUpperCase()}_${(r.engine || "").toUpperCase()}`
-            )
-          );
+          const serviceKey = (r) => {
+            const id = r.component_id || (r.is_package ? r.package_name : "") || "";
+            const mode = (r.mode || "").toUpperCase();
+            const engine = (r.engine || "").toUpperCase();
+            return `${id}_${mode}_${engine}`;
+          };
 
-          const pendingLive = currentLive.filter(
-            (r) =>
-              !historyKeySet.has(
-                `${r.component_id}_${r.timestamp}_${(
-                  r.mode || ""
-                ).toUpperCase()}_${(r.engine || "").toUpperCase()}`
-              )
-          );
+          const historyKeySet = new Set(histRecords.map(serviceKey));
+
+          // If a record exists in history, discard any live row for it to prevent duplicates
+          const currentLive = state.results.filter((r) => !r.is_history);
+          const pendingLive = currentLive.filter((r) => {
+            if (!state.isRunning) return false;
+            return !historyKeySet.has(serviceKey(r));
+          });
 
           state.results = [...pendingLive, ...histRecords];
+
+          // Synchronize state.currentRunItems with loaded history records
+          if (Array.isArray(state.currentRunItems) && state.currentRunItems.length > 0) {
+            const histMap = new Map();
+            histRecords.forEach((h) => {
+              histMap.set(serviceKey(h), h);
+            });
+            state.currentRunItems.forEach((r) => {
+              const matchedHist = histMap.get(serviceKey(r));
+              if (matchedHist) {
+                Object.assign(r, {
+                  ...matchedHist,
+                  is_history: false,
+                });
+              } else if (!state.isRunning && (r.status === "running" || r.status === "pending")) {
+                r.status = "failed";
+              }
+            });
+          }
+
           renderResultsTable();
         }
       }
@@ -1382,35 +1571,63 @@
       const recEngine = (rec.engine || "").toUpperCase();
 
       // Find matching live record matching component_id, mode, and engine
-      const match =
-        state.results.find(
+      let match = state.results.find(
+        (r) =>
+          !r.is_history &&
+          r.component_id === rec.component_id &&
+          (r.mode || "").toUpperCase() === recMode &&
+          (r.engine || "").toUpperCase() === recEngine &&
+          (r.status === "pending" || r.status === "running")
+      );
+
+      if (!match) {
+        // Fallback: match by component_id and mode or engine if one is unspecified/fuzzy
+        match = state.results.find(
           (r) =>
             !r.is_history &&
             r.component_id === rec.component_id &&
-            (r.mode || "").toUpperCase() === recMode &&
-            (r.engine || "").toUpperCase() === recEngine &&
             (r.status === "pending" || r.status === "running")
-        ) ||
-        state.results.find(
+        );
+      }
+
+      if (!match) {
+        // Fallback: match existing live record for the same component_id, mode, and engine regardless of status
+        match = state.results.find(
           (r) =>
             !r.is_history &&
             r.component_id === rec.component_id &&
             (r.mode || "").toUpperCase() === recMode &&
             (r.engine || "").toUpperCase() === recEngine
         );
+      }
 
       if (match) {
         const origTs = match.timestamp;
         Object.assign(match, rec);
         if (origTs) match.timestamp = origTs;
       } else {
-        state.results.unshift({
+        // If not in pre-populated list, append in queue order rather than unshifting
+        state.results.push({
           ...rec,
           timestamp: rec.timestamp || getTimestamp(),
           is_history: false,
           _id: `live-${rec.component_id}-${recMode}-${recEngine}-${Date.now()}`,
         });
       }
+
+      // Also update matching item in state.currentRunItems
+      if (Array.isArray(state.currentRunItems)) {
+        const runItem = state.currentRunItems.find(
+          (r) =>
+            r.component_id === rec.component_id &&
+            (r.mode || "").toUpperCase() === recMode &&
+            (r.engine || "").toUpperCase() === recEngine
+        );
+        if (runItem) {
+          Object.assign(runItem, rec);
+        }
+      }
+
       renderResultsTable();
     } else if (msgData.type === "status") {
       if (msgData.status === "completed") {
@@ -1538,7 +1755,10 @@
           });
         });
       });
-      state.results = [...newPendingRows, ...state.results];
+      // Remove any previous live run items from state.results
+      state.currentRunItems = [...newPendingRows];
+      const prevHistory = state.results.filter((r) => r.is_history);
+      state.results = [...newPendingRows, ...prevHistory];
       renderResultsTable();
 
       try {
@@ -1643,7 +1863,10 @@
           });
         });
       });
-      state.results = [...newPendingRows, ...state.results];
+      // Remove any previous live run items from state.results
+      state.currentRunItems = [...newPendingRows];
+      const prevHistory = state.results.filter((r) => r.is_history);
+      state.results = [...newPendingRows, ...prevHistory];
       renderResultsTable();
 
       try {
@@ -1709,6 +1932,18 @@
           }
         }
       });
+      if (Array.isArray(state.currentRunItems)) {
+        state.currentRunItems.forEach((r) => {
+          if (r.status === "running" || r.status === "pending") {
+            r.status = "failed";
+            r.deployment = "Aborted";
+            r.running = false;
+            if (!r.error_message) {
+              r.error_message = "Test session was manually aborted by user.";
+            }
+          }
+        });
+      }
       renderResultsTable();
     } catch (err) {
       console.error("Failed to stop tests:", err);

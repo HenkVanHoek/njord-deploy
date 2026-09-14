@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "3.1.0.4875-ls41"
-# platform_notes: "Tested on Proxmox LXC: docker (3.1.0.4875-ls41, 2026-09-11), podman (3.1.0.4875-ls40, 2026-09-04); Proxmox VM: docker (3.1.0.4875-ls40, 2026-09-04), podman (3.1.0.4875-ls40, 2026-09-04)."
+# platform_notes: "Tested on Proxmox LXC: docker (3.1.0.4875-ls41, 2026-09-14), podman (3.1.0.4875-ls41, 2026-09-14); Proxmox VM: docker (3.1.0.4875-ls41, 2026-09-14), podman (3.1.0.4875-ls41, 2026-09-14)."
 # breaking_changes: none
 services:
   lidarr:

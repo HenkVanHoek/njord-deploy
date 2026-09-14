@@ -1,6 +1,6 @@
 # 📦 Stack Verification Report: Agile Operations & Secure Chat
 
-> **Stack ID:** `agile-ops` | **Status:** ✅ PASSED | **Last Verified:** 2026-09-13 10:32:55
+> **Stack ID:** `agile-ops` | **Status:** ⚠️ VERIFIED | **Last Verified:** Pending test run
 
 ## Overview & Purpose
 
@@ -8,7 +8,7 @@ Agile project execution and encrypted collaboration workstation bundling Vikunja
 
 ### Test Environment & Parameters
 - **Hypervisor / Platform:** Proxmox VE 8.x
-- **Execution Target:** `VM` (PODMAN)
+- **Execution Target:** `Proxmox` (DOCKER)
 - **Host Bridge / Network:** Isolated Subnet (`10.99.0.x`)
 - **Services in Stack:** 5 modular containers
 
@@ -43,7 +43,7 @@ Expand each section below to inspect ports, auth protocol, and upstream project 
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/vikunja`)
 
 #### Web UI Screenshot:
-![Vikunja Web UI](../../images/test_screenshots/pkg_vikunja_vm_podman_20260913_103403.png)
+![Vikunja Web UI](../../images/test_screenshots/vikunja_vm_podman_20260914_134249.png)
 
 
 ```yaml
@@ -69,7 +69,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/focalboard`)
 
 #### Web UI Screenshot:
-![Focalboard Web UI](../../images/test_screenshots/pkg_focalboard_vm_podman_20260913_103411.png)
+![Focalboard Web UI](../../images/test_screenshots/focalboard_vm_podman_20260914_123840.png)
 
 
 ```yaml
@@ -96,7 +96,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/gitea`)
 
 #### Web UI Screenshot:
-![Gitea Web UI](../../images/test_screenshots/pkg_gitea_vm_podman_20260913_103414.png)
+![Gitea Web UI](../../images/test_screenshots/gitea_vm_podman_20260914_124122.png)
 
 
 ```yaml
@@ -145,7 +145,7 @@ restart_policy: unless-stopped
 - **Volume Mapping:** Isolated Persistent Storage (`/opt/njorddeploy/memos`)
 
 #### Web UI Screenshot:
-![Memos Web UI](../../images/test_screenshots/pkg_memos_vm_podman_20260913_103417.png)
+![Memos Web UI](../../images/test_screenshots/memos_vm_podman_20260914_130259.png)
 
 
 ```yaml
@@ -165,22 +165,22 @@ The following live screenshots were automatically captured during the test run:
 ### Vikunja (`vikunja`)
 - **Endpoint:** [http://10.99.0.199:3456](http://10.99.0.199:3456)
 
-![Vikunja Web UI](../../images/test_screenshots/pkg_vikunja_vm_podman_20260913_103403.png)
+![Vikunja Web UI](../../images/test_screenshots/vikunja_vm_podman_20260914_134249.png)
 
 ### Focalboard (`focalboard`)
 - **Endpoint:** [http://10.99.0.199:8099](http://10.99.0.199:8099)
 
-![Focalboard Web UI](../../images/test_screenshots/pkg_focalboard_vm_podman_20260913_103411.png)
+![Focalboard Web UI](../../images/test_screenshots/focalboard_vm_podman_20260914_123840.png)
 
 ### Gitea (`gitea`)
 - **Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
 
-![Gitea Web UI](../../images/test_screenshots/pkg_gitea_vm_podman_20260913_103414.png)
+![Gitea Web UI](../../images/test_screenshots/gitea_vm_podman_20260914_124122.png)
 
 ### Memos (`memos`)
 - **Endpoint:** [http://10.99.0.199:5230](http://10.99.0.199:5230)
 
-![Memos Web UI](../../images/test_screenshots/pkg_memos_vm_podman_20260913_103417.png)
+![Memos Web UI](../../images/test_screenshots/memos_vm_podman_20260914_130259.png)
 
 ---
 [⬅️ Back to Master Test Dashboard](../LATEST_RUN.md)

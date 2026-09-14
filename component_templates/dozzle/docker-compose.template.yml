@@ -1,0 +1,19 @@
+# status: "tested"
+# last_tested_version: "v11.0.1"
+# platform_notes: "Tested on Proxmox LXC: docker (v11.0.1, 2026-09-14), podman (v11.0.1, 2026-09-14); Proxmox VM: docker (v11.0.1, 2026-09-14), podman (v11.0.1, 2026-09-14)."
+# breaking_changes: none
+services:
+  dozzle:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-dozzle
+    restart: unless-stopped
+    ports:
+      - "{{ DOZZLE_WEB_PORT }}:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

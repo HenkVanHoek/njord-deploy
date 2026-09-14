@@ -1,0 +1,11 @@
+{
+    "variables": [
+        {
+            "default": "8082",
+            "description": "MeTube web interface port.",
+            "id": "METUBE_WEB_PORT",
+            "label": "MeTube Port",
+            "type": "port"
+        }
+    ]
+}

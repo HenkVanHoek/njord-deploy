@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "v6.6.6"
+# platform_notes: "Tested on Proxmox LXC: docker (v6.6.6, 2026-09-14), podman (v6.6.6, 2026-09-14); Proxmox VM: docker (v6.6.6, 2026-09-14), podman (v6.6.6, 2026-09-14)."
+# breaking_changes: none
+services:
+  firefly-iii:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-firefly-iii
+    restart: unless-stopped
+    environment:
+      - APP_KEY=32CharactersStringForFireflyIII!
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/html/storage/database/database.sqlite
+      - TZ=UTC
+    ports:
+      - "{{ FIREFLY_III_WEB_PORT }}:8080"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/firefly-iii/upload:/var/www/html/storage/upload"
+      - "{{ CONFIG_BASE_PATH }}/firefly-iii/database:/var/www/html/storage/database"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,39 @@
+# status: "tested"
+# last_tested_version: "16.15"
+# platform_notes: "Tested on Proxmox LXC: docker (v4.2.0, 2026-09-14), podman (1.19, 2026-09-14); Proxmox VM: docker (v4.2.0, 2026-09-14), podman (16.15, 2026-09-14)."
+# breaking_changes: none
+services:
+  teslamate:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-teslamate
+    restart: unless-stopped
+    environment:
+      - ENCRYPTION_KEY=supersecretencryptionkey123456789
+      - DATABASE_USER=teslamate
+      - DATABASE_PASS=secretpassword
+      - DATABASE_NAME=teslamate
+      - DATABASE_HOST=teslamate_db
+      - MQTT_HOST=mosquitto
+    ports:
+      - "{{ TESLAMATE_WEB_PORT }}:4000"
+    depends_on:
+      - teslamate_db
+    networks:
+      - njorddeploy_net
+
+  teslamate_db:
+    image: postgres:16-alpine
+    container_name: njorddeploy-teslamate-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=teslamate
+      - POSTGRES_PASSWORD=secretpassword
+      - POSTGRES_DB=teslamate
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/teslamate/db:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true
