@@ -199,6 +199,15 @@ def main() -> None:
             print("\n❌ PRE-RELEASE CHECK FAILED AT CODE QUALITY GATE.")
             sys.exit(1)
 
+        # Local CodeQL Static Security Analysis
+        codeql_runner = os.path.join(repo_root, "scripts", "run_local_codeql.py")
+        if os.path.exists(codeql_runner):
+            if not run_command_gate(
+                "Local CodeQL Security Analysis", [sys.executable, codeql_runner]
+            ):
+                print("\n❌ PRE-RELEASE CHECK FAILED AT LOCAL CODEQL GATE.")
+                sys.exit(1)
+
     # 4. Unit Test Suite Gate
     if not args.skip_tests:
         pytest_bin = os.path.join(repo_root, ".venv", "bin", "pytest")
