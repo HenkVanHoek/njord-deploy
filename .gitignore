@@ -90,3 +90,5 @@ docs/*MARKETING*
 docs/*BLUEPRINT*
 docs/*STRATEGY*
 docs/*LAUNCH*
+data/
+scripts/batch_component_builder.py
