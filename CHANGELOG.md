@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
-## [1.0.0-RC4] - 2026-09-14
+## [1.0.0] - 2026-09-14 (General Availability)
 
 ### Added
 - **Fleet Update Management System (FUMS) Architectural Specification (`docs/FLEET_UPDATE_MANAGEMENT_SPEC.md`)**:
