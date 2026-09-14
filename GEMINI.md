@@ -31,7 +31,7 @@
 - **Traceability:** When creating commits or writing code, map requirements from `docs/FUNCTIONAL_SPEC.md` to explicit test functions in `tests/`[cite: 3, 4, 5].
 
 ## File Modification Workflow
-- **Data Protection:** NEVER manually edit or generate overrides for `config/components_metadata.json`. It must only be modified via the `editor_app`[cite: 1, 4, 5].
+- **Data Protection:** `config/components_metadata.json` must only be modified programmatically via the `editor_app` API, the `ComponentManager` DAL, or validated synchronization tools. Never introduce raw unvalidated overrides or corrupt schema formatting.
 - **Version Management:** Do not place the version number inside the main application code. It must only be maintained in `version.py`.
 - **Markdown Output:** Always output files ending in `.md` in raw text/markdown format.
 

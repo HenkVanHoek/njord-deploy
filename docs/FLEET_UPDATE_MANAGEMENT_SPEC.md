@@ -137,19 +137,25 @@ flowchart TD
 * **Doel:** Medewerkers trainen, screenshots/handleidingen maken en formele Customer Acceptance Testing (UAT) uitvoeren vóór de livegang.
 * **Trigger:** On-demand aangevraagd door de klant via Signal/Matrix of het webportaal bij een major update.
 * **Duur:** 7 tot 14 dagen (met automatische Time-To-Live).
-* **Werking:**
-  1. Proxmox start een geïsoleerde staging-omgeving met een subdomein (bijv. `https://training-klant.njorddeploy.com`).
-  2. **Data Masking:** Productiedata wordt geanonimiseerd (AVG/GDPR-compliant; geen persoonsgegevens in trainingsomgevingen).
-  3. De klant traint medewerkers zonder angst voor vervuiling of downtime in productie.
-  4. Zodra de key-user de formele **UAT Sign-off** geeft, plant FUMS de echte productie-update in en breekt de trainingscontainer automatisch af.
+* **Data Privacy & Dummy Seeding (KISS):**
+  - *Standaard:* Gebruikt een **schone 'seed'-database** met dummy-accounts en testdata. Volledig AVG/GDPR-veilig, direct operationeel en geen risico op lekken van persoonsgegevens.
+  - *Custom:* Data-masking op klantdata uitsluitend op expliciet verzoek met specifieke transformatiescripts en verwerkersovereenkomst.
+* **Netwerk-Isolatie & Mailpit Catcher:**
+  - Uitgaande SMTP- en webhook-verbindingen worden in trainingsomgevingen afgevangen en omgeleid naar een lokale dummy-catcher (**Mailpit**). Voorkomt dat cursisten per ongeluk echte klanten of leveranciers mailen.
+* **Resource Beheer & Concurrency Quota:**
+  - **Quotum:** Maximaal 3 gelijktijdige actieve klant-sandboxes op Proxmox.
+  - **Nightly Sleep:** Trainingscontainers worden buiten kantoortijden (19:00 - 07:00) automatisch gepauzeerd/gestopt om CPU en RAM vrij te houden.
+* **UAT Sign-off:** Zodra de key-user de formele **UAT Sign-off** geeft, plant FUMS de echte productie-update in en breekt de trainingscontainer automatisch af.
 
 ---
 
 ## 4. Technische Pijlers & Safeguards
 
-### 4.1. Release Intelligence AI Agent (RISA)
-* Analyseert upstream GitHub releases, changelogs, breaking changes en git-diffs.
-* Genereert een JSON-machine-recept voor Ansible én een begrijpelijke toelichting in gewone mensentaal voor de klant.
+### 4.1. Release Intelligence AI Agent (RISA) Token Hygiene
+* Om token-explosies en context-window overflow bij omvangrijke upstream changelogs te voorkomen, hanteert RISA een **pre-filtering pipeline**:
+  - **Targeted File Inspection:** Inspecteert uitsluitend `docker-compose.yml`, `Dockerfile`, `.env.example`, `MIGRATION.md` en release highlights (geen ruwe applicatie-sourcecode).
+  - **Regex Prioritering:** Filtert release notes primair op signaalwoorden: `BREAKING`, `DEPRECATED`, `DATABASE`, `MIGRATION`, `ENV_VAR`, `SCHEMA`.
+* Genereert op basis hiervan een compact machine-recept (JSON) voor Ansible én een begrijpelijke samenvatting voor de klant.
 
 ### 4.2. Het Database-Migratie Rollback Dilemma (Atomaire State)
 * Onder **High-Safety** zijn Database Dump + Config State een onlosmakelijke atomaire eenheid.
@@ -192,10 +198,11 @@ Of beheer via: https://hub.njorddeploy.com/approve?token=...
 
 ---
 
-## 6. Implementatiefasen
+## 6. Pragmatische Implementatiefasering
+Om snel live te gaan met maximale bescherming zonder verstrikt te raken in vroege complexiteit:
 
-1. **Fase 1 (VM 140 & RISA):** DIUN inrichten, `release_intelligence_auditor.py` implementeren voor GitHub API analyse en Signal/Matrix dispatch.
-2. **Fase 2 (Proxmox Gatekeeper Sandbox):** Koppeling met `proxmox_test_runner.py` voor geautomatiseerde staging runs bij risicovolle updates.
-3. **Fase 3 (Interactive Customer Sandbox):** Geïsoleerde provisioning van trainings-omgevingen met data-masking en automatische TTL.
-4. **Fase 4 (Ansible Engine):** `ansible/update_service.yml` met 2.5x disk space check, lockfile, atomaire DB-dump en harde rollback.
-5. **Fase 5 (Scheduler & Decharge):** SQLite taakqueue en audit logging naar Henks Geheugen.
+| Fase | Focus | Operationeel Doel |
+| :--- | :--- | :--- |
+| **Stap 1** | **RISA Token Filtering + Ansible Pre-flights (Direct)** | Directe bescherming in productie: 2.5x disk space check, lockfile, atomaire DB-dump, harde rollback en notificaties via Signal/Matrix. |
+| **Stap 2** | **De Proeftuin Modus A (Gatekeeper)** | Automatische synthetische Proxmox Gatekeeper voor major updates. Voorkomt dat slechte upstream releases ooit bij klanten terechtkomen. |
+| **Stap 3** | **De Proeftuin Modus B (Klant Sandbox & UAT)** | Klantsandboxes met schone dummy-seeding, Mailpit-isolatie, nightly sleep en subdomein-routering toevoegen zodra de basis 100% stabiel draait. |
