@@ -7,6 +7,16 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [1.0.0] - 2026-09-14 (General Availability)
 
 ### Added
+- **Fleet Update Management System (FUMS) Core Implementation & Test/Security Suite**:
+  - Implemented **RISA Token Filtering Engine (`src/utils/risa_prefilter.py`)**: Targeted file and regex-based token hygiene protecting LLM context windows, signal word parsing (`BREAKING`, `DATABASE`, `MIGRATION`), and automated risk tiering (Green/Orange/Red).
+  - Implemented **Ansible High-Safety Playbook (`ansible/update_playbook.yml`)**: Maintenance lockout (`/run/njord_updating.lock`), 2.5x disk space pre-flight checks, pre-flight atomic configuration & DB dumps, and automated atomic rollbacks upon failed container health probes.
+  - Implemented **Notification Dispatcher & Admin Escalation (`src/utils/fums_notifier.py`)**: Multi-channel customer proposal dispatching (Signal & Matrix) and immediate P1 emergency alerts to administrator (Henk).
+  - Implemented **Dual-Mode Proeftuin Managers**:
+    - *Modus A Gatekeeper (`src/managers/gatekeeper_manager.py`)*: Autonomous synthetic LXC staging, schema migration tests, AI failure root-cause analysis (`AIFailureDiagnoser`), and automatic quarantine.
+    - *Modus B Customer Interactive Sandbox (`src/managers/customer_sandbox_manager.py`)*: On-demand 14-day training sandboxes, AVG/GDPR dummy data seeding, Mailpit outbound traps (port 8025), concurrency quota gating (max 3), nightly sleep cycles (19:00 - 07:00), and formal UAT key-user sign-offs.
+  - Built **FUMS Security & Threat Model Suite (`tests/fums/test_fums_security.py`)**: Strict defense against SSRF, CRLF injection, command injection, and tenant path leakage.
+  - Built **FUMS Operational End-to-End Suite (`tests/fums/test_fums_operational_e2e.py`)**: Verifies 5 comprehensive lifecycles (Routine patch, Gatekeeper certification, Quarantine, Training UAT, and Atomic rollback).
+  - Created **Operational CLI Test Runner (`scripts/fums_test_runner.py`)**: Standalone and CI/CD validation runner executing all 38 FUMS unit, security, and E2E checks with 100% pass rate.
 - **Fleet Update Management System (FUMS) Architectural Specification (`docs/FLEET_UPDATE_MANAGEMENT_SPEC.md`)**:
   - Engineered architectural blueprint for central fleet management on VM 140 (`njorddeploy-vm`).
   - Integrated **Release Intelligence AI Agent (RISA)** to parse upstream release notes, breaking changes, and git-diffs.

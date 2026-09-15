@@ -92,3 +92,12 @@ docs/*STRATEGY*
 docs/*LAUNCH*
 data/
 scripts/batch_component_builder.py
+
+# Offensive Security, Pentest Tooling & Vulnerability Reports (Henks Geheugen Only)
+#-----------------------------------------
+*PENTEST*
+*pentest*
+docs/security/
+scripts/setup_pentest_target.py
+scripts/run_pentest_exploits.py
+scripts/setup_kali_vm.py

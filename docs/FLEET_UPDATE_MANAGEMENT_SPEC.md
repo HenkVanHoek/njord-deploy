@@ -198,11 +198,37 @@ Of beheer via: https://hub.njorddeploy.com/approve?token=...
 
 ---
 
-## 6. Pragmatische Implementatiefasering
-Om snel live te gaan met maximale bescherming zonder verstrikt te raken in vroege complexiteit:
+## 6. Pragmatische Implementatiefasering & Validatiestatus
 
-| Fase | Focus | Operationeel Doel |
-| :--- | :--- | :--- |
-| **Stap 1** | **RISA Token Filtering + Ansible Pre-flights (Direct)** | Directe bescherming in productie: 2.5x disk space check, lockfile, atomaire DB-dump, harde rollback en notificaties via Signal/Matrix. |
-| **Stap 2** | **De Proeftuin Modus A (Gatekeeper)** | Automatische synthetische Proxmox Gatekeeper voor major updates. Voorkomt dat slechte upstream releases ooit bij klanten terechtkomen. |
-| **Stap 3** | **De Proeftuin Modus B (Klant Sandbox & UAT)** | Klantsandboxes met schone dummy-seeding, Mailpit-isolatie, nightly sleep en subdomein-routering toevoegen zodra de basis 100% stabiel draait. |
+| Fase | Focus | Operationeel Doel | Status |
+| :--- | :--- | :--- | :--- |
+| **Stap 1** | **RISA Token Filtering + Ansible Pre-flights** | Directe bescherming in productie: 2.5x disk space check, lockfile, atomaire DB-dump, harde rollback en notificaties via Signal/Matrix. | **Voltooid (✅)** |
+| **Stap 2** | **De Proeftuin Modus A (Gatekeeper)** | Automatische synthetische Proxmox Gatekeeper voor major updates. Voorkomt dat slechte upstream releases ooit bij klanten terechtkomen. | **Voltooid (✅)** |
+| **Stap 3** | **De Proeftuin Modus B (Klant Sandbox & UAT)** | Klantsandboxes met schone dummy-seeding, Mailpit-isolatie, nightly sleep en subdomein-routering. | **Voltooid (✅)** |
+
+---
+
+## 7. Operationele Testsuite & Security Model
+
+Voor continue kwaliteitsborging en compliancy beschikt FUMS over een geautomatiseerde testsuite:
+
+1. **Security & Threat Model (`tests/fums/test_fums_security.py`)**:
+   - **SSRF & URL Injection Defense**: Blokkeert onveilige schema's (`file://`, `gopher://`, `ftp://`) en CRLF-aanvallen op Signal API en Matrix homeserver endpoints.
+   - **Command Injection Prevention**: Garandeert veilige parameterisatie van Ansible variabelen via JSON dictionaries in plaats van shell-concatenatie.
+   - **AVG / GDPR Privacy Verificatie**: Valideert dat Modus B strikt dummy seeds hanteert en geen persoonsgegevens lekt.
+   - **Mailpit Traps**: Valideert dat uitgaande SMTP-verbindingen binnen trainingsomgevingen afgevangen worden op poort 8025.
+
+2. **Operationele End-to-End Orchestratie (`tests/fums/test_fums_operational_e2e.py`)**:
+   - **Keten 1 (Routine Patch)**: Groene risicoclassificatie -> directe uitrol zonder verstoring.
+   - **Keten 2 (Major Update met Gatekeeper)**: Rode classificatie -> Modus A Proxmox Gatekeeper certificering -> vrijgave aan klant.
+   - **Keten 3 (Quarantaine & AI Diagnose)**: Falende migratie -> onmiddellijke quarantaine -> AI analyse -> P1 alarm (geen klantblootstelling).
+   - **Keten 4 (Klant Training & UAT)**: Aanvraag Modus B -> quotumbewaking (max 3) -> nightly sleep -> UAT Sign-off -> automatische opruiming.
+   - **Keten 5 (Production Failure & Atomic Rollback)**: Falende health check in productie -> atomaire DB dump restore + revert image tag -> P1 alarm naar beheerder.
+
+3. **Geautomatiseerde CLI Runner (`scripts/fums_test_runner.py`)**:
+   - Kan zelfstandig of in CI/CD uitgevoerd worden:
+     ```bash
+     python3 scripts/fums_test_runner.py          # Voer alle 38 FUMS tests uit
+     python3 scripts/fums_test_runner.py --suite security  # Alleen de security suite
+     python3 scripts/fums_test_runner.py --suite e2e       # Alleen de E2E ketens
+     ```

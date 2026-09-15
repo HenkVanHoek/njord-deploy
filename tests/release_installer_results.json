@@ -1738,5 +1738,125 @@
         "details": "Skipped"
       }
     ]
+  },
+  {
+    "timestamp": "20260914_151458",
+    "date": "2026-09-14 15:14:58",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260914_165226",
+    "date": "2026-09-14 16:52:26",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260914_165902",
+    "date": "2026-09-14 16:59:02",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
+  },
+  {
+    "timestamp": "20260914_173943",
+    "date": "2026-09-14 17:39:43",
+    "tag": "v0.4.46-Alpha",
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "results": [
+      {
+        "target": "Debian 12 (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Ubuntu 24.04 (LXC)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "Windows (VM)",
+        "success": true,
+        "details": "Passed"
+      },
+      {
+        "target": "macOS (OSX-KVM / CI)",
+        "success": true,
+        "details": "Skipped"
+      }
+    ]
   }
 ]

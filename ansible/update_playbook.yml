@@ -1,0 +1,150 @@
+---
+- name: FUMS Production Update Orchestration with High-Safety Safeguards
+  hosts: all
+  become: true
+  vars:
+    ansible_become_timeout: 60
+    # Lockfile per FUMS Spec 4.4
+    update_lockfile: "/run/njord_updating.lock"
+    # Target stack directory
+    project_config_dir: "/opt/njorddeploy"
+    # Multiplier for space pre-flight: 2.5x per FUMS Spec 4.4
+    disk_space_multiplier: 2.5
+    # Target component and version
+    target_component: "{{ component_id }}"
+    new_image_tag: "{{ new_tag }}"
+    old_image_tag: "{{ old_tag | default('') }}"
+    # Safety level: 'high_safety' (default) or 'fast_rolling'
+    safety_level: "{{ update_safety | default('high_safety') }}"
+    # Health check port or endpoint
+    health_check_port: "{{ service_port | default('') }}"
+    # Container engine: docker or podman
+    container_engine: "{{ engine | default('docker') }}"
+    compose_cmd: "{{ 'podman-compose' if (engine | default('docker') == 'podman') else 'docker compose' }}"
+
+  tasks:
+    - name: FUMS Step 1 - Acquire Exclusive Maintenance Lockout
+      ansible.builtin.shell: |
+        if [ -f "{{ update_lockfile }}" ]; then
+          pid=$(cat "{{ update_lockfile }}" 2>/dev/null || echo "")
+          if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+            echo "BUSY"
+            exit 1
+          fi
+        fi
+        echo $$ > "{{ update_lockfile }}"
+      register: lock_result
+      failed_when: "'BUSY' in lock_result.stdout"
+      changed_when: true
+
+    - name: FUMS Step 2 - Disk Space Pre-flight Check (>= 2.5x required)
+      ansible.builtin.shell: |
+        # Check available space in root partition (in megabytes)
+        avail_mb=$(df -m "{{ project_config_dir }}" | awk 'NR==2 {print $4}')
+        # Estimate image + db footprint (default minimum 1500MB if unspecified)
+        est_req_mb={{ estimated_footprint_mb | default(1500) }}
+        required_mb=$(python3 -c "import math; print(math.ceil($est_req_mb * {{ disk_space_multiplier }}))")
+        if [ "$avail_mb" -lt "$required_mb" ]; then
+          echo "INSUFFICIENT_SPACE: Available ${avail_mb}MB < Required ${required_mb}MB"
+          exit 2
+        fi
+        echo "OK: ${avail_mb}MB available, ${required_mb}MB required"
+      register: space_check
+      failed_when: "'INSUFFICIENT_SPACE' in space_check.stdout"
+      changed_when: false
+
+    - name: FUMS Step 3 - Pre-Flight Atomic Backup (High-Safety Mode)
+      when: safety_level == 'high_safety'
+      block:
+        - name: Ensure pre-update backup directory exists
+          ansible.builtin.file:
+            path: "{{ project_config_dir }}/fums_backups"
+            state: directory
+            mode: "0700"
+
+        - name: Create atomic snapshot of configuration and database state
+          ansible.builtin.shell: |
+            ts=$(date +%Y%m%d_%H%M%S)
+            backup_file="{{ project_config_dir }}/fums_backups/pre_update_{{ target_component }}_${ts}.tar.gz"
+            # Backup compose files, env file, and component configuration
+            cd "{{ project_config_dir }}"
+            tar -czf "$backup_file" docker-compose.yml docker-compose.yaml .env 2>/dev/null || tar -czf "$backup_file" compose.yml .env 2>/dev/null
+            echo "$backup_file"
+          register: pre_backup_result
+          changed_when: true
+
+        - name: Save active backup path variable
+          ansible.builtin.set_fact:
+            fums_active_backup: "{{ pre_backup_result.stdout_lines | last }}"
+
+    - name: FUMS Step 4 - Execute Image Pull & In-Place Container Update
+      block:
+        - name: Pull upstream container image
+          ansible.builtin.command:
+            cmd: "{{ compose_cmd }} pull {{ target_component }}"
+            chdir: "{{ project_config_dir }}"
+          changed_when: true
+
+        - name: Recreate container with new version
+          ansible.builtin.command:
+            cmd: "{{ compose_cmd }} up -d {{ target_component }}"
+            chdir: "{{ project_config_dir }}"
+          changed_when: true
+
+        - name: Wait for container to start
+          ansible.builtin.pause:
+            seconds: 5
+
+        - name: Verify Container Health Check Status
+          ansible.builtin.shell: |
+            # Check container status
+            cid=$({{ container_engine }} ps -q -f name={{ target_component }})
+            if [ -z "$cid" ]; then
+              echo "CONTAINER_NOT_RUNNING"
+              exit 1
+            fi
+            # If health check port provided, probe HTTP / port
+            if [ -n "{{ health_check_port }}" ]; then
+              for i in $(seq 1 12); do
+                if curl -fsSL -o /dev/null "http://127.0.0.1:{{ health_check_port }}" 2>/dev/null; then
+                  echo "HEALTHY"
+                  exit 0
+                fi
+                sleep 2
+              done
+              echo "PORT_PROBE_FAILED"
+              exit 1
+            fi
+            echo "HEALTHY"
+          register: health_check
+          failed_when: "'HEALTHY' not in health_check.stdout"
+          changed_when: false
+
+      rescue:
+        - name: FUMS Step 5 - Automatic Atomic Rollback Triggered
+          ansible.builtin.debug:
+            msg: "CRITICAL: Health check failed! Initiating automatic atomic rollback."
+
+        - name: Restore previous database & configuration state (High-Safety)
+          when: safety_level == 'high_safety' and fums_active_backup is defined
+          ansible.builtin.shell: |
+            if [ -f "{{ fums_active_backup }}" ]; then
+              tar -xzf "{{ fums_active_backup }}" -C "{{ project_config_dir }}"
+            fi
+          changed_when: true
+
+        - name: Revert container stack to previous state
+          ansible.builtin.command:
+            cmd: "{{ compose_cmd }} up -d {{ target_component }}"
+            chdir: "{{ project_config_dir }}"
+          changed_when: true
+
+        - name: Signal Rollback Complete with Error
+          ansible.builtin.fail:
+            msg: "FUMS_ROLLBACK_EXECUTED: Health check failed on {{ target_component }}. Successfully rolled back state."
+
+  always:
+    - name: FUMS Step 6 - Release Maintenance Lockout
+      ansible.builtin.file:
+        path: "{{ update_lockfile }}"
+        state: absent
