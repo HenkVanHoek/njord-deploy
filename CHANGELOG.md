@@ -7,6 +7,12 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [1.0.0] - 2026-09-14 (General Availability)
 
 ### Added
+- **Chatwoot Omnichannel Customer Support Component (`chatwoot`)**:
+  - Full modular multi-container stack integration: Chatwoot Web, Sidekiq background workers, PostgreSQL 16 (with `pgvector`), and Redis 7 with healthchecks.
+  - Formally registered in `config/components_metadata.json` and `component_templates/chatwoot/` with port mapping `3044:3000`.
+  - Configurable SMTP integration (Soverin/custom relays), session secret generation, and persistent data storage.
+  - Successfully deployed, provisioned, and verified live on dedicated Proxmox LXC container (`CT 104`) behind Caddy WAF and Tailscale mesh routing (`chat.njorddeploy.com`).
+  - Successfully verified in-place upgrade lifecycle from `v4.1.0` to `v4.17.1` via `DeploymentManager` with zero data loss and automated database schema migrations.
 - **Fleet Update Management System (FUMS) Core Implementation & Test/Security Suite**:
   - Implemented **RISA Token Filtering Engine (`src/utils/risa_prefilter.py`)**: Targeted file and regex-based token hygiene protecting LLM context windows, signal word parsing (`BREAKING`, `DATABASE`, `MIGRATION`), and automated risk tiering (Green/Orange/Red).
   - Implemented **Ansible High-Safety Playbook (`ansible/update_playbook.yml`)**: Maintenance lockout (`/run/njord_updating.lock`), 2.5x disk space pre-flight checks, pre-flight atomic configuration & DB dumps, and automated atomic rollbacks upon failed container health probes.

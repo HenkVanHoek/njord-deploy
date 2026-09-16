@@ -250,6 +250,12 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | pgAdmin 4 | Comprehensive open source administration and management tool for PostgreSQL databases. | N/A |
 
+## Communication
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Chatwoot | Customer engagement suite, omnichannel support and live chat platform. | [Link](https://www.chatwoot.com) |
+
 ## System & Tools
 
 | Service | Description | Project Homepage / Repository |

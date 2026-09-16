@@ -1,0 +1,49 @@
+{
+    "variables": [
+        {
+            "default": "3044",
+            "description": "The external TCP port on the host for Chatwoot web interface.",
+            "id": "CHATWOOT_WEB_PORT",
+            "label": "Chatwoot Web Port",
+            "required": "always",
+            "source": "",
+            "type": "port"
+        },
+        {
+            "default": "https://chat.njorddeploy.com",
+            "description": "Public URL where Chatwoot will be reachable.",
+            "id": "FRONTEND_URL",
+            "label": "Frontend URL",
+            "required": "always",
+            "source": "",
+            "type": "string"
+        },
+        {
+            "default": "generate_secret_token_placeholder",
+            "description": "Secret key used for Rails session encryption.",
+            "id": "SECRET_KEY_BASE",
+            "label": "Secret Key Base",
+            "required": "always",
+            "source": "dotenv",
+            "type": "password"
+        },
+        {
+            "default": "chatwoot_secure_pw_2026",
+            "description": "Password for the dedicated Chatwoot PostgreSQL database.",
+            "id": "POSTGRES_PASSWORD",
+            "label": "PostgreSQL Password",
+            "required": "always",
+            "source": "dotenv",
+            "type": "password"
+        },
+        {
+            "default": "chatwoot_redis_pw_2026",
+            "description": "Password for the dedicated Chatwoot Redis cache and worker queue.",
+            "id": "REDIS_PASSWORD",
+            "label": "Redis Password",
+            "required": "always",
+            "source": "dotenv",
+            "type": "password"
+        }
+    ]
+}

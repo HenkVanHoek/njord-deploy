@@ -141,7 +141,8 @@
             "Development",
             "Smart Home",
             "Developer Tools",
-            "Database Management"
+            "Database Management",
+            "communication"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -239,6 +240,10 @@
             "Utilities": {
                 "is_exclusive": false,
                 "name": "Utilities"
+            },
+            "communication": {
+                "is_exclusive": false,
+                "name": "Communication"
             },
             "dashboard": {
                 "is_exclusive": true,
@@ -714,6 +719,39 @@
             "requires_root": false,
             "test_status": "tested",
             "ui_port_variable": "CHANGEDETECTION_WEB_PORT"
+        },
+        "chatwoot": {
+            "component_version": "v4.17.1",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Customer engagement suite, omnichannel support and live chat platform.",
+            "docker_service_name": "chatwoot-web",
+            "first_run_info": {
+                "auth_type": "wizard",
+                "doc_url": "https://www.chatwoot.com/docs",
+                "onboarding_guide": "Open the web interface to create your super admin account and configure your inbox channel."
+            },
+            "group": "communication",
+            "has_configuration": true,
+            "has_ui": true,
+            "last_tested": "2026-09-16T15:17:57.356048+00:00",
+            "last_updated": "2026-09-16T15:17:57.356059+00:00",
+            "name": "Chatwoot",
+            "ports": [
+                "3044:3000"
+            ],
+            "project_url": "https://www.chatwoot.com",
+            "protocol": "http",
+            "tags": [
+                "chat",
+                "support",
+                "customer-service",
+                "omnichannel",
+                "messaging"
+            ],
+            "test_status": "testing",
+            "ui_port": 3044,
+            "ui_port_variable": "CHATWOOT_WEB_PORT"
         },
         "conduit": {
             "component_version": "latest",
