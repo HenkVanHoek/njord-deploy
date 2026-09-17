@@ -72,9 +72,12 @@ NjordDeploy is an agentless, metadata-driven self-hosting deployment engine desi
   - Local volume disaster recovery backups, offline AI component generation, and autonomous self-healing diagnostics.
   - Active by default in the Configurator application without artificial node limits or fees.
 - **Njord Console (MSP Fleet Orchestration)**:
-  - Designed for Managed Service Providers (MSPs), businesses, and multi-node fleet operators.
+  - **Pricing**: Starting from **€ 19 / node / month** (or per seat/tenant node).
+  - Designed for Managed Service Providers (MSPs), IT service firms, and multi-node fleet operators.
   - Centralized multi-tenant inventory, live health/telemetry dashboards, rolling remote updates, and automated encrypted off-site cloud backups.
+  - Secure outbound HTTPS polling architecture (no inbound ports open on client target servers).
   - Accessible via the "MSP / Fleet" navigation menu in the Configurator or by contacting info@njorddeploy.com for MSP Pilot Access.
+- **Enterprise Plan**: Custom pricing for 50+ nodes, private cloud deployments, and dedicated SLAs.
 - **Automatic Open Source Conversion**: Transitions unconditionally to the standard open-source **Apache 2.0 License** two years after release.
 
 ---

@@ -52,6 +52,7 @@ NjordDeploy uses a transparent, sovereignty-first pricing model structured in th
    * Licensed under the **[Business Source License 1.1 (BSL-1.1)](https://github.com/HenkVanHoek/njord-deploy/blob/main/LICENSE)**, automatically transitioning to the standard **Apache 2.0 License** two years after release.
 
 2. **Njord Console (MSP Fleet Orchestration)**:
+   * **Tarief**: Vanaf **€ 19 per node / maand** (of per beheerde seat/client).
    * Tailored for Managed Service Providers (MSPs), businesses, and multi-node fleet managers.
    * Centralized multi-tenant inventory, live health/telemetry dashboards, rolling remote updates, and automated encrypted off-site cloud backups across all your active nodes.
    * Can be explored directly via the **"MSP / Fleet"** button in the navigation bar of the web interface or by contacting [info@njorddeploy.com](mailto:info@njorddeploy.com) for MSP Pilot Access.
