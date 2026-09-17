@@ -882,14 +882,23 @@ def render_markdown_to_pdf(markdown_text: str, docs_dir: Path) -> Optional[bytes
 
         def embed_img(match: re.Match) -> str:
             rel_path = match.group(1)
-            img_file = (docs_dir / rel_path).resolve()
-            if str(img_file).startswith(str(docs_dir.resolve())) and img_file.exists():
+            # Support both "images/..." and "docs/images/..." in markdown sources
+            if rel_path.startswith("docs/"):
+                img_file = (project_root / rel_path).resolve()
+            else:
+                img_file = (docs_dir / rel_path).resolve()
+            if img_file.exists() and (
+                img_file.is_relative_to(docs_dir.resolve())
+                or img_file.is_relative_to(project_root.resolve())
+            ):
                 data = base64.b64encode(img_file.read_bytes()).decode("ascii")
                 ext = img_file.suffix.lstrip(".").lower() or "png"
                 return f'src="data:image/{ext};base64,{data}"'
             return match.group(0)
 
-        html_content = re.sub(r'src="(images/[^"]+)"', embed_img, html_content)
+        html_content = re.sub(
+            r'src="((?:docs/)?images/[^"]+)"', embed_img, html_content
+        )
 
         full_html = (
             "<!DOCTYPE html>\n<html>\n<head>\n"

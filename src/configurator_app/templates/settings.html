@@ -84,24 +84,11 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
-                <li class="nav-item">
-                    <button type="button" class="nav-link btn btn-link text-decoration-none" id="nav-billing-link" data-bs-toggle="tab" data-bs-target="#billing-pane" title="Manage Subscription, Plans & Invoices">
-                        <i class="fa-solid fa-credit-card me-1 text-info"></i> Billing
+                <li class="nav-item d-flex align-items-center ms-1 me-1">
+                    <button type="button" class="btn btn-sm btn-outline-primary fw-bold shadow-sm" data-bs-toggle="tab" data-bs-target="#billing-pane" title="MSP Fleet & Console Information">
+                        <i class="fa-solid fa-server me-1"></i> MSP / Fleet
                     </button>
                 </li>
-                {% if session.get('plan') != 'pro' %}
-                <li class="nav-item d-flex align-items-center ms-1 me-1">
-                    <button type="button" class="btn btn-sm btn-primary fw-bold text-white shadow-sm" data-bs-toggle="tab" data-bs-target="#billing-pane" title="Upgrade to NjordDeploy Pro">
-                        <i class="fa-solid fa-crown me-1 text-warning"></i> Upgrade to Pro
-                    </button>
-                </li>
-                {% else %}
-                <li class="nav-item d-flex align-items-center ms-1 me-1">
-                    <span class="badge bg-primary text-white shadow-sm" title="Active Pro Subscription">
-                        <i class="fa-solid fa-crown me-1 text-warning"></i> PRO
-                    </span>
-                </li>
-                {% endif %}
                 {% if session.get('user') %}
                 <li class="nav-item d-flex align-items-center me-2">
                     <span class="user-badge-nav shadow-sm" title="Logged in as {{ session.get('user') }}">
@@ -134,7 +121,7 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link fw-bold" id="billing-tab" data-bs-toggle="tab" data-bs-target="#billing-pane" type="button" role="tab">
-                        <i class="fa-solid fa-credit-card me-2"></i> Subscription &amp; Billing
+                        <i class="fa-solid fa-server me-2"></i> Fleet &amp; Licensing
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
@@ -533,14 +520,14 @@
                                 <div class="card-body p-4">
                                     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                                         <h5 class="card-title text-primary mb-0">
-                                            <i class="fa-solid fa-gem me-2"></i> Subscription &amp; Stripe Customer Portal
+                                            <i class="fa-solid fa-server me-2"></i> Standalone Community vs. Fleet Orchestration
                                         </h5>
-                                        <button type="button" class="btn btn-outline-primary btn-sm btn-billing-portal fw-bold">
-                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Open Stripe Customer Portal
-                                        </button>
+                                        <a href="mailto:info@njorddeploy.com?subject=MSP%20Pilot%20Inquiry%20-%20Njord%20Console" class="btn btn-outline-primary btn-sm fw-bold">
+                                            <i class="fa-solid fa-envelope me-1"></i> Contact for MSP Pilot
+                                        </a>
                                     </div>
                                     <p class="text-muted small mb-4">
-                                        Manage your active plan, download historical invoices, update payment methods (iDEAL, SEPA, Creditcard, Wero), or upgrade to NjordDeploy Pro.
+                                        NjordDeploy is 100% free and sovereign for single-tenant servers and homelabs. For multi-node MSP fleet orchestration and centralized monitoring, connect to Njord Console.
                                     </p>
 
                                     <div class="row g-3">
@@ -548,20 +535,21 @@
                                             <div class="p-4 rounded border bg-body-secondary h-100 shadow-sm d-flex flex-column justify-content-between">
                                                 <div>
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <h6 class="fw-bold mb-0 text-body">Free Community Tier</h6>
-                                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">Included</span>
+                                                        <h6 class="fw-bold mb-0 text-body">Community Edition</h6>
+                                                        <span class="badge bg-success-subtle text-success">Active • 100% Sovereign</span>
                                                     </div>
                                                     <div class="fs-4 fw-bold mb-2">€0 <span class="fs-6 text-muted fw-normal">/ forever</span></div>
-                                                    <p class="small text-muted mb-3">Ideal for personal homelabs and sovereign self-hosting beginners.</p>
+                                                    <p class="small text-muted mb-3">Ideal for personal homelabs, independent servers, and sovereign self-hosters.</p>
                                                     <ul class="small list-unstyled mb-4">
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Up to 2 self-hosted server nodes</li>
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100+ Curated component catalog</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Unlimited container deployments</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Full 100+ curated component catalog</li>
                                                         <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> 100% Local AI &amp; Docker / Rootless Podman</li>
                                                         <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Autonomous AI self-healing diagnostics</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-success me-2"></i> Local volume disaster recovery backups</li>
                                                     </ul>
                                                 </div>
                                                 <button type="button" class="btn btn-outline-secondary w-100 btn-sm disabled fw-bold" disabled>
-                                                    Current Base Plan
+                                                    Installed &amp; Active
                                                 </button>
                                             </div>
                                         </div>
@@ -569,28 +557,26 @@
                                             <div class="p-4 rounded border border-primary border-opacity-50 bg-primary-subtle h-100 shadow-sm d-flex flex-column justify-content-between">
                                                 <div>
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <h6 class="fw-bold mb-0 text-primary">NjordDeploy Pro</h6>
-                                                        <span class="badge bg-primary text-white">Popular</span>
+                                                        <h6 class="fw-bold mb-0 text-primary">Njord Console (MSP Fleet)</h6>
+                                                        <span class="badge bg-primary text-white">Multi-Node</span>
                                                     </div>
-                                                    <div class="fs-4 fw-bold text-primary mb-2">€5 <span class="fs-6 text-muted fw-normal">/ mnd of €50 / jr</span></div>
-                                                    <p class="small text-muted mb-3">For multi-node server fleets, automated encrypted backups &amp; priority alerts.</p>
+                                                    <div class="fs-4 fw-bold text-primary mb-2">Centralized <span class="fs-6 text-muted fw-normal">/ per active node</span></div>
+                                                    <p class="small text-muted mb-3">Multi-tenant fleet management, automated remote rolling updates &amp; aggregated telemetry.</p>
                                                     <ul class="small list-unstyled mb-4">
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> <strong>Unlimited</strong> server nodes &amp; VPS instances</li>
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Automated encrypted S3 cloud backups</li>
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Priority CVE security advisory notifications</li>
-                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Direct priority support</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Multi-node fleet orchestration &amp; inventory</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Outbound polling runner with data sovereignty</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Centralized health &amp; CVE advisory dashboards</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> Automated encrypted off-site cloud backups</li>
+                                                        <li class="mb-2"><i class="fa-solid fa-check text-primary me-2"></i> White-label customer tenant separation</li>
                                                     </ul>
                                                 </div>
                                                 <div class="d-grid gap-2">
-                                                    <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm btn-checkout-monthly">
-                                                        <i class="fa-solid fa-bolt me-1"></i> Upgrade Monthly (€5 / mnd)
-                                                    </button>
-                                                    <button type="button" class="btn btn-success btn-sm fw-bold shadow-sm btn-checkout-yearly">
-                                                        <i class="fa-solid fa-tag me-1"></i> Upgrade Yearly (€50 / jr - 2 mnd gratis)
-                                                    </button>
-                                                    <button type="button" class="btn btn-outline-primary btn-sm fw-bold btn-billing-portal mt-1">
-                                                        <i class="fa-solid fa-credit-card me-1"></i> Manage in Stripe Portal
-                                                    </button>
+                                                    <a href="mailto:info@njorddeploy.com?subject=MSP%20Pilot%20Access%20Request" class="btn btn-primary btn-sm fw-bold shadow-sm">
+                                                        <i class="fa-solid fa-paper-plane me-1"></i> Request MSP Pilot Access
+                                                    </a>
+                                                    <a href="https://njorddeploy.com" target="_blank" class="btn btn-outline-primary btn-sm fw-bold">
+                                                        <i class="fa-solid fa-globe me-1"></i> Learn More at njorddeploy.com
+                                                    </a>
                                                 </div>
                                             </div>
                                         </div>
@@ -809,5 +795,7 @@
 
 <script src="{{ url_for('static', filename='js/auth.js') }}?v=1.0"></script>
 <script src="{{ url_for('static', filename='js/billing.js') }}?v=1.0"></script>
+<!-- Chatwoot Live Support Widget -->
+<script src="{{ url_for('static', filename='js/chatwoot.js') }}?v=1.0" defer></script>
 </body>
 </html>

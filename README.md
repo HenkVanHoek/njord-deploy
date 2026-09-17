@@ -159,11 +159,11 @@ Contributions are welcome! Please review [ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## 📄 License
+## 📄 License & Commercial Architecture
 
 This project is licensed under the **[Business Source License 1.1 (BSL-1.1)](LICENSE)**:
-* **100% Free for Self-Hosting**: Free for personal homelabs, hobbyists, and managing up to two (2) self-hosted target server nodes without a commercial subscription.
+* **Standalone / Community**: 100% open, free, and sovereign to run on your own hardware, virtual machine, or homelab without artificial limits.
 * **Automatic Open Source Transition**: Transitions unconditionally to the standard **Apache 2.0 License** two years after release.
-* **Commercial / MSP Licensing**: Commercial platforms and MSP fleet management tiers require a commercial license or active subscription via the [Customer Portal](https://billing.stripe.com/p/login/00w28r5tw9E3goC9W91Nu00).
+* **MSP / Multi-node Fleet Management**: Managing multiple deployments or offering sovereign hosting to clients? Multi-node fleet orchestration, centralized health dashboards, and automated remote updates are supported via Njord Console. Contact us for MSP pilot access via [info@njorddeploy.com](mailto:info@njorddeploy.com).
 
 Copyright (c) 2025-2026 Henk van Hoek. All rights reserved.

@@ -1,504 +1,504 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-09-14 13:45:21
+**Run Timestamp:** 2026-09-15 21:08:05
 **Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 492 | **Passed:** 487 | **Skipped:** 5 | **Failed:** 0
 
 ## Results Table
 
-| Date / Time | Component ID | Target | Engine | VM ID | IP Address | Deployment | Containers | HTTP | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-09-14 08:45:12 | `actual-budget` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:46:40 | `actual-budget` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:00:22 | `actual-budget` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:19:28 | `actual-budget` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:45:33 | `adguard-home` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:47:00 | `adguard-home` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:01:39 | `adguard-home` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:20:13 | `adguard-home` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:45:49 | `adminer` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:47:16 | `adminer` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:01:55 | `adminer` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:20:32 | `adminer` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:46:06 | `apprise` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:47:32 | `apprise` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:02:13 | `apprise` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:20:56 | `apprise` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:46:30 | `audiobookshelf` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:47:51 | `audiobookshelf` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:02:37 | `audiobookshelf` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:21:20 | `audiobookshelf` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:46:51 | `bazarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:48:12 | `bazarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:03:04 | `bazarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:23:57 | `bazarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:47:26 | `beszel` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:48:45 | `beszel` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:07:48 | `beszel` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:24:36 | `beszel` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:47:44 | `bookstack` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:49:04 | `bookstack` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:08:06 | `bookstack` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:25:07 | `bookstack` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:48:31 | `caddy` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:49:54 | `caddy` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:08:56 | `caddy` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:26:25 | `caddy` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:48:54 | `calibre-web` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:50:14 | `calibre-web` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:09:19 | `calibre-web` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:26:48 | `calibre-web` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:49:21 | `changedetection` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:50:40 | `changedetection` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:09:49 | `changedetection` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:27:17 | `changedetection` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:49:57 | `conduit` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:51:11 | `conduit` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:11:53 | `conduit` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:28:08 | `conduit` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 08:50:12 | `cyberchef` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:51:26 | `cyberchef` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:12:10 | `cyberchef` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:28:25 | `cyberchef` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:50:30 | `dashdot` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:51:44 | `dashdot` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:12:29 | `dashdot` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:28:56 | `dashdot` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:50:49 | `diun` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:52:05 | `diun` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:12:47 | `diun` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:29:24 | `diun` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 08:51:13 | `docker-jitsi-meet` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:52:28 | `docker-jitsi-meet` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:13:11 | `docker-jitsi-meet` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:29:49 | `docker-jitsi-meet` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:51:52 | `dockge` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:00:26 | `dockge` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:13:54 | `dockge` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:31:18 | `dockge` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:52:27 | `docmost` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:01:01 | `docmost` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:14:27 | `docmost` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:31:53 | `docmost` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:53:15 | `dozzle` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:01:43 | `dozzle` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:15:16 | `dozzle` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:32:56 | `dozzle` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:53:33 | `drawio` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:02:00 | `drawio` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:15:34 | `drawio` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:33:16 | `drawio` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:54:01 | `duplicati` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:02:24 | `duplicati` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:16:01 | `duplicati` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:33:48 | `duplicati` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:54:27 | `esphome` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:02:44 | `esphome` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:16:26 | `esphome` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:34:15 | `esphome` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:55:00 | `etherpad` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:03:17 | `etherpad` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:17:01 | `etherpad` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:34:56 | `etherpad` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:55:32 | `evcc` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:03:47 | `evcc` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:17:33 | `evcc` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:35:29 | `evcc` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:55:55 | `excalidraw` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:04:10 | `excalidraw` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:17:55 | `excalidraw` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:35:53 | `excalidraw` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:56:11 | `filebrowser` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:04:25 | `filebrowser` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:18:12 | `filebrowser` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:36:16 | `filebrowser` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:56:28 | `firefly-iii` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:04:41 | `firefly-iii` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:18:29 | `firefly-iii` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:36:34 | `firefly-iii` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:57:10 | `flatnotes` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:05:20 | `flatnotes` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:19:08 | `flatnotes` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:37:36 | `flatnotes` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:57:39 | `focalboard` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:05:52 | `focalboard` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:19:38 | `focalboard` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:38:16 | `focalboard` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:58:05 | `freshrss` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:06:18 | `freshrss` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:20:04 | `freshrss` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:38:43 | `freshrss` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 08:58:24 | `frigate` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:06:34 | `frigate` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:20:23 | `frigate` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:39:03 | `frigate` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:00:28 | `gitea` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:07:49 | `gitea` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:28:59 | `gitea` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:40:43 | `gitea` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:00:56 | `gitlab` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:08:17 | `gitlab` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:29:22 | `gitlab` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:41:25 | `gitlab` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:01:48 | `glance` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:09:04 | `glance` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:30:15 | `glance` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:42:25 | `glance` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:02:07 | `gotify` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:09:22 | `gotify` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:30:35 | `gotify` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:42:51 | `gotify` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:02:23 | `grafana` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:09:38 | `grafana` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:30:52 | `grafana` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:43:09 | `grafana` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:02:52 | `grocy` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:10:23 | `grocy` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:31:23 | `grocy` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:43:59 | `grocy` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:03:15 | `headscale` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:10:46 | `headscale` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:31:48 | `headscale` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:44:32 | `headscale` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:03:34 | `heimdall` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:11:07 | `heimdall` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:32:09 | `heimdall` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:44:59 | `heimdall` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:03:51 | `homarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:11:21 | `homarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:32:26 | `homarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:45:21 | `homarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:04:30 | `homeassistant` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:11:55 | `homeassistant` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:34:09 | `homeassistant` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:46:09 | `homeassistant` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:05:27 | `homebridge` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:12:40 | `homebridge` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:35:05 | `homebridge` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:47:10 | `homebridge` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:06:13 | `homepage` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:13:22 | `homepage` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:35:56 | `homepage` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:47:57 | `homepage` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:06:36 | `homer` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:13:44 | `homer` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:36:22 | `homer` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:48:23 | `homer` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:06:51 | `immich` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:14:05 | `immich` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:36:38 | `immich` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:48:47 | `immich` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:07:43 | `it-tools` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:15:06 | `it-tools` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:37:27 | `it-tools` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:50:19 | `it-tools` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:08:01 | `jellyfin` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:15:34 | `jellyfin` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:37:47 | `jellyfin` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:50:46 | `jellyfin` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:08:34 | `jellyseerr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:16:05 | `jellyseerr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:38:16 | `jellyseerr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:51:31 | `jellyseerr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:09:17 | `kavita` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:16:42 | `kavita` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:38:59 | `kavita` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:52:14 | `kavita` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:09:56 | `komga` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:17:22 | `komga` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:39:40 | `komga` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:53:03 | `komga` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:10:26 | `librechat` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:17:51 | `librechat` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:40:10 | `librechat` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:53:36 | `librechat` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:11:49 | `lidarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:18:59 | `lidarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:41:39 | `lidarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:58:37 | `lidarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:12:17 | `linkding` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:19:26 | `linkding` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:42:09 | `linkding` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:59:29 | `linkding` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:12:44 | `litellm` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:19:53 | `litellm` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:42:38 | `litellm` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:00:01 | `litellm` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:13:44 | `mealie` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:20:55 | `mealie` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:43:45 | `mealie` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:01:48 | `mealie` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:14:30 | `memos` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:21:37 | `memos` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:44:30 | `memos` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:02:42 | `memos` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:14:47 | `metube` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:21:54 | `metube` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:44:48 | `metube` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:03:02 | `metube` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:15:07 | `microbin` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:22:17 | `microbin` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:45:11 | `microbin` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:03:33 | `microbin` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:15:23 | `miniflux` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:22:33 | `miniflux` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:45:29 | `miniflux` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:04:03 | `miniflux` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:15:45 | `minio` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:22:56 | `minio` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:45:53 | `minio` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:04:43 | `minio` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:16:01 | `mosquitto` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:23:18 | `mosquitto` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:46:11 | `mosquitto` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:05:08 | `mosquitto` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:16:14 | `n8n` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:23:31 | `n8n` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:46:25 | `n8n` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:05:24 | `n8n` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:17:03 | `navidrome` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:24:05 | `navidrome` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:47:12 | `navidrome` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:06:12 | `navidrome` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:17:23 | `netdata` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:24:26 | `netdata` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:47:35 | `netdata` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:06:41 | `netdata` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:17:46 | `nextcloud` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:24:48 | `nextcloud` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:48:00 | `nextcloud` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:07:06 | `nextcloud` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:18:23 | `nextcloud-db` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:25:36 | `nextcloud-db` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:48:37 | `nextcloud-db` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:08:00 | `nextcloud-db` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:18:41 | `nextcloud-db-dumper` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:25:56 | `nextcloud-db-dumper` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:48:58 | `nextcloud-db-dumper` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:08:24 | `nextcloud-db-dumper` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:19:07 | `nextcloud-redis` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:26:24 | `nextcloud-redis` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:49:26 | `nextcloud-redis` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:09:00 | `nextcloud-redis` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:19:30 | `nginx-proxy-manager` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:26:48 | `nginx-proxy-manager` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:49:51 | `nginx-proxy-manager` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:09:31 | `nginx-proxy-manager` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:20:01 | `nocodb` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:27:16 | `nocodb` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:50:21 | `nocodb` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:10:10 | `nocodb` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:20:39 | `node-red` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:27:52 | `node-red` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:51:05 | `node-red` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:10:49 | `node-red` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:21:02 | `notify-push` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:28:18 | `notify-push` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:51:30 | `notify-push` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:11:25 | `notify-push` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:21:34 | `ntfy` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:28:52 | `ntfy` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:52:00 | `ntfy` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:12:22 | `ntfy` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:22:02 | `octoprint` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:29:19 | `octoprint` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:52:31 | `octoprint` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:12:53 | `octoprint` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:22:36 | `ollama` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:29:51 | `ollama` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 11:53:03 | `ollama` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:13:27 | `ollama` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:23:45 | `open-webui` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:31:04 | `open-webui` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:54:14 | `open-webui` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:14:47 | `open-webui` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:25:30 | `organizr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:32:46 | `organizr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:56:01 | `organizr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:16:57 | `organizr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:25:52 | `pairdrop` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:33:09 | `pairdrop` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:56:25 | `pairdrop` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:17:23 | `pairdrop` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:26:13 | `paperless-ngx` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:33:29 | `paperless-ngx` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:56:47 | `paperless-ngx` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:17:46 | `paperless-ngx` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:27:35 | `pgadmin4` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:35:23 | `pgadmin4` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:58:15 | `pgadmin4` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:19:33 | `pgadmin4` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:28:36 | `phpmyadmin` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:36:21 | `phpmyadmin` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:59:19 | `phpmyadmin` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:20:42 | `phpmyadmin` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:28:59 | `pi-hole` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:36:44 | `pi-hole` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 11:59:46 | `pi-hole` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:21:13 | `pi-hole` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:29:20 | `pish-fluffychat-web` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:37:03 | `pish-fluffychat-web` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | skipped | Stopped | N/A | **⚠️ SKIPPED** |
-| 2026-09-14 12:00:09 | `pish-fluffychat-web` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:21:47 | `pish-fluffychat-web` | `VM` | `PODMAN` | 104 | 10.99.0.199 | skipped | Stopped | N/A | **⚠️ SKIPPED** |
-| 2026-09-14 09:29:41 | `plausible` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:37:03 | `plausible` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:00:33 | `plausible` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:21:47 | `plausible` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:30:18 | `portainer` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:37:51 | `portainer` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:01:15 | `portainer` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:22:47 | `portainer` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:30:38 | `privatebin` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:38:10 | `privatebin` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:01:38 | `privatebin` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:23:14 | `privatebin` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:30:54 | `prometheus` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:38:26 | `prometheus` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:01:57 | `prometheus` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:23:43 | `prometheus` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:31:15 | `prosody` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:38:54 | `prosody` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:02:19 | `prosody` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:24:18 | `prosody` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:31:29 | `prowlarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:39:08 | `prowlarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:02:35 | `prowlarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:24:35 | `prowlarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:31:50 | `qbittorrent` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:40:26 | `qbittorrent` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:03:00 | `qbittorrent` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:25:00 | `qbittorrent` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:32:12 | `radarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:40:48 | `radarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:03:22 | `radarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:25:24 | `radarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:32:35 | `romm` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:42:24 | `romm` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:03:48 | `romm` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:25:57 | `romm` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:33:13 | `rustdesk-server` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:43:03 | `rustdesk-server` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:04:28 | `rustdesk-server` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:26:37 | `rustdesk-server` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:33:35 | `sabnzbd` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:43:26 | `sabnzbd` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:04:52 | `sabnzbd` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:27:08 | `sabnzbd` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:33:53 | `scrutiny` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:43:42 | `scrutiny` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:05:13 | `scrutiny` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:27:38 | `scrutiny` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:34:20 | `scrypted` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:44:09 | `scrypted` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:05:43 | `scrypted` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:28:14 | `scrypted` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:35:08 | `searxng` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:44:49 | `searxng` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:06:32 | `searxng` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:29:05 | `searxng` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:35:31 | `semaphore` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:45:17 | `semaphore` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:06:59 | `semaphore` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:29:40 | `semaphore` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:36:01 | `sftpgo` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:45:42 | `sftpgo` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:07:28 | `sftpgo` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:30:10 | `sftpgo` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:36:18 | `shlink` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:46:00 | `shlink` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:07:48 | `shlink` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:30:34 | `shlink` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:36:41 | `silverbullet` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:46:17 | `silverbullet` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:08:08 | `silverbullet` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:30:59 | `silverbullet` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:37:12 | `sonarr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:46:51 | `sonarr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:08:43 | `sonarr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:31:50 | `sonarr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:37:32 | `speedtest-tracker` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:47:14 | `speedtest-tracker` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:09:07 | `speedtest-tracker` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:33:38 | `speedtest-tracker` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:38:00 | `stirling-pdf` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:48:59 | `stirling-pdf` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:09:36 | `stirling-pdf` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:34:20 | `stirling-pdf` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:39:00 | `syncthing` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:49:56 | `syncthing` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:10:42 | `syncthing` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:35:28 | `syncthing` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:39:15 | `tautulli` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:50:13 | `tautulli` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:11:01 | `tautulli` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:35:48 | `tautulli` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:39:37 | `technitium-dns` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:50:41 | `technitium-dns` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:11:25 | `technitium-dns` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:36:20 | `technitium-dns` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:39:57 | `teslamate` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:51:05 | `teslamate` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:11:48 | `teslamate` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:36:47 | `teslamate` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:40:24 | `traefik` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | skipped | Stopped | N/A | **⚠️ SKIPPED** |
-| 2026-09-14 10:51:32 | `traefik` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | skipped | Stopped | N/A | **⚠️ SKIPPED** |
-| 2026-09-14 12:12:18 | `traefik` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:37:18 | `traefik` | `VM` | `PODMAN` | 104 | 10.99.0.199 | skipped | Stopped | N/A | **⚠️ SKIPPED** |
-| 2026-09-14 09:40:24 | `transmission` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:51:32 | `transmission` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:12:37 | `transmission` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:37:18 | `transmission` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:40:40 | `trilium` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:51:54 | `trilium` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:12:54 | `trilium` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:37:52 | `trilium` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:41:01 | `umami` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:52:18 | `umami` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:13:18 | `umami` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:38:16 | `umami` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:41:51 | `unbound` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:54:13 | `unbound` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:14:07 | `unbound` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:39:27 | `unbound` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:42:06 | `unifi-controller` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:54:28 | `unifi-controller` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:14:24 | `unifi-controller` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:39:47 | `unifi-controller` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:42:53 | `unpackerr` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 10:56:33 | `unpackerr` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 12:15:18 | `unpackerr` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 13:41:02 | `unpackerr` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | N/A | **✅ PASS** |
-| 2026-09-14 09:43:13 | `uptime-kuma` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:56:54 | `uptime-kuma` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:15:40 | `uptime-kuma` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:41:30 | `uptime-kuma` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:43:35 | `vaultwarden` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:57:17 | `vaultwarden` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:16:04 | `vaultwarden` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:42:00 | `vaultwarden` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:43:56 | `vikunja` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:57:40 | `vikunja` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:16:29 | `vikunja` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:42:33 | `vikunja` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:44:11 | `wallabag` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:57:56 | `wallabag` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:16:46 | `wallabag` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:42:52 | `wallabag` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:44:43 | `wallos` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:58:22 | `wallos` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:17:19 | `wallos` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:43:23 | `wallos` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:45:04 | `web-notepad` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:58:42 | `web-notepad` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:17:48 | `web-notepad` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:43:53 | `web-notepad` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:45:24 | `wg-easy` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:59:03 | `wg-easy` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:18:09 | `wg-easy` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:44:18 | `wg-easy` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 09:45:43 | `woodpecker-ci` | `LXC` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 10:59:22 | `woodpecker-ci` | `LXC` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 12:18:31 | `woodpecker-ci` | `VM` | `DOCKER` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
-| 2026-09-14 13:44:52 | `woodpecker-ci` | `VM` | `PODMAN` | 104 | 10.99.0.199 | success | Running | OK | **✅ PASS** |
+| Date / Time         | Component ID          | Target | Engine   | VM ID | IP Address  | Deployment | Containers | HTTP | Status         |
+|:--------------------|:----------------------|:-------|:---------|:------|:------------|:-----------|:-----------|:-----|:---------------|
+| 2026-09-14 08:45:12 | `actual-budget`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:46:40 | `actual-budget`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:00:22 | `actual-budget`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:19:28 | `actual-budget`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:45:33 | `adguard-home`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:00 | `adguard-home`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:01:39 | `adguard-home`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:13 | `adguard-home`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:45:49 | `adminer`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:16 | `adminer`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:01:55 | `adminer`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:32 | `adminer`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:46:06 | `apprise`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:32 | `apprise`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:02:13 | `apprise`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:56 | `apprise`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:46:30 | `audiobookshelf`      | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:51 | `audiobookshelf`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:02:37 | `audiobookshelf`      | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:21:20 | `audiobookshelf`      | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:46:51 | `bazarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:48:12 | `bazarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:03:04 | `bazarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:23:57 | `bazarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:47:26 | `beszel`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:48:45 | `beszel`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:07:48 | `beszel`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:24:36 | `beszel`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:47:44 | `bookstack`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:49:04 | `bookstack`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:08:06 | `bookstack`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:25:07 | `bookstack`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:48:31 | `caddy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:49:54 | `caddy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:08:56 | `caddy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:26:25 | `caddy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:48:54 | `calibre-web`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:50:14 | `calibre-web`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:09:19 | `calibre-web`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:26:48 | `calibre-web`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:49:21 | `changedetection`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:50:40 | `changedetection`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:09:49 | `changedetection`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:27:17 | `changedetection`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:49:57 | `conduit`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:51:11 | `conduit`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:11:53 | `conduit`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:28:08 | `conduit`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 08:50:12 | `cyberchef`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:51:26 | `cyberchef`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:12:10 | `cyberchef`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:28:25 | `cyberchef`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:50:30 | `dashdot`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:51:44 | `dashdot`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:12:29 | `dashdot`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:28:56 | `dashdot`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:50:49 | `diun`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:52:05 | `diun`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:12:47 | `diun`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:29:24 | `diun`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 08:51:13 | `docker-jitsi-meet`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:52:28 | `docker-jitsi-meet`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:13:11 | `docker-jitsi-meet`   | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:29:49 | `docker-jitsi-meet`   | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:51:52 | `dockge`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:00:26 | `dockge`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:13:54 | `dockge`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:31:18 | `dockge`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:52:27 | `docmost`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:01:01 | `docmost`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:14:27 | `docmost`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:31:53 | `docmost`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:53:15 | `dozzle`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:01:43 | `dozzle`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:15:16 | `dozzle`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:32:56 | `dozzle`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:53:33 | `drawio`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:00 | `drawio`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:15:34 | `drawio`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:33:16 | `drawio`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:54:01 | `duplicati`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:24 | `duplicati`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:16:01 | `duplicati`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:33:48 | `duplicati`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:54:27 | `esphome`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:44 | `esphome`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:16:26 | `esphome`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:34:15 | `esphome`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:55:00 | `etherpad`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:03:17 | `etherpad`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:01 | `etherpad`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:34:56 | `etherpad`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:55:32 | `evcc`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:03:47 | `evcc`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:33 | `evcc`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:35:29 | `evcc`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:55:55 | `excalidraw`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:10 | `excalidraw`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:55 | `excalidraw`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:35:53 | `excalidraw`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:56:11 | `filebrowser`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:25 | `filebrowser`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:18:12 | `filebrowser`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:36:16 | `filebrowser`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:56:28 | `firefly-iii`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:41 | `firefly-iii`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:18:29 | `firefly-iii`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:36:34 | `firefly-iii`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:57:10 | `flatnotes`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:05:20 | `flatnotes`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:19:08 | `flatnotes`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:37:36 | `flatnotes`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:57:39 | `focalboard`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:05:52 | `focalboard`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:19:38 | `focalboard`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:38:16 | `focalboard`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:58:05 | `freshrss`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:06:18 | `freshrss`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:20:04 | `freshrss`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:38:43 | `freshrss`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:58:24 | `frigate`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:06:34 | `frigate`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:20:23 | `frigate`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:39:03 | `frigate`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:00:28 | `gitea`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:07:49 | `gitea`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:28:59 | `gitea`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:40:43 | `gitea`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:00:56 | `gitlab`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:08:17 | `gitlab`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:29:22 | `gitlab`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:41:25 | `gitlab`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:01:48 | `glance`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:04 | `glance`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:15 | `glance`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:42:25 | `glance`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:02:07 | `gotify`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:22 | `gotify`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:35 | `gotify`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:42:51 | `gotify`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:02:23 | `grafana`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:38 | `grafana`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:52 | `grafana`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:43:09 | `grafana`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:02:52 | `grocy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:10:23 | `grocy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:31:23 | `grocy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:43:59 | `grocy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:03:15 | `headscale`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:10:46 | `headscale`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:31:48 | `headscale`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:44:32 | `headscale`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:03:34 | `heimdall`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:11:07 | `heimdall`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:32:09 | `heimdall`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:44:59 | `heimdall`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:03:51 | `homarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:11:21 | `homarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:32:26 | `homarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:45:21 | `homarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:04:30 | `homeassistant`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:11:55 | `homeassistant`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:34:09 | `homeassistant`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:46:09 | `homeassistant`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:05:27 | `homebridge`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:12:40 | `homebridge`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:35:05 | `homebridge`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:47:10 | `homebridge`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:06:13 | `homepage`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:13:22 | `homepage`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:35:56 | `homepage`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:47:57 | `homepage`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:06:36 | `homer`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:13:44 | `homer`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:36:22 | `homer`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:48:23 | `homer`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:06:51 | `immich`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:14:05 | `immich`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:36:38 | `immich`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:48:47 | `immich`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:07:43 | `it-tools`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:15:06 | `it-tools`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:37:27 | `it-tools`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:50:19 | `it-tools`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:08:01 | `jellyfin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:15:34 | `jellyfin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:37:47 | `jellyfin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:50:46 | `jellyfin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:08:34 | `jellyseerr`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:16:05 | `jellyseerr`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:38:16 | `jellyseerr`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:51:31 | `jellyseerr`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:09:17 | `kavita`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:16:42 | `kavita`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:38:59 | `kavita`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:52:14 | `kavita`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:09:56 | `komga`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:17:22 | `komga`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:39:40 | `komga`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:53:03 | `komga`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:10:26 | `librechat`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:17:51 | `librechat`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:40:10 | `librechat`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:53:36 | `librechat`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:11:49 | `lidarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:18:59 | `lidarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:41:39 | `lidarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:58:37 | `lidarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:12:17 | `linkding`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:19:26 | `linkding`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:42:09 | `linkding`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:59:29 | `linkding`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:12:44 | `litellm`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:19:53 | `litellm`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:42:38 | `litellm`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:00:01 | `litellm`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:13:44 | `mealie`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:20:55 | `mealie`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:43:45 | `mealie`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:01:48 | `mealie`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:14:30 | `memos`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:21:37 | `memos`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:44:30 | `memos`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:02:42 | `memos`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:14:47 | `metube`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:21:54 | `metube`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:44:48 | `metube`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:03:02 | `metube`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:07 | `microbin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:17 | `microbin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:11 | `microbin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:03:33 | `microbin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:23 | `miniflux`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:33 | `miniflux`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:29 | `miniflux`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:04:03 | `miniflux`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:45 | `minio`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:56 | `minio`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:53 | `minio`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:04:43 | `minio`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:16:01 | `mosquitto`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:23:18 | `mosquitto`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:46:11 | `mosquitto`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:05:08 | `mosquitto`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:16:14 | `n8n`                 | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:23:31 | `n8n`                 | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:46:25 | `n8n`                 | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:05:24 | `n8n`                 | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:17:03 | `navidrome`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:05 | `navidrome`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:47:12 | `navidrome`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:06:12 | `navidrome`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:17:23 | `netdata`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:26 | `netdata`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:47:35 | `netdata`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:06:41 | `netdata`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:17:46 | `nextcloud`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:48 | `nextcloud`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:48:00 | `nextcloud`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:07:06 | `nextcloud`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:18:23 | `nextcloud-db`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:25:36 | `nextcloud-db`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:48:37 | `nextcloud-db`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:08:00 | `nextcloud-db`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:18:41 | `nextcloud-db-dumper` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:25:56 | `nextcloud-db-dumper` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:48:58 | `nextcloud-db-dumper` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:08:24 | `nextcloud-db-dumper` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:19:07 | `nextcloud-redis`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:26:24 | `nextcloud-redis`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:49:26 | `nextcloud-redis`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:09:00 | `nextcloud-redis`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:19:30 | `nginx-proxy-manager` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:26:48 | `nginx-proxy-manager` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:49:51 | `nginx-proxy-manager` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:09:31 | `nginx-proxy-manager` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:20:01 | `nocodb`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:27:16 | `nocodb`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:50:21 | `nocodb`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:10:10 | `nocodb`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:20:39 | `node-red`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:27:52 | `node-red`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:51:05 | `node-red`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:10:49 | `node-red`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:21:02 | `notify-push`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:28:18 | `notify-push`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:51:30 | `notify-push`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:11:25 | `notify-push`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:21:34 | `ntfy`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:28:52 | `ntfy`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:52:00 | `ntfy`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:12:22 | `ntfy`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:22:02 | `octoprint`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:29:19 | `octoprint`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:52:31 | `octoprint`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:12:53 | `octoprint`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:22:36 | `ollama`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:29:51 | `ollama`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:53:03 | `ollama`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:13:27 | `ollama`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:23:45 | `open-webui`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:31:04 | `open-webui`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:54:14 | `open-webui`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:14:47 | `open-webui`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:25:30 | `organizr`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:32:46 | `organizr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:01 | `organizr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:16:57 | `organizr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:25:52 | `pairdrop`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:33:09 | `pairdrop`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:25 | `pairdrop`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:17:23 | `pairdrop`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:26:13 | `paperless-ngx`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:33:29 | `paperless-ngx`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:47 | `paperless-ngx`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:17:46 | `paperless-ngx`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:27:35 | `pgadmin4`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:35:23 | `pgadmin4`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:58:15 | `pgadmin4`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:19:33 | `pgadmin4`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:28:36 | `phpmyadmin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:36:21 | `phpmyadmin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:59:19 | `phpmyadmin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:20:42 | `phpmyadmin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:28:59 | `pi-hole`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:36:44 | `pi-hole`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:59:46 | `pi-hole`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:13 | `pi-hole`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:29:20 | `pish-fluffychat-web` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:03 | `pish-fluffychat-web` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 12:00:09 | `pish-fluffychat-web` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:47 | `pish-fluffychat-web` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 09:29:41 | `plausible`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:03 | `plausible`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:00:33 | `plausible`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:47 | `plausible`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:18 | `portainer`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:51 | `portainer`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:15 | `portainer`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:22:47 | `portainer`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:38 | `privatebin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:38:10 | `privatebin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:38 | `privatebin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:23:14 | `privatebin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:54 | `prometheus`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:38:26 | `prometheus`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:57 | `prometheus`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:23:43 | `prometheus`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:31:15 | `prosody`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:38:54 | `prosody`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:02:19 | `prosody`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:24:18 | `prosody`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:31:29 | `prowlarr`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:39:08 | `prowlarr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:02:35 | `prowlarr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:24:35 | `prowlarr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:31:50 | `qbittorrent`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:40:26 | `qbittorrent`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:00 | `qbittorrent`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:00 | `qbittorrent`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:32:12 | `radarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:40:48 | `radarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:22 | `radarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:24 | `radarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:32:35 | `romm`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:42:24 | `romm`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:48 | `romm`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:57 | `romm`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:33:13 | `rustdesk-server`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:43:03 | `rustdesk-server`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:04:28 | `rustdesk-server`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:26:37 | `rustdesk-server`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:33:35 | `sabnzbd`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:43:26 | `sabnzbd`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:04:52 | `sabnzbd`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:27:08 | `sabnzbd`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:33:53 | `scrutiny`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:43:42 | `scrutiny`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:05:13 | `scrutiny`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:27:38 | `scrutiny`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:34:20 | `scrypted`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:44:09 | `scrypted`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:05:43 | `scrypted`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:28:14 | `scrypted`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:35:08 | `searxng`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:44:49 | `searxng`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:06:32 | `searxng`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:29:05 | `searxng`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:35:31 | `semaphore`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:45:17 | `semaphore`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:06:59 | `semaphore`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:29:40 | `semaphore`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:36:01 | `sftpgo`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:45:42 | `sftpgo`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:07:28 | `sftpgo`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:10 | `sftpgo`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:36:18 | `shlink`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:00 | `shlink`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:07:48 | `shlink`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:34 | `shlink`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:36:41 | `silverbullet`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:17 | `silverbullet`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:08:08 | `silverbullet`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:59 | `silverbullet`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:37:12 | `sonarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:51 | `sonarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:08:43 | `sonarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:31:50 | `sonarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:37:32 | `speedtest-tracker`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:47:14 | `speedtest-tracker`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:09:07 | `speedtest-tracker`   | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:33:38 | `speedtest-tracker`   | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:38:00 | `stirling-pdf`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:48:59 | `stirling-pdf`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:09:36 | `stirling-pdf`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:34:20 | `stirling-pdf`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:00 | `syncthing`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:49:56 | `syncthing`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:10:42 | `syncthing`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:35:28 | `syncthing`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:15 | `tautulli`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:50:13 | `tautulli`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:01 | `tautulli`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:35:48 | `tautulli`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:37 | `technitium-dns`      | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:50:41 | `technitium-dns`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:25 | `technitium-dns`      | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:36:20 | `technitium-dns`      | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:57 | `teslamate`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:05 | `teslamate`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:48 | `teslamate`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:36:47 | `teslamate`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:40:24 | `traefik`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 10:51:32 | `traefik`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 12:12:18 | `traefik`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:18 | `traefik`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 09:40:24 | `transmission`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:32 | `transmission`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:12:37 | `transmission`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:18 | `transmission`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:40:40 | `trilium`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:54 | `trilium`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:12:54 | `trilium`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:52 | `trilium`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:41:01 | `umami`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:52:18 | `umami`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:13:18 | `umami`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:38:16 | `umami`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:41:51 | `unbound`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:54:13 | `unbound`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:14:07 | `unbound`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:39:27 | `unbound`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:42:06 | `unifi-controller`    | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:54:28 | `unifi-controller`    | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:14:24 | `unifi-controller`    | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:39:47 | `unifi-controller`    | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:42:53 | `unpackerr`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:56:33 | `unpackerr`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:15:18 | `unpackerr`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:41:02 | `unpackerr`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:43:13 | `uptime-kuma`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:56:54 | `uptime-kuma`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:15:40 | `uptime-kuma`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:41:30 | `uptime-kuma`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:43:35 | `vaultwarden`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:17 | `vaultwarden`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:04 | `vaultwarden`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:00 | `vaultwarden`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:43:56 | `vikunja`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:40 | `vikunja`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:29 | `vikunja`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:33 | `vikunja`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:44:11 | `wallabag`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:56 | `wallabag`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:46 | `wallabag`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:52 | `wallabag`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:44:43 | `wallos`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:58:22 | `wallos`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:17:19 | `wallos`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:43:23 | `wallos`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:04 | `web-notepad`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:58:42 | `web-notepad`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:17:48 | `web-notepad`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:43:53 | `web-notepad`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:24 | `wg-easy`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:59:03 | `wg-easy`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:18:09 | `wg-easy`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:44:18 | `wg-easy`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:43 | `woodpecker-ci`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:59:22 | `woodpecker-ci`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:18:31 | `woodpecker-ci`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:44:52 | `woodpecker-ci`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 
 ## Visual Verification & Web UI Screenshots
 
@@ -3515,495 +3515,495 @@
 
 ## 🔑 First-Run Credentials & Onboarding Verification
 
-| Component ID | Target | Engine | Auth Type | Extracted Setup Key / Token | Status |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `actual-budget` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `actual-budget` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `actual-budget` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `actual-budget` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adguard-home` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adguard-home` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adguard-home` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adguard-home` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adminer` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adminer` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adminer` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `adminer` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `apprise` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `apprise` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `apprise` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `apprise` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `audiobookshelf` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `audiobookshelf` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `audiobookshelf` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `audiobookshelf` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `bazarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `bazarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `bazarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `bazarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `beszel` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `beszel` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `beszel` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `beszel` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `bookstack` | `LXC` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `bookstack` | `LXC` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `bookstack` | `VM` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `bookstack` | `VM` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `caddy` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `caddy` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `caddy` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `caddy` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `calibre-web` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `calibre-web` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `calibre-web` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `calibre-web` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `changedetection` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `changedetection` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `changedetection` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `changedetection` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `conduit` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `conduit` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `conduit` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `conduit` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `cyberchef` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `cyberchef` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `cyberchef` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `cyberchef` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dashdot` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `dashdot` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `dashdot` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `dashdot` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `diun` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `diun` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `diun` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `diun` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `docker-jitsi-meet` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docker-jitsi-meet` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docker-jitsi-meet` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docker-jitsi-meet` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dockge` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dockge` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dockge` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dockge` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docmost` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docmost` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docmost` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `docmost` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `dozzle` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `dozzle` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `dozzle` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `dozzle` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `drawio` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `drawio` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `drawio` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `drawio` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `duplicati` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `duplicati` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `duplicati` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `duplicati` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `esphome` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `esphome` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `esphome` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `esphome` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `etherpad` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `etherpad` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `etherpad` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `etherpad` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `evcc` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `evcc` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `evcc` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `evcc` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `excalidraw` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `excalidraw` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `excalidraw` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `excalidraw` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `filebrowser` | `LXC` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `filebrowser` | `LXC` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `filebrowser` | `VM` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `filebrowser` | `VM` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `firefly-iii` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `firefly-iii` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `firefly-iii` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `firefly-iii` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `flatnotes` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `flatnotes` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `flatnotes` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `flatnotes` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `focalboard` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `focalboard` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `focalboard` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `focalboard` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `freshrss` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `freshrss` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `freshrss` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `freshrss` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `frigate` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `frigate` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `frigate` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `frigate` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitea` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitea` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitea` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitea` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitlab` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitlab` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitlab` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gitlab` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `glance` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `glance` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `glance` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `glance` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `gotify` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gotify` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gotify` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `gotify` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `grafana` | `LXC` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `grafana` | `LXC` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `grafana` | `VM` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `grafana` | `VM` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `grocy` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `grocy` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `grocy` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `grocy` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `headscale` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `headscale` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `headscale` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `headscale` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `heimdall` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `heimdall` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `heimdall` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `heimdall` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homeassistant` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homeassistant` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homeassistant` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homeassistant` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homebridge` | `LXC` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `homebridge` | `LXC` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `homebridge` | `VM` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `homebridge` | `VM` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `homepage` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homepage` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homepage` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homepage` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `homer` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `homer` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `homer` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `homer` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `immich` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `immich` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `immich` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `immich` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `it-tools` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `it-tools` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `it-tools` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `it-tools` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyfin` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyfin` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyfin` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyfin` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyseerr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyseerr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyseerr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `jellyseerr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `kavita` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `kavita` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `kavita` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `kavita` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `komga` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `komga` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `komga` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `komga` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `librechat` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `librechat` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `librechat` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `librechat` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `lidarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `lidarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `lidarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `lidarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `linkding` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `linkding` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `linkding` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `linkding` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `litellm` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `litellm` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `litellm` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `litellm` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `mealie` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `mealie` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `mealie` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `mealie` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `memos` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `memos` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `memos` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `memos` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `metube` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `metube` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `metube` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `metube` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `microbin` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `microbin` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `microbin` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `microbin` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `miniflux` | `LXC` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `miniflux` | `LXC` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `miniflux` | `VM` | `DOCKER` | `credentials` | — | ℹ️ NONE |
-| `miniflux` | `VM` | `PODMAN` | `credentials` | — | ℹ️ NONE |
-| `minio` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `minio` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `minio` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `minio` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `mosquitto` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `mosquitto` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `mosquitto` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `mosquitto` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `n8n` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `n8n` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `n8n` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `n8n` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `navidrome` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `navidrome` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `navidrome` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `navidrome` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `netdata` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `netdata` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `netdata` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `netdata` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nextcloud` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nextcloud` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nextcloud` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nextcloud` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nextcloud-db` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-db` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nextcloud-db` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-db` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nextcloud-db-dumper` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-db-dumper` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nextcloud-db-dumper` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-db-dumper` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nextcloud-redis` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-redis` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nextcloud-redis` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `nextcloud-redis` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `nginx-proxy-manager` | `LXC` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `nginx-proxy-manager` | `LXC` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `nginx-proxy-manager` | `VM` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `nginx-proxy-manager` | `VM` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `nocodb` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nocodb` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nocodb` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `nocodb` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `node-red` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `node-red` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `node-red` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `node-red` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `notify-push` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `notify-push` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `notify-push` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `notify-push` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `ntfy` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `ntfy` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `ntfy` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `ntfy` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `octoprint` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `octoprint` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `octoprint` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `octoprint` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `ollama` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `ollama` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `ollama` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `ollama` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `open-webui` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `open-webui` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `open-webui` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `open-webui` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `organizr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `organizr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `organizr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `organizr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pairdrop` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `pairdrop` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `pairdrop` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `pairdrop` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `paperless-ngx` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `paperless-ngx` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `paperless-ngx` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `paperless-ngx` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pgadmin4` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pgadmin4` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pgadmin4` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pgadmin4` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `phpmyadmin` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `phpmyadmin` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `phpmyadmin` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `phpmyadmin` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pi-hole` | `LXC` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `pi-hole` | `LXC` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `pi-hole` | `VM` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `pi-hole` | `VM` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `pish-fluffychat-web` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `pish-fluffychat-web` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `plausible` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `plausible` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `plausible` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `plausible` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `portainer` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `portainer` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `portainer` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `portainer` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `privatebin` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `privatebin` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `privatebin` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `privatebin` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `prometheus` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prometheus` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prometheus` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prometheus` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prosody` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `prosody` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `prosody` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `prosody` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `prowlarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prowlarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prowlarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `prowlarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `qbittorrent` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `qbittorrent` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `qbittorrent` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `qbittorrent` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `radarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `radarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `radarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `radarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `romm` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `romm` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `romm` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `romm` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `rustdesk-server` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `rustdesk-server` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `rustdesk-server` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `rustdesk-server` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `sabnzbd` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sabnzbd` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sabnzbd` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sabnzbd` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `scrutiny` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `scrutiny` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `scrutiny` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `scrutiny` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `scrypted` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `scrypted` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `scrypted` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `scrypted` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `searxng` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `searxng` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `searxng` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `searxng` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `semaphore` | `LXC` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `semaphore` | `LXC` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `semaphore` | `VM` | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `semaphore` | `VM` | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
-| `sftpgo` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sftpgo` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sftpgo` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sftpgo` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `shlink` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `shlink` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `shlink` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `shlink` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `silverbullet` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `silverbullet` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `silverbullet` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `silverbullet` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `sonarr` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sonarr` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sonarr` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `sonarr` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `speedtest-tracker` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `speedtest-tracker` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `speedtest-tracker` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `speedtest-tracker` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `stirling-pdf` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `stirling-pdf` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `stirling-pdf` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `stirling-pdf` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `syncthing` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `syncthing` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `syncthing` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `syncthing` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `tautulli` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `tautulli` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `tautulli` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `tautulli` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `technitium-dns` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `technitium-dns` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `technitium-dns` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `technitium-dns` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `teslamate` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `teslamate` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `teslamate` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `teslamate` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `traefik` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `transmission` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `transmission` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `transmission` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `transmission` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `trilium` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `trilium` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `trilium` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `trilium` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `umami` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `umami` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `umami` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `umami` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `unbound` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `unbound` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `unbound` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `unbound` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `unifi-controller` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `unifi-controller` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `unifi-controller` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `unifi-controller` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `unpackerr` | `LXC` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `unpackerr` | `LXC` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `unpackerr` | `VM` | `DOCKER` | `none` | — | ℹ️ NONE |
-| `unpackerr` | `VM` | `PODMAN` | `none` | — | ℹ️ NONE |
-| `uptime-kuma` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `uptime-kuma` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `uptime-kuma` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `uptime-kuma` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vaultwarden` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vaultwarden` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vaultwarden` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vaultwarden` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vikunja` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vikunja` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vikunja` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `vikunja` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallabag` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallabag` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallabag` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallabag` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallos` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallos` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallos` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wallos` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `web-notepad` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `web-notepad` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `web-notepad` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `web-notepad` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wg-easy` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wg-easy` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wg-easy` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `wg-easy` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `woodpecker-ci` | `LXC` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `woodpecker-ci` | `LXC` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `woodpecker-ci` | `VM` | `DOCKER` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
-| `woodpecker-ci` | `VM` | `PODMAN` | `wizard` | *Onboarding Wizard* | ℹ️ WIZARD |
+| Component ID          | Target | Engine   | Auth Type       | Extracted Setup Key / Token  | Status           |
+|:----------------------|:-------|:---------|:----------------|:-----------------------------|:-----------------|
+| `actual-budget`       | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `actual-budget`       | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `actual-budget`       | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `actual-budget`       | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adguard-home`        | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adguard-home`        | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adguard-home`        | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adguard-home`        | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adminer`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adminer`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adminer`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `adminer`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `apprise`             | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `apprise`             | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `apprise`             | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `apprise`             | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `audiobookshelf`      | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `audiobookshelf`      | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `audiobookshelf`      | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `audiobookshelf`      | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `bazarr`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `bazarr`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `bazarr`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `bazarr`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `beszel`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `beszel`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `beszel`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `beszel`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `bookstack`           | `LXC`  | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `bookstack`           | `LXC`  | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `bookstack`           | `VM`   | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `bookstack`           | `VM`   | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `caddy`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `caddy`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `caddy`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `caddy`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `calibre-web`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `calibre-web`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `calibre-web`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `calibre-web`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `changedetection`     | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `changedetection`     | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `changedetection`     | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `changedetection`     | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `conduit`             | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `conduit`             | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `conduit`             | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `conduit`             | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `cyberchef`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `cyberchef`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `cyberchef`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `cyberchef`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dashdot`             | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `dashdot`             | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `dashdot`             | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `dashdot`             | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `diun`                | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `diun`                | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `diun`                | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `diun`                | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `docker-jitsi-meet`   | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docker-jitsi-meet`   | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docker-jitsi-meet`   | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docker-jitsi-meet`   | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dockge`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dockge`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dockge`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dockge`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docmost`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docmost`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docmost`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `docmost`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `dozzle`              | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `dozzle`              | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `dozzle`              | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `dozzle`              | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `drawio`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `drawio`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `drawio`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `drawio`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `duplicati`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `duplicati`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `duplicati`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `duplicati`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `esphome`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `esphome`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `esphome`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `esphome`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `etherpad`            | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `etherpad`            | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `etherpad`            | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `etherpad`            | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `evcc`                | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `evcc`                | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `evcc`                | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `evcc`                | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `excalidraw`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `excalidraw`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `excalidraw`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `excalidraw`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `filebrowser`         | `LXC`  | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `filebrowser`         | `LXC`  | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `filebrowser`         | `VM`   | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `filebrowser`         | `VM`   | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `firefly-iii`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `firefly-iii`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `firefly-iii`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `firefly-iii`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `flatnotes`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `flatnotes`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `flatnotes`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `flatnotes`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `focalboard`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `focalboard`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `focalboard`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `focalboard`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `freshrss`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `freshrss`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `freshrss`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `freshrss`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `frigate`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `frigate`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `frigate`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `frigate`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitea`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitea`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitea`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitea`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitlab`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitlab`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitlab`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gitlab`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `glance`              | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `glance`              | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `glance`              | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `glance`              | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `gotify`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gotify`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gotify`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `gotify`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `grafana`             | `LXC`  | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `grafana`             | `LXC`  | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `grafana`             | `VM`   | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `grafana`             | `VM`   | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `grocy`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `grocy`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `grocy`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `grocy`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `headscale`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `headscale`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `headscale`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `headscale`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `heimdall`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `heimdall`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `heimdall`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `heimdall`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homarr`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homarr`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homarr`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homarr`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homeassistant`       | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homeassistant`       | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homeassistant`       | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homeassistant`       | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homebridge`          | `LXC`  | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `homebridge`          | `LXC`  | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `homebridge`          | `VM`   | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `homebridge`          | `VM`   | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `homepage`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homepage`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homepage`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homepage`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `homer`               | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `homer`               | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `homer`               | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `homer`               | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `immich`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `immich`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `immich`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `immich`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `it-tools`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `it-tools`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `it-tools`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `it-tools`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyfin`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyfin`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyfin`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyfin`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyseerr`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyseerr`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyseerr`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `jellyseerr`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `kavita`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `kavita`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `kavita`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `kavita`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `komga`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `komga`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `komga`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `komga`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `librechat`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `librechat`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `librechat`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `librechat`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `lidarr`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `lidarr`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `lidarr`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `lidarr`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `linkding`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `linkding`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `linkding`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `linkding`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `litellm`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `litellm`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `litellm`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `litellm`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `mealie`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `mealie`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `mealie`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `mealie`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `memos`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `memos`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `memos`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `memos`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `metube`              | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `metube`              | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `metube`              | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `metube`              | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `microbin`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `microbin`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `microbin`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `microbin`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `miniflux`            | `LXC`  | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `miniflux`            | `LXC`  | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `miniflux`            | `VM`   | `DOCKER` | `credentials`   | —                            | ℹ️ NONE          |
+| `miniflux`            | `VM`   | `PODMAN` | `credentials`   | —                            | ℹ️ NONE          |
+| `minio`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `minio`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `minio`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `minio`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `mosquitto`           | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `mosquitto`           | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `mosquitto`           | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `mosquitto`           | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `n8n`                 | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `n8n`                 | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `n8n`                 | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `n8n`                 | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `navidrome`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `navidrome`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `navidrome`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `navidrome`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `netdata`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `netdata`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `netdata`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `netdata`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nextcloud`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nextcloud`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nextcloud`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nextcloud`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nextcloud-db`        | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db`        | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db`        | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db`        | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db-dumper` | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db-dumper` | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db-dumper` | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-db-dumper` | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-redis`     | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-redis`     | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-redis`     | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `nextcloud-redis`     | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `nginx-proxy-manager` | `LXC`  | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `nginx-proxy-manager` | `LXC`  | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `nginx-proxy-manager` | `VM`   | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `nginx-proxy-manager` | `VM`   | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `nocodb`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nocodb`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nocodb`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `nocodb`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `node-red`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `node-red`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `node-red`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `node-red`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `notify-push`         | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `notify-push`         | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `notify-push`         | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `notify-push`         | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `ntfy`                | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `ntfy`                | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `ntfy`                | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `ntfy`                | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `octoprint`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `octoprint`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `octoprint`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `octoprint`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `ollama`              | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `ollama`              | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `ollama`              | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `ollama`              | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `open-webui`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `open-webui`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `open-webui`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `open-webui`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `organizr`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `organizr`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `organizr`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `organizr`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pairdrop`            | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `pairdrop`            | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `pairdrop`            | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `pairdrop`            | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `paperless-ngx`       | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `paperless-ngx`       | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `paperless-ngx`       | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `paperless-ngx`       | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pgadmin4`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pgadmin4`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pgadmin4`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pgadmin4`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `phpmyadmin`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `phpmyadmin`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `phpmyadmin`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `phpmyadmin`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pi-hole`             | `LXC`  | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `pi-hole`             | `LXC`  | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `pi-hole`             | `VM`   | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `pi-hole`             | `VM`   | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `pish-fluffychat-web` | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `pish-fluffychat-web` | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `plausible`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `plausible`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `plausible`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `plausible`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `portainer`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `portainer`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `portainer`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `portainer`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `privatebin`          | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `privatebin`          | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `privatebin`          | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `privatebin`          | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `prometheus`          | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prometheus`          | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prometheus`          | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prometheus`          | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prosody`             | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `prosody`             | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `prosody`             | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `prosody`             | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `prowlarr`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prowlarr`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prowlarr`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `prowlarr`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `qbittorrent`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `qbittorrent`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `qbittorrent`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `qbittorrent`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `radarr`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `radarr`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `radarr`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `radarr`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `romm`                | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `romm`                | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `romm`                | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `romm`                | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `rustdesk-server`     | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `rustdesk-server`     | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `rustdesk-server`     | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `rustdesk-server`     | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `sabnzbd`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sabnzbd`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sabnzbd`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sabnzbd`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `scrutiny`            | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `scrutiny`            | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `scrutiny`            | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `scrutiny`            | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `scrypted`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `scrypted`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `scrypted`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `scrypted`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `searxng`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `searxng`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `searxng`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `searxng`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `semaphore`           | `LXC`  | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `semaphore`           | `LXC`  | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `semaphore`           | `VM`   | `DOCKER` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `semaphore`           | `VM`   | `PODMAN` | `preconfigured` | *Preconfigured in variables* | ℹ️ PRECONFIGURED |
+| `sftpgo`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sftpgo`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sftpgo`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sftpgo`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `shlink`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `shlink`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `shlink`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `shlink`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `silverbullet`        | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `silverbullet`        | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `silverbullet`        | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `silverbullet`        | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `sonarr`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sonarr`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sonarr`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `sonarr`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `speedtest-tracker`   | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `speedtest-tracker`   | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `speedtest-tracker`   | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `speedtest-tracker`   | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `stirling-pdf`        | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `stirling-pdf`        | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `stirling-pdf`        | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `stirling-pdf`        | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `syncthing`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `syncthing`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `syncthing`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `syncthing`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `tautulli`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `tautulli`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `tautulli`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `tautulli`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `technitium-dns`      | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `technitium-dns`      | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `technitium-dns`      | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `technitium-dns`      | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `teslamate`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `teslamate`           | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `teslamate`           | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `teslamate`           | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `traefik`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `transmission`        | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `transmission`        | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `transmission`        | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `transmission`        | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `trilium`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `trilium`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `trilium`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `trilium`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `umami`               | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `umami`               | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `umami`               | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `umami`               | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `unbound`             | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `unbound`             | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `unbound`             | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `unbound`             | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `unifi-controller`    | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `unifi-controller`    | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `unifi-controller`    | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `unifi-controller`    | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `unpackerr`           | `LXC`  | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `unpackerr`           | `LXC`  | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `unpackerr`           | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
+| `unpackerr`           | `VM`   | `PODMAN` | `none`          | —                            | ℹ️ NONE          |
+| `uptime-kuma`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `uptime-kuma`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `uptime-kuma`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `uptime-kuma`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vaultwarden`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vaultwarden`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vaultwarden`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vaultwarden`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vikunja`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vikunja`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vikunja`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `vikunja`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallabag`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallabag`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallabag`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallabag`            | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallos`              | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallos`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallos`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wallos`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `web-notepad`         | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `web-notepad`         | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `web-notepad`         | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `web-notepad`         | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wg-easy`             | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wg-easy`             | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wg-easy`             | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `wg-easy`             | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `woodpecker-ci`       | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `woodpecker-ci`       | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `woodpecker-ci`       | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `woodpecker-ci`       | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 
 
 ## Details & Failures

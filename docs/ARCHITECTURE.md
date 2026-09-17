@@ -274,11 +274,11 @@ Behavior
 - **Tenant Isolation (`DatabaseManager` & `TenantManager`)**: Managed through SQLite (`njord_saas.db`) with Write-Ahead Logging (WAL) and foreign keys enabled. Users are grouped into organizations with granular roles (`owner`, `admin`, `member`).
 - **Context Switching**: The active tenant context is maintained in signed Flask session cookies and verified against request tokens.
 
-## 12. Commercial Subscriptions & Stripe Billing Integration
+## 12. Licensing Architecture & Commercial Console Integration
 
-- **Principle**: Commercially hosted or managed instances integrate seamless subscription tier management (`BillingManager`) backed by the official Stripe SDK (`stripe>=15.6.0`).
-- **Billing Modes**: Supports monthly (`monthly`) and annual (`yearly`) billing intervals with customizable tier entitlements (`free`, `pro`, `enterprise`).
-- **Self-Service Customer Portal**: Users manage active payment methods, billing history, and plan upgrades directly via the integrated Stripe Customer Portal session handler (`/api/billing/create-portal-session`).
+- **Sovereign Standalone Model**: `njorddeploy` is 100% free, open, and sovereign for single-tenant servers, personal homelabs, and on-premise deployments without artificial server caps or mandatory SaaS connections.
+- **Centralized Fleet Orchestration (`njord-console`)**: Multi-node management, commercial MSP operations, client tenant billing, and centralized fleet health metrics are decoupled into the separate `njord-console` project.
+- **Commercial Billing Integration**: For managed deployments utilizing dynamic subscriptions, `BillingManager` interfaces with the Stripe SDK (`stripe>=15.6.0`) for checkout sessions and self-service customer portal redirects.
 
 ## 13. 24/7 Persistent Self-Hosted Service Daemon (`run_service.py`)
 
@@ -354,3 +354,9 @@ Behavior
   - Re-creating user-defined networks (`njorddeploy_net`) with this wrapper active reliably provisions `"dns_enabled": true`.
 - **Infrastructure Standardization**:
   - The wrapper and pre-configured bridge network are baked directly into Proxmox Golden Template `914` (`njorddeploy-podman-lxc-template`), automated in `ansible/playbook.yml`, and checked before every package deployment in `proxmox_package_test_runner.py`.
+
+## 20. Remote Fleet Agent Integration & Data Sovereignty (`njord-agent`)
+
+- **Principle**: To preserve strict data sovereignty and comply with zero-trust networking, remote fleet coordination via `njord-console` operates entirely decoupled from the core deployment logic.
+- **Outbound Polling Architecture**: Remote telemetry, inventory synchronization, and dispatch jobs are handled exclusively via an optional local runner / sidecar agent (`njord-agent`) performing periodic outbound polling over secure HTTPS/WSS to `njord-console`. No inbound management ports or external control backdoors are ever opened on the target server.
+- **Data Sovereignty & Local Storage**: Stack compose files, deployment templates, persistent volume definitions, and container runtime states are uniformly organized in standardized local directory structures (`/opt/njorddeploy` or user-defined deployment paths). The target node retains full local autonomy and runs uninterrupted even if network connectivity to `njord-console` is severed.

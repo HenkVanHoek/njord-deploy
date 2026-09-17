@@ -7,6 +7,11 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [1.0.0] - 2026-09-14 (General Availability)
 
 ### Added
+- **Chatwoot Live Support Widget & Sovereign AI Agent Bot Integration**:
+  - Embedded `chatwoot.js` widget across all `deploy.njorddeploy.com` web pages (`base.html`, `index.html`, `login.html`, `register.html`, `settings.html`, `setup.html`, `summary.html`, `live_log.html`, `swagger.html`).
+  - Implemented `ChatwootBotManager` (`src/managers/chatwoot_bot_manager.py`) with sovereign RAG knowledge base loaded from `llms-full.txt` and `docs/FAQ.md`.
+  - Added public webhook endpoints (`/api/v1/chatwoot/webhook` and `/api/chatwoot/webhook`) with optional HMAC signature validation in `src/configurator_app/app.py`.
+  - Integrated keyword-based automated human escalation/handoff to operators and setup CLI tool (`scripts/setup_chatwoot_agent_bot.py`).
 - **Chatwoot Omnichannel Customer Support Component (`chatwoot`)**:
   - Full modular multi-container stack integration: Chatwoot Web, Sidekiq background workers, PostgreSQL 16 (with `pgvector`), and Redis 7 with healthchecks.
   - Formally registered in `config/components_metadata.json` and `component_templates/chatwoot/` with port mapping `3044:3000`.

@@ -27,6 +27,7 @@ from configurator_app.openapi import get_openapi_spec
 from managers.agent_manager import AgentManager
 from managers.backup_manager import BackupManager
 from managers.billing_manager import BillingManager
+from managers.chatwoot_bot_manager import ChatwootBotManager
 from managers.component_manager import ComponentManager
 from managers.database_manager import DatabaseManager
 from managers.deployment_evaluator import evaluate_deployment
@@ -338,6 +339,7 @@ def create_app(test_config=None):
     db_mgr = DatabaseManager.get_instance()
     billing_mgr = BillingManager(db=db_mgr)
     agent_mgr = AgentManager(db=db_mgr)
+    chatwoot_bot_mgr = ChatwootBotManager()
 
     flask_app.deployment_tasks = {}
     flask_app.map_analysis_to_report_errors = map_analysis_to_report_errors
@@ -370,6 +372,8 @@ def create_app(test_config=None):
             "/api/stripe/webhook",
             "/api/billing/webhook",
             "/api/v1/billing/webhook",
+            "/api/chatwoot/webhook",
+            "/api/v1/chatwoot/webhook",
             "/api/first-run-status",
         }
         if request.path in public_routes:
@@ -850,6 +854,19 @@ def create_app(test_config=None):
         payload = request.get_data()
         sig_header = request.headers.get("Stripe-Signature", "")
         success, msg = billing_mgr.handle_webhook_event(payload, sig_header)
+        if not success:
+            return jsonify({"error": msg}), 400
+        return jsonify({"status": "processed", "message": msg})
+
+    @flask_app.route("/api/v1/chatwoot/webhook", methods=["POST"])
+    @flask_app.route("/api/chatwoot/webhook", methods=["POST"])
+    def chatwoot_webhook():
+        """Inbound webhook handler for Chatwoot Agent Bot events."""
+        payload = request.get_data()
+        sig_header = request.headers.get("X-Chatwoot-Signature")
+        success, msg = chatwoot_bot_mgr.handle_webhook_event(
+            payload, signature_header=sig_header
+        )
         if not success:
             return jsonify({"error": msg}), 400
         return jsonify({"status": "processed", "message": msg})

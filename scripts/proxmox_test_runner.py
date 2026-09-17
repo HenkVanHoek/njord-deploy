@@ -2934,6 +2934,28 @@ def run_proxmox_tests(cli_args) -> int:
     return failed_count
 
 
+def format_markdown_table(headers: List[str], rows: List[List[str]]) -> List[str]:
+    """Formats markdown table with aligned columns to satisfy IDE linters."""
+    cols = len(headers)
+    widths = [len(h) for h in headers]
+    for r in rows:
+        for idx in range(cols):
+            cell_val = str(r[idx]) if idx < len(r) else ""
+            if len(cell_val) > widths[idx]:
+                widths[idx] = len(cell_val)
+    hdr_cells = [h.ljust(widths[i]) for i, h in enumerate(headers)]
+    header_str = "| " + " | ".join(hdr_cells) + " |"
+    sep_str = "|:" + "-|:".join("-" * widths[i] for i in range(cols)) + "-|"
+    lines = [header_str, sep_str]
+    for r in rows:
+        row_cells = [
+            (str(r[i]) if i < len(r) else "").ljust(widths[i]) for i in range(cols)
+        ]
+        row_str = "| " + " | ".join(row_cells) + " |"
+        lines.append(row_str)
+    return lines
+
+
 def write_markdown_report(
     report_path: Path,
     results: List[Dict[str, Any]],
@@ -2966,13 +2988,21 @@ def write_markdown_report(
         "",
         "## Results Table",
         "",
-        (
-            "| Date / Time | Component ID | Target | Engine | VM ID | IP Address | "
-            "Deployment | Containers | HTTP | Status |"
-        ),
-        ("| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |"),
     ]
 
+    res_headers = [
+        "Date / Time",
+        "Component ID",
+        "Target",
+        "Engine",
+        "VM ID",
+        "IP Address",
+        "Deployment",
+        "Containers",
+        "HTTP",
+        "Status",
+    ]
+    res_rows: List[List[str]] = []
     for record in results:
         if record["status"] == "success":
             status_emoji = "✅ PASS"
@@ -2988,13 +3018,22 @@ def write_markdown_report(
             if record["http_ok"] is None
             else ("OK" if record["http_ok"] else "FAIL")
         )
-        md_lines.append(
-            f"| {rec_time} | `{record['component_id']}` | `{rec_mode}` | "
-            f"`{rec_engine}` | {record['vmid']} | {record['ip'] or 'N/A'} | "
-            f"{record['deployment']} | "
-            f"{'Running' if record['running'] else 'Stopped'} | "
-            f"{http_val} | **{status_emoji}** |"
+        res_rows.append(
+            [
+                rec_time,
+                f"`{record['component_id']}`",
+                f"`{rec_mode}`",
+                f"`{rec_engine}`",
+                str(record["vmid"]),
+                record["ip"] or "N/A",
+                str(record["deployment"]),
+                "Running" if record["running"] else "Stopped",
+                http_val,
+                f"**{status_emoji}**",
+            ]
         )
+
+    md_lines.extend(format_markdown_table(res_headers, res_rows))
 
     screenshots_records = [r for r in results if r.get("screenshot_path")]
     if screenshots_records:
@@ -3024,11 +3063,15 @@ def write_markdown_report(
         md_lines.append("")
         md_lines.append("## 🔑 First-Run Credentials & Onboarding Verification")
         md_lines.append("")
-        md_lines.append(
-            "| Component ID | Target | Engine | Auth Type | "
-            "Extracted Setup Key / Token | Status |"
-        )
-        md_lines.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
+        fr_headers = [
+            "Component ID",
+            "Target",
+            "Engine",
+            "Auth Type",
+            "Extracted Setup Key / Token",
+            "Status",
+        ]
+        fr_rows: List[List[str]] = []
         for f_rec in first_run_records:
             cid = f_rec.get("component_id", "service")
             fmode = (f_rec.get("mode") or "LXC").upper()
@@ -3053,11 +3096,17 @@ def write_markdown_report(
                 display_text = "—"
                 f_status = "ℹ️ NONE"
 
-            row_str = (
-                f"| `{cid}` | `{fmode}` | `{fengine}` | `{atype}` | "
-                f"{display_text} | {f_status} |"
+            fr_rows.append(
+                [
+                    f"`{cid}`",
+                    f"`{fmode}`",
+                    f"`{fengine}`",
+                    f"`{atype}`",
+                    display_text,
+                    f_status,
+                ]
             )
-            md_lines.append(row_str)
+        md_lines.extend(format_markdown_table(fr_headers, fr_rows))
         md_lines.append("")
 
     md_lines.append("")

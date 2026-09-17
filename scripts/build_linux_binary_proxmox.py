@@ -224,10 +224,21 @@ def main():
     sftp.close()
 
     logger.info(f"Cleaning up build container {vmid}...")
-    client.post(f"nodes/{node}/lxc/{vmid}/status/stop")
-    time.sleep(2)
-    client.delete(f"nodes/{node}/lxc/{vmid}", params={"purge": 1})
-    logger.info("Build container destroyed. All binaries ready in dist/.")
+    try:
+        client.stop_lxc(node, vmid)
+        for _ in range(15):
+            time.sleep(2)
+            st = client.get_lxc_status(node, vmid).get("data", {}).get("status")
+            if st == "stopped":
+                break
+    except Exception as e:
+        logger.debug(f"Container stop note for {vmid}: {e}")
+
+    try:
+        client.destroy_lxc(node, vmid)
+        logger.info("Build container destroyed. All binaries ready in dist/.")
+    except Exception as e:
+        logger.warning(f"Could not destroy build container {vmid}: {e}")
 
 
 if __name__ == "__main__":

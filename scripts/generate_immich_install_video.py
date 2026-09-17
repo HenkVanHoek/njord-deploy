@@ -23,7 +23,7 @@ from pathlib import Path
 
 import edge_tts
 import imageio_ffmpeg  # type: ignore[import-untyped]
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import ViewportSize, sync_playwright
 
 # Project Root Setup
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -59,7 +59,12 @@ NARRATION_SCRIPTS: list[tuple[str, str]] = [
     ),
     (
         "scene6.mp3",
-        "Launch the Immich Web UI instantly with one click on " "port 2283.",
+        "Launch the Immich Web UI instantly with one click on port 2283.",
+    ),
+    (
+        "scene7.mp3",
+        "Here is the live Immich web interface, ready for instant "
+        "use directly on your local network.",
     ),
 ]
 
@@ -123,23 +128,28 @@ def update_narration_subtitle(page, text: str) -> None:
         if (!bar) {
             bar = document.createElement('div');
             bar.id = 'njord-narration-banner';
-            bar.style.cssText = (
-                'position: fixed; bottom: 20px; left: 50%; ' +
-                'transform: translateX(-50%);' +
-                'background: rgba(15, 23, 42, 0.94);' +
-                'border: 1px solid rgba(0, 242, 254, 0.45);' +
-                'color: #f8fafc; padding: 9px 24px; border-radius: 9999px;' +
-                'font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", ' +
-                'Roboto, sans-serif; font-size: 14.5px; font-weight: 500; ' +
-                'letter-spacing: 0.2px;' +
-                'box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), ' +
-                '0 0 16px rgba(0, 242, 254, 0.25);' +
-                'backdrop-filter: blur(12px); ' +
-                '-webkit-backdrop-filter: blur(12px);' +
-                'z-index: 9999999; display: flex; align-items: center; ' +
-                'gap: 10px; transition: opacity 0.3s ease, ' +
-                'transform 0.3s ease; max-width: 88%;'
+            bar.style.position = 'fixed';
+            bar.style.bottom = '20px';
+            bar.style.left = '50%';
+            bar.style.transform = 'translate(-50%, 0)';
+            bar.style.background = 'rgba(15, 23, 42, 0.94)';
+            bar.style.border = '1px solid rgba(0, 242, 254, 0.45)';
+            bar.style.color = '#f8fafc';
+            bar.style.padding = '9px 24px';
+            bar.style.borderRadius = '9999px';
+            bar.style.fontFamily = 'system-ui, sans-serif';
+            bar.style.fontSize = '14.5px';
+            bar.style.fontWeight = '500';
+            bar.style.letterSpacing = '0.2px';
+            bar.style.boxShadow = (
+                '0 8px 32px rgba(0,0,0,0.7), 0 0 16px rgba(0,242,254,0.25)'
             );
+            bar.style.backdropFilter = 'blur(12px)';
+            bar.style.zIndex = '9999999';
+            bar.style.display = 'flex';
+            bar.style.alignItems = 'center';
+            bar.style.gap = '10px';
+            bar.style.maxWidth = '88%';
             document.body.appendChild(bar);
         }
         bar.innerHTML = `
@@ -227,6 +237,116 @@ def move_cursor_to_input_and_type(page, selector: str, text: str, delay_ms: int 
     wait_seconds(page, 1.0)
 
 
+def render_first_run_ui(page) -> None:
+    """Renders a realistic in-frame browser window showing the Immich first-run UI."""
+    js_code = """() => {
+        const header = document.getElementById('wizard-header');
+        if (header) {
+            header.innerHTML = (
+                '<strong>Application Live: Immich First-Run Web UI</strong>'
+            );
+        }
+        const body = document.getElementById('wizard-body');
+        if (body) {
+            body.innerHTML = `
+                <div class="card shadow-lg border-0 mb-3" ` +
+                `style="background:#0b1120; border-radius:12px; ` +
+                `overflow:hidden;">
+                    <div class="card-header bg-black py-2 px-3 d-flex ` +
+                    `align-items-center justify-content-between ` +
+                    `border-bottom border-secondary">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="width:12px; height:12px; ` +
+                            `background:#ef4444; border-radius:50%; ` +
+                            `display:inline-block;"></span>
+                            <span style="width:12px; height:12px; ` +
+                            `background:#f59e0b; border-radius:50%; ` +
+                            `display:inline-block;"></span>
+                            <span style="width:12px; height:12px; ` +
+                            `background:#10b981; border-radius:50%; ` +
+                            `display:inline-block;"></span>
+                            <span class="badge bg-secondary font-monospace ` +
+                            `ms-3 px-3 py-1 text-light" id="active-url-bar">
+                                <i class="fa-solid fa-lock text-success me-1"></i>` +
+                                `http://192.168.1.185:2283
+                            </span>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-sm bg-primary text-white ` +
+                            `me-2 font-monospace px-3 py-1">
+                                <i class="fa-solid fa-globe me-1"></i>` +
+                                `Immich Web UI (:2283)
+                            </button>
+                            <span class="badge bg-success-subtle text-success ` +
+                            `border border-success-subtle px-2 py-1 small">
+                                <i class="fa-solid fa-circle-check me-1"></i>Live OK
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-body p-4 text-light" ` +
+                    `style="background:#0f172a; min-height:460px;">
+                        <div class="row align-items-center ` +
+                        `justify-content-center py-4">
+                            <div class="col-md-9 text-center">
+                                <div class="mb-4">
+                                    <div class="d-inline-flex p-3 ` +
+                                    `rounded-circle mb-3" ` +
+                                    `style="background:rgba(0,242,254,0.15); ` +
+                                    `border:1px solid #00f2fe;">
+                                        <i class="fa-solid fa-photo-film ` +
+                                        `text-info fs-1"></i>
+                                    </div>
+                                    <h2 class="fw-bold text-white mb-2">` +
+                                    `Welcome to Immich</h2>
+                                    <p class="text-muted fs-6 mb-4">
+                                        Self-hosted photo and video backup ` +
+                                        `solution directly on your Virtual Pi.
+                                    </p>
+                                </div>
+                                <div class="card p-4 mx-auto text-start shadow" ` +
+                                `style="max-width: 520px; background:#1e293b; ` +
+                                `border:1px solid rgba(255,255,255,0.1);">
+                                    <h5 class="fw-bold text-white mb-3">
+                                        <i class="fa-solid fa-user-plus ` +
+                                        `text-primary me-2"></i>Getting Started
+                                    </h5>
+                                    <div class="mb-3">
+                                        <label class="form-label small ` +
+                                        `text-muted">Admin Account</label>
+                                        <input type="text" class="form-control ` +
+                                        `form-control-sm bg-dark text-white ` +
+                                        `border-secondary" ` +
+                                        `value="admin@immich.local" readonly>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small ` +
+                                        `text-muted">Cluster Node</label>
+                                        <input type="text" class="form-control ` +
+                                        `form-control-sm bg-dark text-white ` +
+                                        `border-secondary" ` +
+                                        `value="virtual-pi-5 (192.168.1.185)" ` +
+                                        `readonly>
+                                    </div>
+                                    <div class="d-grid mt-4">
+                                        <button class="btn btn-primary fw-bold" ` +
+                                        `id="app-get-started-btn">
+                                            <i class="fa-solid ` +
+                                            `fa-arrow-right-to-bracket me-2"></i>
+                                            Enter Immich Dashboard
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }"""
+    page.evaluate(js_code)
+
+
 def pregenerate_audio_clips(
     temp_dir: Path, voice: str = "en-US-ChristopherNeural"
 ) -> dict[str, float]:
@@ -237,16 +357,16 @@ def pregenerate_audio_clips(
     durations: dict[str, float] = {}
 
     async def generate():
-        for filename, text in NARRATION_SCRIPTS:
-            out_file = temp_dir / filename
+        for script_file, text in NARRATION_SCRIPTS:
+            out_file = temp_dir / script_file
             comm = edge_tts.Communicate(text, voice, rate="+6%")
             await comm.save(str(out_file))
 
     print(f"[*] Pre-synthesizing {len(NARRATION_SCRIPTS)} voice-over clips...")
     asyncio.run(generate())
 
-    for filename, _ in NARRATION_SCRIPTS:
-        clip_path = temp_dir / filename
+    for script_file, _ in NARRATION_SCRIPTS:
+        clip_path = temp_dir / script_file
         cmd = [ffmpeg, "-i", str(clip_path)]
         res = subprocess.run(cmd, capture_output=True, text=True)  # nosec B603
         dur = 6.0
@@ -256,8 +376,8 @@ def pregenerate_audio_clips(
                 h, m, s = part.split(":")
                 dur = float(h) * 3600 + float(m) * 60 + float(s)
                 break
-        durations[filename] = dur
-        print(f"    - {filename}: {dur:.2f}s")
+        durations[script_file] = dur
+        print(f"    - {script_file}: {dur:.2f}s")
 
     return durations
 
@@ -281,11 +401,12 @@ def record_walkthrough_video():
     print(f"[*] Launching Chromium at {view_w}x{view_h} Full HD...")
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+        v_size: ViewportSize = {"width": view_w, "height": view_h}
         context = browser.new_context(
-            viewport={"width": view_w, "height": view_h},
+            viewport=v_size,
             color_scheme="dark",
             record_video_dir=str(video_dir),
-            record_video_size={"width": view_w, "height": view_h},
+            record_video_size=v_size,
         )
         context.add_init_script(
             """
@@ -801,11 +922,26 @@ def record_walkthrough_video():
             }
         }"""
         )
-        # Generous holding pause at the end for voice-over 6 + outro
-        wait_seconds(page, d6 + 3.0)
+        wait_seconds(page, d6 + 1.5)
+
+        # -------------------------------------------------------------
+        # Scene 7: First-Run Web UI Onboarding & Verification
+        # -------------------------------------------------------------
+        print("[*] Scene 7: First-Run Web UI for Immich...")
+        render_first_run_ui(page)
+        init_custom_cursor(page)
+
+        d7 = record_cue(6, offset_sec=0.2)
+        page.screenshot(path=str(screenshot_dir / "scene_7_first_run_web_ui.png"))
+
+        # Hold on first-run UI for remainder of speech + outro
+        wait_seconds(page, d7 + 3.0)
 
         # Close page & context to finalize video
-        raw_video_path = Path(page.video.path())
+        rec_video = page.video
+        if rec_video is None:
+            raise RuntimeError("Playwright video recording was not initialized.")
+        raw_video_path = Path(rec_video.path())
         page.close()
         context.close()
         browser.close()
@@ -836,15 +972,16 @@ def mux_audio_tracks(
     def fmt_vtt(seconds: float) -> str:
         m = int(seconds // 60)
         s = int(seconds % 60)
-        ms = int(round((seconds - int(seconds)) * 1000))
-        return f"00:{m:02d}:{s:02d}.{ms:03d}"
+        msec = int(round((seconds - int(seconds)) * 1000))
+        return f"00:{m:02d}:{s:02d}.{msec:03d}"
 
     def fmt_srt(seconds: float) -> str:
         m = int(seconds // 60)
         s = int(seconds % 60)
-        ms = int(round((seconds - int(seconds)) * 1000))
-        return f"00:{m:02d}:{s:02d},{ms:03d}"
+        msec = int(round((seconds - int(seconds)) * 1000))
+        return f"00:{m:02d}:{s:02d},{msec:03d}"
 
+    # noinspection SpellCheckingInspection
     vtt_lines = ["WEBVTT - Immich Deployment Walkthrough\n"]
     srt_lines = []
     for idx, (start_sec, text, filename) in enumerate(recorded_cues, 1):
@@ -870,10 +1007,11 @@ def mux_audio_tracks(
     mix_labels = []
     for i, (delay, _, filename) in enumerate(recorded_cues):
         inputs.extend(["-i", str(temp_audio_dir / filename)])
-        ms = int(delay * 1000)
-        filter_parts.append(f"[{i}:a]adelay={ms}|{ms}[a{i}]")
+        delay_ms = int(delay * 1000)
+        filter_parts.append(f"[{i}:a]adelay={delay_ms}|{delay_ms}[a{i}]")
         mix_labels.append(f"[a{i}]")
 
+    # noinspection SpellCheckingInspection
     filter_complex = (
         ";".join(filter_parts)
         + ";"
@@ -882,6 +1020,7 @@ def mux_audio_tracks(
     )
     mixed_audio = temp_audio_dir / "full_voiceover.mp3"
 
+    # noinspection SpellCheckingInspection
     cmd_mix = (
         [ffmpeg, "-y"]
         + inputs
@@ -915,11 +1054,12 @@ def mux_audio_tracks(
     ]
     subprocess.run(cmd_mp4, check=True, capture_output=True)  # nosec B603
     mp4_size_mb = mp4_target.stat().st_size / (1024 * 1024)
-    print(f"[+] Saved Audio-Muxed MP4: {mp4_target} ({mp4_size_mb:.2f} MB)")
+    print(f"[+] Saved Multiplexed MP4: {mp4_target} ({mp4_size_mb:.2f} MB)")
 
     # 2. Output WebM with Opus audio
     webm_target = video_dir / "immich-virtual-pi-deployment.webm"
     temp_webm = temp_audio_dir / "out.webm"
+    # noinspection SpellCheckingInspection
     cmd_webm = [
         ffmpeg,
         "-y",
@@ -939,7 +1079,7 @@ def mux_audio_tracks(
     subprocess.run(cmd_webm, check=True, capture_output=True)  # nosec B603
     shutil.move(str(temp_webm), str(webm_target))
     webm_size_mb = webm_target.stat().st_size / (1024 * 1024)
-    print(f"[+] Saved Audio-Muxed WebM: {webm_target} ({webm_size_mb:.2f} MB)")
+    print(f"[+] Saved Multiplexed WebM: {webm_target} ({webm_size_mb:.2f} MB)")
 
     # Cleanup temp directory and raw video
     shutil.rmtree(temp_audio_dir, ignore_errors=True)

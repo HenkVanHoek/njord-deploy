@@ -2307,6 +2307,28 @@ def run_proxmox_package_tests(cli_args) -> int:
     return failed_count
 
 
+def format_markdown_table(headers: List[str], rows: List[List[str]]) -> List[str]:
+    """Formats markdown table with aligned columns to satisfy IDE linters."""
+    cols = len(headers)
+    widths = [len(h) for h in headers]
+    for r in rows:
+        for idx in range(cols):
+            cell_val = str(r[idx]) if idx < len(r) else ""
+            if len(cell_val) > widths[idx]:
+                widths[idx] = len(cell_val)
+    hdr_cells = [h.ljust(widths[i]) for i, h in enumerate(headers)]
+    header_str = "| " + " | ".join(hdr_cells) + " |"
+    sep_str = "|:" + "-|:".join("-" * widths[i] for i in range(cols)) + "-|"
+    lines = [header_str, sep_str]
+    for r in rows:
+        row_cells = [
+            (str(r[i]) if i < len(r) else "").ljust(widths[i]) for i in range(cols)
+        ]
+        row_str = "| " + " | ".join(row_cells) + " |"
+        lines.append(row_str)
+    return lines
+
+
 def write_markdown_report(
     report_path: Path,
     results: List[Dict[str, Any]],
@@ -2330,23 +2352,36 @@ def write_markdown_report(
         "",
         "## Packages Summary Table",
         "",
-        (
-            "| Package ID | Package Name | Target | Engine | "
-            "VM ID | IP Address | Deployment | Status |"
-        ),
-        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
     ]
 
+    pkg_headers = [
+        "Package ID",
+        "Package Name",
+        "Target",
+        "Engine",
+        "VM ID",
+        "IP Address",
+        "Deployment",
+        "Status",
+    ]
+    pkg_rows: List[List[str]] = []
     for record in results:
         mode_val = (record.get("mode") or "lxc").upper()
         engine_val = (record.get("engine") or "docker").upper()
         status_emoji = "✅ PASS" if record["status"] == "success" else "❌ FAIL"
-        md_lines.append(
-            f"| `{record['package_id']}` | {record['package_name']} | "
-            f"{mode_val} | {engine_val} | "
-            f"{record['vmid']} | {record['ip'] or 'N/A'} | "
-            f"{record['deployment']} | **{status_emoji}** |"
+        pkg_rows.append(
+            [
+                f"`{record['package_id']}`",
+                str(record["package_name"]),
+                mode_val,
+                engine_val,
+                str(record["vmid"]),
+                record["ip"] or "N/A",
+                str(record["deployment"]),
+                f"**{status_emoji}**",
+            ]
         )
+    md_lines.extend(format_markdown_table(pkg_headers, pkg_rows))
 
     md_lines.append("")
     md_lines.append("## Detailed Components Verification Status")
@@ -2372,12 +2407,15 @@ def write_markdown_report(
             md_lines.append("")
             md_lines.append("#### Component Health Status:")
             md_lines.append("")
-            md_lines.append(
-                "| Component ID | Container Running | HTTP UI Port | "
-                "Log Error (Traceback/Fatal) | Version | Status |"
-            )
-            md_lines.append("| :--- | :--- | :--- | :--- | :--- | :--- |")
-
+            comp_headers = [
+                "Component ID",
+                "Container Running",
+                "HTTP UI Port",
+                "Log Error (Traceback/Fatal)",
+                "Version",
+                "Status",
+            ]
+            comp_rows: List[List[str]] = []
             for comp_id, comp_record in components_data.items():
                 running = "Running" if comp_record.get("running") else "Stopped"
                 http_val = (
@@ -2395,11 +2433,17 @@ def write_markdown_report(
                     )
                     else "❌ FAILED"
                 )
-
-                md_lines.append(
-                    f"| `{comp_id}` | {running} | {http_val} | "
-                    f"{log_err} | {ver} | {comp_status} |"
+                comp_rows.append(
+                    [
+                        f"`{comp_id}`",
+                        running,
+                        http_val,
+                        log_err,
+                        ver,
+                        comp_status,
+                    ]
                 )
+            md_lines.extend(format_markdown_table(comp_headers, comp_rows))
 
             pkg_shots = [
                 (cid, crec)
@@ -2430,11 +2474,13 @@ def write_markdown_report(
                     "#### 🔑 First-Run Credentials & Onboarding Verification:"
                 )
                 md_lines.append("")
-                md_lines.append(
-                    "| Component ID | Auth Type | "
-                    "Extracted Setup Key / Token | Status |"
-                )
-                md_lines.append("| :--- | :--- | :--- | :--- |")
+                fr_headers = [
+                    "Component ID",
+                    "Auth Type",
+                    "Extracted Setup Key / Token",
+                    "Status",
+                ]
+                fr_rows: List[List[str]] = []
                 for cid, crec in first_run_entries:
                     atype = crec.get("first_run_auth_type") or "none"
                     token = crec.get("first_run_token")
@@ -2453,10 +2499,15 @@ def write_markdown_report(
                         f_status = "⚠️ TOKEN MISSING"
                     else:
                         display_text = "—"
-                        f_status = "ℹ️ NONE"
-                    md_lines.append(
-                        f"| `{cid}` | `{atype}` | {display_text} | {f_status} |"
+                    fr_rows.append(
+                        [
+                            f"`{cid}`",
+                            f"`{atype}`",
+                            display_text,
+                            f_status,
+                        ]
                     )
+                md_lines.extend(format_markdown_table(fr_headers, fr_rows))
                 md_lines.append("")
 
         if record.get("error_message"):

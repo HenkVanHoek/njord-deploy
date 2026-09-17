@@ -32,7 +32,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import edge_tts
 import imageio_ffmpeg  # type: ignore[import-untyped]
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import ViewportSize, sync_playwright
 
 # Project Root Setup
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -601,11 +601,12 @@ def record_walkthrough_video(
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
+        v_size: ViewportSize = {"width": view_w, "height": view_h}
         context = browser.new_context(
-            viewport={"width": view_w, "height": view_h},
+            viewport=v_size,
             color_scheme="dark",
             record_video_dir=str(video_dir),
-            record_video_size={"width": view_w, "height": view_h},
+            record_video_size=v_size,
         )
         context.add_init_script(
             """
@@ -1078,9 +1079,10 @@ def record_walkthrough_video(
         wait_seconds(page, d7 + 3.0)
 
         # Finalize video capture
-        if page.video is None:
+        rec_video = page.video
+        if rec_video is None:
             raise RuntimeError("Playwright video recording was not initialized.")
-        raw_video_path = Path(page.video.path())
+        raw_video_path = Path(rec_video.path())
         page.close()
         context.close()
         browser.close()
@@ -1114,14 +1116,14 @@ def mux_audio_tracks(
     def fmt_vtt(seconds: float) -> str:
         m = int(seconds // 60)
         s = int(seconds % 60)
-        ms = int(round((seconds - int(seconds)) * 1000))
-        return f"00:{m:02d}:{s:02d}.{ms:03d}"
+        msec = int(round((seconds - int(seconds)) * 1000))
+        return f"00:{m:02d}:{s:02d}.{msec:03d}"
 
     def fmt_srt(seconds: float) -> str:
         m = int(seconds // 60)
         s = int(seconds % 60)
-        ms = int(round((seconds - int(seconds)) * 1000))
-        return f"00:{m:02d}:{s:02d},{ms:03d}"
+        msec = int(round((seconds - int(seconds)) * 1000))
+        return f"00:{m:02d}:{s:02d},{msec:03d}"
 
     vtt_lines = [f"WEBVTT - {comp_id.title()} Deployment Walkthrough\n"]
     srt_lines = []
@@ -1149,8 +1151,8 @@ def mux_audio_tracks(
     mix_labels = []
     for i, (delay, _, filename) in enumerate(recorded_cues):
         inputs.extend(["-i", str(temp_audio_dir / filename)])
-        ms = int(delay * 1000)
-        filter_parts.append(f"[{i}:a]adelay={ms}|{ms}[a{i}]")
+        delay_ms = int(delay * 1000)
+        filter_parts.append(f"[{i}:a]adelay={delay_ms}|{delay_ms}[a{i}]")
         mix_labels.append(f"[a{i}]")
 
     filter_complex = (

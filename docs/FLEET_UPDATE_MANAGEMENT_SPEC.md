@@ -130,7 +130,7 @@ flowchart TD
   1. Start een ephemeral LXC/kloon op Proxmox via [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py).
   2. Voert de migratie uit tegen een geanonimiseerd schema.
   3. Verifieert container-status en API-endpoints (`healthy` status / HTTP 200).
-  4. Bij falen: **Quarantaine**. Henk ontvangt direct een bugrapport; de update wordt geblokkeerd.
+  4. Bij falen: **Quarantaine**. Henk ontvangt direct een bug-rapport; de update wordt geblokkeerd.
   5. Bij succes: Keurmerk *"Gecertificeerd in Proeftuin"* wordt toegekend. De container wordt direct vernietigd.
 
 ### 3.2. Modus B: Interactieve Klant Sandbox (Training & UAT)
@@ -161,12 +161,12 @@ flowchart TD
 * Onder **High-Safety** zijn Database Dump + Config State een onlosmakelijke atomaire eenheid.
 * Mislukt de health check in productie? FUMS voert **altijd** zowel de image-tag revert als een harde database-restore uit. Geen enkele oude container start ooit op een gemuteerde database.
 
-### 4.3. Bulk Media vs. State Scheiding (De 500GB Valkuil)
-* FUMS scheidt **Applicatiestate & Database** (binnen seconden geback-upt) strikt van **Bulk Media Mounts** (foto's/video's).
+### 4.3. Bulk Media vs. State Scheiding (De 500 GB Valkuil)
+* FUMS scheidt **Applicatiestatus & Database** (binnen seconden geback-upt) strikt van **Bulk Media Mounts** (foto's/video's).
 * Waar beschikbaar gebruikt Proxmox ZFS/Btrfs CoW (Copy-on-Write) snapshots voor nagenoeg instantane snapshots.
 
 ### 4.4. Security, Concurrency & Pre-flights
-* **Disk Space Pre-flight:** Minimaal **2.5x** image + DB omvang vereist vóór start van de pull.
+* **Disk Space Pre-flight:** Minimaal **2.5 x** image + DB omvang vereist vóór start van de pull.
 * **Maintenance Lockout:** `/run/njord_updating.lock` voorkomt parallelle triggers of herstarts.
 * **Strict Identity:** Alleen geautoriseerde Signal-nummers of Matrix MXID's worden geaccepteerd (geen interactie door derden in groepsgesprekken).
 * **Admin Escalatie:** Elke rollback in productie resulteert direct in een P1-alarm naar Henk.
@@ -221,12 +221,12 @@ Voor continue kwaliteitsborging en compliancy beschikt FUMS over een geautomatis
 2. **Operationele End-to-End Orchestratie (`tests/fums/test_fums_operational_e2e.py`)**:
    - **Keten 1 (Routine Patch)**: Groene risicoclassificatie -> directe uitrol zonder verstoring.
    - **Keten 2 (Major Update met Gatekeeper)**: Rode classificatie -> Modus A Proxmox Gatekeeper certificering -> vrijgave aan klant.
-   - **Keten 3 (Quarantaine & AI Diagnose)**: Falende migratie -> onmiddellijke quarantaine -> AI analyse -> P1 alarm (geen klantblootstelling).
-   - **Keten 4 (Klant Training & UAT)**: Aanvraag Modus B -> quotumbewaking (max 3) -> nightly sleep -> UAT Sign-off -> automatische opruiming.
+   - **Keten 3 (Quarantaine & AI Diagnose)**: Falende migratie -> onmiddellijke quarantaine -> AI-analyse -> P1 alarm (geen klantblootstelling).
+   - **Keten 4 (Klant Training & UAT)**: Aanvraag Modus B -> quotumbewaking (maximaal 3) -> nightly sleep -> UAT Sign-off -> automatische opruiming.
    - **Keten 5 (Production Failure & Atomic Rollback)**: Falende health check in productie -> atomaire DB dump restore + revert image tag -> P1 alarm naar beheerder.
 
 3. **Geautomatiseerde CLI Runner (`scripts/fums_test_runner.py`)**:
-   - Kan zelfstandig of in CI/CD uitgevoerd worden:
+   - Kan zelfstandig of in CI / CD uitgevoerd worden:
      ```bash
      python3 scripts/fums_test_runner.py          # Voer alle 38 FUMS tests uit
      python3 scripts/fums_test_runner.py --suite security  # Alleen de security suite

@@ -10,8 +10,8 @@ NjordDeploy (including the Configurator, Component Editor, Service Daemon, Deplo
 
 Additional Use Grant:
 1. You are granted the right to make use of the Licensed Work free of charge for non-commercial purposes, personal self-hosting, homelab deployments, educational use, and internal evaluation.
-2. For self-hosting and internal business operations, you may manage up to two (2) target server nodes (Single Board Computers, VMs, or physical servers) free of charge without requiring a paid subscription.
-3. You may NOT make the Licensed Work available to third parties as a hosted deployment service, managed SaaS platform, or commercial cloud offering in competition with the Licensor without an explicit written commercial license agreement from the Licensor.
+2. For self-hosting and standalone homelab/server operations, you may deploy and manage target server nodes (Single Board Computers, VMs, or physical servers) free of charge without requiring a paid subscription.
+3. You may NOT make the Licensed Work available to third parties as a commercial cloud deployment platform or managed fleet service in competition with the Licensor without an explicit commercial partnership or access via Njord Console.
 
 Change Date:
 2028-08-30 (two years from the release date of this version)
