@@ -41,13 +41,20 @@ Yes. NjordDeploy includes dedicated AI components such as **Open WebUI bundled w
 **Answer:**
 NjordDeploy is **100% local, self-contained, and privacy-first**. All discovery scans, credential handling, template rendering, and deployments execute directly from your control machine to your target device over local network or encrypted SSH/WireGuard/Tailscale tunnels. No telemetry, metadata, or user credentials ever leave your infrastructure.
 
-### 1.6 What license does NjordDeploy use and is it free for self-hosters?
+### 1.6 What subscription plans and licenses does NjordDeploy offer?
 **Answer:**
-**Yes, absolutely!** NjordDeploy is licensed under the **[Business Source License 1.1 (BSL-1.1)](https://github.com/HenkVanHoek/njord-deploy/blob/main/LICENSE)**.
-* **Standalone / Community:** Every self-hoster, homelab enthusiast, student, and sovereign operator can run NjordDeploy **100% free forever** on their own hardware, SBC devices, or virtual machines without artificial node locks. It includes full access to all curated components, container deployments, local volume backups, and autonomous AI diagnostics without requiring payment or cloud dependencies.
-* **Standalone Desktop & Daemon Modes:** Running the offline standalone desktop executable or persistent background systemd/Docker daemon locally is completely free and sovereign.
-* **Commercial MSP / Multi-Node Fleet Management:** Managing multiple client deployments or offering sovereign hosting services? Multi-node fleet orchestration, centralized health dashboards, and automated remote updates are supported via Njord Console. Contact us for MSP pilot access via [info@njorddeploy.com](mailto:info@njorddeploy.com).
-* **Automatic Open Source Transition:** Each version automatically transitions unconditionally to the standard **Apache License, Version 2.0** open-source license two years after release (Change Date: August 30, 2028).
+NjordDeploy uses a transparent, sovereignty-first pricing model structured in the web interface as follows:
+
+1. **Community Edition (€0 / Forever Free)**:
+   * 100% free and sovereign for personal homelabs, independent servers, and sovereign self-hosters.
+   * Unlimited container deployments and full access to the 100+ curated service catalog.
+   * 100% local AI integration (Ollama / Rootless Podman / Docker Engine), autonomous self-healing diagnostics, and local volume disaster recovery backups.
+   * Licensed under the **[Business Source License 1.1 (BSL-1.1)](https://github.com/HenkVanHoek/njord-deploy/blob/main/LICENSE)**, automatically transitioning to the standard **Apache 2.0 License** two years after release.
+
+2. **Njord Console (MSP Fleet Orchestration)**:
+   * Tailored for Managed Service Providers (MSPs), businesses, and multi-node fleet managers.
+   * Centralized multi-tenant inventory, live health/telemetry dashboards, rolling remote updates, and automated encrypted off-site cloud backups across all your active nodes.
+   * Can be explored directly via the **"MSP / Fleet"** button in the navigation bar of the web interface or by contacting [info@njorddeploy.com](mailto:info@njorddeploy.com) for MSP Pilot Access.
 
 ### 1.7 Can I run NjordDeploy as a 24/7 persistent background daemon/service on my home server?
 **Answer:**

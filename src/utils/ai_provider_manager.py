@@ -26,7 +26,7 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
         "requires_api_key": False,
         "default_base_url": "http://localhost:11434/v1",
         "allow_custom_base_url": True,
-        "default_model": "qwen2.5-coder:14b-instruct-q4_K_M",
+        "default_model": "qwen2.5-coder:14b",
         "models": [],
     },
     "gemini": {

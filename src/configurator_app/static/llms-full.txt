@@ -63,12 +63,19 @@ NjordDeploy is an agentless, metadata-driven self-hosting deployment engine desi
 
 ---
 
-## 5. Licensing & Commercial Terms
+## 5. Licensing & Subscription Tiers
 
 - **License Type**: Business Source License 1.1 (BSL-1.1).
-- **Standalone / Community Edition**: 100% open, free, and sovereign to run on your own hardware, virtual machines, or homelabs. Includes full access to all 100+ components, unlimited container deployments, local volume backups, and autonomous AI diagnostics without artificial node restrictions.
+- **Community Edition (€0 / Forever Free)**:
+  - 100% open, free, and sovereign to run on your own hardware, SBCs (Raspberry Pi 4/5), virtual machines, or homelabs.
+  - Unlimited container deployments and full access to all 100+ curated component stacks.
+  - Local volume disaster recovery backups, offline AI component generation, and autonomous self-healing diagnostics.
+  - Active by default in the Configurator application without artificial node limits or fees.
+- **Njord Console (MSP Fleet Orchestration)**:
+  - Designed for Managed Service Providers (MSPs), businesses, and multi-node fleet operators.
+  - Centralized multi-tenant inventory, live health/telemetry dashboards, rolling remote updates, and automated encrypted off-site cloud backups.
+  - Accessible via the "MSP / Fleet" navigation menu in the Configurator or by contacting info@njorddeploy.com for MSP Pilot Access.
 - **Automatic Open Source Conversion**: Transitions unconditionally to the standard open-source **Apache 2.0 License** two years after release.
-- **MSP & Fleet Management**: Multi-node fleet orchestration, centralized health dashboards, and remote update automation are supported via Njord Console (contact info@njorddeploy.com for MSP pilot access).
 
 ---
 
