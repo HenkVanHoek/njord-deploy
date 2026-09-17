@@ -95,15 +95,24 @@ def build_binaries_if_needed(force_build: bool = False) -> bool:
         return False
 
 
-def verify_http_endpoint(url: str, timeout: int = 6) -> Tuple[bool, Optional[int]]:
-    """Verify HTTP reachable endpoint with status 200 OK."""
-    # noinspection PyBroadException
-    try:
-        res = requests.get(url, timeout=timeout)
-        return res.status_code == 200, res.status_code
-    except Exception as e:
-        logger.debug(f"HTTP check failed for {url}: {e}")
-        return False, None
+def verify_http_endpoint(
+    url: str, timeout: int = 6, retries: int = 5
+) -> Tuple[bool, Optional[int]]:
+    """Verify HTTP reachable endpoint with status 200 OK, with retries."""
+    for attempt in range(retries):
+        # noinspection PyBroadException
+        try:
+            res = requests.get(url, timeout=timeout)
+            if res.status_code == 200:
+                return True, 200
+            if attempt == retries - 1:
+                return False, res.status_code
+        except Exception as e:
+            if attempt == retries - 1:
+                logger.debug(f"HTTP check failed for {url}: {e}")
+                return False, None
+        time.sleep(3)
+    return False, None
 
 
 def send_signal_notification(message: str) -> bool:
