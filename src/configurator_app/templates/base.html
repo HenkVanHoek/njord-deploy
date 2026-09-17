@@ -16,7 +16,9 @@
     <main>
         {% block content %}{% endblock %}
     </main>
-    <!-- Chatwoot Live Support Widget -->
-    <script src="{{ url_for('static', filename='js/chatwoot.js') }}?v=1.0" defer></script>
+    {% if session.get('logged_in') and session.get('user') %}
+    <!-- Chatwoot Live Support Widget (Authenticated Sessions Only) -->
+    <script src="{{ url_for('static', filename='js/chatwoot.js') }}?v=1.1" defer></script>
+    {% endif %}
 </body>
 </html>

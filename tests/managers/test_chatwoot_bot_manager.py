@@ -128,6 +128,29 @@ class TestChatwootBotManager(unittest.TestCase):
         mock_toggle.assert_called_once_with(1, 10, "open")
         self.assertEqual(mock_send.call_count, 2)
 
+    @patch.object(ChatwootBotManager, "send_message")
+    def test_rate_limiter_exceeded(self, mock_send):
+        """Verify rapid repeated messages trigger rate limiter warning."""
+        payload = {
+            "event": "message_created",
+            "message_type": "incoming",
+            "private": False,
+            "content": "Snel bericht",
+            "conversation": {"id": 99},
+            "account": {"id": 1},
+        }
+        for _ in range(5):
+            self.manager.handle_webhook_event(payload, sync=True)
+
+        # 6th message should be blocked by rate limiter
+        self.manager.handle_webhook_event(payload, sync=True)
+        call_contents = [
+            c[1]["content"] for c in mock_send.call_args_list if "content" in c[1]
+        ]
+        self.assertTrue(
+            any("te veel berichten" in content for content in call_contents)
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

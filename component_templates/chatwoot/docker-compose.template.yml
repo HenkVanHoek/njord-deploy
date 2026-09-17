@@ -37,6 +37,8 @@ services:
       - "SMTP_AUTHENTICATION=plain"
       - "MAILER_SENDER_EMAIL={{ MAILER_SENDER_EMAIL | default('info@njorddeploy.com') }}"
       - "SMTP_OPENSSL_VERIFY_MODE=peer"
+      - "ENABLE_ACCOUNT_SIGNUP=false"
+      - "ENABLE_RACK_ATTACK_WIDGET_API=true"
     volumes:
       - "{{ DATA_ROOT | default('/opt/njorddeploy/data') }}/chatwoot/storage:/app/storage"
     entrypoint: docker/entrypoints/rails.sh
@@ -75,6 +77,8 @@ services:
       - "SMTP_AUTHENTICATION=plain"
       - "MAILER_SENDER_EMAIL={{ MAILER_SENDER_EMAIL | default('info@njorddeploy.com') }}"
       - "SMTP_OPENSSL_VERIFY_MODE=peer"
+      - "ENABLE_ACCOUNT_SIGNUP=false"
+      - "ENABLE_RACK_ATTACK_WIDGET_API=true"
     volumes:
       - "{{ DATA_ROOT | default('/opt/njorddeploy/data') }}/chatwoot/storage:/app/storage"
     entrypoint: docker/entrypoints/rails.sh
