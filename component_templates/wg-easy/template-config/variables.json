@@ -25,8 +25,8 @@
             "id": "WG_PASSWORD_HASH",
             "label": "Admin Web UI Password Hash (bcrypt)",
             "type": "password",
-            "default": "$2b$12$$EIo48nMxDtA344BrYKRqpO2upZR4EMxB0BsS4f3iQ2pLZ/11A7LOK",
-            "description": "Bcrypt password hash used to log in to the WireGuard Easy web management interface (default: SaxGitaar31!)."
+            "default": "$2b$12$U5DIA2y39QuBN0Cv4iZNxu9bb7NROm.gs2Kq.KbIi4uOzjJ3ST5u2",
+            "description": "Bcrypt password hash used to log in to the WireGuard Easy web management interface (default: change_me)."
         },
         {
             "id": "WG_DEFAULT_DNS",

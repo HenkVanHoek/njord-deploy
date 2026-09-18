@@ -231,7 +231,9 @@ def main() -> None:
     parser.add_argument("--node", default=os.getenv("PROXMOX_NODE", "pve"))
     parser.add_argument("--bridge", default=os.getenv("PROXMOX_BRIDGE", "vmbr1"))
     parser.add_argument(
-        "--password", default=os.getenv("PROXMOX_VM_PASSWORD", "SaxGitaar31!")
+        "--password",
+        default=os.getenv("PROXMOX_VM_PASSWORD", ""),
+        help="LXC root password (defaults to PROXMOX_VM_PASSWORD env var)",
     )
     args = parser.parse_args()
 
@@ -242,10 +244,11 @@ def main() -> None:
         token_secret=os.getenv("PROXMOX_TOKEN_SECRET", ""),
     )
 
+    vm_pass = args.password or os.getenv("PROXMOX_VM_PASSWORD", "")
     ensure_gateway_container(
-        client=client, node=args.node, bridge=args.bridge, vm_pass=args.password
+        client=client, node=args.node, bridge=args.bridge, vm_pass=vm_pass
     )
-    success = configure_registry_service(vm_pass=args.password)
+    success = configure_registry_service(vm_pass=vm_pass)
     if not success:
         logger.error("Failed to configure test registry gateway.")
         sys.exit(1)
