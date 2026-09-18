@@ -136,5 +136,11 @@
   "editor_guide_select_prompt": "Select a component to begin editing.",
   "editor_welcome_title": "Welcome to the Component Editor",
   "editor_welcome_desc": "Select a component from the list to begin editing its metadata, variables, and template.",
-  "editor_welcome_btn_guide": "Show Quick Start Guide"
+  "editor_welcome_btn_guide": "Show Quick Start Guide",
+  "chatwoot_rate_limit_warning": "⚠️ You are sending messages too quickly. Please wait a minute before asking another question.",
+  "chatwoot_human_escalation_private": "🤖 *AI Handoff*: Visitor requested contact with a human agent.",
+  "chatwoot_human_escalation_ack": "I have routed this conversation to our support team. Please hold on, we will get back to you as soon as possible!",
+  "chatwoot_failover_reassurance": "⚡ Please hold on a moment. Our reserve AI service is currently starting up to process your request...",
+  "chatwoot_default_reply": "Thank you for your message! One of our team members will review it as soon as possible.",
+  "chatwoot_fallback_error": "Thank you for your message! I was unable to generate an automated answer right now. A team member will follow up with you shortly."
 }

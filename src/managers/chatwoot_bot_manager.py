@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 import requests
 
 from utils.ai_generator_engine import AIGeneratorEngine
+from utils.i18n import gettext
 
 logger = logging.getLogger(__name__)
 
@@ -160,6 +161,96 @@ class ChatwootBotManager:
                 return True
         return False
 
+    def detect_language(
+        self,
+        payload: Dict[str, Any],
+        content: str,
+    ) -> str:
+        """Detects conversation language ('nl' or 'en') from metadata or content."""
+        # 1. Check conversation additional_attributes or browser language
+        conversation = payload.get("conversation")
+        if isinstance(conversation, dict):
+            add_attrs = conversation.get("additional_attributes")
+            if isinstance(add_attrs, dict):
+                browser_lang = add_attrs.get("browser_language")
+                if isinstance(browser_lang, str) and browser_lang.lower().startswith(
+                    "nl"
+                ):
+                    return "nl"
+                if isinstance(browser_lang, str) and browser_lang.lower().startswith(
+                    "en"
+                ):
+                    return "en"
+
+        # 2. Check sender / contact locale
+        sender = payload.get("sender")
+        if isinstance(sender, dict):
+            custom_attrs = sender.get("custom_attributes")
+            if isinstance(custom_attrs, dict):
+                sender_lang = custom_attrs.get("language")
+                if isinstance(sender_lang, str) and sender_lang.lower().startswith(
+                    "nl"
+                ):
+                    return "nl"
+                if isinstance(sender_lang, str) and sender_lang.lower().startswith(
+                    "en"
+                ):
+                    return "en"
+
+        # 3. Simple text heuristic for Dutch vs English
+        words = set(re.findall(r"\b\w+\b", content.lower()))
+        nl_markers = {
+            "ik",
+            "je",
+            "jij",
+            "het",
+            "een",
+            "van",
+            "naar",
+            "hoe",
+            "wat",
+            "werkt",
+            "graag",
+            "kan",
+            "met",
+            "mens",
+            "medewerker",
+            "voor",
+            "mijn",
+            "deze",
+            "zijn",
+            "heb",
+            "heeft",
+            "vraag",
+        }
+        en_markers = {
+            "the",
+            "is",
+            "how",
+            "what",
+            "can",
+            "with",
+            "for",
+            "please",
+            "my",
+            "this",
+            "have",
+            "has",
+            "question",
+            "human",
+            "agent",
+            "connect",
+        }
+        nl_count = len(words & nl_markers)
+        en_count = len(words & en_markers)
+        if nl_count > en_count:
+            return "nl"
+        if en_count > nl_count:
+            return "en"
+
+        # Default fallback to Dutch if ambiguous, matching the core system default
+        return "nl"
+
     def verify_signature(
         self, payload_bytes: bytes, signature_header: Optional[str]
     ) -> bool:
@@ -245,6 +336,9 @@ class ChatwootBotManager:
         if len(content) > 1000:
             content = content[:1000]
 
+        # Detect visitor language (Dutch vs English)
+        lang = self.detect_language(payload, content)
+
         # Rate limiting per conversation: max 5 messages per 60s
         now = time.time()
         with self._rate_lock:
@@ -255,10 +349,7 @@ class ChatwootBotManager:
                 self.send_message(
                     account_id=account_id,
                     conversation_id=conv_id,
-                    content=(
-                        "⚠️ Je stuurt te veel berichten in korte tijd. "
-                        "Wacht even een minuutje voordat je een nieuwe vraag stelt."
-                    ),
+                    content=gettext("chatwoot_rate_limit_warning", lang=lang),
                     private=False,
                 )
                 return
@@ -271,20 +362,13 @@ class ChatwootBotManager:
             self.send_message(
                 account_id=account_id,
                 conversation_id=conv_id,
-                content=(
-                    "🤖 *AI Handoff*: Bezoeker verzoekt om contact met een "
-                    "menselijke medewerker."
-                ),
+                content=gettext("chatwoot_human_escalation_private", lang=lang),
                 private=True,
             )
             self.send_message(
                 account_id=account_id,
                 conversation_id=conv_id,
-                content=(
-                    "Ik heb dit gesprek direct klaargezet voor een beheerder/"
-                    "medewerker. Een ogenblik geduld, we reageren zo snel "
-                    "mogelijk!"
-                ),
+                content=gettext("chatwoot_human_escalation_ack", lang=lang),
                 private=False,
             )
             return
@@ -295,8 +379,8 @@ class ChatwootBotManager:
         # Prepare AI prompt and context
         sys_context = self.get_knowledge_context()
         prompt = (
-            f'Bezoeker vraagt via de NjordDeploy live chat widget:\n"{content}"\n\n'
-            "Geef een behulpzaam, vriendelijk en accuraat antwoord:"
+            f'Visitor asks via NjordDeploy live chat widget:\n"{content}"\n\n'
+            f"Please provide a helpful, friendly response in {lang.upper()}:"
         )
 
         def on_failover_notify():
@@ -304,10 +388,7 @@ class ChatwootBotManager:
             self.send_message(
                 account_id=account_id,
                 conversation_id=conv_id,
-                content=(
-                    "⚡ Een ogenblik geduld alstublieft. Onze reserve AI-service "
-                    "wordt op dit moment geactiveerd om je vraag te verwerken..."
-                ),
+                content=gettext("chatwoot_failover_reassurance", lang=lang),
                 private=False,
             )
             # Re-enable typing indicator during wait
@@ -325,17 +406,10 @@ class ChatwootBotManager:
                 reply_text = ""
 
             if not reply_text:
-                reply_text = (
-                    "Bedankt voor je vraag! Een van onze medewerkers bekijkt "
-                    "je bericht zo snel mogelijk."
-                )
+                reply_text = gettext("chatwoot_default_reply", lang=lang)
         except Exception as exc:
             logger.error("AI generator failure in Chatwoot bot: %s", exc)
-            reply_text = (
-                "Bedankt voor je vraag! Ik kon op dit moment geen geautomatiseerd "
-                "antwoord genereren. Een medewerker neemt zo spoedig mogelijk "
-                "contact met je op."
-            )
+            reply_text = gettext("chatwoot_fallback_error", lang=lang)
         finally:
             self.toggle_typing_status(account_id, conv_id, "off")
 

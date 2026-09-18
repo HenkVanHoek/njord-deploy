@@ -169,6 +169,66 @@ class TestChatwootBotManager(unittest.TestCase):
             self.assertEqual(engine2.provider, "ollama")
             self.assertEqual(engine2.model, "custom-model")
 
+    def test_detect_language_metadata_and_heuristics(self):
+        """Verify language detection via browser metadata, sender locale, and text."""
+        # Test browser language in conversation metadata
+        payload_nl = {
+            "conversation": {"additional_attributes": {"browser_language": "nl-NL"}}
+        }
+        self.assertEqual(self.manager.detect_language(payload_nl, "Short note"), "nl")
+
+        payload_en = {
+            "conversation": {"additional_attributes": {"browser_language": "en-US"}}
+        }
+        self.assertEqual(
+            self.manager.detect_language(payload_en, "Korte notitie"), "en"
+        )
+
+        # Test text heuristic fallback
+        self.assertEqual(
+            self.manager.detect_language(
+                {}, "How can I install Nextcloud on Debian with Docker?"
+            ),
+            "en",
+        )
+        self.assertEqual(
+            self.manager.detect_language(
+                {}, "Hoe kan ik Nextcloud installeren op mijn server?"
+            ),
+            "nl",
+        )
+
+    @patch.object(ChatwootBotManager, "send_message")
+    def test_localized_failover_reassurance(self, mock_send):
+        """Verify failover reassurance callback sends English text for EN visitors."""
+
+        def fake_generate(prompt, system_context=None, failover_callback=None):
+            if failover_callback:
+                failover_callback()
+            return "Here is your answer!"
+
+        self.mock_ai_engine.generate.side_effect = fake_generate
+
+        payload_en = {
+            "event": "message_created",
+            "message_type": "incoming",
+            "private": False,
+            "content": "How do I configure Traefik SSL certificates?",
+            "conversation": {
+                "id": 88,
+                "additional_attributes": {"browser_language": "en-US"},
+            },
+            "account": {"id": 1},
+        }
+
+        success, _ = self.manager.handle_webhook_event(payload_en, sync=True)
+        self.assertTrue(success)
+
+        # First message sent was the failover reassurance in English, then the AI answer
+        call_contents = [call[1]["content"] for call in mock_send.call_args_list]
+        self.assertTrue(any("Please hold on a moment" in c for c in call_contents))
+        self.assertTrue(any("Here is your answer!" in c for c in call_contents))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -136,5 +136,11 @@
   "editor_guide_select_prompt": "Selecteer een component om te beginnen met bewerken.",
   "editor_welcome_title": "Welkom bij de Component Editor",
   "editor_welcome_desc": "Selecteer een component uit de lijst om de metadata, variabelen en sjablonen te bewerken.",
-  "editor_welcome_btn_guide": "Snelstartgids Weergeven"
+  "editor_welcome_btn_guide": "Snelstartgids Weergeven",
+  "chatwoot_rate_limit_warning": "⚠️ Je stuurt te veel berichten in korte tijd. Wacht even een minuutje voordat je een nieuwe vraag stelt.",
+  "chatwoot_human_escalation_private": "🤖 *AI Handoff*: Bezoeker verzoekt om contact met een menselijke medewerker.",
+  "chatwoot_human_escalation_ack": "Ik heb dit gesprek direct klaargezet voor een beheerder/medewerker. Een ogenblik geduld, we reageren zo snel mogelijk!",
+  "chatwoot_failover_reassurance": "⚡ Een ogenblik geduld alstublieft. Onze reserve AI-service wordt op dit moment geactiveerd om je vraag te verwerken...",
+  "chatwoot_default_reply": "Bedankt voor je vraag! Een van onze medewerkers bekijkt je bericht zo snel mogelijk.",
+  "chatwoot_fallback_error": "Bedankt voor je vraag! Ik kon op dit moment geen geautomatiseerd antwoord genereren. Een medewerker neemt zo spoedig mogelijk contact met je op."
 }
