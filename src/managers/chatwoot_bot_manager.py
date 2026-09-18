@@ -289,6 +289,9 @@ class ChatwootBotManager:
             )
             return
 
+        # Turn on typing indicator so visitor sees activity
+        self.toggle_typing_status(account_id, conv_id, "on")
+
         # Prepare AI prompt and context
         sys_context = self.get_knowledge_context()
         prompt = (
@@ -296,10 +299,31 @@ class ChatwootBotManager:
             "Geef een behulpzaam, vriendelijk en accuraat antwoord:"
         )
 
-        try:
-            reply_text = self.ai_engine.generate(
-                prompt=prompt, system_context=sys_context
+        def on_failover_notify():
+            # Send neutral, professional reassurance message to visitor
+            self.send_message(
+                account_id=account_id,
+                conversation_id=conv_id,
+                content=(
+                    "⚡ Een ogenblik geduld alstublieft. Onze reserve AI-service "
+                    "wordt op dit moment geactiveerd om je vraag te verwerken..."
+                ),
+                private=False,
             )
+            # Re-enable typing indicator during wait
+            self.toggle_typing_status(account_id, conv_id, "on")
+
+        try:
+            # Pass notification callback to AI generator if supported
+            if hasattr(self.ai_engine, "generate"):
+                reply_text = self.ai_engine.generate(
+                    prompt=prompt,
+                    system_context=sys_context,
+                    failover_callback=on_failover_notify,
+                )
+            else:
+                reply_text = ""
+
             if not reply_text:
                 reply_text = (
                     "Bedankt voor je vraag! Een van onze medewerkers bekijkt "
@@ -312,6 +336,8 @@ class ChatwootBotManager:
                 "antwoord genereren. Een medewerker neemt zo spoedig mogelijk "
                 "contact met je op."
             )
+        finally:
+            self.toggle_typing_status(account_id, conv_id, "off")
 
         self.send_message(
             account_id=account_id,
@@ -382,4 +408,28 @@ class ChatwootBotManager:
             return resp.status_code in (200, 201)
         except Exception as exc:
             logger.error("Failed updating Chatwoot conversation status: %s", exc)
+            return False
+
+    def toggle_typing_status(
+        self,
+        account_id: Union[int, str],
+        conversation_id: Union[int, str],
+        typing_status: str = "on",
+    ) -> bool:
+        """Toggles the typing status indicator (on/off) in Chatwoot widget."""
+        url = (
+            f"{self.base_url}/api/v1/accounts/{account_id}/"
+            f"conversations/{conversation_id}/toggle_typing_status"
+        )
+        headers: Dict[str, str] = {
+            "Content-Type": "application/json",
+            "api_access_token": self.bot_token,
+        }
+        body: Dict[str, Any] = {"typing_status": typing_status}
+
+        try:
+            resp = requests.post(url, json=body, headers=headers, timeout=5.0)
+            return resp.status_code in (200, 201)
+        except Exception as exc:
+            logger.debug("Failed toggling typing status: %s", exc)
             return False

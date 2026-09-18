@@ -34,6 +34,7 @@ class AIGeneratorEngine:
         prompt: Union[str, List[Dict[str, str]]],
         system_context: Optional[str] = None,
         response_format: Optional[Dict[str, Any]] = None,
+        failover_callback: Optional[Any] = None,
     ) -> str:
         """Sends a prompt to the configured provider and returns the response."""
         config = self._get_provider_config(self.provider)
@@ -87,8 +88,8 @@ class AIGeneratorEngine:
                 hostyourai_key = os.getenv("HOSTYOURAI_API_KEY")
                 if hostyourai_key:
                     logger.warning(
-                        "Gemini provider unavailable (%s). Initiating sovereign "
-                        "failover to HostYourAI / Loes (EU).",
+                        "Primary AI provider unavailable (%s). Initiating sovereign "
+                        "failover to secondary AI provider.",
                         exc,
                     )
                     try:
@@ -103,12 +104,21 @@ class AIGeneratorEngine:
                             timeout=hy_timeout,
                         )
                     except Exception as hy_err:
-                        logger.error("HostYourAI sovereign failover failed: %s", hy_err)
+                        logger.error(
+                            "Secondary AI provider failover failed: %s", hy_err
+                        )
 
-                # Air-Gapped Emergency Failover: Wake local Windows RTX machine via WOL
+                # Air-Gapped Emergency Failover: Wake local standby system via WOL
                 # and alert admin via Signal if all cloud providers are unreachable
                 wol_mac = os.getenv("WOL_LOCAL_AI_MAC")
                 if wol_mac:
+                    if callable(failover_callback):
+                        try:
+                            failover_callback()
+                        except Exception as cb_err:
+                            logger.debug(
+                                "Failover notification callback failed: %s", cb_err
+                            )
                     self._trigger_local_wol_failover(wol_mac, exc)
 
             raise exc
@@ -130,9 +140,9 @@ class AIGeneratorEngine:
             )
             if admin_recipient:
                 msg = (
-                    "⚠️ [NjordDeploy Nood-Failover] Zowel Gemini als Loes.ai zijn "
-                    "onbereikbaar. Magic packet verzonden naar lokale Windows RTX "
-                    f"machine ({mac_address}). Fout: {error}"
+                    "⚠️ [NjordDeploy Nood-Failover] Zowel primaire als secundaire "
+                    "cloud AI-providers zijn onbereikbaar. Magic packet verzonden "
+                    f"naar lokale reserve AI-machine ({mac_address}). Fout: {error}"
                 )
                 notifier.send_signal(msg, admin_recipient)
         except Exception as failover_err:
