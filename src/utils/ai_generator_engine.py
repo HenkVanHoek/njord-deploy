@@ -57,7 +57,7 @@ class AIGeneratorEngine:
             )
         except Exception as exc:
             # Automatic fallback across Gemini versions during Google Cloud load spikes
-            if self.provider == "gemini" and "503" in str(exc):
+            if self.provider == "gemini":
                 fallback_models = [
                     "gemini-3.8-flash",
                     "gemini-3.7-flash",
@@ -79,9 +79,31 @@ class AIGeneratorEngine:
                             timeout=timeout,
                         )
                     except Exception as fb_err:
-                        # Log and try next candidate in fallback cascade
                         logger.debug("Gemini fallback %s failed: %s", fb_model, fb_err)
                         continue
+
+                # Sovereign EU Cloud Failover: Fallback to HostYourAI / Loes (EU)
+                # if Gemini is down, blocked, or experiencing policy sanctions.
+                hostyourai_key = os.getenv("HOSTYOURAI_API_KEY")
+                if hostyourai_key:
+                    logger.warning(
+                        "Gemini provider unavailable (%s). Initiating sovereign "
+                        "failover to HostYourAI / Loes (EU).",
+                        exc,
+                    )
+                    try:
+                        hy_config = self._get_provider_config("hostyourai")
+                        hy_base = hy_config.get("base_url")
+                        hy_timeout = get_ai_timeout("hostyourai", hy_base)
+                        return self._generate_openai_compatible(
+                            prompt=prompt,
+                            system_context=system_context,
+                            response_format=response_format,
+                            config=hy_config,
+                            timeout=hy_timeout,
+                        )
+                    except Exception as hy_err:
+                        logger.error("HostYourAI sovereign failover failed: %s", hy_err)
             raise exc
 
     def _generate_anthropic(
