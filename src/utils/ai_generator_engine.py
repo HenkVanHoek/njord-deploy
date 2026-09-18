@@ -155,6 +155,7 @@ class AIGeneratorEngine:
                 api_key=config["api_key"] or "none",
                 base_url=config["base_url"],
                 timeout=timeout,
+                max_retries=3,
             )
             response = client.chat.completions.create(**kwargs)
             if not response.choices:
