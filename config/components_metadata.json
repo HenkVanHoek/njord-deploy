@@ -128,7 +128,6 @@
             "Chat",
             "Communication",
             "Messaging",
-            "Communications",
             "Utilities",
             "Productivity",
             "Media Servers",
@@ -141,8 +140,7 @@
             "Development",
             "Smart Home",
             "Developer Tools",
-            "Database Management",
-            "communication"
+            "Database Management"
         ],
         "group_rules": {
             "AI & LLM Services": {
@@ -160,10 +158,6 @@
             "Communication": {
                 "is_exclusive": false,
                 "name": "Communication"
-            },
-            "Communications": {
-                "is_exclusive": false,
-                "name": "Communications"
             },
             "Database Management": {
                 "is_exclusive": false,
@@ -240,10 +234,6 @@
             "Utilities": {
                 "is_exclusive": false,
                 "name": "Utilities"
-            },
-            "communication": {
-                "is_exclusive": false,
-                "name": "Communication"
             },
             "dashboard": {
                 "is_exclusive": true,
@@ -731,7 +721,7 @@
                 "doc_url": "https://www.chatwoot.com/docs",
                 "onboarding_guide": "Open the web interface to create your super admin account and configure your inbox channel."
             },
-            "group": "communication",
+            "group": "Communication",
             "has_configuration": true,
             "has_ui": true,
             "last_tested": "2026-09-16T15:17:57.356048+00:00",
@@ -918,7 +908,7 @@
                 "onboarding_guide": "Open jitsi-meet web UI and complete the initial onboarding setup.",
                 "token_label": null
             },
-            "group": "Communications",
+            "group": "Communication",
             "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": true,
