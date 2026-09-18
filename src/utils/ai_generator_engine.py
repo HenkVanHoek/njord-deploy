@@ -104,7 +104,39 @@ class AIGeneratorEngine:
                         )
                     except Exception as hy_err:
                         logger.error("HostYourAI sovereign failover failed: %s", hy_err)
+
+                # Air-Gapped Emergency Failover: Wake local Windows RTX machine via WOL
+                # and alert admin via Signal if all cloud providers are unreachable
+                wol_mac = os.getenv("WOL_LOCAL_AI_MAC")
+                if wol_mac:
+                    self._trigger_local_wol_failover(wol_mac, exc)
+
             raise exc
+
+    def _trigger_local_wol_failover(self, mac_address: str, error: Exception) -> None:
+        """Sends Wake-on-LAN magic packet and Signal alert for emergency failover."""
+        # noinspection PyBroadException
+        try:
+            from utils.wake_on_lan import send_wake_on_lan
+
+            bcast = os.getenv("WOL_BROADCAST_IP", "255.255.255.255")
+            send_wake_on_lan(mac_address, broadcast_ip=bcast)
+
+            from utils.fums_notifier import FUMSNotifier
+
+            notifier = FUMSNotifier()
+            admin_recipient = os.getenv("SIGNAL_RECIPIENT") or os.getenv(
+                "ADMIN_SIGNAL_RECIPIENT"
+            )
+            if admin_recipient:
+                msg = (
+                    "⚠️ [NjordDeploy Nood-Failover] Zowel Gemini als Loes.ai zijn "
+                    "onbereikbaar. Magic packet verzonden naar lokale Windows RTX "
+                    f"machine ({mac_address}). Fout: {error}"
+                )
+                notifier.send_signal(msg, admin_recipient)
+        except Exception as failover_err:
+            logger.error("Emergency WOL/Signal failover failed: %s", failover_err)
 
     def _generate_anthropic(
         self,
