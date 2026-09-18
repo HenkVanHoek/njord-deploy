@@ -1,3 +1,22 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "GITLAB_HTTP_PORT",
+      "description": "HTTP port to access the GitLab web interface.",
+      "type": "port",
+      "default": 10080
+    },
+    {
+      "name": "GITLAB_HTTPS_PORT",
+      "description": "HTTPS port to access the GitLab web interface.",
+      "type": "port",
+      "default": 10443
+    },
+    {
+      "name": "GITLAB_SSH_PORT",
+      "description": "SSH port for Git over SSH.",
+      "type": "port",
+      "default": 10022
+    }
+  ]
 }

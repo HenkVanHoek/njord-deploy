@@ -6,7 +6,12 @@
 # This URL must be set to the address users will use to access GitLab.
 # It is used to generate clone URLs and for many internal functions.
 # We are using the HTTP port here, assuming a reverse proxy will handle HTTPS.
-external_url 'http://{{ DOMAIN }}:{{ GITLAB_HTTP_PORT | default(10080) }}'
+external_url 'http://{{ DOMAIN | default("gitlab.local") }}:{{ GITLAB_HTTP_PORT | default(10080) }}'
+
+# --- NGINX LISTEN PORT ---
+# Even though external_url includes the host port, internal Nginx inside the container must listen on port 80:
+nginx['listen_port'] = 80
+nginx['listen_https'] = false
 
 # --- SSH PORT CONFIGURATION ---
 # If you use a non-standard SSH port (like 10022), you must inform GitLab.

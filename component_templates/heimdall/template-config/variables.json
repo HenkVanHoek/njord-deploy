@@ -1,3 +1,10 @@
 {
-    "variables": []
+  "variables": [
+    {
+      "name": "HEIMDALL_WEB_PORT",
+      "description": "Port to access the Heimdall dashboard.",
+      "type": "port",
+      "default": 8090
+    }
+  ]
 }

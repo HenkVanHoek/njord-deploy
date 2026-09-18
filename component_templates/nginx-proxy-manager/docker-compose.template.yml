@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "1.29.2.5"
-# platform_notes: "Tested on Proxmox LXC: docker (1.29.2.5, 2026-09-14), podman (1.29.2.5, 2026-09-14); Proxmox VM: docker (1.29.2.5, 2026-09-14), podman (1.29.2.5, 2026-09-14)."
+# platform_notes: "Tested on Proxmox LXC: docker (1.29.2.5, 2026-09-18), podman (1.29.2.5, 2026-09-14); Proxmox VM: docker (1.29.2.5, 2026-09-14), podman (1.29.2.5, 2026-09-14)."
 # breaking_changes: "None"
 services:
   nginx-proxy-manager:

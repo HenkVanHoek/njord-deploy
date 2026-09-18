@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "24.04"
-# platform_notes: "Tested on Proxmox LXC: docker (24.04, 2026-09-14), podman (24.04, 2026-09-14); Proxmox VM: docker (24.04, 2026-09-14), podman (24.04, 2026-09-14)."
+# platform_notes: "Tested on Proxmox LXC: docker (24.04, 2026-09-18), podman (24.04, 2026-09-14); Proxmox VM: docker (24.04, 2026-09-14), podman (24.04, 2026-09-14)."
 # breaking_changes: "None"
 # templates/gitlab/docker-compose.template.yml
 services:
@@ -8,7 +8,7 @@ services:
     image: 'gitlab/gitlab-ce:{{ component_version }}' # 'ce' stands for Community Edition, the free version.
     container_name: njorddeploy-gitlab
     restart: unless-stopped
-    hostname: '{{ DOMAIN }}' # GitLab needs a hostname to configure itself correctly.
+    hostname: '{{ DOMAIN | default("gitlab.local") }}' # GitLab needs a hostname to configure itself correctly.
     environment:
       GITLAB_OMNIBUS_CONFIG: "from_file('/etc/gitlab/gitlab.rb')"
     ports:
@@ -17,7 +17,7 @@ services:
       - "{{ GITLAB_SSH_PORT | default(10022) }}:22"   # Git over SSH
     volumes:
       # Mount the pre-configured gitlab.rb file into the container.
-      - ./gitlab/template-config/gitlab.rb:/etc/gitlab/gitlab.rb
+      - '{{ DATA_ROOT }}/gitlab/config/gitlab.rb:/etc/gitlab/gitlab.rb'
       # Mount host directories for persistent data.
       - '{{ DATA_ROOT }}/gitlab/config:/etc/gitlab'
       - '{{ DATA_ROOT }}/gitlab/logs:/var/log/gitlab'

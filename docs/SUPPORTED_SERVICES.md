@@ -42,12 +42,6 @@ This document is automatically generated from the project metadata. It lists the
 | UniFi Controller | A centralized management software suite for configuring, monitoring, and updating Ubiquiti UniFi network devices such as access points, switches, and gateways. | [Link](https://ui.com/wi-fi) |
 | Zigbee2MQTT | A lightweight bridge that connects Zigbee smart home devices directly to an MQTT broker, enabling local control via Home Assistant or custom automation software. | [Link](https://www.zigbee2mqtt.io/) |
 
-## Development Tools
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| GitLab | A complete DevOps platform for project planning, source code management, CI/CD, and monitoring. | [Link](https://about.gitlab.com/) |
-
 ## Dashboard & Homepages
 
 | Service | Description | Project Homepage / Repository |
@@ -118,19 +112,15 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Chatwoot | Customer engagement suite, omnichannel support and live chat platform. | [Link](https://www.chatwoot.com) |
 | Gotify | A simple server for sending and receiving messages in real-time per web socket with push notifications. | N/A |
+| jitsi-meet | Jitsi Meet is a collection of open-source projects that provides a secure, simple, and scalable video conferencing solution. This component sets up a complete Jitsi Meet instance with optional Etherpad collaboration and recording capabilities. | [Link](https://jitsi.org/) |
 
 ## Messaging
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | FluffyChat Web | A modern, cute, and cross-platform Matrix client web interface, packaged as a NjordDeploy component. | [Link](https://fluffychat.im/) |
-
-## Communications
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| jitsi-meet | Jitsi Meet is a collection of open-source projects that provides a secure, simple, and scalable video conferencing solution. This component sets up a complete Jitsi Meet instance with optional Etherpad collaboration and recording capabilities. | [Link](https://jitsi.org/) |
 
 ## Utilities
 
@@ -198,6 +188,9 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Gitea | A painless, self-hosted Git service written in Go with repository management, code review, issues, and wikis. | N/A |
+| GitLab | A complete DevOps platform for project planning, source code management, CI/CD, and monitoring. | [Link](https://about.gitlab.com/) |
+| NocoDB | Open Source Airtable Alternative that turns any SQL database into a smart spreadsheet. | N/A |
+| Woodpecker CI | Simple yet powerful community-driven continuous integration engine with container-native pipelines. | N/A |
 
 ## Management
 
@@ -225,12 +218,6 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | FreshRSS | A free, self-hostable aggregator for RSS and Atom feeds with responsive web interface and multi-user support. | N/A |
 
-## Development
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| NocoDB | Open Source Airtable Alternative that turns any SQL database into a smart spreadsheet. | N/A |
-
 ## Smart Home
 
 | Service | Description | Project Homepage / Repository |
@@ -238,23 +225,11 @@ This document is automatically generated from the project metadata. It lists the
 | ESPHome | System to control your ESP8266 and ESP32 boards by simple and powerful configuration files and control them remotely. | N/A |
 | Node-RED | Low-code programming for event-driven applications, connecting hardware devices, APIs and online services. | N/A |
 
-## Developer Tools
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| Woodpecker CI | Simple yet powerful community-driven continuous integration engine with container-native pipelines. | N/A |
-
 ## Database Management
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | pgAdmin 4 | Comprehensive open source administration and management tool for PostgreSQL databases. | N/A |
-
-## Communication
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| Chatwoot | Customer engagement suite, omnichannel support and live chat platform. | [Link](https://www.chatwoot.com) |
 
 ## System & Tools
 

@@ -1,6 +1,6 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-09-15 21:08:05
+**Run Timestamp:** 2026-09-18 17:23:41
 **Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 492 | **Passed:** 487 | **Skipped:** 5 | **Failed:** 0
 
 ## Results Table
@@ -135,7 +135,7 @@
 | 2026-09-14 10:07:49 | `gitea`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:28:59 | `gitea`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:40:43 | `gitea`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:00:56 | `gitlab`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-18 17:19:53 | `gitlab`              | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:08:17 | `gitlab`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 11:29:22 | `gitlab`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 12:41:25 | `gitlab`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
@@ -159,7 +159,7 @@
 | 2026-09-14 10:10:46 | `headscale`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:31:48 | `headscale`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:44:32 | `headscale`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:03:34 | `heimdall`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-18 16:49:17 | `heimdall`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:11:07 | `heimdall`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 11:32:09 | `heimdall`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 12:44:59 | `heimdall`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
@@ -263,7 +263,7 @@
 | 2026-09-14 10:24:26 | `netdata`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:47:35 | `netdata`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:06:41 | `netdata`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:17:46 | `nextcloud`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:57:59 | `nextcloud`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:24:48 | `nextcloud`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:48:00 | `nextcloud`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:07:06 | `nextcloud`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -279,7 +279,7 @@
 | 2026-09-14 10:26:24 | `nextcloud-redis`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 11:49:26 | `nextcloud-redis`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 13:09:00 | `nextcloud-redis`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:19:30 | `nginx-proxy-manager` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:50:49 | `nginx-proxy-manager` | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:26:48 | `nginx-proxy-manager` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:49:51 | `nginx-proxy-manager` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:09:31 | `nginx-proxy-manager` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -299,7 +299,7 @@
 | 2026-09-14 10:28:52 | `ntfy`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:52:00 | `ntfy`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:12:22 | `ntfy`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:22:02 | `octoprint`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:47:51 | `octoprint`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:29:19 | `octoprint`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:52:31 | `octoprint`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:12:53 | `octoprint`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -311,7 +311,7 @@
 | 2026-09-14 10:31:04 | `open-webui`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:54:14 | `open-webui`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:14:47 | `open-webui`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:25:30 | `organizr`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:52:14 | `organizr`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:32:46 | `organizr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:56:01 | `organizr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:16:57 | `organizr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -387,7 +387,7 @@
 | 2026-09-14 10:43:42 | `scrutiny`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:05:13 | `scrutiny`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:27:38 | `scrutiny`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:34:20 | `scrypted`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:54:35 | `scrypted`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:44:09 | `scrypted`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:05:43 | `scrypted`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:28:14 | `scrypted`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -459,7 +459,7 @@
 | 2026-09-14 10:54:13 | `unbound`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 12:14:07 | `unbound`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 13:39:27 | `unbound`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:42:06 | `unifi-controller`    | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:56:12 | `unifi-controller`    | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:54:28 | `unifi-controller`    | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:14:24 | `unifi-controller`    | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:39:47 | `unifi-controller`    | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -471,7 +471,7 @@
 | 2026-09-14 10:56:54 | `uptime-kuma`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:15:40 | `uptime-kuma`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:41:30 | `uptime-kuma`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:43:35 | `vaultwarden`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:53:26 | `vaultwarden`         | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:57:17 | `vaultwarden`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:16:04 | `vaultwarden`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:42:00 | `vaultwarden`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -1482,6 +1482,13 @@
 
 ![headscale Web UI](images/test_screenshots/headscale_vm_podman_20260914_124457.png)
 
+### Component: `heimdall` (LXC + DOCKER)
+- **Web UI Endpoint:** [http://10.99.0.199:8090](http://10.99.0.199:8090)
+- **Target Mode:** `LXC` | **Engine:** `DOCKER`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
+
+![heimdall Web UI](images/test_screenshots/heimdall_lxc_docker_20260918_164938.png)
+
 ### Component: `homarr` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:7575](http://10.99.0.199:7575)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
@@ -2157,9 +2164,9 @@
 ### Component: `nextcloud` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![nextcloud Web UI](images/test_screenshots/nextcloud_lxc_docker_20260914_091820.png)
+![nextcloud Web UI](images/test_screenshots/nextcloud_lxc_docker_20260918_165834.png)
 
 ### Component: `nextcloud` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
@@ -2185,9 +2192,9 @@
 ### Component: `nginx-proxy-manager` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8181](http://10.99.0.199:8181)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![nginx-proxy-manager Web UI](images/test_screenshots/nginx-proxy-manager_lxc_docker_20260914_091958.png)
+![nginx-proxy-manager Web UI](images/test_screenshots/nginx-proxy-manager_lxc_docker_20260918_165116.png)
 
 ### Component: `nginx-proxy-manager` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8181](http://10.99.0.199:8181)
@@ -2297,9 +2304,9 @@
 ### Component: `octoprint` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:5000](http://10.99.0.199:5000)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![octoprint Web UI](images/test_screenshots/octoprint_lxc_docker_20260914_092230.png)
+![octoprint Web UI](images/test_screenshots/octoprint_lxc_docker_20260918_164817.png)
 
 ### Component: `octoprint` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5000](http://10.99.0.199:5000)
@@ -2353,9 +2360,9 @@
 ### Component: `organizr` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8095](http://10.99.0.199:8095)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![organizr Web UI](images/test_screenshots/organizr_lxc_docker_20260914_092549.png)
+![organizr Web UI](images/test_screenshots/organizr_lxc_docker_20260918_165231.png)
 
 ### Component: `organizr` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8095](http://10.99.0.199:8095)
@@ -2815,9 +2822,9 @@
 ### Component: `scrypted` (LXC + DOCKER)
 - **Web UI Endpoint:** [https://10.99.0.199:10443](https://10.99.0.199:10443)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![scrypted Web UI](images/test_screenshots/scrypted_lxc_docker_20260914_093504.png)
+![scrypted Web UI](images/test_screenshots/scrypted_lxc_docker_20260918_165515.png)
 
 ### Component: `scrypted` (LXC + PODMAN)
 - **Web UI Endpoint:** [https://10.99.0.199:10443](https://10.99.0.199:10443)
@@ -3270,9 +3277,9 @@
 ### Component: `unifi-controller` (LXC + DOCKER)
 - **Web UI Endpoint:** [https://10.99.0.199:8443](https://10.99.0.199:8443)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![unifi-controller Web UI](images/test_screenshots/unifi-controller_lxc_docker_20260914_094250.png)
+![unifi-controller Web UI](images/test_screenshots/unifi-controller_lxc_docker_20260918_165701.png)
 
 ### Component: `unifi-controller` (LXC + PODMAN)
 - **Web UI Endpoint:** [https://10.99.0.199:8443](https://10.99.0.199:8443)
@@ -3326,9 +3333,9 @@
 ### Component: `vaultwarden` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8088](http://10.99.0.199:8088)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
+- **VM ID:** 106 | **IP:** `10.99.0.199`
 
-![vaultwarden Web UI](images/test_screenshots/vaultwarden_lxc_docker_20260914_094353.png)
+![vaultwarden Web UI](images/test_screenshots/vaultwarden_lxc_docker_20260918_165341.png)
 
 ### Component: `vaultwarden` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8088](http://10.99.0.199:8088)

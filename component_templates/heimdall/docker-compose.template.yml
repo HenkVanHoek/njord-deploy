@@ -1,6 +1,6 @@
 # status: "tested"
 # last_tested_version: "v2.8.3-ls364"
-# platform_notes: "Tested on Proxmox LXC: docker (v2.8.3-ls364, 2026-09-14), podman (v2.8.3-ls364, 2026-09-14); Proxmox VM: docker (v2.8.3-ls364, 2026-09-14), podman (v2.8.3-ls364, 2026-09-14)."
+# platform_notes: "Tested on Proxmox LXC: docker (v2.8.3-ls364, 2026-09-18), podman (v2.8.3-ls364, 2026-09-14); Proxmox VM: docker (v2.8.3-ls364, 2026-09-14), podman (v2.8.3-ls364, 2026-09-14)."
 # breaking_changes: "None"
 services:
   heimdall:
@@ -8,7 +8,7 @@ services:
     image: lscr.io/linuxserver/heimdall:{{ component_version }}
     restart: unless-stopped
     ports:
-      - "8090:80"
+      - "{{ HEIMDALL_WEB_PORT | default(8090) }}:80"
       - "8490:443"
     volumes:
       - "{{DATA_ROOT}}/heimdall/config:/config"

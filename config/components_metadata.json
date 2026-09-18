@@ -1501,6 +1501,9 @@
         },
         "gitlab": {
             "component_version": "latest",
+            "config_templates": {
+                "gitlab.rb": "gitlab/config/gitlab.rb"
+            },
             "conflicts_with": [],
             "depends_on": [],
             "description": "A complete DevOps platform for project planning, source code management, CI/CD, and monitoring.",
@@ -1518,7 +1521,9 @@
             "has_ui": true,
             "image_name": "gitlab/gitlab-ce",
             "intent_questions": [],
-            "last_tested": "2026-09-14T10:42:25.295497+00:00",
+            "last_tested": "2026-09-18T15:23:34.529923+00:00",
+            "last_tested_version": "24.04",
+            "last_updated": "2026-09-18T15:23:34.529938+00:00",
             "name": "GitLab",
             "package_id": null,
             "project_url": "https://about.gitlab.com/",
@@ -1532,7 +1537,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "GITLAB_HTTP_PORT"
         },
         "glance": {
             "component_version": "latest",
@@ -1810,7 +1816,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/heimdall",
             "intent_questions": [],
-            "last_tested": "2026-09-14T10:45:21.813339+00:00",
+            "last_tested": "2026-09-18T14:49:40.925967+00:00",
+            "last_tested_version": "v2.8.3-ls364",
+            "last_updated": "2026-09-18T14:49:40.925980+00:00",
             "name": "Heimdall",
             "package_id": null,
             "project_url": "https://heimdall.site/",
@@ -1824,7 +1832,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "HEIMDALL_WEB_PORT"
         },
         "homarr": {
             "component_version": "latest",
@@ -2881,7 +2890,9 @@
             "has_configuration": true,
             "has_traefik_support": false,
             "has_ui": true,
-            "last_tested": "2026-09-14T11:08:00.857310+00:00",
+            "last_tested": "2026-09-18T14:58:37.354581+00:00",
+            "last_tested_version": "latest",
+            "last_updated": "2026-09-18T14:58:37.354593+00:00",
             "name": "Nextcloud",
             "package_id": "modern-workplace",
             "project_url": "https://nextcloud.com/",
@@ -2898,7 +2909,8 @@
                 "office"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_NEXTCLOUD"
         },
         "nextcloud-db": {
             "conflicts_with": [],
@@ -3020,7 +3032,9 @@
             "has_ui": true,
             "image_name": "jc21/nginx-proxy-manager",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:10:09.983518+00:00",
+            "last_tested": "2026-09-18T14:51:18.876104+00:00",
+            "last_tested_version": "latest",
+            "last_updated": "2026-09-18T14:51:18.876116+00:00",
             "name": "Nginx Proxy Manager",
             "package_id": null,
             "project_url": "https://nginxproxymanager.com/",
@@ -3034,7 +3048,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_NPM_ADMIN"
         },
         "nocodb": {
             "category": "Development",
@@ -3197,7 +3212,9 @@
             "has_configuration": false,
             "has_traefik_support": false,
             "has_ui": true,
-            "last_tested": "2026-09-14T11:13:27.412303+00:00",
+            "last_tested": "2026-09-18T14:48:25.069341+00:00",
+            "last_tested_version": "master",
+            "last_updated": "2026-09-18T14:48:25.069354+00:00",
             "name": "OctoPrint",
             "package_id": null,
             "project_url": "https://octoprint.org/",
@@ -3210,7 +3227,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_OCTOPRINT"
         },
         "ollama": {
             "component_version": "latest",
@@ -3336,7 +3354,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/organizr",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:17:23.700664+00:00",
+            "last_tested": "2026-09-18T14:52:34.495946+00:00",
+            "last_tested_version": "latest",
+            "last_updated": "2026-09-18T14:52:34.495959+00:00",
             "name": "Organizr",
             "package_id": null,
             "project_url": "https://organizr.app/",
@@ -3350,7 +3370,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_ORGANIZR"
         },
         "pairdrop": {
             "component_version": "latest",
@@ -4179,7 +4200,9 @@
             "has_ui": true,
             "image_name": "koush/scrypted",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:29:05.603065+00:00",
+            "last_tested": "2026-09-18T14:55:19.043838+00:00",
+            "last_tested_version": "24.04",
+            "last_updated": "2026-09-18T14:55:19.043851+00:00",
             "name": "Scrypted",
             "package_id": null,
             "project_url": "https://www.scrypted.app/",
@@ -4193,7 +4216,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_SCRYPTED"
         },
         "searxng": {
             "ai_instructions": "Privacy-respecting metasearch engine. Service searxng (searxng/searxng:latest) on port SEARXNG_WEB_PORT: 8888 (container port 8080). Service searxng-redis (redis:7-alpine). Environment: SEARXNG_BASE_URL=http://localhost:8888, SEARXNG_SECRET, SEARXNG_REDIS_URL=redis://njorddeploy-searxng-redis:6379/0. Config volume /etc/searxng for settings.yml. user: \"0:0\". Group: Utilities.",
@@ -4897,7 +4921,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/unifi-controller",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:41:02.131265+00:00",
+            "last_tested": "2026-09-18T14:57:03.650931+00:00",
+            "last_tested_version": "8.0.24-ls221",
+            "last_updated": "2026-09-18T14:57:03.650945+00:00",
             "name": "UniFi Controller",
             "package_id": null,
             "project_url": "https://ui.com/wi-fi",
@@ -4911,7 +4937,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "PORT_UNIFI"
         },
         "unpackerr": {
             "component_version": "latest",
@@ -5015,7 +5042,9 @@
             "has_ui": true,
             "image_name": "vaultwarden/server",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:42:33.133553+00:00",
+            "last_tested": "2026-09-18T14:53:44.173530+00:00",
+            "last_tested_version": "1.37.3",
+            "last_updated": "2026-09-18T14:53:44.173542+00:00",
             "name": "Vaultwarden",
             "package_id": null,
             "project_url": "https://github.com/dani-garcia/vaultwarden",
@@ -5029,7 +5058,8 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "ui_port_variable": "VAULTWARDEN_WEB_PORT"
         },
         "vikunja": {
             "category": "Productivity",
