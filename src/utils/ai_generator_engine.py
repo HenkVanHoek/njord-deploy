@@ -1,14 +1,17 @@
 # src/utils/ai_generator_engine.py
 
+import logging
 import os
 from typing import Any, Dict, List, Optional, Union
+
+from utils.ai_provider_manager import get_ai_timeout, get_provider_resolved_config
 
 try:
     from openai import OpenAI
 except ImportError:  # pragma: no cover
     OpenAI = None  # type: ignore
 
-from utils.ai_provider_manager import get_ai_timeout, get_provider_resolved_config
+logger = logging.getLogger(__name__)
 
 
 class AIGeneratorEngine:
@@ -44,13 +47,42 @@ class AIGeneratorEngine:
                 timeout=timeout,
             )
 
-        return self._generate_openai_compatible(
-            prompt=prompt,
-            system_context=system_context,
-            response_format=response_format,
-            config=config,
-            timeout=timeout,
-        )
+        try:
+            return self._generate_openai_compatible(
+                prompt=prompt,
+                system_context=system_context,
+                response_format=response_format,
+                config=config,
+                timeout=timeout,
+            )
+        except Exception as exc:
+            # Automatic fallback across Gemini versions during Google Cloud load spikes
+            if self.provider == "gemini" and "503" in str(exc):
+                fallback_models = [
+                    "gemini-3.8-flash",
+                    "gemini-3.7-flash",
+                    "gemini-3.5-flash",
+                    "gemini-flash-latest",
+                ]
+                current_model = config.get("model")
+                for fb_model in fallback_models:
+                    if fb_model == current_model:
+                        continue
+                    try:
+                        fb_config = dict(config)
+                        fb_config["model"] = fb_model
+                        return self._generate_openai_compatible(
+                            prompt=prompt,
+                            system_context=system_context,
+                            response_format=response_format,
+                            config=fb_config,
+                            timeout=timeout,
+                        )
+                    except Exception as fb_err:
+                        # Log and try next candidate in fallback cascade
+                        logger.debug("Gemini fallback %s failed: %s", fb_model, fb_err)
+                        continue
+            raise exc
 
     def _generate_anthropic(
         self,
