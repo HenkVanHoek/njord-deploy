@@ -159,6 +159,14 @@
             .replace(/'/g, '&#x27;');
     }
 
+    // Translation helper delegating to window._t or fallback
+    function t(key, fallback) {
+        if (typeof window._t === 'function') {
+            return window._t(key, fallback);
+        }
+        return fallback || key;
+    }
+
     async function fetchAPI(url, options = {}) {
         try {
             const response = await fetch(url, options);
@@ -465,9 +473,9 @@
         // Option B: Visual progress bar and header bar start here at 25%!
         toggleProgressBarVisibility(true, 25);
         if (wizardHeader) {
-            wizardHeader.innerHTML = '<strong>Step 1 of 4: Discovery &amp; SSH</strong>';
+            wizardHeader.innerHTML = '<strong>' + escapeHTML(t('step_1_of_4', 'Step 1 of 4: Discovery & SSH')) + '</strong>';
         }
-        updateWizardFooter('Enter the SSH credentials for the devices you want to manage.');
+        updateWizardFooter(t('wizard_footer_credentials', 'Enter the SSH credentials for the devices you want to manage.'));
         const popoverContent = `
             The scanner looks for two types of devices:
             1. Physical single-board computers by checking for a hardware model file.
@@ -962,9 +970,9 @@
         // Option B: Visual progress bar at 50%
         toggleProgressBarVisibility(true, 50);
         if (wizardHeader) {
-            wizardHeader.innerHTML = '<strong>Step 2 of 4: Select Software</strong>';
+            wizardHeader.innerHTML = '<strong>' + escapeHTML(t('step_2_of_4', 'Step 2 of 4: Select Software')) + '</strong>';
         }
-        updateWizardFooter('Choose software to install. Selections in a category are mutually exclusive.');
+        updateWizardFooter(t('wizard_footer_select_software', 'Choose software to install. Selections in a category are mutually exclusive.'));
 
         try {
             /** @type {[SoftwareResponseData, GroupData]} */
@@ -1543,9 +1551,9 @@
         // Option B: Visual progress bar at 75%
         toggleProgressBarVisibility(true, 75);
         if (wizardHeader) {
-            wizardHeader.innerHTML = '<strong>Step 3 of 4: Configure Services</strong>';
+            wizardHeader.innerHTML = '<strong>' + escapeHTML(t('step_3_of_4', 'Step 3 of 4: Configure Services')) + '</strong>';
         }
-        updateWizardFooter('Provide the required values for your selected software.');
+        updateWizardFooter(t('wizard_footer_configure_services', 'Provide the required values for your selected software.'));
 
         if (selectedComponentsCache.length === 0) {
             wizardBody.innerHTML = `<p class="text-center text-muted">No software was selected. Please go back and select at least one component.</p>`;
@@ -1880,9 +1888,9 @@
         // Option B: Visual progress bar at 100%
         toggleProgressBarVisibility(true, 100);
         if (wizardHeader) {
-            wizardHeader.innerHTML = '<strong>Step 4 of 4: Confirmation</strong>';
+            wizardHeader.innerHTML = '<strong>' + escapeHTML(t('step_4_of_4', 'Step 4 of 4: Confirmation')) + '</strong>';
         }
-        updateWizardFooter('Please review your selections before generating files and deploying.');
+        updateWizardFooter(t('wizard_footer_confirmation', 'Please review your selections before generating files and deploying.'));
 
         // Mitigation: string-fallbacks ensure we always pass a pure string to escapeHTML
         const devicesHTML = Object.values(managedDeviceCache).map(device => {
@@ -1955,24 +1963,24 @@
             // Mitigation: Hide progress bar entirely on final completed success screen
             toggleProgressBarVisibility(false, 0);
 
-            wizardHeader.innerHTML = '<strong>Setup Complete</strong>';
-            updateWizardFooter('Ready for deployment.');
+            wizardHeader.innerHTML = '<strong>' + escapeHTML(t('wizard_header_setup_complete', 'Setup Complete')) + '</strong>';
+            updateWizardFooter(t('wizard_footer_ready_deploy', 'Ready for deployment.'));
             wizardBody.innerHTML = `
                 <div class="text-center">
                     <div id="deployment-status-icon">
                         <i class="fa-solid fa-circle-check fa-3x text-success mb-3"></i>
                     </div>
-                    <h2 id="deployment-status-title" class="h4">Files Generated Successfully!</h2>
+                    <h2 id="deployment-status-title" class="h4">${escapeHTML(t('wizard_files_generated_title', 'Files Generated Successfully!'))}</h2>
                     <div id="deployment-status-subtitle-container">
-                        <p class="text-muted">Your configuration files are ready.</p>
+                        <p class="text-muted">${escapeHTML(t('wizard_files_generated_desc', 'Your configuration files are ready.'))}</p>
                     </div>
                     <span id="output-path-display" class="d-none">${escapeHTML(result.output_path)}</span>
                     <div id="final-actions-container">
                          <div class="sticky-action-bar" id="deployment-actions">
                             <button id="deploy-button" class="btn btn-primary">
-                                <i class="fa-solid fa-rocket me-2"></i>Deploy to Target(s)
+                                <i class="fa-solid fa-rocket me-2"></i>${escapeHTML(t('btn_deploy_targets', 'Deploy to Target(s)'))}
                             </button>
-                            <button id="start-over-btn" class="btn btn-secondary">Start Over</button>
+                            <button id="start-over-btn" class="btn btn-secondary">${escapeHTML(t('btn_start_over', 'Start Over'))}</button>
                         </div>
                     </div>
                     <div id="log-viewer-container" class="mt-4 text-start" style="display: none;">
@@ -2288,11 +2296,11 @@
             }
         };
 
-        setButtonState(deployButton, true, {loadingText: 'Deploying...'});
+        setButtonState(deployButton, true, {loadingText: t('status_deploying', 'Deploying...')});
         logContainer.style.display = 'block';
         logOutput.innerHTML = '';
-        wizardHeader.innerHTML = '<strong>Deploying Services</strong>';
-        updateWizardFooter('Deploying services...', 'primary');
+        wizardHeader.innerHTML = '<strong>' + escapeHTML(t('wizard_header_deploying', 'Deploying Services')) + '</strong>';
+        updateWizardFooter(t('wizard_footer_deploying', 'Deploying services...'), 'primary');
 
         const statusIcon = document.getElementById('deployment-status-icon');
         const statusTitle = document.getElementById('deployment-status-title');
@@ -2302,7 +2310,7 @@
             statusIcon.innerHTML = '<i class="fa-solid fa-spinner fa-spin fa-3x text-primary mb-3"></i>';
         }
         if (statusTitle) {
-            statusTitle.textContent = 'Deploying Services...';
+            statusTitle.textContent = t('wizard_header_deploying', 'Deploying Services...');
         }
         if (subtitleContainer) {
             subtitleContainer.innerHTML = `
@@ -2310,7 +2318,7 @@
                     <div class="progress" style="height: 20px;">
                         <div id="deployment-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
                     </div>
-                    <div id="deployment-playbook-step" class="text-muted small mt-2">Initializing deployment...</div>
+                    <div id="deployment-playbook-step" class="text-muted small mt-2">${escapeHTML(t('wizard_step_initializing', 'Initializing deployment...'))}</div>
                 </div>
             `;
         }
@@ -2478,9 +2486,9 @@
                 const playbookStep = document.getElementById('deployment-playbook-step');
 
                 if (hasErrors) {
-                    setButtonState(deployButton, false, {text: '<i class="fa-solid fa-triangle-exclamation me-2"></i>Show Error Report'});
-                    wizardHeader.innerHTML = '<strong>Deployment Finished with Errors</strong>';
-                    updateWizardFooter('Deployment completed, but some steps failed.', 'warning');
+                    setButtonState(deployButton, false, {text: '<i class="fa-solid fa-triangle-exclamation me-2"></i>' + escapeHTML(t('btn_show_error_report', 'Show Error Report'))});
+                    wizardHeader.innerHTML = '<strong>' + escapeHTML(t('wizard_header_deployment_errors', 'Deployment Finished with Errors')) + '</strong>';
+                    updateWizardFooter(t('wizard_footer_deployment_errors', 'Deployment completed, but some steps failed.'), 'warning');
                     deployButton.onclick = async () => {
                         await showErrorSummary(taskId);
                     };
@@ -2489,7 +2497,7 @@
                         statusIcon.innerHTML = '<i class="fa-solid fa-circle-xmark fa-3x text-danger mb-3"></i>';
                     }
                     if (statusTitle) {
-                        statusTitle.textContent = 'Deployment Failed';
+                        statusTitle.textContent = t('status_deployment_failed', 'Deployment Failed');
                     }
                     if (progressBar) {
                         progressBar.classList.remove('bg-success');
@@ -2497,12 +2505,12 @@
                     }
                     if (playbookStep) {
                         playbookStep.className = 'text-danger fw-bold mt-2';
-                        playbookStep.textContent = 'Deployment failed with errors.';
+                        playbookStep.textContent = t('status_deployment_failed_errors', 'Deployment failed with errors.');
                     }
                 } else {
-                    setButtonState(deployButton, false, {text: '<i class="fa-solid fa-circle-check me-2"></i>Deployment Finished'});
-                    wizardHeader.innerHTML = '<strong>Deployment Finished</strong>';
-                    updateWizardFooter('Deployment process completed successfully.', 'success');
+                    setButtonState(deployButton, false, {text: '<i class="fa-solid fa-circle-check me-2"></i>' + escapeHTML(t('btn_deployment_finished', 'Deployment Finished'))});
+                    wizardHeader.innerHTML = '<strong>' + escapeHTML(t('wizard_header_deployment_finished', 'Deployment Finished')) + '</strong>';
+                    updateWizardFooter(t('wizard_footer_deployment_success', 'Deployment process completed successfully.'), 'success');
 
                     const targetHosts = Object.values(managedDeviceCache)
                         .map(d => `${escapeHTML(d.hostname || 'Unknown Host')} (${escapeHTML(d.ip)})`)

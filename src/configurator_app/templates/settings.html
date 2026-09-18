@@ -11,6 +11,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/njorddeploy-style.css') }}?v=1.3">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/configurator.css') }}?v=1.0">
     <script src="{{ url_for('static', filename='js/accessibility.js') }}?v=1.2"></script>
+    <script id="njord-i18n-data" type="application/json">
+        {{ i18n_catalog|tojson|safe }}
+    </script>
+    <script>
+        window.NJORD_LOCALE = "{{ current_locale }}";
+        try {
+            window.NJORD_I18N = JSON.parse(document.getElementById('njord-i18n-data').textContent);
+        } catch (e) {
+            window.NJORD_I18N = {};
+        }
+        window._t = function(key, fallback) {
+            return (window.NJORD_I18N && window.NJORD_I18N[key]) || fallback || key;
+        };
+    </script>
     <style>
         .settings-card {
             border: 1px solid rgba(0,0,0,0.08);
