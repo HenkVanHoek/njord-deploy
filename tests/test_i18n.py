@@ -108,6 +108,21 @@ class TestTranslationManager(unittest.TestCase):
         bad_res = client.get("/api/v1/set-language/invalid_lang")
         self.assertEqual(bad_res.status_code, 400)
 
+    def test_editor_and_configurator_template_i18n(self):
+        """Verifies editor_app and configurator_app templates render without 500."""
+        from src.configurator_app.app import create_app as create_conf_app
+        from src.editor_app.app import create_app as create_edit_app
+
+        c_app = create_conf_app(test_config={"TESTING": True, "AUTH_ENABLED": False})
+        c_client = c_app.test_client()
+        res_conf = c_client.get("/")
+        self.assertEqual(res_conf.status_code, 200)
+
+        e_app = create_edit_app(test_config={"TESTING": True, "AUTH_ENABLED": False})
+        e_client = e_app.test_client()
+        res_edit = e_client.get("/")
+        self.assertEqual(res_edit.status_code, 200)
+
 
 if __name__ == "__main__":
     unittest.main()

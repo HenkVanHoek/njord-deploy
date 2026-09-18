@@ -134,8 +134,10 @@ def init_i18n(
     @app.context_processor
     def inject_i18n() -> Dict[str, Any]:
         curr_lang = mgr.get_locale()
+        catalog = mgr.translations.get(curr_lang, {})
         return {
             "_": lambda key, **kw: mgr.gettext(key, lang=curr_lang, **kw),
             "current_locale": curr_lang,
             "supported_locales": SUPPORTED_LOCALES,
+            "i18n_catalog": catalog,
         }
