@@ -538,18 +538,18 @@
             <!-- Detailed startup Quickstart Onboarding Guide -->
             <div id="welcome-detailed-guide" class="text-start w-100 p-4 d-none" style="max-width: 850px; margin: 0 auto; overflow-y: auto;">
                 <h3 class="mb-3 d-flex align-items-center">
-                    <i class="bi bi-rocket-takeoff-fill text-primary me-2"></i> Quick Start &amp; Concept Guide
+                    <i class="bi bi-rocket-takeoff-fill text-primary me-2"></i> {{ _('editor_guide_title') }}
                 </h3>
                 <p class="lead mb-4">
-                    Welcome to the NjordDeploy Component Editor! This workspace is used to customize the software stacks running on your target server.
+                    {{ _('editor_guide_lead') }}
                 </p>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title text-primary"><i class="bi bi-cpu me-2"></i> Components</h5>
+                                <h5 class="card-title text-primary"><i class="bi bi-cpu me-2"></i> {{ _('editor_guide_card_components_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    The atomic building blocks of your system. Each represents a single self-hosted service (e.g. Pi-hole, Nextcloud, AdGuard) containing direct Docker Compose definitions, variables, and packaging rules.
+                                    {{ _('editor_guide_card_components_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -557,9 +557,9 @@
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title text-warning"><i class="bi bi-box-seam me-2"></i> Packages</h5>
+                                <h5 class="card-title text-warning"><i class="bi bi-box-seam me-2"></i> {{ _('editor_guide_card_packages_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    Logical stacks consisting of grouped components. Perfect for designing coherent Multi-Container system architectures (like nextcloud stacks or database structures).
+                                    {{ _('editor_guide_card_packages_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -567,9 +567,9 @@
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title text-success"><i class="bi bi-braces me-2"></i> Macros &amp; Variables</h5>
+                                <h5 class="card-title text-success"><i class="bi bi-braces me-2"></i> {{ _('editor_guide_card_macros_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    Inject portable properties into your compose templates dynamically. Use <code>{% raw %}{{ CONFIG_BASE_PATH }}{% endraw %}</code> to declare clean local file systems, and <code>{% raw %}{{ DOTENV.YOUR_ENV_VAR }}{% endraw %}</code> to reference global environment configs safely.
+                                    {{ _('editor_guide_card_macros_desc_1') }} <code>{% raw %}{{ CONFIG_BASE_PATH }}{% endraw %}</code> {{ _('editor_guide_card_macros_desc_2') }} <code>{% raw %}{{ DOTENV.YOUR_ENV_VAR }}{% endraw %}</code> {{ _('editor_guide_card_macros_desc_3') }}
                                 </p>
                             </div>
                         </div>
@@ -577,9 +577,9 @@
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title text-danger"><i class="bi bi-shield-lock-fill me-2"></i> Traefik SSL Routing</h5>
+                                <h5 class="card-title text-danger"><i class="bi bi-shield-lock-fill me-2"></i> {{ _('editor_guide_card_traefik_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    Enable the "Has Traefik Support" switch to automatically inject secure HTTPS loadbalancer routing rules. No complex proxy labels are needed inside compose.
+                                    {{ _('editor_guide_card_traefik_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -587,9 +587,9 @@
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> AI Component Bootstrap</h5>
+                                <h5 class="card-title text-info"><i class="bi bi-stars me-2"></i> {{ _('editor_guide_card_ai_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    Generate new components automatically from any Git repository (GitHub, GitLab, Gitea, Codeberg, etc.). Click "Create with AI" at the top of the sidebar, enter a repository URL with optional custom instructions, and the AI will bootstrap the configuration templates, variables, and metadata.
+                                    {{ _('editor_guide_card_ai_desc') }}
                                 </p>
                             </div>
                         </div>
@@ -597,9 +597,9 @@
                     <div class="col">
                         <div class="card h-100">
                             <div class="card-body">
-                                <h5 class="card-title" style="color: #a855f7;"><i class="bi bi-cpu-fill me-2"></i> Multi-Provider &amp; Local LLMs</h5>
+                                <h5 class="card-title" style="color: #a855f7;"><i class="bi bi-cpu-fill me-2"></i> {{ _('editor_guide_card_llm_title') }}</h5>
                                 <p class="card-text small text-muted">
-                                    Freedom of AI choice: run <strong>Ollama Local</strong> (e.g., RTX 3060) for 100% offline privacy, <strong>HostYourAI / Loes (EU)</strong> for privacy-compliant European cloud, or cloud providers like <strong>Google Gemini</strong>, <strong>OpenAI</strong>, and <strong>Custom Endpoints</strong>.
+                                    {{ _('editor_guide_card_llm_desc_1') }} <strong>Ollama Local</strong> {{ _('editor_guide_card_llm_desc_2') }} <strong>HostYourAI / Loes (EU)</strong> {{ _('editor_guide_card_llm_desc_3') }} <strong>Google Gemini</strong>, <strong>OpenAI</strong>, {{ _('editor_guide_card_llm_desc_4') }} <strong>{{ _('editor_guide_card_llm_desc_5') }}</strong>.
                                 </p>
                             </div>
                         </div>
@@ -609,27 +609,27 @@
                     <div class="form-check form-switch mb-0">
                         <input class="form-check-input" type="checkbox" role="switch" id="hide-onboarding-checkbox">
                         <label class="form-check-label small text-muted" for="hide-onboarding-checkbox">
-                            Don't show this onboarding guide on startup
+                            {{ _('editor_guide_hide_startup') }}
                         </label>
                     </div>
                     <div>
                         <button class="btn btn-outline-primary btn-sm me-3" id="start-tour-btn">
-                            <i class="bi bi-compass"></i> Start Interactive Tour
+                            <i class="bi bi-compass"></i> {{ _('editor_guide_btn_tour') }}
                         </button>
-                        <span class="small text-secondary italic">Select a component to begin editing.</span>
+                        <span class="small text-secondary italic">{{ _('editor_guide_select_prompt') }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Minimal welcome text fall back -->
             <div id="welcome-minimal" class="text-center d-none">
-                <h4>Welcome to the Component Editor</h4>
-                <p class="lead">Select a component from the list to begin editing its metadata, variables, and template.</p>
+                <h4>{{ _('editor_welcome_title') }}</h4>
+                <p class="lead">{{ _('editor_welcome_desc') }}</p>
                 <button class="btn btn-link btn-sm text-decoration-none" id="show-onboarding-link">
-                    <i class="bi bi-info-circle"></i> Show Quick Start Guide
+                    <i class="bi bi-info-circle"></i> {{ _('editor_welcome_btn_guide') }}
                 </button>
                 <button class="btn btn-link btn-sm text-decoration-none ms-3" id="start-tour-minimal-btn">
-                    <i class="bi bi-compass"></i> Start Interactive Tour
+                    <i class="bi bi-compass"></i> {{ _('editor_guide_btn_tour') }}
                 </button>
             </div>
         </div>
