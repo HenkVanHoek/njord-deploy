@@ -151,6 +151,24 @@ class TestChatwootBotManager(unittest.TestCase):
             any("te veel berichten" in content for content in call_contents)
         )
 
+    def test_dynamic_ai_engine_resolution(self):
+        """Verify dynamic AI engine provider resolution from environment."""
+        mgr = ChatwootBotManager(enabled=True)
+        with patch.dict("os.environ", {"CHATWOOT_AI_PROVIDER": "gemini"}):
+            engine = mgr.ai_engine
+            self.assertEqual(engine.provider, "gemini")
+
+        with patch.dict(
+            "os.environ",
+            {
+                "CHATWOOT_AI_PROVIDER": "ollama",
+                "CHATWOOT_AI_MODEL": "custom-model",
+            },
+        ):
+            engine2 = mgr.ai_engine
+            self.assertEqual(engine2.provider, "ollama")
+            self.assertEqual(engine2.model, "custom-model")
+
 
 if __name__ == "__main__":
     unittest.main()

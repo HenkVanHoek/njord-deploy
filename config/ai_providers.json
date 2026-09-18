@@ -20,9 +20,10 @@
       "requires_api_key": true,
       "default_base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
       "allow_custom_base_url": false,
-      "default_model": "gemini-2.5-flash",
+      "default_model": "gemini-3.6-flash",
       "models": [
-        {"value": "gemini-2.5-flash", "text": "Gemini 2.5 Flash (Aanbevolen - Snel)"},
+        {"value": "gemini-3.6-flash", "text": "Gemini 3.6 Flash (Aanbevolen - Snel)"},
+        {"value": "gemini-2.5-flash", "text": "Gemini 2.5 Flash"},
         {"value": "gemini-2.5-pro", "text": "Gemini 2.5 Pro (Deep Coding Reasoning)"},
         {"value": "gemini-1.5-flash", "text": "Gemini 1.5 Flash (Legacy Snel)"},
         {"value": "gemini-1.5-pro", "text": "Gemini 1.5 Pro (Legacy)"}

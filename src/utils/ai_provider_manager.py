@@ -38,7 +38,7 @@ DEFAULT_PROVIDERS_REGISTRY: Dict[str, Any] = {
             "https://generativelanguage.googleapis.com/v1beta/openai/"
         ),
         "allow_custom_base_url": False,
-        "default_model": "gemini-2.5-flash",
+        "default_model": "gemini-3.6-flash",
         "models": [],
     },
     "hostyourai": {

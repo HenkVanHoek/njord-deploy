@@ -399,6 +399,36 @@
                                         Configure API keys and endpoints for AI Failure Diagnosis and Component Editor AI Generation. Obtain API keys directly from the provider portals linked below.
                                     </p>
                                     <div class="row g-3">
+                                        <!-- Chatwoot AI Bot Backend Configuration -->
+                                        <div class="col-12">
+                                            <div class="p-3 border rounded bg-body-secondary">
+                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                    <label for="CHATWOOT_AI_PROVIDER" class="form-label small fw-bold mb-0 text-primary">
+                                                        <i class="fa-solid fa-comments me-1"></i> Chatwoot AI Assistant Backend Provider
+                                                    </label>
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">24/7 Autonomous Bot</span>
+                                                </div>
+                                                <div class="row g-2 align-items-center">
+                                                    <div class="col-md-6">
+                                                        <select class="form-select form-select-sm" id="CHATWOOT_AI_PROVIDER">
+                                                            <option value="gemini" {% if env_vars.get('CHATWOOT_AI_PROVIDER', 'gemini') == 'gemini' %}selected{% endif %}>Google Gemini (Aanbevolen voor 24/7 Cloud - geen lokale PC nodig)</option>
+                                                            <option value="ollama" {% if env_vars.get('CHATWOOT_AI_PROVIDER') == 'ollama' %}selected{% endif %}>Ollama (Lokaal / Offline RTX 3060)</option>
+                                                            <option value="openai" {% if env_vars.get('CHATWOOT_AI_PROVIDER') == 'openai' %}selected{% endif %}>OpenAI (gpt-4o-mini)</option>
+                                                            <option value="hostyourai" {% if env_vars.get('CHATWOOT_AI_PROVIDER') == 'hostyourai' %}selected{% endif %}>HostYourAI / Loes (EU Private Cloud)</option>
+                                                            <option value="anthropic" {% if env_vars.get('CHATWOOT_AI_PROVIDER') == 'anthropic' %}selected{% endif %}>Anthropic Claude</option>
+                                                            <option value="custom" {% if env_vars.get('CHATWOOT_AI_PROVIDER') == 'custom' %}selected{% endif %}>Custom OpenAI Endpoint</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <input type="text" class="form-control form-control-sm" id="CHATWOOT_AI_MODEL" value="{{ env_vars.get('CHATWOOT_AI_MODEL', '') }}" placeholder="Optioneel custom model (bv. gemini-2.5-flash of qwen2.5-coder:14b)">
+                                                    </div>
+                                                </div>
+                                                <div class="form-text small mt-1">
+                                                    Kies <strong>Google Gemini</strong> om de Chatwoot live chat autonoom 24/7 actief te laten zijn via de cloud, zonder dat de lokale Windows-machine aan hoeft te blijven staan.
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <!-- Google Gemini -->
                                         <div class="col-md-6">
                                             <div class="d-flex justify-content-between align-items-center mb-1">

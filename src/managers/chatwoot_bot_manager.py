@@ -107,10 +107,21 @@ class ChatwootBotManager:
         else:
             self.enabled = os.getenv("CHATWOOT_AI_ENABLED", "true").lower() == "true"
 
-        self.ai_engine = ai_engine or AIGeneratorEngine()
+        self._explicit_ai_engine = ai_engine
         self._knowledge_context: Optional[str] = None
         self._rate_limits: Dict[Any, List[float]] = {}
         self._rate_lock = threading.Lock()
+
+    @property
+    def ai_engine(self) -> Any:
+        """Returns explicitly provided AI engine or creates one from live env config."""
+        if self._explicit_ai_engine is not None:
+            return self._explicit_ai_engine
+        provider = os.getenv("CHATWOOT_AI_PROVIDER") or os.getenv(
+            "AI_PROVIDER", "gemini" if os.getenv("GEMINI_API_KEY") else "ollama"
+        )
+        model = os.getenv("CHATWOOT_AI_MODEL")
+        return AIGeneratorEngine(provider=provider, model=model)
 
     def get_knowledge_context(self) -> str:
         """Loads and caches full architectural reference and FAQ context."""
