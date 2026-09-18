@@ -115,7 +115,6 @@
             "dns_blocker",
             "general",
             "Smart Home & IoT",
-            "git_server",
             "dashboard & Homepages",
             "Media Stack",
             "productivity",
@@ -137,9 +136,7 @@
             "Storage",
             "Monitoring",
             "News & Media",
-            "Development",
             "Smart Home",
-            "Developer Tools",
             "Database Management"
         ],
         "group_rules": {
@@ -166,14 +163,6 @@
             "Developer": {
                 "is_exclusive": false,
                 "name": "Developer"
-            },
-            "Developer Tools": {
-                "is_exclusive": false,
-                "name": "Developer Tools"
-            },
-            "Development": {
-                "is_exclusive": false,
-                "name": "Development"
             },
             "Home Automation": {
                 "is_exclusive": false,
@@ -254,10 +243,6 @@
             "general": {
                 "is_exclusive": false,
                 "name": "General Components"
-            },
-            "git_server": {
-                "is_exclusive": true,
-                "name": "Development Tools"
             },
             "reverse_proxy": {
                 "is_exclusive": true,
@@ -1527,7 +1512,7 @@
                 "onboarding_guide": "Open GitLab web UI and complete the initial onboarding setup.",
                 "token_label": null
             },
-            "group": "git_server",
+            "group": "Developer",
             "has_configuration": false,
             "has_traefik_support": false,
             "has_ui": true,
@@ -3066,7 +3051,7 @@
                 "onboarding_guide": "Open NocoDB web UI and complete the initial onboarding setup.",
                 "token_label": null
             },
-            "group": "Development",
+            "group": "Developer",
             "has_configuration": true,
             "has_ui": true,
             "image_name": "nocodb/nocodb",
@@ -5237,7 +5222,7 @@
                 "onboarding_guide": "Open Woodpecker CI web UI and complete the initial onboarding setup.",
                 "token_label": null
             },
-            "group": "Developer Tools",
+            "group": "Developer",
             "has_configuration": true,
             "has_ui": true,
             "image_name": "woodpeckerci/woodpecker-server",
