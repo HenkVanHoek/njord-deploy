@@ -52,6 +52,7 @@ from utils.auth_utils import (
     verify_api_key,
     verify_credentials,
 )
+from utils.i18n import SUPPORTED_LOCALES, init_i18n
 from utils.resource_utils import (
     get_app_data_dir,
     get_components_paths,
@@ -340,6 +341,7 @@ def create_app(test_config=None):
     billing_mgr = BillingManager(db=db_mgr)
     agent_mgr = AgentManager(db=db_mgr)
     chatwoot_bot_mgr = ChatwootBotManager()
+    init_i18n(flask_app)
 
     flask_app.deployment_tasks = {}
     flask_app.map_analysis_to_report_errors = map_analysis_to_report_errors
@@ -375,8 +377,11 @@ def create_app(test_config=None):
             "/api/chatwoot/webhook",
             "/api/v1/chatwoot/webhook",
             "/api/first-run-status",
+            "/api/v1/set-language",
         }
-        if request.path in public_routes:
+        if request.path in public_routes or request.path.startswith(
+            "/api/v1/set-language"
+        ):
             return None
 
         # Check if auth is disabled in test_config or environment
@@ -1118,6 +1123,33 @@ def create_app(test_config=None):
                 "is_remote_sync_enabled": repo_config.get("is_enabled"),
             }
         )
+
+    @flask_app.route("/api/v1/set-language/<lang_code>", methods=["POST", "GET"])
+    @flask_app.route("/set-language/<lang_code>", methods=["POST", "GET"])
+    def set_language(lang_code: str):
+        """Sets the active session language and response cookie."""
+        clean_code = lang_code.strip().lower()
+        if clean_code not in SUPPORTED_LOCALES:
+            return jsonify({"error": f"Unsupported language: {clean_code}"}), 400
+
+        session["lang"] = clean_code
+
+        # If accessed via GET with a redirect target, return to the calling page
+        target = request.args.get("next") or request.referrer or "/"
+        safe_target = get_safe_redirect_target(target, request.host_url) or "/"
+
+        if request.method == "GET" and not is_api_request():
+            resp = redirect(safe_target)
+            resp.set_cookie(
+                "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+            )
+            return resp
+
+        json_resp = jsonify({"status": "success", "language": clean_code})
+        json_resp.set_cookie(
+            "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+        )
+        return json_resp
 
     @flask_app.route("/api/engine-switch", methods=["POST"])
     def switch_engine():

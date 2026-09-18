@@ -37,6 +37,7 @@ from utils.auth_utils import (
     verify_api_key,
     verify_credentials,
 )
+from utils.i18n import SUPPORTED_LOCALES, init_i18n
 from utils.resource_utils import get_components_paths
 from utils.security_utils import get_safe_redirect_target
 
@@ -113,6 +114,8 @@ def create_app(test_config=None):
             ]
         )
 
+    init_i18n(app)
+
     # Crucial for testing: apply the test_config
     if test_config:
         app.config.update(test_config)
@@ -182,8 +185,14 @@ def create_app(test_config=None):
             "/api/logout",
             "/setup",
             "/api/setup",
+            "/api/v1/set-language",
+            "/set-language",
         }
-        if request.path in public_routes:
+        if (
+            request.path in public_routes
+            or request.path.startswith("/api/v1/set-language")
+            or request.path.startswith("/set-language")
+        ):
             return None
 
         if app.config.get("AUTH_ENABLED") is False or not is_auth_enabled():
@@ -228,6 +237,32 @@ def create_app(test_config=None):
 
         next_url = request.full_path if request.method == "GET" else "/"
         return redirect(url_for("login_page", next=next_url))
+
+    @app.route("/api/v1/set-language/<lang_code>", methods=["POST", "GET"])
+    @app.route("/set-language/<lang_code>", methods=["POST", "GET"])
+    def set_language(lang_code: str):
+        """Sets the active session language and response cookie."""
+        clean_code = lang_code.strip().lower()
+        if clean_code not in SUPPORTED_LOCALES:
+            return jsonify({"error": f"Unsupported language: {clean_code}"}), 400
+
+        session["lang"] = clean_code
+
+        target = request.args.get("next") or request.referrer or "/"
+        safe_target = get_safe_redirect_target(target, request.host_url) or "/"
+
+        if request.method == "GET" and not is_api_request():
+            resp = redirect(safe_target)
+            resp.set_cookie(
+                "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+            )
+            return resp
+
+        json_resp = jsonify({"status": "success", "language": clean_code})
+        json_resp.set_cookie(
+            "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+        )
+        return json_resp
 
     @app.route("/setup", methods=["GET"])
     def setup_wizard():
