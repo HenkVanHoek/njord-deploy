@@ -174,9 +174,31 @@
                         <li><button class="dropdown-item d-flex align-items-center" id="btn-open-onboarding-modal"><i class="fa-solid fa-sliders me-2"></i> Engine &amp; Repo Setup...</button></li>
                     </ul>
                 </li>
+                <!-- Language Selector Dropdown -->
+                <li class="nav-item dropdown me-2">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="langDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="{{ _('nav_language') }}">
+                        {% if current_locale == 'nl' %}
+                        <img src="{{ url_for('static', filename='images/flags/nl.svg') }}" alt="NL" width="18" height="12" class="me-1 rounded-1 shadow-sm"> NL
+                        {% else %}
+                        <img src="{{ url_for('static', filename='images/flags/gb.svg') }}" alt="EN" width="18" height="12" class="me-1 rounded-1 shadow-sm"> EN
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="langDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center {% if current_locale == 'en' %}active fw-bold{% endif %}" href="/set-language/en?next={{ request.path }}">
+                                <img src="{{ url_for('static', filename='images/flags/gb.svg') }}" alt="English" width="18" height="12" class="me-2 rounded-1 shadow-sm"> English (EN)
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item d-flex align-items-center {% if current_locale == 'nl' %}active fw-bold{% endif %}" href="/set-language/nl?next={{ request.path }}">
+                                <img src="{{ url_for('static', filename='images/flags/nl.svg') }}" alt="Nederlands" width="18" height="12" class="me-2 rounded-1 shadow-sm"> Nederlands (NL)
+                            </a>
+                        </li>
+                    </ul>
+                </li>
                 <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="fa-solid fa-palette me-1"></i> Theme
+                        <i class="fa-solid fa-palette me-1"></i> {{ _('nav_theme') }}
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="themeDropdown" style="background-color: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px);">
                         <li><button class="dropdown-item" data-theme-value="futuristic-dark">Futuristic Dark</button></li>
@@ -186,18 +208,18 @@
                         <li><button class="dropdown-item" data-theme-value="high-contrast-light">High Contrast Light</button></li>
                     </ul>
                 </li>
-                <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn" title="Start Interactive Quick Tour"><i class="fa-solid fa-compass me-1"></i> Quick Tour</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" id="nav-quick-start-btn" title="View Quick Start Guide"><i class="fa-solid fa-graduation-cap me-1"></i> Quick Start</a></li>
-                <li class="nav-item"><a class="nav-link" href="#" id="nav-backup-btn" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> Backup & Restore</a></li>
-                <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> Settings</a></li>
-                <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> Help</a></li>
-                <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> API Docs</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://njorddeploy.com" target="_blank"><i class="fa-solid fa-globe me-1"></i> Website</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njorddeploy/wiki" target="_blank"><i class="fa-solid fa-book-open me-1"></i> Wiki</a></li>
-                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njord-deploy" target="_blank"><i class="fa-brands fa-github me-1"></i> GitHub</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn" title="Start Interactive Quick Tour"><i class="fa-solid fa-compass me-1"></i> {{ _('nav_quick_tour') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-quick-start-btn" title="View Quick Start Guide"><i class="fa-solid fa-graduation-cap me-1"></i> {{ _('nav_quick_start') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-backup-btn" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> {{ _('nav_backups') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> {{ _('nav_settings') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> {{ _('nav_help') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> {{ _('nav_api_docs') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://njorddeploy.com" target="_blank"><i class="fa-solid fa-globe me-1"></i> {{ _('nav_website') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njorddeploy/wiki" target="_blank"><i class="fa-solid fa-book-open me-1"></i> {{ _('nav_wiki') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/HenkVanHoek/njord-deploy" target="_blank"><i class="fa-brands fa-github me-1"></i> {{ _('nav_github') }}</a></li>
                 <li class="nav-item d-flex align-items-center ms-1 me-1">
                     <button class="btn btn-sm btn-outline-primary fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#billingModal" title="MSP Fleet & Console Information">
-                        <i class="fa-solid fa-server me-1"></i> MSP / Fleet
+                        <i class="fa-solid fa-server me-1"></i> {{ _('nav_msp') }}
                     </button>
                 </li>
                 {% if session.get('user') %}
@@ -208,7 +230,7 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="/logout" title="Sign Out">
-                        <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+                        <i class="fa-solid fa-right-from-bracket me-1"></i> {{ _('nav_logout') }}
                     </a>
                 </li>
                 {% endif %}
