@@ -1134,11 +1134,13 @@ def create_app(test_config=None):
 
         session["lang"] = clean_code
 
-        # If accessed via GET with a redirect target, return to the calling page
         target = request.args.get("next") or request.referrer or "/"
         safe_target = get_safe_redirect_target(target, request.host_url) or "/"
 
-        if request.method == "GET" and not is_api_request():
+        # If accessed via /set-language/<lang> (browser page navigation) or
+        # GET without explicit JSON Accept, redirect back to calling page
+        is_browser_nav = not request.path.startswith("/api/")
+        if is_browser_nav and (request.method == "GET" or not is_api_request()):
             resp = redirect(safe_target)
             resp.set_cookie(
                 "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
