@@ -246,7 +246,8 @@ def create_app(test_config=None):
         if clean_code not in SUPPORTED_LOCALES:
             return jsonify({"error": f"Unsupported language: {clean_code}"}), 400
 
-        session["lang"] = clean_code
+        selected_locale = "nl" if clean_code == "nl" else "en"
+        session["lang"] = selected_locale
 
         target = request.args.get("next") or request.referrer or "/"
         safe_target = get_safe_redirect_target(target, request.host_url) or "/"
@@ -257,13 +258,21 @@ def create_app(test_config=None):
         if is_browser_nav and (request.method == "GET" or not is_api_request()):
             resp = redirect(safe_target)
             resp.set_cookie(
-                "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+                "njord_lang",
+                selected_locale,
+                max_age=365 * 86400,
+                samesite="Lax",
+                httponly=True,
             )
             return resp
 
-        json_resp = jsonify({"status": "success", "language": clean_code})
+        json_resp = jsonify({"status": "success", "language": selected_locale})
         json_resp.set_cookie(
-            "njord_lang", clean_code, max_age=365 * 86400, samesite="Lax"
+            "njord_lang",
+            selected_locale,
+            max_age=365 * 86400,
+            samesite="Lax",
+            httponly=True,
         )
         return json_resp
 

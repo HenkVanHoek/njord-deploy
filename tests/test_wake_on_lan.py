@@ -56,6 +56,7 @@ def test_emergency_wol_and_signal_failover():
                 "GEMINI_API_KEY": "fake-key",
                 "HOSTYOURAI_API_KEY": "fake-key",
                 "WOL_LOCAL_AI_MAC": "e8:9c:25:29:f0:0c",
+                "WOL_BROADCAST_IP": "255.255.255.255",
                 "SIGNAL_RECIPIENT": "+31651107603",
             },
         ),

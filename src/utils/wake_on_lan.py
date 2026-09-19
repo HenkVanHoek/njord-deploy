@@ -28,7 +28,7 @@ def send_wake_on_lan(
     """
     cleaned_mac = re.sub(r"[^0-9A-Fa-f]", "", mac_address)
     if len(cleaned_mac) != 12:
-        logger.error("Invalid MAC address provided for Wake-on-LAN: %s", mac_address)
+        logger.error("Invalid MAC address format provided for Wake-on-LAN.")
         return False
 
     try:
@@ -45,8 +45,7 @@ def send_wake_on_lan(
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
             sock.sendto(magic_packet, (broadcast_ip, port))
         logger.info(
-            "Wake-on-LAN magic packet dispatched to %s (%s:%d)",
-            mac_address,
+            "Wake-on-LAN magic packet dispatched successfully via %s:%d",
             broadcast_ip,
             port,
         )

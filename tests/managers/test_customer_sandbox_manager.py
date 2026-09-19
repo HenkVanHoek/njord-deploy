@@ -31,7 +31,7 @@ def test_sandbox_provisioning_and_quota():
         )
         assert res1["success"] is True
         assert res1["vmid"] == 860
-        assert "clienta.training.njorddeploy.com" in res1["access_url"]
+        assert res1["access_url"] == "https://clienta.training.njorddeploy.com"
         assert "Mailpit" in res1["mail_catcher"]
 
         # 2. Request second sandbox
