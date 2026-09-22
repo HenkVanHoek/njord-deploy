@@ -1,0 +1,31 @@
+# status: "stable"
+# last_tested_version: "stable"
+# platform_notes: "Tested on Proxmox LXC: docker, podman; Proxmox VM: docker, podman."
+# breaking_changes: none
+services:
+  forgejo:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-forgejo
+    restart: unless-stopped
+    environment:
+      - "USER_UID=1000"
+      - "USER_GID=1000"
+      - "FORGEJO__database__DB_TYPE=sqlite3"
+      - "FORGEJO__database__PATH=/data/gitea/gitea.db"
+      - "FORGEJO__server__DOMAIN={{ HOST_IP }}"
+      - "FORGEJO__server__SSH_PORT={{ FORGEJO_SSH_PORT }}"
+      - "FORGEJO__server__ROOT_URL=http://{{ HOST_IP }}:{{ FORGEJO_WEB_PORT }}/"
+      - "FORGEJO__server__HTTP_PORT=3000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/forgejo/data:/data"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    ports:
+      - "{{ FORGEJO_WEB_PORT }}:3000"
+      - "{{ FORGEJO_SSH_PORT }}:22"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

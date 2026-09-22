@@ -100,7 +100,8 @@
             "wallabag",
             "woodpecker-ci",
             "pgadmin4",
-            "wg-easy"
+            "wg-easy",
+            "forgejo"
         ],
         "default_group": "general",
         "global_variables": [
@@ -298,7 +299,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "ACTUAL_BUDGET_WEB_PORT"
+            "ui_port_variable": "ACTUAL_BUDGET_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "actualbudget/actual-server",
+                "rss_feed": "https://github.com/actualbudget/actual-server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.20.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": "25.2.1",
+                "status": "awaiting_approval",
+                "test_result": null,
+                "entered_staging_at": "2026-09-20T12:44:00Z",
+                "grace_days": 14
+            }
         },
         "adguard-home": {
             "component_version": "latest",
@@ -343,7 +365,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 80,
-            "ui_port_variable": "ADGUARDHOME_WEB_PORT"
+            "ui_port_variable": "ADGUARDHOME_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "AdguardTeam/AdGuardHome",
+                "rss_feed": "https://github.com/AdguardTeam/AdGuardHome/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v0.107.79",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "adminer": {
             "component_version": "latest",
@@ -386,7 +429,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "ADMINER_WEB_PORT"
+            "ui_port_variable": "ADMINER_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "8.4.25",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "apprise": {
             "component_version": "latest",
@@ -429,7 +493,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8000",
-            "ui_port_variable": "APPRISE_WEB_PORT"
+            "ui_port_variable": "APPRISE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "caronc/apprise-ap",
+                "rss_feed": "https://github.com/caronc/apprise-ap/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.5.4",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "audiobookshelf": {
             "conflicts_with": [],
@@ -470,7 +555,28 @@
                 "audio"
             ],
             "test_status": "tested",
-            "ui_port_variable": "AUDIOBOOKSHELF_PORT"
+            "ui_port_variable": "AUDIOBOOKSHELF_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "advplyr/audiobookshelf",
+                "rss_feed": "https://github.com/advplyr/audiobookshelf/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "2.36.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "bazarr": {
             "category": "Media",
@@ -499,7 +605,28 @@
             "port": 6767,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "BAZARR_WEB_PORT"
+            "ui_port_variable": "BAZARR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v1.6.0-ls363",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "beszel": {
             "category": "Monitoring",
@@ -528,7 +655,28 @@
             "port": 8095,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "BESZEL_WEB_PORT"
+            "ui_port_variable": "BESZEL_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "henrygd/beszel",
+                "rss_feed": "https://github.com/henrygd/beszel/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.19.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "bookstack": {
             "component_version": "latest",
@@ -572,7 +720,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "80",
-            "ui_port_variable": "BOOKSTACK_WEB_PORT"
+            "ui_port_variable": "BOOKSTACK_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "11.8.8-r0-ls230",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "caddy": {
             "component_version": "latest",
@@ -618,7 +787,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "CADDY_HTTP_PORT"
+            "ui_port_variable": "CADDY_HTTP_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "caddyserver/caddy",
+                "rss_feed": "https://github.com/caddyserver/caddy/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.11.4",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "calibre-web": {
             "ai_instructions": "Web app for browsing, reading and downloading eBooks. Image linuxserver/calibre-web:latest on port CALIBRE_WEB_PORT: 8085 (container port 8083). Volumes for /config and /books. Environment: PUID=0, PGID=0, TZ=UTC, DOCKER_MODS=linuxserver/mods:universal-calibre. user: \"0:0\". Group: Media.",
@@ -664,7 +854,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "CALIBRE_WEB_PORT"
+            "ui_port_variable": "CALIBRE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "linuxserver/calibre-web",
+                "rss_feed": "https://github.com/linuxserver/calibre-web/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.6.27-ls401",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "changedetection": {
             "category": "Utilities",
@@ -693,7 +904,28 @@
             "port": 5002,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "CHANGEDETECTION_WEB_PORT"
+            "ui_port_variable": "CHANGEDETECTION_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "dgtlmoon/changedetection.io",
+                "rss_feed": "https://github.com/dgtlmoon/changedetection.io/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "0.60.4",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "chatwoot": {
             "component_version": "v4.17.1",
@@ -726,7 +958,28 @@
             ],
             "test_status": "testing",
             "ui_port": 3044,
-            "ui_port_variable": "CHATWOOT_WEB_PORT"
+            "ui_port_variable": "CHATWOOT_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": null,
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "conduit": {
             "component_version": "latest",
@@ -763,7 +1016,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": null
+            "ui_port_variable": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "famedly/conduit",
+                "rss_feed": "https://github.com/famedly/conduit/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "cyberchef": {
             "category": "Utilities",
@@ -792,7 +1066,28 @@
             "port": 8083,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "CYBERCHEF_WEB_PORT"
+            "ui_port_variable": "CYBERCHEF_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "mpepping/cyberchef",
+                "rss_feed": "https://github.com/mpepping/cyberchef/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.30.4-alpine",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "dashdot": {
             "component_version": "latest",
@@ -835,7 +1130,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "3001",
-            "ui_port_variable": "DASHDOT_WEB_PORT"
+            "ui_port_variable": "DASHDOT_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "mauricenino/dashdot",
+                "rss_feed": "https://github.com/mauricenino/dashdot/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "6.3.4",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "diun": {
             "component_version": "latest",
@@ -878,7 +1194,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "DIUN_PROMETHEUS_PORT"
+            "ui_port_variable": "DIUN_PROMETHEUS_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "crazymax/diun",
+                "rss_feed": "https://github.com/crazymax/diun/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "4.33.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "docker-jitsi-meet": {
             "conflicts_with": [],
@@ -921,7 +1258,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "JITSI_HTTPS_PORT"
+            "ui_port_variable": "JITSI_HTTPS_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "jitsi/web",
+                "rss_feed": "https://github.com/jitsi/web/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "dockge": {
             "category": "Management",
@@ -951,7 +1309,28 @@
             "port": 5001,
             "requires_root": true,
             "test_status": "tested",
-            "ui_port_variable": "DOCKGE_WEB_PORT"
+            "ui_port_variable": "DOCKGE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "louislam/dockge",
+                "rss_feed": "https://github.com/louislam/dockge/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.22.22",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "docmost": {
             "component_version": "latest",
@@ -995,7 +1374,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "3000",
-            "ui_port_variable": "DOCMOST_WEB_PORT"
+            "ui_port_variable": "DOCMOST_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "docmost/docmost",
+                "rss_feed": "https://github.com/docmost/docmost/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "dozzle": {
             "component_version": "latest",
@@ -1038,7 +1438,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "DOZZLE_WEB_PORT"
+            "ui_port_variable": "DOZZLE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "amir20/dozzle",
+                "rss_feed": "https://github.com/amir20/dozzle/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v11.0.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "drawio": {
             "category": "Productivity",
@@ -1067,7 +1488,28 @@
             "port": 8082,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "DRAWIO_WEB_PORT"
+            "ui_port_variable": "DRAWIO_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "jgraph/drawio",
+                "rss_feed": "https://github.com/jgraph/drawio/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "duplicati": {
             "component_version": "latest",
@@ -1111,7 +1553,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8200",
-            "ui_port_variable": "DUPLICATI_WEB_PORT"
+            "ui_port_variable": "DUPLICATI_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "linuxserver/duplicati",
+                "rss_feed": "https://github.com/linuxserver/duplicati/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.4.0.0_stable_2026-09-03-ls308",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "esphome": {
             "category": "Smart Home & IoT",
@@ -1140,7 +1603,28 @@
             "port": 6052,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "ESPHOME_WEB_PORT"
+            "ui_port_variable": "ESPHOME_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "esphome/esphome",
+                "rss_feed": "https://github.com/esphome/esphome/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2026.8.2",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "etherpad": {
             "component_version": "latest",
@@ -1183,7 +1667,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "9001",
-            "ui_port_variable": "ETHERPAD_WEB_PORT"
+            "ui_port_variable": "ETHERPAD_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "etherpad/etherpad",
+                "rss_feed": "https://github.com/etherpad/etherpad/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.3.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "evcc": {
             "component_version": "latest",
@@ -1227,7 +1732,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "7070",
-            "ui_port_variable": "EVCC_WEB_PORT"
+            "ui_port_variable": "EVCC_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "evcc/evcc",
+                "rss_feed": "https://github.com/evcc/evcc/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "excalidraw": {
             "category": "Productivity",
@@ -1256,7 +1782,28 @@
             "port": 8081,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "EXCALIDRAW_WEB_PORT"
+            "ui_port_variable": "EXCALIDRAW_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "excalidraw/excalidraw",
+                "rss_feed": "https://github.com/excalidraw/excalidraw/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.8.10",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "filebrowser": {
             "component_version": "latest",
@@ -1294,7 +1841,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "FILEBROWSER_WEB_PORT"
+            "ui_port_variable": "FILEBROWSER_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "filebrowser/filebrowser",
+                "rss_feed": "https://github.com/filebrowser/filebrowser/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.63.23",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "firefly-iii": {
             "component_version": "latest",
@@ -1337,7 +1905,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "FIREFLY_III_WEB_PORT"
+            "ui_port_variable": "FIREFLY_III_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "fireflyiii/core",
+                "rss_feed": "https://github.com/fireflyiii/core/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v6.6.6",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "flatnotes": {
             "category": "Productivity",
@@ -1366,7 +1955,28 @@
             "port": 8088,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "FLATNOTES_WEB_PORT"
+            "ui_port_variable": "FLATNOTES_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "dullage/flatnotes",
+                "rss_feed": "https://github.com/dullage/flatnotes/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.13.15",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "focalboard": {
             "category": "Productivity",
@@ -1395,7 +2005,28 @@
             "port": 8099,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "FOCALBOARD_WEB_PORT"
+            "ui_port_variable": "FOCALBOARD_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "mattermost/focalboard",
+                "rss_feed": "https://github.com/mattermost/focalboard/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "freshrss": {
             "category": "News & Media",
@@ -1424,7 +2055,28 @@
             "port": 8086,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "FRESHRSS_WEB_PORT"
+            "ui_port_variable": "FRESHRSS_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "freshrss/freshrss",
+                "rss_feed": "https://github.com/freshrss/freshrss/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.30.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "frigate": {
             "component_version": "stable",
@@ -1468,7 +2120,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_FRIGATE_WEB"
+            "ui_port_variable": "PORT_FRIGATE_WEB",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "blakeblackshear/frigate",
+                "rss_feed": "https://github.com/blakeblackshear/frigate/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "8.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "gitea": {
             "category": "Developer",
@@ -1497,7 +2170,28 @@
             "port": 3000,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "GITEA_WEB_PORT"
+            "ui_port_variable": "GITEA_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "gitea/gitea",
+                "rss_feed": "https://github.com/gitea/gitea/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "gitlab": {
             "component_version": "latest",
@@ -1538,7 +2232,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "GITLAB_HTTP_PORT"
+            "ui_port_variable": "GITLAB_HTTP_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "gitlab/gitlab-ce",
+                "rss_feed": "https://github.com/gitlab/gitlab-ce/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "glance": {
             "component_version": "latest",
@@ -1584,7 +2299,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "GLANCE_WEB_PORT"
+            "ui_port_variable": "GLANCE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "glanceapp/glance",
+                "rss_feed": "https://github.com/glanceapp/glance/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "gluetun": {
             "component_version": "latest",
@@ -1619,7 +2355,28 @@
                 "security"
             ],
             "traefik_internal_port": null,
-            "ui_port_variable": "GLUETUN_HTTP_PROXY_PORT"
+            "ui_port_variable": "GLUETUN_HTTP_PROXY_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "qdm12/gluetun",
+                "rss_feed": "https://github.com/qdm12/gluetun/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": null,
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "gotify": {
             "category": "Communication",
@@ -1648,7 +2405,28 @@
             "port": 8097,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "GOTIFY_WEB_PORT"
+            "ui_port_variable": "GOTIFY_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "gotify/server",
+                "rss_feed": "https://github.com/gotify/server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.1.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "grafana": {
             "component_version": "11.1.3",
@@ -1717,7 +2495,28 @@
                     "label": "Grafana Admin Password",
                     "type": "password"
                 }
-            ]
+            ],
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "grafana/grafana",
+                "rss_feed": "https://github.com/grafana/grafana/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "11.1.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "grocy": {
             "category": "Utilities",
@@ -1746,7 +2545,28 @@
             "port": 9283,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "GROCY_WEB_PORT"
+            "ui_port_variable": "GROCY_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v4.7.1-ls341",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "headscale": {
             "ai_instructions": "Self-hosted open source Tailscale control server. Image headscale/headscale:latest. Command: headscale serve. Web/API port HEADSCALE_WEB_PORT: 9080 (container port 8080). Config template config.yaml at /etc/headscale/config.yaml. Data volume /var/lib/headscale. user: \"0:0\". Group: Utilities.",
@@ -1795,7 +2615,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 8080,
-            "ui_port_variable": "HEADSCALE_WEB_PORT"
+            "ui_port_variable": "HEADSCALE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "headscale/headscale",
+                "rss_feed": "https://github.com/headscale/headscale/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "heimdall": {
             "component_version": "latest",
@@ -1833,7 +2674,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "HEIMDALL_WEB_PORT"
+            "ui_port_variable": "HEIMDALL_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "linuxserver/docker-heimdall",
+                "rss_feed": "https://github.com/linuxserver/docker-heimdall/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.8.3-ls364",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "homarr": {
             "component_version": "latest",
@@ -1874,7 +2736,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "HOMARR_PORT"
+            "ui_port_variable": "HOMARR_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "ajnart/homarr",
+                "rss_feed": "https://github.com/ajnart/homarr/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "0.16.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "homeassistant": {
             "component_version": "stable",
@@ -1925,7 +2808,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 8123,
-            "ui_port_variable": "HA_PORT"
+            "ui_port_variable": "HA_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "home-assistant/core",
+                "rss_feed": "https://github.com/home-assistant/core/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2026.9.2",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "homebridge": {
             "component_version": "latest",
@@ -1968,7 +2872,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8581",
-            "ui_port_variable": "HOMEBRIDGE_WEB_PORT"
+            "ui_port_variable": "HOMEBRIDGE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "homebridge/homebridge",
+                "rss_feed": "https://github.com/homebridge/homebridge/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2026-09-02",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "homepage": {
             "component_version": "latest",
@@ -2004,7 +2929,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "HOMEPAGE_WEB_PORT"
+            "ui_port_variable": "HOMEPAGE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "gethomepage/homepage",
+                "rss_feed": "https://github.com/gethomepage/homepage/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "v2.3.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "homer": {
             "component_version": "latest",
@@ -2042,7 +2988,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_HOMER"
+            "ui_port_variable": "PORT_HOMER",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "bastienwirtz/homer",
+                "rss_feed": "https://github.com/bastienwirtz/homer/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v26.08.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "immich": {
             "ai_instructions": null,
@@ -2087,7 +3054,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 8080,
-            "ui_port_variable": "IMMICH_WEB_PORT"
+            "ui_port_variable": "IMMICH_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "immich-app/immich",
+                "rss_feed": "https://github.com/immich-app/immich/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "v3.2.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "it-tools": {
             "ai_instructions": "Useful web tools for developers and sysadmins. Container image corentinth/it-tools:latest. Web port 8080 (IT_TOOLS_WEB_PORT: 8080). Group: Productivity.",
@@ -2133,7 +3121,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "IT_TOOLS_WEB_PORT"
+            "ui_port_variable": "IT_TOOLS_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "corentinth/it-tools",
+                "rss_feed": "https://github.com/corentinth/it-tools/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.8.5",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "jellyfin": {
             "component_version": "latest",
@@ -2171,7 +3180,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "JELLYFIN_WEB_PORT"
+            "ui_port_variable": "JELLYFIN_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "jellyfin/jellyfin",
+                "rss_feed": "https://github.com/jellyfin/jellyfin/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "12.0ubu2604-ls48",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "jellyseerr": {
             "category": "Media",
@@ -2200,7 +3230,28 @@
             "port": 5055,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "JELLYSEERR_WEB_PORT"
+            "ui_port_variable": "JELLYSEERR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "fallenbagel/jellyseerr",
+                "rss_feed": "https://github.com/fallenbagel/jellyseerr/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "22.18.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "kavita": {
             "ai_instructions": "Self-hosted digital library for Manga, Comics, and Books. Image kareadita/kavita:latest on port KAVITA_WEB_PORT: 5000 (container port 5000). Volumes for /kavita/config, /manga, /comics, /books. Environment: TZ=UTC. user: \"0:0\". Group: Media.",
@@ -2248,7 +3299,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 5000,
-            "ui_port_variable": "KAVITA_WEB_PORT"
+            "ui_port_variable": "KAVITA_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "kareadita/kavita",
+                "rss_feed": "https://github.com/kareadita/kavita/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "komga": {
             "component_version": "latest",
@@ -2292,7 +3364,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "25600",
-            "ui_port_variable": "KOMGA_WEB_PORT"
+            "ui_port_variable": "KOMGA_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "gotson/komga",
+                "rss_feed": "https://github.com/gotson/komga/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "26.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "librechat": {
             "ai_instructions": "Multi-model AI chat platform. LibreChat web app (ghcr.io/danny-avila/librechat:latest) on port LIBRECHAT_WEB_PORT: 3080 (container port 3080). MongoDB backend (mongo:6.0) as librechat-mongodb on port 27017. Required env: MONGO_URI=mongodb://njorddeploy-librechat-mongodb:27017/LibreChat, PORT=3080, HOST=0.0.0.0, JWT_SECRET, JWT_REFRESH_TOKEN_SECRET, CREDS_KEY, CREDS_IV. Persistent volume for MongoDB data. user: \"0:0\" for volume permissions. Group: AI.",
@@ -2343,7 +3436,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 3080,
-            "ui_port_variable": "LIBRECHAT_WEB_PORT"
+            "ui_port_variable": "LIBRECHAT_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "danny-avila/librechat",
+                "rss_feed": "https://github.com/danny-avila/librechat/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "22.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "lidarr": {
             "category": "Media",
@@ -2372,7 +3486,28 @@
             "port": 8686,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "LIDARR_WEB_PORT"
+            "ui_port_variable": "LIDARR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.1.0.4875-ls41",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "linkding": {
             "component_version": "latest",
@@ -2415,7 +3550,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "9090",
-            "ui_port_variable": "LINKDING_WEB_PORT"
+            "ui_port_variable": "LINKDING_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "sissbruecker/linkdin",
+                "rss_feed": "https://github.com/sissbruecker/linkdin/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.13.7",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "litellm": {
             "ai_instructions": "Make sure to include hostyourai along with gemini and ollama.",
@@ -2456,7 +3612,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 4000,
-            "ui_port_variable": "LITELLM_WEB_PORT"
+            "ui_port_variable": "LITELLM_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "BerriAI/litellm",
+                "rss_feed": "https://github.com/BerriAI/litellm/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "16.15-1.pgdg13+2",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "lora-service": {
             "conflicts_with": [],
@@ -2486,7 +3663,28 @@
             "tags": [],
             "test_status": "hardware_dependent",
             "traefik_internal_port": null,
-            "ui_port_variable": "CHIRPSTACK_WEB_UI_PORT"
+            "ui_port_variable": "CHIRPSTACK_WEB_UI_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "HenkVanHoek/lora-letterbox-notifier",
+                "rss_feed": "https://github.com/HenkVanHoek/lora-letterbox-notifier/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": null,
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "mealie": {
             "ai_instructions": "Self-hosted recipe manager and meal planner. Image ghcr.io/mealie-recipes/mealie:latest. Port MEALIE_WEB_PORT: 9925 (container port 9000). Volume /app/data/. Group: Productivity.",
@@ -2532,7 +3730,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 9000,
-            "ui_port_variable": "MEALIE_WEB_PORT"
+            "ui_port_variable": "MEALIE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "mealie-recipes/mealie",
+                "rss_feed": "https://github.com/mealie-recipes/mealie/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "v3.26.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "memos": {
             "category": "Productivity",
@@ -2561,7 +3780,28 @@
             "port": 5230,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "MEMOS_WEB_PORT"
+            "ui_port_variable": "MEMOS_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "neosmemo/memos",
+                "rss_feed": "https://github.com/neosmemo/memos/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "metube": {
             "component_version": "latest",
@@ -2605,7 +3845,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8081",
-            "ui_port_variable": "METUBE_WEB_PORT"
+            "ui_port_variable": "METUBE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "alexta69/metube",
+                "rss_feed": "https://github.com/alexta69/metube/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.13.15",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "microbin": {
             "conflicts_with": [],
@@ -2648,7 +3909,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "MICROBIN_PORT"
+            "ui_port_variable": "MICROBIN_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "szabodanika/microbin",
+                "rss_feed": "https://github.com/szabodanika/microbin/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.1.4",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "miniflux": {
             "component_version": "latest",
@@ -2691,7 +3973,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "MINIFLUX_WEB_PORT"
+            "ui_port_variable": "MINIFLUX_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "miniflux/miniflux",
+                "rss_feed": "https://github.com/miniflux/miniflux/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "minio": {
             "category": "Storage",
@@ -2720,7 +4023,28 @@
             "port": 9001,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "MINIO_CONSOLE_PORT"
+            "ui_port_variable": "MINIO_CONSOLE_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "quay",
+                "latest_upstream_version": "RELEASE.2025-09-07T16-13-09Z",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "mosquitto": {
             "component_version": "latest",
@@ -2766,7 +4090,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": null
+            "ui_port_variable": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.1.2",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "n8n": {
             "component_version": "latest",
@@ -2793,7 +4138,28 @@
             "project_url": "https://n8n.io/",
             "protocol": "http",
             "test_status": "tested",
-            "ui_port_variable": "N8N_WEB_PORT"
+            "ui_port_variable": "N8N_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "n8n-io/n8n",
+                "rss_feed": "https://github.com/n8n-io/n8n/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.38.7",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "navidrome": {
             "ai_instructions": "Modern music streaming server and audio player. Image deluan/navidrome:latest on port NAVIDROME_WEB_PORT: 4533 (container port 4533). Volumes for /data and /music:ro. Environment: ND_SCANSCHEDULE=1h, ND_LOGLEVEL=info, ND_SESSIONTIMEOUT=24h, ND_BASEURL=\"\". user: \"0:0\". Group: Media.",
@@ -2839,7 +4205,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "NAVIDROME_WEB_PORT"
+            "ui_port_variable": "NAVIDROME_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "deluan/navidrome",
+                "rss_feed": "https://github.com/deluan/navidrome/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.64.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "netdata": {
             "category": "Monitoring",
@@ -2868,7 +4255,28 @@
             "port": 19999,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "NETDATA_WEB_PORT"
+            "ui_port_variable": "NETDATA_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "netdata/netdata",
+                "rss_feed": "https://github.com/netdata/netdata/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "nightly",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nextcloud": {
             "component_version": "latest",
@@ -2910,7 +4318,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_NEXTCLOUD"
+            "ui_port_variable": "PORT_NEXTCLOUD",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "nextcloud/server",
+                "rss_feed": "https://github.com/nextcloud/server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nextcloud-db": {
             "conflicts_with": [],
@@ -2944,7 +4373,28 @@
                 "mariadb"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "10.11.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nextcloud-db-dumper": {
             "depends_on": [
@@ -2977,7 +4427,28 @@
                 "database",
                 "mariadb"
             ],
-            "test_status": "tested"
+            "test_status": "tested",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "10.11.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nextcloud-redis": {
             "conflicts_with": [],
@@ -3011,7 +4482,28 @@
                 "performance"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "release_track": {
+                "track": "lts",
+                "otap_role": "production",
+                "lts_identifier": "7"
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "8.10.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nginx-proxy-manager": {
             "component_version": "latest",
@@ -3049,7 +4541,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_NPM_ADMIN"
+            "ui_port_variable": "PORT_NPM_ADMIN",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "NginxProxyManager/nginx-proxy-manager",
+                "rss_feed": "https://github.com/NginxProxyManager/nginx-proxy-manager/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "nocodb": {
             "category": "Development",
@@ -3078,7 +4591,28 @@
             "port": 8098,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "NOCODB_WEB_PORT"
+            "ui_port_variable": "NOCODB_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "nocodb/nocodb",
+                "rss_feed": "https://github.com/nocodb/nocodb/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.14.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "node-red": {
             "category": "Smart Home & IoT",
@@ -3107,7 +4641,28 @@
             "port": 1880,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "NODERED_WEB_PORT"
+            "ui_port_variable": "NODERED_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "nodered/node-red",
+                "rss_feed": "https://github.com/nodered/node-red/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.0.7",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "notify-push": {
             "conflicts_with": [],
@@ -3146,7 +4701,28 @@
                 "rust"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "10.11.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "ntfy": {
             "ai_instructions": "HTTP-based pub-sub notification service. Image binwiederhier/ntfy:latest. Command: serve. Port NTFY_WEB_PORT: 8077 (container port 80). Environment: NTFY_BASE_URL=http://localhost:8077, NTFY_CACHE_FILE=/var/cache/ntfy/cache.db, NTFY_ATTACHMENT_CACHE_DIR=/var/cache/ntfy/attachments. Volumes for cache and etc. user: \"0:0\". Group: Utilities.",
@@ -3194,7 +4770,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 80,
-            "ui_port_variable": "NTFY_WEB_PORT"
+            "ui_port_variable": "NTFY_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "binwiederhier/ntfy",
+                "rss_feed": "https://github.com/binwiederhier/ntfy/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "octoprint": {
             "conflicts_with": [],
@@ -3228,7 +4825,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_OCTOPRINT"
+            "ui_port_variable": "PORT_OCTOPRINT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "OctoPrint/OctoPrint",
+                "rss_feed": "https://github.com/OctoPrint/OctoPrint/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "master",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "ollama": {
             "component_version": "latest",
@@ -3275,7 +4893,28 @@
                 "GPU"
             ],
             "test_status": "tested",
-            "ui_port_variable": null
+            "ui_port_variable": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "ollama/ollama",
+                "rss_feed": "https://github.com/ollama/ollama/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "open-webui": {
             "ai_instructions": null,
@@ -3333,7 +4972,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 8080,
-            "ui_port_variable": "OPEN_WEBUI_PORT"
+            "ui_port_variable": "OPEN_WEBUI_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "open-webui/open-webui",
+                "rss_feed": "https://github.com/open-webui/open-webui/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "main",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "organizr": {
             "component_version": "latest",
@@ -3371,7 +5031,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_ORGANIZR"
+            "ui_port_variable": "PORT_ORGANIZR",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "pairdrop": {
             "component_version": "latest",
@@ -3414,7 +5095,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "3000",
-            "ui_port_variable": "PAIRDROP_WEB_PORT"
+            "ui_port_variable": "PAIRDROP_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v1.11.2-ls144",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "paperless-ngx": {
             "ai_instructions": "Multi-container document management and OCR stack. Main service ghcr.io/paperless-ngx/paperless-ngx:latest (njorddeploy-paperless-ngx) on port PAPERLESS_WEB_PORT: 8000. Broker redis:7-alpine (njorddeploy-paperless-broker). Database postgres:16-alpine (njorddeploy-paperless-db). Required env: PAPERLESS_REDIS=redis://njorddeploy-paperless-broker:6379, PAPERLESS_DBHOST=njorddeploy-paperless-db, PAPERLESS_DBNAME=paperless, PAPERLESS_DBUSER=paperless, PAPERLESS_DBPASS, PAPERLESS_SECRET_KEY (random secret), PAPERLESS_URL=http://localhost:8000, USERMAP_UID=0, USERMAP_GID=0. Volumes for data, media, export, consume. Group: Productivity.",
@@ -3463,7 +5165,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 8000,
-            "ui_port_variable": "PAPERLESS_WEB_PORT"
+            "ui_port_variable": "PAPERLESS_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "paperless-ngx/paperless-ngx",
+                "rss_feed": "https://github.com/paperless-ngx/paperless-ngx/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "7.4.11",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "pgadmin4": {
             "category": "Database Management",
@@ -3492,7 +5215,28 @@
             "port": 5050,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "PGADMIN_WEB_PORT"
+            "ui_port_variable": "PGADMIN_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "dpage/pgadmin4",
+                "rss_feed": "https://github.com/dpage/pgadmin4/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.14.6",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "phpmyadmin": {
             "component_version": "latest",
@@ -3537,7 +5281,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PHPMYADMIN_WEB_PORT"
+            "ui_port_variable": "PHPMYADMIN_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.2.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "pi-hole": {
             "component_version": "latest",
@@ -3579,7 +5344,28 @@
             "traefik_host_variable": "VIRTUAL_HOST",
             "traefik_internal_port": 80,
             "ui_path": "/admin",
-            "ui_port_variable": "PIHOLE_WEB_PORT"
+            "ui_port_variable": "PIHOLE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "pi-hole/pi-hole",
+                "rss_feed": "https://github.com/pi-hole/pi-hole/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2026.07.2",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "pish-fluffychat-web": {
             "conflicts_with": [],
@@ -3675,7 +5461,28 @@
                     "label": "Component Version",
                     "type": "string"
                 }
-            ]
+            ],
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.9.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "plausible": {
             "component_version": "v3.2.1",
@@ -3726,7 +5533,28 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "ui_port_variable": "PLAUSIBLE_WEB_PORT"
+            "ui_port_variable": "PLAUSIBLE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "plausible/community-edition",
+                "rss_feed": "https://github.com/plausible/community-edition/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "1.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "portainer": {
             "component_version": "lts",
@@ -3768,7 +5596,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORTAINER_WEB_PORT"
+            "ui_port_variable": "PORTAINER_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "portainer/portainer",
+                "rss_feed": "https://github.com/portainer/portainer/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "lts",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "privatebin": {
             "component_version": "latest",
@@ -3811,7 +5660,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "PRIVATEBIN_WEB_PORT"
+            "ui_port_variable": "PRIVATEBIN_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "privatebin/nginx-fpm-alpine",
+                "rss_feed": "https://github.com/privatebin/nginx-fpm-alpine/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.0.6",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "prometheus": {
             "component_version": "v2.54.1",
@@ -3877,7 +5747,28 @@
                     "label": "cAdvisor Web Port",
                     "type": "port"
                 }
-            ]
+            ],
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "prom/prometheus",
+                "rss_feed": "https://github.com/prom/prometheus/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.54.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "prosody": {
             "conflicts_with": [],
@@ -3911,7 +5802,28 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": 80
+            "traefik_internal_port": 80,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "prowlarr": {
             "component_version": "latest",
@@ -3948,7 +5860,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PROWLARR_WEB_PORT"
+            "ui_port_variable": "PROWLARR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "Prowlarr/Prowlarr",
+                "rss_feed": "https://github.com/Prowlarr/Prowlarr/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.5.2.5491-ls159",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "qbittorrent": {
             "component_version": "latest",
@@ -3986,7 +5919,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "QBITTORRENT_WEB_PORT"
+            "ui_port_variable": "QBITTORRENT_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "linuxserver/docker-qbittorrent",
+                "rss_feed": "https://github.com/linuxserver/docker-qbittorrent/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.2.3_v2.0.14-ls476",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "radarr": {
             "component_version": "latest",
@@ -4024,7 +5978,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "RADARR_WEB_PORT"
+            "ui_port_variable": "RADARR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "Radarr/Radarr",
+                "rss_feed": "https://github.com/Radarr/Radarr/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "6.3.0.10514-ls316",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "romm": {
             "category": "Media",
@@ -4053,7 +6028,28 @@
             "port": 8090,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "ROMM_WEB_PORT"
+            "ui_port_variable": "ROMM_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "zurdi15/romm",
+                "rss_feed": "https://github.com/zurdi15/romm/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "11.8.9",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "rustdesk-server": {
             "component_version": "latest",
@@ -4097,7 +6093,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "21116",
-            "ui_port_variable": "RUSTDESK_HBBS_PORT"
+            "ui_port_variable": "RUSTDESK_HBBS_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "rustdesk/rustdesk-server",
+                "rss_feed": "https://github.com/rustdesk/rustdesk-server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.1.16",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "sabnzbd": {
             "component_version": "latest",
@@ -4135,7 +6152,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "SABNZBD_WEB_PORT"
+            "ui_port_variable": "SABNZBD_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "sabnzbd/sabnzbd",
+                "rss_feed": "https://github.com/sabnzbd/sabnzbd/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.1.3-ls273",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "scrutiny": {
             "component_version": "master-omnibus",
@@ -4179,7 +6217,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "SCRUTINY_WEB_PORT"
+            "ui_port_variable": "SCRUTINY_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "AnalogJ/scrutiny",
+                "rss_feed": "https://github.com/AnalogJ/scrutiny/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "master-omnibus",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "scrypted": {
             "component_version": "latest",
@@ -4217,7 +6276,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_SCRYPTED"
+            "ui_port_variable": "PORT_SCRYPTED",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "koush/scrypted",
+                "rss_feed": "https://github.com/koush/scrypted/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "searxng": {
             "ai_instructions": "Privacy-respecting metasearch engine. Service searxng (searxng/searxng:latest) on port SEARXNG_WEB_PORT: 8888 (container port 8080). Service searxng-redis (redis:7-alpine). Environment: SEARXNG_BASE_URL=http://localhost:8888, SEARXNG_SECRET, SEARXNG_REDIS_URL=redis://njorddeploy-searxng-redis:6379/0. Config volume /etc/searxng for settings.yml. user: \"0:0\". Group: Utilities.",
@@ -4267,7 +6347,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "SEARXNG_WEB_PORT"
+            "ui_port_variable": "SEARXNG_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "searxng/searxng",
+                "rss_feed": "https://github.com/searxng/searxng/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "7.4.11",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "semaphore": {
             "component_version": "latest",
@@ -4309,7 +6410,28 @@
                 "ui"
             ],
             "test_status": "tested",
-            "ui_port_variable": "SEMAPHORE_PORT"
+            "ui_port_variable": "SEMAPHORE_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "semaphoreui/semaphore",
+                "rss_feed": "https://github.com/semaphoreui/semaphore/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.19.14",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "sftpgo": {
             "component_version": "latest",
@@ -4353,7 +6475,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "8080",
-            "ui_port_variable": "SFTPGO_WEB_PORT"
+            "ui_port_variable": "SFTPGO_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "drakkan/sftpgo",
+                "rss_feed": "https://github.com/drakkan/sftpgo/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.7.5",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "shlink": {
             "category": "Utilities",
@@ -4382,7 +6525,28 @@
             "port": 8089,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "SHLINK_WEB_PORT"
+            "ui_port_variable": "SHLINK_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "shlinkio/shlink",
+                "rss_feed": "https://github.com/shlinkio/shlink/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.1.6",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "silverbullet": {
             "component_version": "latest",
@@ -4426,7 +6590,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "3000",
-            "ui_port_variable": "SILVERBULLET_WEB_PORT"
+            "ui_port_variable": "SILVERBULLET_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "zefhemel/silverbullet",
+                "rss_feed": "https://github.com/zefhemel/silverbullet/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.10.0-runtime-api",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "sonarr": {
             "component_version": "latest",
@@ -4464,7 +6649,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "SONARR_WEB_PORT"
+            "ui_port_variable": "SONARR_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "Sonarr/Sonarr",
+                "rss_feed": "https://github.com/Sonarr/Sonarr/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "4.0.19.2979-ls324",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "speedtest-tracker": {
             "category": "Utilities",
@@ -4493,7 +6699,28 @@
             "port": 8765,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "SPEEDTEST_WEB_PORT"
+            "ui_port_variable": "SPEEDTEST_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v1.15.0-ls171",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "stirling-pdf": {
             "conflicts_with": [],
@@ -4534,7 +6761,28 @@
                 "productivity"
             ],
             "test_status": "tested",
-            "ui_port_variable": "STIRLING_PDF_HTTP_PORT"
+            "ui_port_variable": "STIRLING_PDF_HTTP_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "Stirling-Tools/Stirling-PDF",
+                "rss_feed": "https://github.com/Stirling-Tools/Stirling-PDF/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.14.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "syncthing": {
             "category": "Storage",
@@ -4563,7 +6811,28 @@
             "port": 8384,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "SYNCTHING_WEB_PORT"
+            "ui_port_variable": "SYNCTHING_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "syncthing/syncthing",
+                "rss_feed": "https://github.com/syncthing/syncthing/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.1.5",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "tautulli": {
             "category": "Media",
@@ -4592,7 +6861,28 @@
             "port": 8181,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "TAUTULLI_WEB_PORT"
+            "ui_port_variable": "TAUTULLI_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v2.18.1-ls244",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "technitium-dns": {
             "ai_instructions": null,
@@ -4654,7 +6944,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 5380,
-            "ui_port_variable": "DNS_WEB_CONSOLE_PORT"
+            "ui_port_variable": "DNS_WEB_CONSOLE_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "technitium/dns-server",
+                "rss_feed": "https://github.com/technitium/dns-server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "24.04",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "teslamate": {
             "component_version": "latest",
@@ -4698,7 +7009,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "4000",
-            "ui_port_variable": "TESLAMATE_WEB_PORT"
+            "ui_port_variable": "TESLAMATE_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "teslamate/teslamate",
+                "rss_feed": "https://github.com/teslamate/teslamate/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "16.15",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "traefik": {
             "component_version": "latest",
@@ -4747,7 +7079,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "TRAEFIK_DASHBOARD_PORT"
+            "ui_port_variable": "TRAEFIK_DASHBOARD_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "traefik/traefik",
+                "rss_feed": "https://github.com/traefik/traefik/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v3.7.13",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "transmission": {
             "component_version": "latest",
@@ -4790,7 +7143,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "9091",
-            "ui_port_variable": "TRANSMISSION_WEB_PORT"
+            "ui_port_variable": "TRANSMISSION_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "linuxserver/docker-transmission",
+                "rss_feed": "https://github.com/linuxserver/docker-transmission/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "4.1.3-r0-ls361",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "trilium": {
             "category": "Productivity",
@@ -4819,7 +7193,28 @@
             "port": 8087,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "TRILIUM_WEB_PORT"
+            "ui_port_variable": "TRILIUM_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "triliumnext/notes",
+                "rss_feed": "https://github.com/triliumnext/notes/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "v0.95.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "umami": {
             "component_version": "postgresql-latest",
@@ -4864,7 +7259,28 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "ui_port_variable": "UMAMI_WEB_PORT"
+            "ui_port_variable": "UMAMI_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "umami-software/umami",
+                "rss_feed": "https://github.com/umami-software/umami/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "1.19",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "unbound": {
             "component_version": "latest",
@@ -4900,7 +7316,28 @@
                 "self-hosted"
             ],
             "test_status": "tested",
-            "traefik_internal_port": null
+            "traefik_internal_port": null,
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "mvance/unbound",
+                "rss_feed": "https://github.com/mvance/unbound/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "latest",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "unifi-controller": {
             "component_version": "latest",
@@ -4938,7 +7375,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "PORT_UNIFI"
+            "ui_port_variable": "PORT_UNIFI",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": null,
+                "rss_feed": null,
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "8.0.24-ls221",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "unpackerr": {
             "component_version": "latest",
@@ -4982,7 +7440,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "5656",
-            "ui_port_variable": "UNPACKERR_METRICS_PORT"
+            "ui_port_variable": "UNPACKERR_METRICS_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "golift/unpackerr",
+                "rss_feed": "https://github.com/golift/unpackerr/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "0.16.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "uptime-kuma": {
             "component_version": "latest",
@@ -5021,7 +7500,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "UPTIME_KUMA_PORT"
+            "ui_port_variable": "UPTIME_KUMA_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "louislam/uptime-kuma",
+                "rss_feed": "https://github.com/louislam/uptime-kuma/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "18.20.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": "2.5.5",
+                "status": "awaiting_approval",
+                "test_result": null,
+                "entered_staging_at": "2026-09-20T12:44:00Z",
+                "grace_days": 14
+            }
         },
         "vaultwarden": {
             "component_version": "latest",
@@ -5059,7 +7559,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "VAULTWARDEN_WEB_PORT"
+            "ui_port_variable": "VAULTWARDEN_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "dani-garcia/vaultwarden",
+                "rss_feed": "https://github.com/dani-garcia/vaultwarden/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "1.37.3",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "vikunja": {
             "category": "Productivity",
@@ -5088,7 +7609,28 @@
             "port": 3456,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "VIKUNJA_WEB_PORT"
+            "ui_port_variable": "VIKUNJA_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "vikunja/vikunja",
+                "rss_feed": "https://github.com/vikunja/vikunja/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.6.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "wallabag": {
             "category": "Productivity",
@@ -5117,7 +7659,28 @@
             "port": 8085,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "WALLABAG_WEB_PORT"
+            "ui_port_variable": "WALLABAG_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "wallabag/wallabag",
+                "rss_feed": "https://github.com/wallabag/wallabag/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "2.6.14",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "wallos": {
             "component_version": "latest",
@@ -5160,7 +7723,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": "80",
-            "ui_port_variable": "WALLOS_WEB_PORT"
+            "ui_port_variable": "WALLOS_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "ellite/Wallos",
+                "rss_feed": "https://github.com/ellite/Wallos/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "5.7.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "web-notepad": {
             "component_version": "latest",
@@ -5198,7 +7782,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": null,
-            "ui_port_variable": "WEB_NOTEPAD_WEB_PORT"
+            "ui_port_variable": "WEB_NOTEPAD_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "pajikos/minimalist-web-notepad",
+                "rss_feed": "https://github.com/pajikos/minimalist-web-notepad/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "8.2.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "wg-easy": {
             "ai_instructions": "Ensure WireGuard port 51820 UDP and Web UI port 51821 TCP are configured with sensible defaults.",
@@ -5235,7 +7840,28 @@
             ],
             "test_status": "tested",
             "traefik_internal_port": 51821,
-            "ui_port_variable": "WG_EASY_WEB_PORT"
+            "ui_port_variable": "WG_EASY_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "wg-easy/wg-easy",
+                "rss_feed": "https://github.com/wg-easy/wg-easy/releases.atom",
+                "registry_type": "ghcr",
+                "latest_upstream_version": "22.16.0",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "woodpecker-ci": {
             "category": "Developer Tools",
@@ -5264,7 +7890,28 @@
             "port": 9005,
             "requires_root": false,
             "test_status": "tested",
-            "ui_port_variable": "WOODPECKER_WEB_PORT"
+            "ui_port_variable": "WOODPECKER_WEB_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "woodpeckerci/woodpecker-server",
+                "rss_feed": "https://github.com/woodpeckerci/woodpecker-server/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": "3.18.1",
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
         },
         "zigbee2mqtt": {
             "component_version": "latest",
@@ -5305,7 +7952,99 @@
             ],
             "test_status": "hardware_dependent",
             "traefik_internal_port": null,
-            "ui_port_variable": "ZIGBEE2MQTT_FRONTEND_PORT"
+            "ui_port_variable": "ZIGBEE2MQTT_FRONTEND_PORT",
+            "release_track": {
+                "track": "standard",
+                "otap_role": "production",
+                "lts_identifier": null
+            },
+            "upstream": {
+                "github_repo": "Koenkk/zigbee2mqtt",
+                "rss_feed": "https://github.com/Koenkk/zigbee2mqtt/releases.atom",
+                "registry_type": "dockerhub",
+                "latest_upstream_version": null,
+                "last_upstream_check": null,
+                "is_deprecated": false,
+                "deprecation_note": null
+            },
+            "staging": {
+                "candidate_version": null,
+                "status": "idle",
+                "test_result": null,
+                "entered_staging_at": null,
+                "grace_days": 14
+            }
+        },
+        "forgejo": {
+            "category": "Developer",
+            "conflicts_with": [],
+            "default_version": "latest",
+            "depends_on": [],
+            "description": "Beyond coding. We forge. Self-hosted lightweight software forge, hard fork of Gitea.",
+            "docker_service_name": "forgejo",
+            "group": "Developer",
+            "has_configuration": true,
+            "has_ui": true,
+            "ui_port_variable": "FORGEJO_WEB_PORT",
+            "id": "forgejo",
+            "image_name": "codeberg.org/forgejo/forgejo",
+            "is_agent": false,
+            "name": "Forgejo",
+            "package_id": "general-stack",
+            "port": 3000,
+            "required_variables": [
+                {
+                    "default": "3000",
+                    "description": "Port for the Forgejo web interface.",
+                    "id": "FORGEJO_WEB_PORT",
+                    "label": "Forgejo Web Port",
+                    "type": "port"
+                },
+                {
+                    "default": "2222",
+                    "description": "Port for Git operations over SSH.",
+                    "id": "FORGEJO_SSH_PORT",
+                    "label": "Forgejo SSH Port",
+                    "type": "port"
+                },
+                {
+                    "default": "127.0.0.1",
+                    "description": "IP address or domain name of the host.",
+                    "id": "HOST_IP",
+                    "label": "Host IP / Domain",
+                    "type": "text"
+                }
+            ],
+            "requires_root": false,
+            "resource_profile": {
+                "cpu": "medium",
+                "ram": "medium",
+                "storage_type": "persistent"
+            },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": ""
+            },
+            "tags": [
+                "git",
+                "vcs",
+                "ci-cd",
+                "self-hosted"
+            ],
+            "test_status": "stable",
+            "traefik_internal_port": null,
+            "lifecycle_monitoring": {
+                "upstream_tracker": "forgejo",
+                "codeberg_repo": "forgejo/forgejo",
+                "release_monitoring": true
+            }
         }
     },
     "packages": {
