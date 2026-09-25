@@ -1,0 +1,36 @@
+{
+    "variables": [
+        {
+            "default": "8080",
+            "description": "Port to access the GeoLens Web Map interface.",
+            "id": "PORT_GEOLENS",
+            "label": "GeoLens Web Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "8001",
+            "description": "Port for the GeoLens FastAPI and OGC API endpoints.",
+            "id": "GEOLENS_API_PORT",
+            "label": "GeoLens API Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/geolens/data",
+            "description": "Host path for storing datasets and PostGIS database.",
+            "id": "GEOLENS_DATA_PATH",
+            "label": "GeoLens Storage Path",
+            "required": "always",
+            "type": "path"
+        },
+        {
+            "default": "ChangeMeSecurePassword123!",
+            "description": "Password for internal PostGIS relational store.",
+            "id": "GEOLENS_DB_PASSWORD",
+            "label": "GeoLens Database Password",
+            "required": "always",
+            "type": "password"
+        }
+    ]
+}

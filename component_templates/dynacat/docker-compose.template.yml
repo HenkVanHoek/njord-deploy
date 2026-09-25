@@ -1,0 +1,22 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Fast Go binary. Real-time WebSocket homelab dashboard."
+# breaking_changes: "None"
+services:
+  dynacat:
+    image: panonim/dynacat:latest
+    container_name: njorddeploy-dynacat
+    restart: unless-stopped
+    ports:
+      - "{{ PORT_DYNACAT }}:8080"
+    volumes:
+      - "{{ DYNACAT_CONFIG_PATH }}:/app/config"
+      - "{{ DYNACAT_ASSETS_PATH }}:/app/assets"
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

@@ -1,0 +1,50 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Multi-arch ARM64/AMD64. Runs PostGIS, FastAPI, Vite web client."
+# breaking_changes: "None"
+services:
+  geolens-web:
+    image: ghcr.io/geolens-io/geolens-frontend:latest
+    container_name: njorddeploy-geolens-web
+    restart: unless-stopped
+    ports:
+      - "{{ PORT_GEOLENS }}:80"
+    depends_on:
+      - geolens-api
+    networks:
+      - njorddeploy_net
+
+  geolens-api:
+    image: ghcr.io/geolens-io/geolens-api:latest
+    container_name: njorddeploy-geolens-api
+    restart: unless-stopped
+    ports:
+      - "{{ GEOLENS_API_PORT }}:8000"
+    depends_on:
+      - geolens-db
+    environment:
+      - "POSTGRES_HOST=geolens-db"
+      - "POSTGRES_DB=geolens"
+      - "POSTGRES_USER=geolens"
+      - "POSTGRES_PASSWORD={{ GEOLENS_DB_PASSWORD }}"
+    volumes:
+      - "{{ GEOLENS_DATA_PATH }}/storage:/data/storage"
+    networks:
+      - njorddeploy_net
+
+  geolens-db:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: njorddeploy-geolens-db
+    restart: unless-stopped
+    environment:
+      - "POSTGRES_DB=geolens"
+      - "POSTGRES_USER=geolens"
+      - "POSTGRES_PASSWORD={{ GEOLENS_DB_PASSWORD }}"
+    volumes:
+      - "{{ GEOLENS_DATA_PATH }}/db:/var/lib/postgresql/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

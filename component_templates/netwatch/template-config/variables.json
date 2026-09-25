@@ -1,0 +1,20 @@
+{
+    "variables": [
+        {
+            "default": "8000",
+            "description": "Port to access the Netwatch web interface.",
+            "id": "PORT_NETWATCH",
+            "label": "Netwatch HTTP Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/netwatch/data",
+            "description": "Host directory for Netwatch database and configuration.",
+            "id": "NETWATCH_DATA_PATH",
+            "label": "Netwatch Data Path",
+            "required": "always",
+            "type": "path"
+        }
+    ]
+}

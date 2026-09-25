@@ -1,0 +1,28 @@
+{
+    "variables": [
+        {
+            "default": "42824",
+            "description": "Port to access the Hatchdoor Web UI and MCP endpoint.",
+            "id": "PORT_HATCHDOOR",
+            "label": "Hatchdoor Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/hatchdoor/vault",
+            "description": "Host path containing Markdown notes and documents.",
+            "id": "HATCHDOOR_VAULT_PATH",
+            "label": "Markdown Vault Path",
+            "required": "always",
+            "type": "path"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/hatchdoor/cache",
+            "description": "Host path for storing generated SQLite search cache.",
+            "id": "HATCHDOOR_CACHE_PATH",
+            "label": "Hatchdoor Cache Path",
+            "required": "always",
+            "type": "path"
+        }
+    ]
+}

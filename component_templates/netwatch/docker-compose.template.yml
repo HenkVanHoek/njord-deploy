@@ -1,0 +1,18 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Requires host network mode or NET_ADMIN/NET_RAW capabilities."
+# breaking_changes: "None"
+services:
+  netwatch:
+    image: ghcr.io/emanuele-f/netwatch:latest
+    container_name: njorddeploy-netwatch
+    restart: unless-stopped
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - "{{ NETWATCH_DATA_PATH }}:/data"
+    environment:
+      - "TZ={{ TZ }}"
+      - "PORT={{ PORT_NETWATCH }}"

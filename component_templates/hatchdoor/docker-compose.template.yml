@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "Rootless and distroless. Provides web UI and MCP server."
+# breaking_changes: "None"
+services:
+  hatchdoor:
+    image: battermanz/hatchdoor:latest
+    container_name: njorddeploy-hatchdoor
+    restart: unless-stopped
+    ports:
+      - "{{ PORT_HATCHDOOR }}:42824"
+    environment:
+      - "HOST=0.0.0.0"
+      - "PORT=42824"
+      - "VAULT_PATH=/data/vault"
+      - "HATCHDOOR_CACHE_DB=/data/cache/hatchdoor-cache.sqlite3"
+    volumes:
+      - "{{ HATCHDOOR_VAULT_PATH }}:/data/vault"
+      - "{{ HATCHDOOR_CACHE_PATH }}:/data/cache"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

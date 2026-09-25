@@ -104,6 +104,7 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Netwatch | A network presence and device monitoring system featuring active and passive scanning, timeline analysis, captive portal access control, and device grouping. | [Link](https://github.com/emanuele-f/netwatch) |
 | Unbound | A secure, validating, recursive, and caching DNS resolver designed for privacy, preventing upstream ISP DNS logging when paired with Pi-hole or AdGuard. | [Link](https://www.nlnetlabs.nl/projects/unbound/about/) |
 | Vaultwarden | A lightweight, self-hosted password manager compatible with Bitwarden clients. It provides almost all of the features of the official server without the resource-heavy footprint. | [Link](https://github.com/dani-garcia/vaultwarden) |
 | Web Notepad | A minimal, web-based notepad application for quick note-taking, text sharing, and viewing system post-deployment summaries. | [Link](https://github.com/pajikos/minimalist-web-notepad) |
@@ -128,6 +129,7 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | ChangeDetection.io | Self-hosted website change detection, website monitor, restock alerts and notification service. | N/A |
 | CyberChef | The Cyber Swiss Army Knife - a web app for encryption, encoding, compression, and data analysis. | N/A |
+| GeoLens | Self-hosted geospatial data catalog and interactive web map builder with PostGIS, vector tiles, OGC API support, and semantic spatial search. | [Link](https://getgeolens.com) |
 | Grocy | ERP beyond your fridge - self-hosted grocery, household management and inventory solution. | N/A |
 | Headscale | An open source, self-hosted implementation of the Tailscale control server, providing a private network for your devices. | N/A |
 | Microbin | Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service. | [Link](https://microbin.eu/) |
@@ -151,6 +153,7 @@ This document is automatically generated from the project metadata. It lists the
 | Firefly III | Free and open source personal finance manager to track expenses, income, budgets, and bank accounts. | [Link](https://www.firefly-iii.org/) |
 | Flatnotes | A self-hosted, database-less flat-file markdown note taking web app with fast search and wikilinks. | N/A |
 | Focalboard | Open source, multilingual project management and personal task board alternative to Trello, Notion, and Asana. | N/A |
+| Hatchdoor | Agent-native web app and Model Context Protocol (MCP) server for Obsidian-style Markdown vaults with semantic search, wikilinks, and graph views. | [Link](https://github.com/BattermanZ/Hatchdoor) |
 | IT Tools | Useful web tools for developers and sysadmins. | N/A |
 | Mealie | A self-hosted recipe manager, meal planner, and shopping list with a RestAPI backend and a reactive frontend built in Vue for a pleasant user experience for the whole family. Easily add recipes into your database by providing the URL and Mealie will automatically import the relevant data, or add a family recipe with the UI editor. The Mealie Docker image often supports PUID/PGID environment variables for file ownership within the container, even if the container runs as root. | N/A |
 | Memos | A privacy-first, lightweight note-taking service with markdown support and social timeline view. | N/A |
@@ -187,6 +190,7 @@ This document is automatically generated from the project metadata. It lists the
 
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
+| Forgejo | Beyond coding. We forge. Self-hosted lightweight software forge, hard fork of Gitea. | N/A |
 | Gitea | A painless, self-hosted Git service written in Go with repository management, code review, issues, and wikis. | N/A |
 | GitLab | A complete DevOps platform for project planning, source code management, CI/CD, and monitoring. | [Link](https://about.gitlab.com/) |
 | NocoDB | Open Source Airtable Alternative that turns any SQL database into a smart spreadsheet. | N/A |
@@ -231,6 +235,14 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | pgAdmin 4 | Comprehensive open source administration and management tool for PostgreSQL databases. | N/A |
 
+## Dashboards
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Dashdot | Modern server dashboard for displaying CPU, RAM, storage, and network statistics. | [Link](https://getdashdot.com/) |
+| Dynacat | A modern, real-time homelab dashboard and Glance fork featuring WebSockets, dynamic widgets, live feed aggregators, and minimal resource usage. | [Link](https://github.com/Panonim/dynacat) |
+| Glance Dashboard | Extremely fast, self-contained dashboard written in Go for server feeds, weather, bookmarks, and services. | [Link](https://github.com/glanceapp/glance) |
+
 ## System & Tools
 
 | Service | Description | Project Homepage / Repository |
@@ -241,13 +253,6 @@ This document is automatically generated from the project metadata. It lists the
 | PrivateBin | Zero-knowledge, client-side encrypted minimalist pastebin application. | [Link](https://privatebin.info/) |
 | RustDesk Server | Self-hosted rendezvous and relay server for RustDesk remote desktop clients. | [Link](https://rustdesk.com/) |
 | Scrutiny | WebUI for smartd S.M.A.R.T. monitoring and hard drive health inspection. | [Link](https://github.com/AnalogJ/scrutiny) |
-
-## Dashboards
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| Dashdot | Modern server dashboard for displaying CPU, RAM, storage, and network statistics. | [Link](https://getdashdot.com/) |
-| Glance Dashboard | Extremely fast, self-contained dashboard written in Go for server feeds, weather, bookmarks, and services. | [Link](https://github.com/glanceapp/glance) |
 
 ## Cloud & Storage
 

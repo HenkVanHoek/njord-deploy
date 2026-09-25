@@ -1,0 +1,28 @@
+{
+    "variables": [
+        {
+            "default": "8092",
+            "description": "Port to access the Dynacat dashboard.",
+            "id": "PORT_DYNACAT",
+            "label": "Dynacat Web Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/dynacat/config",
+            "description": "Host path for Dynacat YAML configuration.",
+            "id": "DYNACAT_CONFIG_PATH",
+            "label": "Dynacat Config Path",
+            "required": "always",
+            "type": "path"
+        },
+        {
+            "default": "{{ CONFIG_BASE_PATH }}/dynacat/assets",
+            "description": "Host path for custom dashboard icons and assets.",
+            "id": "DYNACAT_ASSETS_PATH",
+            "label": "Dynacat Assets Path",
+            "required": "always",
+            "type": "path"
+        }
+    ]
+}

@@ -73,6 +73,11 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Path to the njord-deploy-site repository.",
     )
+    parser.add_argument(
+        "--skip-readmes",
+        action="store_true",
+        help="Skip auto-generating component and stack READMEs before syncing.",
+    )
     return parser.parse_args()
 
 
@@ -217,8 +222,14 @@ def commit_and_push(
 ) -> None:
     """Stages, commits, and optionally pushes changes in the target repository."""
     # Stage synced artifacts
+    stage_items = ["components_metadata.json", "component_templates"]
+    if (target_repo / "stacks").exists():
+        stage_items.append("stacks")
+    if (target_repo / "CATALOG.md").exists():
+        stage_items.append("CATALOG.md")
+
     run_git_command(
-        ["add", "components_metadata.json", "component_templates"],
+        ["add"] + stage_items,
         cwd=target_repo,
     )
 
@@ -349,6 +360,48 @@ def main() -> int:
         pkg_count,
     )
 
+    # Auto-generate component and stack READMEs if enabled
+    if not args.skip_readmes:
+        logger.info("Verifying component and stack README documentation...")
+        if str(source_root) not in sys.path:
+            sys.path.insert(0, str(source_root))
+        try:
+            from scripts.generate_component_readmes import (
+                generate_catalog_doc,
+                generate_component_readme,
+                generate_stack_readme,
+                write_file_if_changed,
+            )
+
+            group_rules = metadata_data.get("_njorddeploy", {}).get("group_rules", {})
+            group_order = metadata_data.get("_njorddeploy", {}).get("group_order", [])
+            components = metadata_data.get("components", {})
+            packages = metadata_data.get("packages", {})
+
+            for comp_id, comp_meta in sorted(components.items()):
+                comp_dir = source_templates / comp_id
+                if comp_dir.exists():
+                    rm_text = generate_component_readme(comp_id, comp_dir, comp_meta)
+                    write_file_if_changed(comp_dir / "README.md", rm_text, args.check)
+
+            source_stacks = source_root / "stacks"
+            for pkg_id, pkg_meta in sorted(packages.items()):
+                st_text = generate_stack_readme(
+                    pkg_id, pkg_meta, components, source_templates
+                )
+                write_file_if_changed(
+                    source_stacks / pkg_id / "README.md", st_text, args.check
+                )
+
+            cat_text = generate_catalog_doc(
+                components, packages, group_rules, group_order
+            )
+            write_file_if_changed(
+                source_root / "docs" / "CATALOG.md", cat_text, args.check
+            )
+        except Exception as err:
+            logger.warning("Could not auto-generate READMEs: %s", err)
+
     # Sync metadata
     metadata_changed = sync_metadata(
         source_metadata, target_metadata, check_only=args.check
@@ -369,6 +422,31 @@ def main() -> int:
         deleted,
         unchanged,
     )
+
+    # Sync stacks
+    source_stacks_dir = source_root / "stacks"
+    target_stacks_dir = target_repo / "stacks"
+    if source_stacks_dir.exists():
+        s_up, s_del, s_unch = sync_templates(
+            source_stacks_dir, target_stacks_dir, check_only=args.check
+        )
+        logger.info(
+            "Stacks summary: %d updated/added, %d deleted, %d unchanged.",
+            s_up,
+            s_del,
+            s_unch,
+        )
+
+    # Sync CATALOG.md
+    source_cat_file = source_root / "docs" / "CATALOG.md"
+    target_cat_file = target_repo / "CATALOG.md"
+    if source_cat_file.exists():
+        cat_updated = sync_metadata(
+            source_cat_file, target_cat_file, check_only=args.check
+        )
+        if cat_updated:
+            action = "Would update" if args.check else "Updated"
+            logger.info("%s CATALOG.md in components repository.", action)
 
     # Commit and push components repo if requested
     if not args.check and (args.commit or args.push):
