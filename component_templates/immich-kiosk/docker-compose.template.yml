@@ -1,0 +1,23 @@
+# status: "tested"
+# last_tested_version: "v3.2.2"
+# platform_notes: "Tested on Proxmox VM: docker (v3.2.2, 2026-09-27)."
+# breaking_changes: "None"
+services:
+  immich-kiosk:
+    container_name: njorddeploy-immich-kiosk
+    image: ghcr.io/damongolding/immich-kiosk:{{ component_version if (component_version and component_version != 'latest') else 'latest' }}
+    tty: true
+    restart: unless-stopped
+    ports:
+      - "{{ IMMICH_KIOSK_PORT | default('2284', true) }}:3000"
+    environment:
+      - "KIOSK_IMMICH_URL={{ KIOSK_IMMICH_URL | default('http://njorddeploy-immich-server:2283', true) }}"
+      - "KIOSK_IMMICH_API_KEY={{ KIOSK_IMMICH_API_KEY | default('initial_setup_token', true) }}"
+      - "KIOSK_DURATION={{ KIOSK_DURATION | default('60', true) }}"
+      - "TZ={{ TZ | default('Europe/Amsterdam', true) }}"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

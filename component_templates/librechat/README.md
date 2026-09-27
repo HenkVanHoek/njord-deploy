@@ -8,7 +8,7 @@
 
 > LibreChat is a self-hosted AI chat platform that unifies all major AI providers in a single, privacy-focused interface. It features AI Agents, Code Interpreter, custom actions, conversation search, and enterprise-ready multi-user authentication. The service runs as root (user: 0:0) to manage volume permissions.
 
-- **Source Repository:** [github.com/danny-avila/librechat](https://github.com/danny-avila/librechat)
+- **Source Repository:** [github.com/LibreChat-AI/LibreChat](https://github.com/LibreChat-AI/LibreChat)
 - **Container Image:** `mongo:6.0`
 
 ---

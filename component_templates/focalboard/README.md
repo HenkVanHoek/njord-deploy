@@ -8,7 +8,7 @@
 
 > Open source, multilingual project management and personal task board alternative to Trello, Notion, and Asana.
 
-- **Source Repository:** [github.com/mattermost/focalboard](https://github.com/mattermost/focalboard)
+- **Source Repository:** [github.com/mattermost-community/focalboard](https://github.com/mattermost-community/focalboard)
 - **Container Image:** `mattermost/focalboard`
 
 ---

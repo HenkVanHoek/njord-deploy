@@ -8,7 +8,7 @@
 
 > Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your music collection from any browser or mobile device. It's like your personal Spotify! The container runs as root (user: 0:0) to ensure proper file permissions for mounted volumes.
 
-- **Source Repository:** [github.com/deluan/navidrome](https://github.com/deluan/navidrome)
+- **Source Repository:** [github.com/navidrome/navidrome](https://github.com/navidrome/navidrome)
 - **Container Image:** `deluan/navidrome`
 
 ---

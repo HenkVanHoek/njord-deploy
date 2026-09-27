@@ -1,0 +1,36 @@
+{
+    "variables": [
+        {
+            "default": "2284",
+            "description": "Port to access the Immich Kiosk web interface.",
+            "id": "IMMICH_KIOSK_PORT",
+            "label": "Immich Kiosk Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "http://njorddeploy-immich-server:2283",
+            "description": "Internal or external URL to the Immich server (e.g. http://njorddeploy-immich-server:2283).",
+            "id": "KIOSK_IMMICH_URL",
+            "label": "Immich Server URL",
+            "required": "always",
+            "type": "string"
+        },
+        {
+            "default": "initial_setup_token",
+            "description": "API Key generated in Immich (Account Settings -> API Keys).",
+            "id": "KIOSK_IMMICH_API_KEY",
+            "label": "Immich API Key",
+            "required": "",
+            "type": "password"
+        },
+        {
+            "default": "60",
+            "description": "Duration in seconds each photo remains on screen.",
+            "id": "KIOSK_DURATION",
+            "label": "Slide Duration (s)",
+            "required": "",
+            "type": "string"
+        }
+    ]
+}

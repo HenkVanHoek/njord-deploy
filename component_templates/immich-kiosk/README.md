@@ -1,16 +1,16 @@
-# 🏗️ NjordDeploy: Miniflux
+# 🏗️ NjordDeploy: Immich Kiosk
 
 [![Proxmox Tested](https://img.shields.io/badge/Proxmox%20VE-Tested%20Passing-10b981.svg)](/docs/test-reports/LATEST_RUN.md)
 [![Architecture](https://img.shields.io/badge/Arch-ARM64%20%7C%20AMD64-blue.svg)]()
 [![Container Engine](https://img.shields.io/badge/Engine-Docker%20%7C%20Rootless%20Podman-orange.svg)]()
 [![Data Sovereignty](https://img.shields.io/badge/Data%20Sovereignty-100%25%20Self--Hosted-green.svg)]()
-[![Category](https://img.shields.io/badge/Category-News%20%26%20Bookmarks-purple.svg)]()
+[![Category](https://img.shields.io/badge/Category-Media%20Servers-purple.svg)]()
 
-> Minimalist, fast, and opinionated RSS feed reader written in Go.
+> Immich Kiosk is an ambient digital photo frame and slideshow client designed for smart TVs, tablets, and wall displays powered by your Immich server.
 
-- **Upstream Project:** [Miniflux](https://miniflux.app/)
-- **Source Repository:** [github.com/miniflux/v2](https://github.com/miniflux/v2)
-- **Container Image:** `postgres:16-alpine`
+- **Upstream Project:** [Immich Kiosk](https://github.com/damongolding/immich-kiosk)
+- **Source Repository:** [github.com/damongolding/immich-kiosk](https://github.com/damongolding/immich-kiosk)
+- **Container Image:** `ghcr.io/damongolding/immich-kiosk`
 
 ---
 
@@ -24,44 +24,29 @@
 - **Engine Freedom:** Tested and supported under standard **Docker Engine**
   as well as unprivileged rootless **Podman** environments.
 - **Resource Footprint:**
-  - **RAM Profile:** Medium
-  - **CPU Profile:** Medium
-  - **Storage:** Persistent
+  - **RAM Profile:** Low
+  - **CPU Profile:** Low
+  - **Storage:** Ephemeral
 > **Platform Verification Notes:**
-> Tested on Proxmox LXC: docker (1.19, 2026-09-14), podman (16.15, 2026-09-14); Proxmox VM: docker (16.15, 2026-09-14), podman (1.19, 2026-09-14).
+> Tested on Proxmox VM: docker (v3.2.2, 2026-09-27).
 ---
 
 ## 🚀 Quick Start (Standalone Docker Compose)
 
 ```yaml
 services:
-  miniflux:
-    image: "miniflux/miniflux:latest"
-    container_name: njorddeploy-miniflux
+  immich-kiosk:
+    container_name: njorddeploy-immich-kiosk
+    image: ghcr.io/damongolding/immich-kiosk:0.44.1
+    tty: true
     restart: unless-stopped
-    environment:
-      - RUN_MIGRATIONS=1
-      - DATABASE_URL=postgres://miniflux:minifluxpassword@miniflux_db/miniflux?sslmode=disable
-      - CREATE_ADMIN=1
-      - ADMIN_USERNAME=admin
-      - ADMIN_PASSWORD=adminpassword
     ports:
-      - "8105:8080"
-    depends_on:
-      - miniflux_db
-    networks:
-      - njorddeploy_net
-
-  miniflux_db:
-    image: postgres:16-alpine
-    container_name: njorddeploy-miniflux-db
-    restart: unless-stopped
+      - "2284:3000"
     environment:
-      - POSTGRES_USER=miniflux
-      - POSTGRES_PASSWORD=minifluxpassword
-      - POSTGRES_DB=miniflux
-    volumes:
-      - "./data/miniflux/db:/var/lib/postgresql/data"
+      - "KIOSK_IMMICH_URL=http://njorddeploy-immich-server:2283"
+      - "KIOSK_IMMICH_API_KEY=initial_setup_token"
+      - "KIOSK_DURATION=60"
+      - "TZ=Europe/Amsterdam"
     networks:
       - njorddeploy_net
 
@@ -80,16 +65,18 @@ docker compose up -d
 
 | Variable | Default Value | Description |
 |---|---|---|
-| `MINIFLUX_WEB_PORT` | `8105` | Miniflux web interface port. |
+| `IMMICH_KIOSK_PORT` | `2284` | Port to access the Immich Kiosk web interface. |
+| `KIOSK_IMMICH_URL` | `http://njorddeploy-immich-server:2283` | Internal or external URL to the Immich server (e.g. http://njorddeploy-immich-server:2283). |
+| `KIOSK_IMMICH_API_KEY` | `initial_setup_token` | API Key generated in Immich (Account Settings -> API Keys). |
+| `KIOSK_DURATION` | `60` | Duration in seconds each photo remains on screen. |
 
 ---
 
 ## 🔑 First-Run Onboarding Guide
 
-Log in with username admin and the configured initial password.
+Generate an API key in Immich (Account Settings -> API Keys) and provide it via KIOSK_IMMICH_API_KEY or in config/config.yaml to start displaying your albums.
 
-- **Default Username / Role:** `admin`
-- **Upstream Setup Guide:** [https://miniflux.app/docs/](https://miniflux.app/docs/)
+- **Upstream Setup Guide:** [https://docs.immichkiosk.app/](https://docs.immichkiosk.app/)
 
 ---
 ## 🔌 Ecosystem Integration with NjordDeploy
@@ -123,4 +110,4 @@ View the latest multi-environment test results in the [Fleet Health Dashboard](/
 
 Don't want to manage passwords, volume permissions, SSL certificates, and network bindings manually?
 
-Deploy **Miniflux** with 1-click using the **[NjordDeploy Configurator](https://github.com/HenkVanHoek/njord-deploy)**.
+Deploy **Immich Kiosk** with 1-click using the **[NjordDeploy Configurator](https://github.com/HenkVanHoek/njord-deploy)**.

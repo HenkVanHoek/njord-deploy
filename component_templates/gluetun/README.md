@@ -9,7 +9,7 @@
 > A lightweight, multi-provider VPN client container supporting OpenVPN and WireGuard protocols to route Docker service traffic securely.
 
 - **Upstream Project:** [Gluetun](https://github.com/qdm12/gluetun)
-- **Source Repository:** [github.com/qdm12/gluetun](https://github.com/qdm12/gluetun)
+- **Source Repository:** [github.com/passteque/gluetun](https://github.com/passteque/gluetun)
 - **Container Image:** `ghcr.io/qdm12/gluetun`
 
 ---

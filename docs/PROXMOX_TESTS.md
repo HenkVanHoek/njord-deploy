@@ -1,7 +1,7 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-09-18 17:23:41
-**Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 492 | **Passed:** 487 | **Skipped:** 5 | **Failed:** 0
+**Run Timestamp:** 2026-09-27 15:04:22
+**Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 493 | **Passed:** 488 | **Skipped:** 5 | **Failed:** 0
 
 ## Results Table
 
@@ -187,6 +187,7 @@
 | 2026-09-14 10:14:05 | `immich`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:36:38 | `immich`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:48:47 | `immich`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-27 15:02:53 | `immich-kiosk`        | `VM`   | `DOCKER` | 107   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 09:07:43 | `it-tools`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:15:06 | `it-tools`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:37:27 | `it-tools`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
@@ -1656,6 +1657,13 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![immich Web UI](images/test_screenshots/immich_vm_podman_20260914_125015.png)
+
+### Component: `immich-kiosk` (VM + DOCKER)
+- **Web UI Endpoint:** [http://10.99.0.199:2284](http://10.99.0.199:2284)
+- **Target Mode:** `VM` | **Engine:** `DOCKER`
+- **VM ID:** 107 | **IP:** `10.99.0.199`
+
+![immich-kiosk Web UI](images/test_screenshots/immich-kiosk_vm_docker_20260927_150414.png)
 
 ### Component: `it-tools` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
@@ -3704,6 +3712,7 @@
 | `immich`              | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `immich`              | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `immich`              | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `immich-kiosk`        | `VM`   | `DOCKER` | `none`          | —                            | ℹ️ NONE          |
 | `it-tools`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `it-tools`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `it-tools`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |

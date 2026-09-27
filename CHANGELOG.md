@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [Unreleased]
+
+### Added
+- **Immich Kiosk (`immich-kiosk`) Service Component**:
+  - Registered official ambient slideshow and digital photo frame client (`damongolding/immich-kiosk:0.44.1`) on external port `2284:3000` connected to Immich over `njorddeploy_net`.
+  - Added compose template, variables definition, and documentation in `component_templates/immich-kiosk/`.
+  - Successfully validated on Proxmox VE (Debian 12 VM + Docker) with automated Playwright UI screenshot capture and `HTTP 200 OK`.
+- **Immich Photo & Kiosk Suite Turnkey Package (`immich-stack`)**:
+  - Curated 1-click turnkey stack bundling Immich photo vault with Immich Kiosk ambient display.
+  - Validated end-to-end multi-container deployment on Proxmox VE (Debian 12 VM + Docker) with automated UI screenshot verification.
+- **TrueNAS Target Platform Roadmap**:
+  - Documented TrueNAS SCALE as a future deployment target platform under Phase 4 of `ROADMAP.md`.
+
 ## [1.0.0] - 2026-09-14 (General Availability)
 
 ### Added

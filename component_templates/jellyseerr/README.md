@@ -8,7 +8,7 @@
 
 > Free and open source software application for managing requests for your media library (Jellyfin, Emby, Plex).
 
-- **Source Repository:** [github.com/fallenbagel/jellyseerr](https://github.com/fallenbagel/jellyseerr)
+- **Source Repository:** [github.com/seerr-team/seerr](https://github.com/seerr-team/seerr)
 - **Container Image:** `fallenbagel/jellyseerr`
 
 ---

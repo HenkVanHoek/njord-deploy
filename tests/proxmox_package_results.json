@@ -1,1 +1,39 @@
-[]
+[
+    {
+        "timestamp": "2026-09-27 15:04:28",
+        "package_id": "immich-stack",
+        "package_name": "Immich Photo & Kiosk Suite",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 107,
+        "ip": "10.99.0.199",
+        "deployment": "success",
+        "components": {
+            "immich": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_immich_vm_docker_20260927_150607.png",
+                "http_url": "http://10.99.0.199:2283",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "immich-kiosk": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": "images/test_screenshots/pkg_immich-kiosk_vm_docker_20260927_150610.png",
+                "http_url": "http://10.99.0.199:2284",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_immich-stack_vm_docker_20260927_150428.md",
+        "error_message": ""
+    }
+]

@@ -8,7 +8,7 @@
 
 > A web-based retro ROMs manager and player for managing your game library.
 
-- **Source Repository:** [github.com/zurdi15/romm](https://github.com/zurdi15/romm)
+- **Source Repository:** [github.com/rommapp/romm](https://github.com/rommapp/romm)
 - **Container Image:** `mariadb:11`
 
 ---

@@ -107,6 +107,9 @@ This is a collection of ideas that are being considered for future minor/major i
     *   **Why?**: To provide a seamless, native multilingual experience across the Configurator and Editor applications, starting with Dutch (NL) and English (EN), matching the existing marketing website and AI chatbot capabilities.
     *   **Implementation**: Documented in [`docs/I18N_IMPLEMENTATION_PLAN.md`](docs/I18N_IMPLEMENTATION_PLAN.md). Lightweight, KISS-compliant translation engine in `src/utils/i18n.py` with session persistence (`session['lang']`), Jinja2 `{{ _('...') }}` integration, navbar language toggle (🇬🇧 / 🇳🇱), and non-breaking component metadata localization.
 *   **Provider-Agnostic Off-site Backups**: Enhance the Backup & Restore tool with an automated off-site capability using a generic tool like `rclone`. This will allow users to send encrypted backups to any of the 70+ cloud storage providers `rclone` supports.
+*   **TrueNAS as Deployment Target Platform**:
+    *   **Why?**: To expand NjordDeploy's capabilities into the large NAS and storage homelab ecosystem (specifically TrueNAS SCALE, which runs Debian Linux with native Docker and Docker Compose support).
+    *   **Scope**: Investigate target provisioning, SSH management, storage dataset/pool volume mapping (ZFS datasets), user permissions, and deployment convergence without disrupting TrueNAS's underlying appliance middleware.
 *   **Plugin Marketplace**: An interface where the community can submit new component templates for easy inclusion.
 *   **Multi-Node/Clustering Support**: The ability to deploy services across multiple Raspberry Pi devices and distributed nodes.
 *   **Enhanced Security Auditing**: Tools to scan configurations for common security misconfigurations.
