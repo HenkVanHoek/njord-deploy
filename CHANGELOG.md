@@ -7,6 +7,18 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Component Lifecycle Autopilot (`scripts/component_lifecycle_autopilot.py`)**:
+  - Autonomous end-to-end component update orchestrator combining upstream release detection, Proxmox VE LXC integration verification in "De Proeftuin", automatic promotion, multi-repo synchronization (`njord-deploy-components`, `njord-deploy-site`), and live VPS deployment (`njorddeploy.com`).
+  - **Human-in-the-Loop on Exception (HITL)** architecture: Happy flow (passing tests) automatically promotes templates, regenerates 258 SEO landing pages, pushes to GitHub, deploys via rsync to Netcup NVMe edge server, and sends a concise Signal success report. Exception flow (failing tests or breaking changes) halts promotion, parks candidates in Wachtkamer with status `needs_review`, records diagnostic logs, and dispatches a high-priority Signal escalation alert to Henk (+31651107603) requesting manual guidance.
+  - Comprehensive unit test suite (`tests/test_component_lifecycle_autopilot.py`) verifying filtering, security prioritization, Signal alerts, Proeftuin test execution, happy flow, and exception flow.
+  - Full architecture and operational runbook documented in [`docs/COMPONENT_LIFECYCLE_AUTOPILOT.md`](file:///home/hvhoek/PycharmProjects/njord-deploy/docs/COMPONENT_LIFECYCLE_AUTOPILOT.md).
+- **Automated Site Landing Page Regeneration in Component Sync**:
+  - Enhanced [`scripts/sync_components_repo.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/sync_components_repo.py) to automatically rebuild all English and Dutch SEO component landing pages and sitemap when updating `njord-deploy-site`.
+- **Per-Module Test Coverage Quality Gate (≥ 95.0%) & Coverage Gap Analyzer**:
+  - Implemented Henk van Hoek's Air Traffic Control per-module quality mandate: zero modules may hide behind a global average; every single Python module in `src/` must independently achieve ≥ 95.0% line coverage.
+  - Engineered [`scripts/analyze_coverage_gaps.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/analyze_coverage_gaps.py) to parse `pytest-cov` JSON reports, evaluate strict line coverage per module, and classify uncovered lines into 6 semantic gap categories (`UNAUTHENTICATED_GUARD`, `RBAC_AUTHORIZATION`, `DEFENSIVE_FALLBACK`, `ORM_TRANSACTION_ROLLBACK`, `EDGE_INPUT_VALIDATION`, `EXTERNAL_SERVICE_FAILURE`).
+  - Integrated gap analysis and strict gating into [`scripts/check_code_quality.sh`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/check_code_quality.sh) with pre-commit, Flake8 (88 chars), ESLint, and Bandit checks.
+  - Reached **98.72% global line coverage** across 8,378 statements with **100% of all 43 modules passing ≥ 95.0%** (25 modules achieving 100.00% line coverage).
 - **Immich Kiosk (`immich-kiosk`) Service Component**:
   - Registered official ambient slideshow and digital photo frame client (`damongolding/immich-kiosk:0.44.1`) on external port `2284:3000` connected to Immich over `njorddeploy_net`.
   - Added compose template, variables definition, and documentation in `component_templates/immich-kiosk/`.

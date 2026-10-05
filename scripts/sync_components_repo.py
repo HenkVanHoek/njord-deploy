@@ -300,11 +300,39 @@ def sync_site_repo(
     if check_only:
         return
 
+    # Auto-regenerate static landing pages and sitemap if metadata changed
+    if metadata_updated:
+        logger.info("Regenerating site SEO component pages and sitemaps...")
+        comp_gen = site_repo / "scripts" / "generate_component_pages.py"
+        if comp_gen.exists():
+            subprocess.run(
+                ["/usr/bin/python3", str(comp_gen)],
+                cwd=site_repo,
+                check=False,
+            )
+        stack_gen = site_repo / "scripts" / "generate_stack_pages.py"
+        if stack_gen.exists():
+            subprocess.run(
+                ["/usr/bin/python3", str(stack_gen)],
+                cwd=site_repo,
+                check=False,
+            )
+
     if commit or push:
-        rel_files = [
-            str(target_metadata.relative_to(site_repo)),
-            str(target_supported.relative_to(site_repo)),
-        ]
+        rel_files = [str(target_metadata.relative_to(site_repo))]
+        if target_supported.exists():
+            rel_files.append(str(target_supported.relative_to(site_repo)))
+
+        comp_dir = site_repo / "src" / "site_app" / "static" / "components"
+        if comp_dir.exists():
+            rel_files.append(str(comp_dir.relative_to(site_repo)))
+        nl_comp_dir = site_repo / "src" / "site_app" / "static" / "nl" / "components"
+        if nl_comp_dir.exists():
+            rel_files.append(str(nl_comp_dir.relative_to(site_repo)))
+        sitemap_file = site_repo / "src" / "site_app" / "static" / "sitemap.xml"
+        if sitemap_file.exists():
+            rel_files.append(str(sitemap_file.relative_to(site_repo)))
+
         run_git_command(["add"] + rel_files, cwd=site_repo)
         status_res = run_git_command(["status", "--porcelain"], cwd=site_repo)
         if not status_res.stdout.strip():
