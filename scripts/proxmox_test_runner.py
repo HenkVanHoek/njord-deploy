@@ -2490,19 +2490,38 @@ def run_environment_tests(
                         engine=engine.lower(),
                         test_date=time.strftime("%Y-%m-%d"),
                     )
-                    # Update verified version in components_metadata.json
+                    # Update verified version and clear staging in metadata
                     try:
+                        comp_raw = comp_mgr.get_component_details(comp_id) or {}
+                        staging_data = dict(comp_raw.get("staging") or {})
+                        staging_data["candidate_version"] = None
+                        staging_data["status"] = "idle"
+                        staging_data["test_result"] = (
+                            f"Passed Proxmox {mode.upper()} {engine.upper()} "
+                            f"test ({version_to_record})"
+                        )
+                        staging_data["entered_staging_at"] = None
+
                         comp_mgr.update_component_metadata(
                             comp_id,
                             {
                                 "last_tested_version": version_to_record,
                                 "test_status": "tested",
+                                "staging": staging_data,
                             },
                         )
                         logger.info(
                             f"Updated metadata last_tested_version for "
-                            f"{comp_id}: {version_to_record}"
+                            f"{comp_id}: {version_to_record} (staging cleared)"
                         )
+                        try:
+                            from scripts.watch_components_lifecycle import (
+                                sync_to_sysopswatch,
+                            )
+
+                            sync_to_sysopswatch()
+                        except Exception:
+                            pass
                     except Exception as meta_ex:
                         logger.warning(
                             f"Failed to update metadata version for {comp_id}: "

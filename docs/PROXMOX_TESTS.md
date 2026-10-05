@@ -1,514 +1,507 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-09-27 15:04:22
+**Run Timestamp:** 2026-10-05 20:10:00
 **Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 493 | **Passed:** 488 | **Skipped:** 5 | **Failed:** 0
 
 ## Results Table
 
-| Date / Time         | Component ID          | Target | Engine   | VM ID | IP Address  | Deployment | Containers | HTTP | Status         |
-|:--------------------|:----------------------|:-------|:---------|:------|:------------|:-----------|:-----------|:-----|:---------------|
-| 2026-09-14 08:45:12 | `actual-budget`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:46:40 | `actual-budget`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:00:22 | `actual-budget`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:19:28 | `actual-budget`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:45:33 | `adguard-home`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:47:00 | `adguard-home`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:01:39 | `adguard-home`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:20:13 | `adguard-home`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:45:49 | `adminer`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:47:16 | `adminer`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:01:55 | `adminer`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:20:32 | `adminer`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:46:06 | `apprise`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:47:32 | `apprise`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:02:13 | `apprise`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:20:56 | `apprise`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:46:30 | `audiobookshelf`      | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:47:51 | `audiobookshelf`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:02:37 | `audiobookshelf`      | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:21:20 | `audiobookshelf`      | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:46:51 | `bazarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:48:12 | `bazarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:03:04 | `bazarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:23:57 | `bazarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:47:26 | `beszel`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:48:45 | `beszel`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:07:48 | `beszel`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:24:36 | `beszel`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:47:44 | `bookstack`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:49:04 | `bookstack`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:08:06 | `bookstack`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:25:07 | `bookstack`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:48:31 | `caddy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:49:54 | `caddy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:08:56 | `caddy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:26:25 | `caddy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:48:54 | `calibre-web`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:50:14 | `calibre-web`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:09:19 | `calibre-web`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:26:48 | `calibre-web`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:49:21 | `changedetection`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:50:40 | `changedetection`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:09:49 | `changedetection`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:27:17 | `changedetection`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:49:57 | `conduit`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:51:11 | `conduit`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:11:53 | `conduit`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:28:08 | `conduit`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 08:50:12 | `cyberchef`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:51:26 | `cyberchef`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:12:10 | `cyberchef`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:28:25 | `cyberchef`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:50:30 | `dashdot`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:51:44 | `dashdot`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:12:29 | `dashdot`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:28:56 | `dashdot`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:50:49 | `diun`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:52:05 | `diun`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:12:47 | `diun`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:29:24 | `diun`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 08:51:13 | `docker-jitsi-meet`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:52:28 | `docker-jitsi-meet`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:13:11 | `docker-jitsi-meet`   | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:29:49 | `docker-jitsi-meet`   | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:51:52 | `dockge`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:00:26 | `dockge`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:13:54 | `dockge`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:31:18 | `dockge`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:52:27 | `docmost`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:01:01 | `docmost`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:14:27 | `docmost`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:31:53 | `docmost`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:53:15 | `dozzle`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:01:43 | `dozzle`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:15:16 | `dozzle`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:32:56 | `dozzle`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:53:33 | `drawio`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:02:00 | `drawio`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:15:34 | `drawio`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:33:16 | `drawio`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:54:01 | `duplicati`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:02:24 | `duplicati`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:16:01 | `duplicati`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:33:48 | `duplicati`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:54:27 | `esphome`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:02:44 | `esphome`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:16:26 | `esphome`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:34:15 | `esphome`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:55:00 | `etherpad`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:03:17 | `etherpad`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:17:01 | `etherpad`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:34:56 | `etherpad`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:55:32 | `evcc`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:03:47 | `evcc`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:17:33 | `evcc`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:35:29 | `evcc`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:55:55 | `excalidraw`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:04:10 | `excalidraw`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:17:55 | `excalidraw`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:35:53 | `excalidraw`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:56:11 | `filebrowser`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:04:25 | `filebrowser`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:18:12 | `filebrowser`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:36:16 | `filebrowser`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:56:28 | `firefly-iii`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:04:41 | `firefly-iii`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:18:29 | `firefly-iii`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:36:34 | `firefly-iii`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:57:10 | `flatnotes`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:05:20 | `flatnotes`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:19:08 | `flatnotes`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:37:36 | `flatnotes`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:57:39 | `focalboard`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:05:52 | `focalboard`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:19:38 | `focalboard`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:38:16 | `focalboard`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:58:05 | `freshrss`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:06:18 | `freshrss`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:20:04 | `freshrss`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:38:43 | `freshrss`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 08:58:24 | `frigate`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:06:34 | `frigate`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:20:23 | `frigate`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:39:03 | `frigate`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:00:28 | `gitea`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:07:49 | `gitea`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:28:59 | `gitea`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:40:43 | `gitea`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 17:19:53 | `gitlab`              | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:08:17 | `gitlab`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:29:22 | `gitlab`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:41:25 | `gitlab`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:01:48 | `glance`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:09:04 | `glance`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:30:15 | `glance`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:42:25 | `glance`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:02:07 | `gotify`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:09:22 | `gotify`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:30:35 | `gotify`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:42:51 | `gotify`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:02:23 | `grafana`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:09:38 | `grafana`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:30:52 | `grafana`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:43:09 | `grafana`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:02:52 | `grocy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:10:23 | `grocy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:31:23 | `grocy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:43:59 | `grocy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:03:15 | `headscale`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:10:46 | `headscale`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:31:48 | `headscale`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:44:32 | `headscale`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:49:17 | `heimdall`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:11:07 | `heimdall`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:32:09 | `heimdall`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:44:59 | `heimdall`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:03:51 | `homarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:11:21 | `homarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:32:26 | `homarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:45:21 | `homarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:04:30 | `homeassistant`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:11:55 | `homeassistant`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:34:09 | `homeassistant`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:46:09 | `homeassistant`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:05:27 | `homebridge`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:12:40 | `homebridge`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:35:05 | `homebridge`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:47:10 | `homebridge`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:06:13 | `homepage`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:13:22 | `homepage`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:35:56 | `homepage`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:47:57 | `homepage`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:06:36 | `homer`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:13:44 | `homer`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:36:22 | `homer`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:48:23 | `homer`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:06:51 | `immich`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:14:05 | `immich`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:36:38 | `immich`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:48:47 | `immich`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-27 15:02:53 | `immich-kiosk`        | `VM`   | `DOCKER` | 107   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:07:43 | `it-tools`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:15:06 | `it-tools`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:37:27 | `it-tools`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:50:19 | `it-tools`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:08:01 | `jellyfin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:15:34 | `jellyfin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:37:47 | `jellyfin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:50:46 | `jellyfin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:08:34 | `jellyseerr`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:16:05 | `jellyseerr`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:38:16 | `jellyseerr`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:51:31 | `jellyseerr`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:09:17 | `kavita`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:16:42 | `kavita`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:38:59 | `kavita`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:52:14 | `kavita`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:09:56 | `komga`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:17:22 | `komga`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:39:40 | `komga`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:53:03 | `komga`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:10:26 | `librechat`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:17:51 | `librechat`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:40:10 | `librechat`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:53:36 | `librechat`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:11:49 | `lidarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:18:59 | `lidarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:41:39 | `lidarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:58:37 | `lidarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:12:17 | `linkding`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:19:26 | `linkding`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:42:09 | `linkding`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:59:29 | `linkding`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:12:44 | `litellm`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:19:53 | `litellm`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:42:38 | `litellm`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:00:01 | `litellm`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:13:44 | `mealie`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:20:55 | `mealie`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:43:45 | `mealie`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:01:48 | `mealie`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:14:30 | `memos`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:21:37 | `memos`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:44:30 | `memos`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:02:42 | `memos`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:14:47 | `metube`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:21:54 | `metube`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:44:48 | `metube`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:03:02 | `metube`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:15:07 | `microbin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:22:17 | `microbin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:45:11 | `microbin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:03:33 | `microbin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:15:23 | `miniflux`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:22:33 | `miniflux`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:45:29 | `miniflux`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:04:03 | `miniflux`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:15:45 | `minio`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:22:56 | `minio`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:45:53 | `minio`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:04:43 | `minio`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:16:01 | `mosquitto`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:23:18 | `mosquitto`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:46:11 | `mosquitto`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:05:08 | `mosquitto`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:16:14 | `n8n`                 | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:23:31 | `n8n`                 | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:46:25 | `n8n`                 | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:05:24 | `n8n`                 | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:17:03 | `navidrome`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:24:05 | `navidrome`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:47:12 | `navidrome`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:06:12 | `navidrome`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:17:23 | `netdata`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:24:26 | `netdata`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:47:35 | `netdata`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:06:41 | `netdata`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:57:59 | `nextcloud`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:24:48 | `nextcloud`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:48:00 | `nextcloud`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:07:06 | `nextcloud`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:18:23 | `nextcloud-db`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:25:36 | `nextcloud-db`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:48:37 | `nextcloud-db`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:08:00 | `nextcloud-db`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:18:41 | `nextcloud-db-dumper` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:25:56 | `nextcloud-db-dumper` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:48:58 | `nextcloud-db-dumper` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:08:24 | `nextcloud-db-dumper` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:19:07 | `nextcloud-redis`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:26:24 | `nextcloud-redis`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:49:26 | `nextcloud-redis`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:09:00 | `nextcloud-redis`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-18 16:50:49 | `nginx-proxy-manager` | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:26:48 | `nginx-proxy-manager` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:49:51 | `nginx-proxy-manager` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:09:31 | `nginx-proxy-manager` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:20:01 | `nocodb`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:27:16 | `nocodb`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:50:21 | `nocodb`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:10:10 | `nocodb`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:20:39 | `node-red`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:27:52 | `node-red`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:51:05 | `node-red`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:10:49 | `node-red`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:21:02 | `notify-push`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:28:18 | `notify-push`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:51:30 | `notify-push`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:11:25 | `notify-push`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:21:34 | `ntfy`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:28:52 | `ntfy`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:52:00 | `ntfy`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:12:22 | `ntfy`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:47:51 | `octoprint`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:29:19 | `octoprint`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:52:31 | `octoprint`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:12:53 | `octoprint`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:22:36 | `ollama`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:29:51 | `ollama`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 11:53:03 | `ollama`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:13:27 | `ollama`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:23:45 | `open-webui`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:31:04 | `open-webui`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:54:14 | `open-webui`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:14:47 | `open-webui`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:52:14 | `organizr`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:32:46 | `organizr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:56:01 | `organizr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:16:57 | `organizr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:25:52 | `pairdrop`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:33:09 | `pairdrop`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:56:25 | `pairdrop`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:17:23 | `pairdrop`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:26:13 | `paperless-ngx`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:33:29 | `paperless-ngx`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:56:47 | `paperless-ngx`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:17:46 | `paperless-ngx`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:27:35 | `pgadmin4`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:35:23 | `pgadmin4`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:58:15 | `pgadmin4`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:19:33 | `pgadmin4`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:28:36 | `phpmyadmin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:36:21 | `phpmyadmin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:59:19 | `phpmyadmin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:20:42 | `phpmyadmin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:28:59 | `pi-hole`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:36:44 | `pi-hole`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 11:59:46 | `pi-hole`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:21:13 | `pi-hole`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:29:20 | `pish-fluffychat-web` | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:37:03 | `pish-fluffychat-web` | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
-| 2026-09-14 12:00:09 | `pish-fluffychat-web` | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:21:47 | `pish-fluffychat-web` | `VM`   | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
-| 2026-09-14 09:29:41 | `plausible`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:37:03 | `plausible`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:00:33 | `plausible`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:21:47 | `plausible`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:30:18 | `portainer`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:37:51 | `portainer`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:01:15 | `portainer`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:22:47 | `portainer`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:30:38 | `privatebin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:38:10 | `privatebin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:01:38 | `privatebin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:23:14 | `privatebin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:30:54 | `prometheus`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:38:26 | `prometheus`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:01:57 | `prometheus`          | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:23:43 | `prometheus`          | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:31:15 | `prosody`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:38:54 | `prosody`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:02:19 | `prosody`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:24:18 | `prosody`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:31:29 | `prowlarr`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:39:08 | `prowlarr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:02:35 | `prowlarr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:24:35 | `prowlarr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:31:50 | `qbittorrent`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:40:26 | `qbittorrent`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:03:00 | `qbittorrent`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:25:00 | `qbittorrent`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:32:12 | `radarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:40:48 | `radarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:03:22 | `radarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:25:24 | `radarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:32:35 | `romm`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:42:24 | `romm`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:03:48 | `romm`                | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:25:57 | `romm`                | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:33:13 | `rustdesk-server`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:43:03 | `rustdesk-server`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:04:28 | `rustdesk-server`     | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:26:37 | `rustdesk-server`     | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:33:35 | `sabnzbd`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:43:26 | `sabnzbd`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:04:52 | `sabnzbd`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:27:08 | `sabnzbd`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:33:53 | `scrutiny`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:43:42 | `scrutiny`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:05:13 | `scrutiny`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:27:38 | `scrutiny`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:54:35 | `scrypted`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:44:09 | `scrypted`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:05:43 | `scrypted`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:28:14 | `scrypted`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:35:08 | `searxng`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:44:49 | `searxng`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:06:32 | `searxng`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:29:05 | `searxng`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:35:31 | `semaphore`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:45:17 | `semaphore`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:06:59 | `semaphore`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:29:40 | `semaphore`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:36:01 | `sftpgo`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:45:42 | `sftpgo`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:07:28 | `sftpgo`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:30:10 | `sftpgo`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:36:18 | `shlink`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:46:00 | `shlink`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:07:48 | `shlink`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:30:34 | `shlink`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:36:41 | `silverbullet`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:46:17 | `silverbullet`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:08:08 | `silverbullet`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:30:59 | `silverbullet`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:37:12 | `sonarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:46:51 | `sonarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:08:43 | `sonarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:31:50 | `sonarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:37:32 | `speedtest-tracker`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:47:14 | `speedtest-tracker`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:09:07 | `speedtest-tracker`   | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:33:38 | `speedtest-tracker`   | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:38:00 | `stirling-pdf`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:48:59 | `stirling-pdf`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:09:36 | `stirling-pdf`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:34:20 | `stirling-pdf`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:39:00 | `syncthing`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:49:56 | `syncthing`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:10:42 | `syncthing`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:35:28 | `syncthing`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:39:15 | `tautulli`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:50:13 | `tautulli`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:11:01 | `tautulli`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:35:48 | `tautulli`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:39:37 | `technitium-dns`      | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:50:41 | `technitium-dns`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:11:25 | `technitium-dns`      | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:36:20 | `technitium-dns`      | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:39:57 | `teslamate`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:51:05 | `teslamate`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:11:48 | `teslamate`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:36:47 | `teslamate`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:40:24 | `traefik`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
-| 2026-09-14 10:51:32 | `traefik`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
-| 2026-09-14 12:12:18 | `traefik`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:37:18 | `traefik`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
-| 2026-09-14 09:40:24 | `transmission`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:51:32 | `transmission`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:12:37 | `transmission`        | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:37:18 | `transmission`        | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:40:40 | `trilium`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:51:54 | `trilium`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:12:54 | `trilium`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:37:52 | `trilium`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:41:01 | `umami`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:52:18 | `umami`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:13:18 | `umami`               | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:38:16 | `umami`               | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:41:51 | `unbound`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:54:13 | `unbound`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:14:07 | `unbound`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:39:27 | `unbound`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-18 16:56:12 | `unifi-controller`    | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:54:28 | `unifi-controller`    | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:14:24 | `unifi-controller`    | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:39:47 | `unifi-controller`    | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:42:53 | `unpackerr`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 10:56:33 | `unpackerr`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 12:15:18 | `unpackerr`           | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 13:41:02 | `unpackerr`           | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-09-14 09:43:13 | `uptime-kuma`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:56:54 | `uptime-kuma`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:15:40 | `uptime-kuma`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:41:30 | `uptime-kuma`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-18 16:53:26 | `vaultwarden`         | `LXC`  | `DOCKER` | 106   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:57:17 | `vaultwarden`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:16:04 | `vaultwarden`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:42:00 | `vaultwarden`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:43:56 | `vikunja`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:57:40 | `vikunja`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:16:29 | `vikunja`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:42:33 | `vikunja`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:44:11 | `wallabag`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:57:56 | `wallabag`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:16:46 | `wallabag`            | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:42:52 | `wallabag`            | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:44:43 | `wallos`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:58:22 | `wallos`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:17:19 | `wallos`              | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:43:23 | `wallos`              | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:45:04 | `web-notepad`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:58:42 | `web-notepad`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:17:48 | `web-notepad`         | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:43:53 | `web-notepad`         | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:45:24 | `wg-easy`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:59:03 | `wg-easy`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:18:09 | `wg-easy`             | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:44:18 | `wg-easy`             | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 09:45:43 | `woodpecker-ci`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 10:59:22 | `woodpecker-ci`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 12:18:31 | `woodpecker-ci`       | `VM`   | `DOCKER` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
-| 2026-09-14 13:44:52 | `woodpecker-ci`       | `VM`   | `PODMAN` | 104   | 10.99.0.199 | success    | Running    | OK   | **✅ PASS**     |
+| Date / Time         | Component ID          | Target | Engine   | VM ID | IP Address      | Deployment | Containers | HTTP | Status         |
+|:--------------------|:----------------------|:-------|:---------|:------|:----------------|:-----------|:-----------|:-----|:---------------|
+| 2026-10-05 19:53:09 | `actual-budget`       | `LXC`  | `DOCKER` | 107   | 192.168.178.200 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:46:40 | `actual-budget`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:00:22 | `actual-budget`       | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:19:28 | `actual-budget`       | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:45:33 | `adguard-home`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:00 | `adguard-home`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:01:39 | `adguard-home`        | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:13 | `adguard-home`        | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:45:49 | `adminer`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:16 | `adminer`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:01:55 | `adminer`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:32 | `adminer`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:46:06 | `apprise`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:32 | `apprise`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:02:13 | `apprise`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:20:56 | `apprise`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:39:46 | `audiobookshelf`      | `LXC`  | `DOCKER` | 107   | 192.168.178.133 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:47:51 | `audiobookshelf`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:02:37 | `audiobookshelf`      | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:21:20 | `audiobookshelf`      | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:46:51 | `bazarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:48:12 | `bazarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:03:04 | `bazarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:23:57 | `bazarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:36:49 | `beszel`              | `LXC`  | `DOCKER` | 107   | 192.168.178.98  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:48:45 | `beszel`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:07:48 | `beszel`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:24:36 | `beszel`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:47:44 | `bookstack`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:49:04 | `bookstack`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:08:06 | `bookstack`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:25:07 | `bookstack`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:48:31 | `caddy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:49:54 | `caddy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:08:56 | `caddy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:26:25 | `caddy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:48:54 | `calibre-web`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:50:14 | `calibre-web`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:09:19 | `calibre-web`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:26:48 | `calibre-web`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:40:06 | `changedetection`     | `LXC`  | `DOCKER` | 107   | 192.168.178.133 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:50:40 | `changedetection`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:09:49 | `changedetection`     | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:27:17 | `changedetection`     | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:49:57 | `conduit`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:51:11 | `conduit`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:11:53 | `conduit`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:28:08 | `conduit`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 08:50:12 | `cyberchef`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:51:26 | `cyberchef`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:12:10 | `cyberchef`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:28:25 | `cyberchef`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:50:30 | `dashdot`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:51:44 | `dashdot`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:12:29 | `dashdot`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:28:56 | `dashdot`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:50:49 | `diun`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:52:05 | `diun`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:12:47 | `diun`                | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:29:24 | `diun`                | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 08:51:13 | `docker-jitsi-meet`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:52:28 | `docker-jitsi-meet`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:13:11 | `docker-jitsi-meet`   | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:29:49 | `docker-jitsi-meet`   | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:37:06 | `dockge`              | `LXC`  | `DOCKER` | 107   | 192.168.178.98  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:00:26 | `dockge`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:13:54 | `dockge`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:31:18 | `dockge`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:52:27 | `docmost`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:01:01 | `docmost`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:14:27 | `docmost`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:31:53 | `docmost`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:40:38 | `dozzle`              | `LXC`  | `DOCKER` | 107   | 192.168.178.133 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:01:43 | `dozzle`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:15:16 | `dozzle`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:32:56 | `dozzle`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:53:32 | `drawio`              | `LXC`  | `DOCKER` | 107   | 192.168.178.200 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:00 | `drawio`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:15:34 | `drawio`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:33:16 | `drawio`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:54:01 | `duplicati`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:24 | `duplicati`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:16:01 | `duplicati`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:33:48 | `duplicati`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:56:26 | `esphome`             | `LXC`  | `DOCKER` | 107   | 192.168.178.69  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:02:44 | `esphome`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:16:26 | `esphome`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:34:15 | `esphome`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:55:00 | `etherpad`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:03:17 | `etherpad`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:01 | `etherpad`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:34:56 | `etherpad`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:55:32 | `evcc`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:03:47 | `evcc`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:33 | `evcc`                | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:35:29 | `evcc`                | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:45:43 | `excalidraw`          | `LXC`  | `DOCKER` | 107   | 192.168.178.184 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:10 | `excalidraw`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:17:55 | `excalidraw`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:35:53 | `excalidraw`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:56:11 | `filebrowser`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:25 | `filebrowser`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:18:12 | `filebrowser`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:36:16 | `filebrowser`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:56:28 | `firefly-iii`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:04:41 | `firefly-iii`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:18:29 | `firefly-iii`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:36:34 | `firefly-iii`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:53:57 | `flatnotes`           | `LXC`  | `DOCKER` | 107   | 192.168.178.200 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:05:20 | `flatnotes`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:19:08 | `flatnotes`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:37:36 | `flatnotes`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:57:39 | `focalboard`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:05:52 | `focalboard`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:19:38 | `focalboard`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:38:16 | `focalboard`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 08:58:05 | `freshrss`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:06:18 | `freshrss`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:20:04 | `freshrss`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:38:43 | `freshrss`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 20:06:47 | `frigate`             | `LXC`  | `DOCKER` | 107   | 192.168.178.121 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:06:34 | `frigate`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:20:23 | `frigate`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:39:03 | `frigate`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:00:28 | `gitea`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:07:49 | `gitea`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:28:59 | `gitea`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:40:43 | `gitea`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 17:19:53 | `gitlab`              | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:08:17 | `gitlab`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:29:22 | `gitlab`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:41:25 | `gitlab`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:01:48 | `glance`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:04 | `glance`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:15 | `glance`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:42:25 | `glance`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:35:14 | `gotify`              | `LXC`  | `DOCKER` | 107   | 192.168.178.75  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:22 | `gotify`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:35 | `gotify`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:42:51 | `gotify`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:56:56 | `grafana`             | `LXC`  | `DOCKER` | 107   | 192.168.178.69  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:09:38 | `grafana`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:30:52 | `grafana`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:43:09 | `grafana`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:02:52 | `grocy`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:10:23 | `grocy`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:31:23 | `grocy`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:43:59 | `grocy`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:03:15 | `headscale`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:10:46 | `headscale`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:31:48 | `headscale`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:44:32 | `headscale`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:42:48 | `heimdall`            | `LXC`  | `DOCKER` | 107   | 192.168.178.137 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:11:07 | `heimdall`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:32:09 | `heimdall`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:44:59 | `heimdall`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:03:51 | `homarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:11:21 | `homarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:32:26 | `homarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:45:21 | `homarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:57:33 | `homeassistant`       | `LXC`  | `DOCKER` | 107   | 192.168.178.69  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:11:55 | `homeassistant`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:34:09 | `homeassistant`       | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:46:09 | `homeassistant`       | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:05:27 | `homebridge`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:12:40 | `homebridge`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:35:05 | `homebridge`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:47:10 | `homebridge`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:37:31 | `homepage`            | `LXC`  | `DOCKER` | 107   | 192.168.178.98  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:13:22 | `homepage`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:35:56 | `homepage`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:47:57 | `homepage`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:06:36 | `homer`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:13:44 | `homer`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:36:22 | `homer`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:48:23 | `homer`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:06:51 | `immich`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:14:05 | `immich`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:36:38 | `immich`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:48:47 | `immich`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-27 15:02:53 | `immich-kiosk`        | `VM`   | `DOCKER` | 107   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:07:43 | `it-tools`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:15:06 | `it-tools`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:37:27 | `it-tools`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:50:19 | `it-tools`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:08:01 | `jellyfin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:15:34 | `jellyfin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:37:47 | `jellyfin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:50:46 | `jellyfin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 20:00:33 | `jellyseerr`          | `LXC`  | `DOCKER` | 107   | 192.168.178.85  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:16:05 | `jellyseerr`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:38:16 | `jellyseerr`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:51:31 | `jellyseerr`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:09:17 | `kavita`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:16:42 | `kavita`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:38:59 | `kavita`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:52:14 | `kavita`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:09:56 | `komga`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:17:22 | `komga`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:39:40 | `komga`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:53:03 | `komga`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:10:26 | `librechat`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:17:51 | `librechat`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:40:10 | `librechat`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:53:36 | `librechat`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:11:49 | `lidarr`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:18:59 | `lidarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:41:39 | `lidarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:58:37 | `lidarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:12:17 | `linkding`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:19:26 | `linkding`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:42:09 | `linkding`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:59:29 | `linkding`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:12:44 | `litellm`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:19:53 | `litellm`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:42:38 | `litellm`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:00:01 | `litellm`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:37:52 | `mealie`              | `LXC`  | `DOCKER` | 107   | 192.168.178.98  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:20:55 | `mealie`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:43:45 | `mealie`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:01:48 | `mealie`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:14:30 | `memos`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:21:37 | `memos`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:44:30 | `memos`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:02:42 | `memos`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:48:20 | `metube`              | `LXC`  | `DOCKER` | 107   | 192.168.178.194 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:21:54 | `metube`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:44:48 | `metube`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:03:02 | `metube`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:07 | `microbin`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:17 | `microbin`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:11 | `microbin`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:03:33 | `microbin`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:23 | `miniflux`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:33 | `miniflux`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:29 | `miniflux`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:04:03 | `miniflux`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:15:45 | `minio`               | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:22:56 | `minio`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:45:53 | `minio`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:04:43 | `minio`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:16:01 | `mosquitto`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:23:18 | `mosquitto`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:46:11 | `mosquitto`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:05:08 | `mosquitto`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:16:14 | `n8n`                 | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:23:31 | `n8n`                 | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:46:25 | `n8n`                 | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:05:24 | `n8n`                 | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:40:56 | `navidrome`           | `LXC`  | `DOCKER` | 107   | 192.168.178.133 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:05 | `navidrome`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:47:12 | `navidrome`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:06:12 | `navidrome`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:17:23 | `netdata`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:26 | `netdata`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:47:35 | `netdata`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:06:41 | `netdata`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:57:59 | `nextcloud`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:24:48 | `nextcloud`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:48:00 | `nextcloud`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:07:06 | `nextcloud`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:18:23 | `nextcloud-db`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:25:36 | `nextcloud-db`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:48:37 | `nextcloud-db`        | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:08:00 | `nextcloud-db`        | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:18:41 | `nextcloud-db-dumper` | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:25:56 | `nextcloud-db-dumper` | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:48:58 | `nextcloud-db-dumper` | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:08:24 | `nextcloud-db-dumper` | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:19:07 | `nextcloud-redis`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:26:24 | `nextcloud-redis`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:49:26 | `nextcloud-redis`     | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:09:00 | `nextcloud-redis`     | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-18 16:50:49 | `nginx-proxy-manager` | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:26:48 | `nginx-proxy-manager` | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:49:51 | `nginx-proxy-manager` | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:09:31 | `nginx-proxy-manager` | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 20:01:17 | `nocodb`              | `LXC`  | `DOCKER` | 107   | 192.168.178.85  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:27:16 | `nocodb`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:50:21 | `nocodb`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:10:10 | `nocodb`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:20:39 | `node-red`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:27:52 | `node-red`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:51:05 | `node-red`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:10:49 | `node-red`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:21:02 | `notify-push`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:28:18 | `notify-push`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:51:30 | `notify-push`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:11:25 | `notify-push`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:21:34 | `ntfy`                | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:28:52 | `ntfy`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:52:00 | `ntfy`                | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:12:22 | `ntfy`                | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:47:51 | `octoprint`           | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:29:19 | `octoprint`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:52:31 | `octoprint`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:12:53 | `octoprint`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:22:36 | `ollama`              | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:29:51 | `ollama`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 11:53:03 | `ollama`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:13:27 | `ollama`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:23:45 | `open-webui`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:31:04 | `open-webui`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:54:14 | `open-webui`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:14:47 | `open-webui`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:52:14 | `organizr`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:32:46 | `organizr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:01 | `organizr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:16:57 | `organizr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:25:52 | `pairdrop`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:33:09 | `pairdrop`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:25 | `pairdrop`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:17:23 | `pairdrop`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 20:03:46 | `paperless-ngx`       | `LXC`  | `DOCKER` | 107   | 192.168.178.87  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:33:29 | `paperless-ngx`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:56:47 | `paperless-ngx`       | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:17:46 | `paperless-ngx`       | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:27:35 | `pgadmin4`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:35:23 | `pgadmin4`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:58:15 | `pgadmin4`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:19:33 | `pgadmin4`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:28:36 | `phpmyadmin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:36:21 | `phpmyadmin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:59:19 | `phpmyadmin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:20:42 | `phpmyadmin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:48:43 | `pi-hole`             | `LXC`  | `DOCKER` | 107   | 192.168.178.194 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:36:44 | `pi-hole`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 11:59:46 | `pi-hole`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:13 | `pi-hole`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:29:20 | `pish-fluffychat-web` | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:03 | `pish-fluffychat-web` | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 12:00:09 | `pish-fluffychat-web` | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:47 | `pish-fluffychat-web` | `VM`   | `PODMAN` | 104   | 10.99.0.199     | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 09:29:41 | `plausible`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:03 | `plausible`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:00:33 | `plausible`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:21:47 | `plausible`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:18 | `portainer`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:37:51 | `portainer`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:15 | `portainer`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:22:47 | `portainer`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:38 | `privatebin`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:38:10 | `privatebin`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:38 | `privatebin`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:23:14 | `privatebin`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:30:54 | `prometheus`          | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:38:26 | `prometheus`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:01:57 | `prometheus`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:23:43 | `prometheus`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:31:15 | `prosody`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:38:54 | `prosody`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:02:19 | `prosody`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:24:18 | `prosody`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-10-05 19:46:00 | `prowlarr`            | `LXC`  | `DOCKER` | 107   | 192.168.178.184 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:39:08 | `prowlarr`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:02:35 | `prowlarr`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:24:35 | `prowlarr`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:43:14 | `qbittorrent`         | `LXC`  | `DOCKER` | 107   | 192.168.178.137 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:40:26 | `qbittorrent`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:00 | `qbittorrent`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:00 | `qbittorrent`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:46:22 | `radarr`              | `LXC`  | `DOCKER` | 107   | 192.168.178.184 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:40:48 | `radarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:22 | `radarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:24 | `radarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 20:01:57 | `romm`                | `LXC`  | `DOCKER` | 107   | 192.168.178.85  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:42:24 | `romm`                | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:03:48 | `romm`                | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:25:57 | `romm`                | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:33:13 | `rustdesk-server`     | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:43:03 | `rustdesk-server`     | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:04:28 | `rustdesk-server`     | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:26:37 | `rustdesk-server`     | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-10-05 19:43:36 | `sabnzbd`             | `LXC`  | `DOCKER` | 107   | 192.168.178.137 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:43:26 | `sabnzbd`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:04:52 | `sabnzbd`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:27:08 | `sabnzbd`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:33:53 | `scrutiny`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:43:42 | `scrutiny`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:05:13 | `scrutiny`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:27:38 | `scrutiny`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:54:35 | `scrypted`            | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:44:09 | `scrypted`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:05:43 | `scrypted`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:28:14 | `scrypted`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:35:08 | `searxng`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:44:49 | `searxng`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:06:32 | `searxng`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:29:05 | `searxng`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:35:31 | `semaphore`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:45:17 | `semaphore`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:06:59 | `semaphore`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:29:40 | `semaphore`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:44:00 | `sftpgo`              | `LXC`  | `DOCKER` | 107   | 192.168.178.137 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:45:42 | `sftpgo`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:07:28 | `sftpgo`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:10 | `sftpgo`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:44:20 | `shlink`              | `LXC`  | `DOCKER` | 107   | 192.168.178.137 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:00 | `shlink`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:07:48 | `shlink`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:34 | `shlink`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:36:41 | `silverbullet`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:17 | `silverbullet`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:08:08 | `silverbullet`        | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:30:59 | `silverbullet`        | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:46:47 | `sonarr`              | `LXC`  | `DOCKER` | 107   | 192.168.178.184 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:46:51 | `sonarr`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:08:43 | `sonarr`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:31:50 | `sonarr`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:37:32 | `speedtest-tracker`   | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:47:14 | `speedtest-tracker`   | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:09:07 | `speedtest-tracker`   | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:33:38 | `speedtest-tracker`   | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:54:17 | `stirling-pdf`        | `LXC`  | `DOCKER` | 107   | 192.168.178.200 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:48:59 | `stirling-pdf`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:09:36 | `stirling-pdf`        | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:34:20 | `stirling-pdf`        | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:00 | `syncthing`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:49:56 | `syncthing`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:10:42 | `syncthing`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:35:28 | `syncthing`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:15 | `tautulli`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:50:13 | `tautulli`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:01 | `tautulli`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:35:48 | `tautulli`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:37 | `technitium-dns`      | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:50:41 | `technitium-dns`      | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:25 | `technitium-dns`      | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:36:20 | `technitium-dns`      | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:39:57 | `teslamate`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:05 | `teslamate`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:11:48 | `teslamate`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:36:47 | `teslamate`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:40:24 | `traefik`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 10:51:32 | `traefik`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 12:12:18 | `traefik`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:18 | `traefik`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | skipped    | Stopped    | N/A  | **⚠️ SKIPPED** |
+| 2026-09-14 09:40:24 | `transmission`        | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:32 | `transmission`        | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:12:37 | `transmission`        | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:18 | `transmission`        | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:40:40 | `trilium`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:51:54 | `trilium`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:12:54 | `trilium`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:37:52 | `trilium`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:58:27 | `umami`               | `LXC`  | `DOCKER` | 107   | 192.168.178.69  | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:52:18 | `umami`               | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:13:18 | `umami`               | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:38:16 | `umami`               | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:41:51 | `unbound`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:54:13 | `unbound`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:14:07 | `unbound`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:39:27 | `unbound`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-18 16:56:12 | `unifi-controller`    | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:54:28 | `unifi-controller`    | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:14:24 | `unifi-controller`    | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:39:47 | `unifi-controller`    | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:42:53 | `unpackerr`           | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 10:56:33 | `unpackerr`           | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 12:15:18 | `unpackerr`           | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 13:41:02 | `unpackerr`           | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
+| 2026-09-14 09:43:13 | `uptime-kuma`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:56:54 | `uptime-kuma`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:15:40 | `uptime-kuma`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:41:30 | `uptime-kuma`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-18 16:53:26 | `vaultwarden`         | `LXC`  | `DOCKER` | 106   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:17 | `vaultwarden`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:04 | `vaultwarden`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:00 | `vaultwarden`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:43:56 | `vikunja`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:40 | `vikunja`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:29 | `vikunja`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:33 | `vikunja`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:44:11 | `wallabag`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:57:56 | `wallabag`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:16:46 | `wallabag`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:42:52 | `wallabag`            | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-10-05 19:41:15 | `wallos`              | `LXC`  | `DOCKER` | 107   | 192.168.178.133 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:58:22 | `wallos`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:17:19 | `wallos`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:43:23 | `wallos`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:04 | `web-notepad`         | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:58:42 | `web-notepad`         | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:17:48 | `web-notepad`         | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:43:53 | `web-notepad`         | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:24 | `wg-easy`             | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:59:03 | `wg-easy`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:18:09 | `wg-easy`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:44:18 | `wg-easy`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 09:45:43 | `woodpecker-ci`       | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 10:59:22 | `woodpecker-ci`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 12:18:31 | `woodpecker-ci`       | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-09-14 13:44:52 | `woodpecker-ci`       | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 
 ## Visual Verification & Web UI Screenshots
-
-### Component: `actual-budget` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:5006](http://10.99.0.199:5006)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![actual-budget Web UI](images/test_screenshots/actual-budget_lxc_docker_20260914_084530.png)
 
 ### Component: `actual-budget` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5006](http://10.99.0.199:5006)
@@ -615,13 +608,6 @@
 
 ![apprise Web UI](images/test_screenshots/apprise_vm_podman_20260914_122117.png)
 
-### Component: `audiobookshelf` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:13378](http://10.99.0.199:13378)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![audiobookshelf Web UI](images/test_screenshots/audiobookshelf_lxc_docker_20260914_084648.png)
-
 ### Component: `audiobookshelf` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:13378](http://10.99.0.199:13378)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -670,13 +656,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![bazarr Web UI](images/test_screenshots/bazarr_vm_podman_20260914_122433.png)
-
-### Component: `beszel` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8095](http://10.99.0.199:8095)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![beszel Web UI](images/test_screenshots/beszel_lxc_docker_20260914_084741.png)
 
 ### Component: `beszel` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8095](http://10.99.0.199:8095)
@@ -783,13 +762,6 @@
 
 ![calibre-web Web UI](images/test_screenshots/calibre-web_vm_podman_20260914_122715.png)
 
-### Component: `changedetection` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:5002](http://10.99.0.199:5002)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![changedetection Web UI](images/test_screenshots/changedetection_lxc_docker_20260914_084954.png)
-
 ### Component: `changedetection` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5002](http://10.99.0.199:5002)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -895,13 +867,6 @@
 
 ![docker-jitsi-meet Web UI](images/test_screenshots/docker-jitsi-meet_vm_podman_20260914_123114.png)
 
-### Component: `dockge` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:5001](http://10.99.0.199:5001)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![dockge Web UI](images/test_screenshots/dockge_lxc_docker_20260914_085224.png)
-
 ### Component: `dockge` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5001](http://10.99.0.199:5001)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -951,13 +916,6 @@
 
 ![docmost Web UI](images/test_screenshots/docmost_vm_podman_20260914_123253.png)
 
-### Component: `dozzle` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8101](http://10.99.0.199:8101)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![dozzle Web UI](images/test_screenshots/dozzle_lxc_docker_20260914_085329.png)
-
 ### Component: `dozzle` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8101](http://10.99.0.199:8101)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -978,13 +936,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![dozzle Web UI](images/test_screenshots/dozzle_vm_podman_20260914_123313.png)
-
-### Component: `drawio` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8082](http://10.99.0.199:8082)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![drawio Web UI](images/test_screenshots/drawio_lxc_docker_20260914_085356.png)
 
 ### Component: `drawio` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8082](http://10.99.0.199:8082)
@@ -1034,13 +985,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![duplicati Web UI](images/test_screenshots/duplicati_vm_podman_20260914_123413.png)
-
-### Component: `esphome` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:6052](http://10.99.0.199:6052)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![esphome Web UI](images/test_screenshots/esphome_lxc_docker_20260914_085457.png)
 
 ### Component: `esphome` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:6052](http://10.99.0.199:6052)
@@ -1119,13 +1063,6 @@
 
 ![evcc Web UI](images/test_screenshots/evcc_vm_podman_20260914_123550.png)
 
-### Component: `excalidraw` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8081](http://10.99.0.199:8081)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![excalidraw Web UI](images/test_screenshots/excalidraw_lxc_docker_20260914_085609.png)
-
 ### Component: `excalidraw` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8081](http://10.99.0.199:8081)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -1202,13 +1139,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![firefly-iii Web UI](images/test_screenshots/firefly-iii_vm_podman_20260914_123734.png)
-
-### Component: `flatnotes` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8088](http://10.99.0.199:8088)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![flatnotes Web UI](images/test_screenshots/flatnotes_lxc_docker_20260914_085737.png)
 
 ### Component: `flatnotes` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8088](http://10.99.0.199:8088)
@@ -1287,13 +1217,6 @@
 
 ![freshrss Web UI](images/test_screenshots/freshrss_vm_podman_20260914_123901.png)
 
-### Component: `frigate` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:5000](http://10.99.0.199:5000)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![frigate Web UI](images/test_screenshots/frigate_lxc_docker_20260914_090023.png)
-
 ### Component: `frigate` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5000](http://10.99.0.199:5000)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -1371,13 +1294,6 @@
 
 ![glance Web UI](images/test_screenshots/glance_vm_podman_20260914_124248.png)
 
-### Component: `gotify` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8097](http://10.99.0.199:8097)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![gotify Web UI](images/test_screenshots/gotify_lxc_docker_20260914_090221.png)
-
 ### Component: `gotify` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8097](http://10.99.0.199:8097)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -1398,13 +1314,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![gotify Web UI](images/test_screenshots/gotify_vm_podman_20260914_124307.png)
-
-### Component: `grafana` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![grafana Web UI](images/test_screenshots/grafana_lxc_docker_20260914_090247.png)
 
 ### Component: `grafana` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
@@ -1483,13 +1392,6 @@
 
 ![headscale Web UI](images/test_screenshots/headscale_vm_podman_20260914_124457.png)
 
-### Component: `heimdall` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8090](http://10.99.0.199:8090)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 106 | **IP:** `10.99.0.199`
-
-![heimdall Web UI](images/test_screenshots/heimdall_lxc_docker_20260918_164938.png)
-
 ### Component: `homarr` (LXC + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:7575](http://10.99.0.199:7575)
 - **Target Mode:** `LXC` | **Engine:** `DOCKER`
@@ -1517,13 +1419,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![homarr Web UI](images/test_screenshots/homarr_vm_podman_20260914_124606.png)
-
-### Component: `homeassistant` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8123](http://10.99.0.199:8123)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![homeassistant Web UI](images/test_screenshots/homeassistant_lxc_docker_20260914_090524.png)
 
 ### Component: `homeassistant` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8123](http://10.99.0.199:8123)
@@ -1573,13 +1468,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![homebridge Web UI](images/test_screenshots/homebridge_vm_podman_20260914_124753.png)
-
-### Component: `homepage` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![homepage Web UI](images/test_screenshots/homepage_lxc_docker_20260914_090633.png)
 
 ### Component: `homepage` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
@@ -1720,13 +1608,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![jellyfin Web UI](images/test_screenshots/jellyfin_vm_podman_20260914_125128.png)
-
-### Component: `jellyseerr` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:5055](http://10.99.0.199:5055)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![jellyseerr Web UI](images/test_screenshots/jellyseerr_lxc_docker_20260914_090914.png)
 
 ### Component: `jellyseerr` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:5055](http://10.99.0.199:5055)
@@ -1917,13 +1798,6 @@
 
 ![litellm Web UI](images/test_screenshots/litellm_vm_podman_20260914_130145.png)
 
-### Component: `mealie` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:9925](http://10.99.0.199:9925)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![mealie Web UI](images/test_screenshots/mealie_lxc_docker_20260914_091428.png)
-
 ### Component: `mealie` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:9925](http://10.99.0.199:9925)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -1972,13 +1846,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![memos Web UI](images/test_screenshots/memos_vm_podman_20260914_130259.png)
-
-### Component: `metube` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8082](http://10.99.0.199:8082)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![metube Web UI](images/test_screenshots/metube_lxc_docker_20260914_091505.png)
 
 ### Component: `metube` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8082](http://10.99.0.199:8082)
@@ -2113,13 +1980,6 @@
 
 ![n8n Web UI](images/test_screenshots/n8n_vm_podman_20260914_130609.png)
 
-### Component: `navidrome` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:4533](http://10.99.0.199:4533)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![navidrome Web UI](images/test_screenshots/navidrome_lxc_docker_20260914_091720.png)
-
 ### Component: `navidrome` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:4533](http://10.99.0.199:4533)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2224,13 +2084,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![nginx-proxy-manager Web UI](images/test_screenshots/nginx-proxy-manager_vm_podman_20260914_131006.png)
-
-### Component: `nocodb` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8098](http://10.99.0.199:8098)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![nocodb Web UI](images/test_screenshots/nocodb_lxc_docker_20260914_092035.png)
 
 ### Component: `nocodb` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8098](http://10.99.0.199:8098)
@@ -2421,13 +2274,6 @@
 
 ![pairdrop Web UI](images/test_screenshots/pairdrop_vm_podman_20260914_131744.png)
 
-### Component: `paperless-ngx` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8000](http://10.99.0.199:8000)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![paperless-ngx Web UI](images/test_screenshots/paperless-ngx_lxc_docker_20260914_092732.png)
-
 ### Component: `paperless-ngx` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8000](http://10.99.0.199:8000)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2504,13 +2350,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![phpmyadmin Web UI](images/test_screenshots/phpmyadmin_vm_podman_20260914_132110.png)
-
-### Component: `pi-hole` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8088/admin](http://10.99.0.199:8088/admin)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![pi-hole Web UI](images/test_screenshots/pi-hole_lxc_docker_20260914_092917.png)
 
 ### Component: `pi-hole` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8088/admin](http://10.99.0.199:8088/admin)
@@ -2659,13 +2498,6 @@
 
 ![prometheus Web UI](images/test_screenshots/prometheus_vm_podman_20260914_132415.png)
 
-### Component: `prowlarr` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:9696](http://10.99.0.199:9696)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![prowlarr Web UI](images/test_screenshots/prowlarr_lxc_docker_20260914_093148.png)
-
 ### Component: `prowlarr` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:9696](http://10.99.0.199:9696)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2686,13 +2518,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![prowlarr Web UI](images/test_screenshots/prowlarr_vm_podman_20260914_132457.png)
-
-### Component: `qbittorrent` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8084](http://10.99.0.199:8084)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![qbittorrent Web UI](images/test_screenshots/qbittorrent_lxc_docker_20260914_093210.png)
 
 ### Component: `qbittorrent` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8084](http://10.99.0.199:8084)
@@ -2715,13 +2540,6 @@
 
 ![qbittorrent Web UI](images/test_screenshots/qbittorrent_vm_podman_20260914_132522.png)
 
-### Component: `radarr` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:7878](http://10.99.0.199:7878)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![radarr Web UI](images/test_screenshots/radarr_lxc_docker_20260914_093233.png)
-
 ### Component: `radarr` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:7878](http://10.99.0.199:7878)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2743,13 +2561,6 @@
 
 ![radarr Web UI](images/test_screenshots/radarr_vm_podman_20260914_132554.png)
 
-### Component: `romm` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8090](http://10.99.0.199:8090)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![romm Web UI](images/test_screenshots/romm_lxc_docker_20260914_093310.png)
-
 ### Component: `romm` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8090](http://10.99.0.199:8090)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2770,13 +2581,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![romm Web UI](images/test_screenshots/romm_vm_podman_20260914_132634.png)
-
-### Component: `sabnzbd` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8086](http://10.99.0.199:8086)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![sabnzbd Web UI](images/test_screenshots/sabnzbd_lxc_docker_20260914_093350.png)
 
 ### Component: `sabnzbd` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8086](http://10.99.0.199:8086)
@@ -2911,13 +2715,6 @@
 
 ![semaphore Web UI](images/test_screenshots/semaphore_vm_podman_20260914_133007.png)
 
-### Component: `sftpgo` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8109](http://10.99.0.199:8109)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![sftpgo Web UI](images/test_screenshots/sftpgo_lxc_docker_20260914_093615.png)
-
 ### Component: `sftpgo` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8109](http://10.99.0.199:8109)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -2938,13 +2735,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![sftpgo Web UI](images/test_screenshots/sftpgo_vm_podman_20260914_133031.png)
-
-### Component: `shlink` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8089/rest/v3/health](http://10.99.0.199:8089/rest/v3/health)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![shlink Web UI](images/test_screenshots/shlink_lxc_docker_20260914_093638.png)
 
 ### Component: `shlink` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8089/rest/v3/health](http://10.99.0.199:8089/rest/v3/health)
@@ -2995,13 +2785,6 @@
 
 ![silverbullet Web UI](images/test_screenshots/silverbullet_vm_podman_20260914_133148.png)
 
-### Component: `sonarr` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8989](http://10.99.0.199:8989)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![sonarr Web UI](images/test_screenshots/sonarr_lxc_docker_20260914_093730.png)
-
 ### Component: `sonarr` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8989](http://10.99.0.199:8989)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -3050,13 +2833,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![speedtest-tracker Web UI](images/test_screenshots/speedtest-tracker_vm_podman_20260914_133417.png)
-
-### Component: `stirling-pdf` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![stirling-pdf Web UI](images/test_screenshots/stirling-pdf_lxc_docker_20260914_093857.png)
 
 ### Component: `stirling-pdf` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:8080](http://10.99.0.199:8080)
@@ -3254,13 +3030,6 @@
 
 ![trilium Web UI](images/test_screenshots/trilium_vm_podman_20260914_133813.png)
 
-### Component: `umami` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![umami Web UI](images/test_screenshots/umami_lxc_docker_20260914_094149.png)
-
 ### Component: `umami` (LXC + PODMAN)
 - **Web UI Endpoint:** [http://10.99.0.199:3000](http://10.99.0.199:3000)
 - **Target Mode:** `LXC` | **Engine:** `PODMAN`
@@ -3421,13 +3190,6 @@
 - **VM ID:** 104 | **IP:** `10.99.0.199`
 
 ![wallabag Web UI](images/test_screenshots/wallabag_vm_podman_20260914_134320.png)
-
-### Component: `wallos` (LXC + DOCKER)
-- **Web UI Endpoint:** [http://10.99.0.199:8119](http://10.99.0.199:8119)
-- **Target Mode:** `LXC` | **Engine:** `DOCKER`
-- **VM ID:** 104 | **IP:** `10.99.0.199`
-
-![wallos Web UI](images/test_screenshots/wallos_lxc_docker_20260914_094502.png)
 
 ### Component: `wallos` (VM + DOCKER)
 - **Web UI Endpoint:** [http://10.99.0.199:8119](http://10.99.0.199:8119)

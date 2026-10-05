@@ -9,7 +9,7 @@
 > A network-wide ad and tracker blocker that functions as a DNS sinkhole, protecting all local network devices without requiring client-side software.
 
 - **Upstream Project:** [Pi-hole](https://pi-hole.net/)
-- **Source Repository:** [github.com/pi-hole/pi-hole](https://github.com/pi-hole/pi-hole)
+- **Source Repository:** [github.com/pi-hole/docker-pi-hole](https://github.com/pi-hole/docker-pi-hole)
 - **Container Image:** `pihole/pihole:latest`
 
 ---
@@ -28,7 +28,7 @@
   - **CPU Profile:** Medium
   - **Storage:** Persistent
 > **Platform Verification Notes:**
-> Tested on Proxmox LXC: docker (2026.07.2, 2026-09-14), podman (2026.07.2, 2026-09-14); Proxmox VM: docker (2026.07.2, 2026-09-14), podman (2026.07.2, 2026-09-14).
+> Tested on Proxmox LXC: docker (2026.09.0, 2026-10-05), podman (2026.07.2, 2026-09-14); Proxmox VM: docker (2026.07.2, 2026-09-14), podman (2026.07.2, 2026-09-14).
 ---
 
 ## 🚀 Quick Start (Standalone Docker Compose)
