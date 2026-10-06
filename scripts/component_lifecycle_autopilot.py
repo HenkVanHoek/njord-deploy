@@ -596,6 +596,11 @@ def main() -> int:
         )
         if not args.skip_sync:
             sync_and_publish_all(passed)
+            try:
+                from scripts.watch_components_lifecycle import sync_to_sysopswatch
+                sync_to_sysopswatch()
+            except Exception:
+                pass
 
         if not args.no_signal:
             remaining_meta = load_metadata()
