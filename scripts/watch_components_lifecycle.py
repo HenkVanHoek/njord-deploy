@@ -524,7 +524,7 @@ def promote_candidate(comp_id: str) -> None:
 
     comp = comps[comp_id]
     staging = comp.get("staging", {})
-    candidate = staging.get("candidate_version")
+    candidate = staging.get("candidate_version") or staging.get("version")
 
     if not candidate:
         print(
@@ -540,6 +540,8 @@ def promote_candidate(comp_id: str) -> None:
 
     # Reset staging
     staging["candidate_version"] = None
+    if "version" in staging:
+        staging["version"] = None
     staging["status"] = "idle"
     staging["entered_staging_at"] = None
 

@@ -64,9 +64,11 @@ logger = logging.getLogger("component_autopilot")
 def get_python_env() -> Dict[str, str]:
     """Prepares environment with PYTHONPATH pointing to virtualenv and src."""
     env = os.environ.copy()
-    venv_site = PROJECT_ROOT / ".venv" / "lib" / "python3.12" / "site-packages"
-    src_dir = PROJECT_ROOT / "src"
-    py_path = f"{venv_site}:{src_dir}"
+    site_dirs = list((PROJECT_ROOT / ".venv" / "lib").glob("python*/site-packages"))
+    venv_site = str(site_dirs[0]) if site_dirs else ""
+    src_dir = str(PROJECT_ROOT / "src")
+    paths = [p for p in (venv_site, src_dir) if p]
+    py_path = ":".join(paths)
     existing = env.get("PYTHONPATH")
     if existing:
         py_path = f"{py_path}:{existing}"
@@ -111,7 +113,7 @@ def run_upstream_check() -> None:
     # noinspection PyBroadException
     try:
         subprocess.run(
-            ["/usr/bin/python3", str(script_path), "--check"],
+            [sys.executable or "/usr/bin/python3", str(script_path), "--check"],
             cwd=PROJECT_ROOT,
             env=env,
             check=False,
@@ -168,11 +170,21 @@ def get_candidates(
         if comp_meta.get("pinned"):
             continue
         staging = comp_meta.get("staging") or {}
-        if staging.get("status") == "candidate":
-            target_ver = staging.get("version", "").strip()
-            if target_ver:
-                is_sec = is_security_component(comp_id, comp_meta)
-                candidates.append((comp_id, target_ver, is_sec))
+        stat = staging.get("status")
+        target_ver = (
+            staging.get("candidate_version")
+            or staging.get("version")
+            or ""
+        ).strip()
+        if target_ver and stat in (
+            "candidate",
+            "awaiting_approval",
+            "testing",
+            "in_staging",
+            "pending_validation",
+        ):
+            is_sec = is_security_component(comp_id, comp_meta)
+            candidates.append((comp_id, target_ver, is_sec))
 
     # Sort security infrastructure first, then alphabetically
     candidates.sort(key=lambda x: (not x[2], x[0]))
@@ -197,7 +209,7 @@ def run_proeftuin_test(
     env = get_python_env()
 
     cmd = [
-        "/usr/bin/python3",
+        sys.executable or "/usr/bin/python3",
         str(test_runner),
         "--components",
         comp_id,
@@ -270,6 +282,17 @@ def mark_candidate_needs_review(
     save_metadata(metadata)
     sync_sysopswatch()
     logger.warning("Marked '%s' as 'needs_review' in Wachtkamer.", comp_id)
+
+
+def promote_verified_candidate(comp_id: str, version: str) -> None:
+    """Promotes verified candidate to production in metadata and templates."""
+    try:
+        from scripts.watch_components_lifecycle import promote_candidate
+
+        promote_candidate(comp_id)
+        logger.info("Promoted candidate '%s' (v%s) to operational.", comp_id, version)
+    except Exception as exc:
+        logger.error("Error promoting candidate '%s': %s", comp_id, exc)
 
 
 def deploy_static_site_to_live_vps() -> bool:
@@ -550,6 +573,7 @@ def main() -> int:
         if test_ok:
             logger.info(">>> GESLAAGD: %s (v%s) is geverifieerd.", comp_id, version)
             passed.append((comp_id, version))
+            promote_verified_candidate(comp_id, version)
         else:
             logger.warning(
                 ">>> MISLUKT: %s (v%s) faalt: %s", comp_id, version, error_info

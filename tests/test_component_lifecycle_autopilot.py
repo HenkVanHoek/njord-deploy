@@ -27,7 +27,7 @@ def test_get_candidates_filtering_and_sorting():
             "mealie": {
                 "group": "Lifestyle & Automation",
                 "pinned": False,
-                "staging": {"status": "candidate", "version": "3.30.0"},
+                "staging": {"status": "awaiting_approval", "candidate_version": "3.30.0"},
             },
             "pi-hole": {
                 "group": "dns_blocker",
@@ -210,12 +210,13 @@ def test_main_no_candidates(mock_load, mock_scan):
 
 @patch("scripts.component_lifecycle_autopilot.load_metadata")
 @patch("scripts.component_lifecycle_autopilot.run_proeftuin_test")
+@patch("scripts.component_lifecycle_autopilot.promote_verified_candidate")
 @patch("scripts.component_lifecycle_autopilot.sync_and_publish_all")
 @patch("scripts.component_lifecycle_autopilot.dispatch_success_report")
 def test_main_happy_flow(
-    mock_report, mock_sync, mock_test, mock_load
+    mock_report, mock_sync, mock_promote, mock_test, mock_load
 ):
-    """Verifies happy flow where all candidates pass and publish."""
+    """Verifies happy flow where all candidates pass, promote and publish."""
     mock_load.return_value = {
         "components": {
             "gotify": {
@@ -237,8 +238,19 @@ def test_main_happy_flow(
         ret = main()
         assert ret == 0
         assert mock_test.called
+        assert mock_promote.called
+        mock_promote.assert_called_once_with("gotify", "3.1.2")
         assert mock_sync.called
         assert mock_report.called
+
+
+@patch("scripts.watch_components_lifecycle.promote_candidate")
+def test_promote_verified_candidate_calls_watcher(mock_promote_candidate):
+    """Verifies that promote_verified_candidate delegates to promote_candidate."""
+    from scripts.component_lifecycle_autopilot import promote_verified_candidate
+
+    promote_verified_candidate("vaultwarden", "1.37.4")
+    mock_promote_candidate.assert_called_once_with("vaultwarden")
 
 
 @patch("scripts.component_lifecycle_autopilot.load_metadata")
