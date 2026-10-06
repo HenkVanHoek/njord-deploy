@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "v3.2.0"
-# platform_notes: "Tested on Proxmox LXC: docker (v3.2.0, 2026-09-14), podman (v3.2.0, 2026-09-14); Proxmox VM: docker (v3.2.0, 2026-09-27), podman (v3.2.0, 2026-09-14)."
+# last_tested_version: "3.2.4"
+# platform_notes: "Tested on Proxmox LXC: docker (v3.2.4, 2026-10-06), podman (v3.2.0, 2026-09-14); Proxmox VM: docker (v3.2.0, 2026-09-27), podman (v3.2.0, 2026-09-14)."
 # breaking_changes: none
 services:
   immich-server:

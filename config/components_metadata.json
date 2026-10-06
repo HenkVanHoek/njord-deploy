@@ -1481,9 +1481,9 @@
             "has_ui": true,
             "image_name": "jgraph/drawio",
             "is_agent": false,
-            "last_tested": "2026-10-05T17:53:57.225198+00:00",
-            "last_tested_version": "24.04",
-            "last_updated": "2026-10-05T17:53:57.225208+00:00",
+            "last_tested": "2026-10-06T08:16:16.024775+00:00",
+            "last_tested_version": "32.0.2",
+            "last_updated": "2026-10-06T08:08:43.367591+00:00",
             "name": "Draw.io",
             "port": 8082,
             "release_track": {
@@ -1493,11 +1493,11 @@
             },
             "requires_root": false,
             "staging": {
-                "candidate_version": "32.0.2",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": "Passed Proxmox LXC DOCKER test (24.04)"
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (32.0.2)"
             },
             "test_status": "tested",
             "ui_port_variable": "DRAWIO_WEB_PORT",
@@ -2154,9 +2154,9 @@
             "has_ui": true,
             "image_name": "freshrss/freshrss",
             "is_agent": false,
-            "last_tested": "2026-09-14T10:39:03.821029+00:00",
-            "last_tested_version": "1.30.0",
-            "last_updated": "2026-09-14T10:39:03.821044+00:00",
+            "last_tested": "2026-10-06T08:16:16.025578+00:00",
+            "last_tested_version": "1.30.1",
+            "last_updated": "2026-10-06T08:09:53.994311+00:00",
             "name": "FreshRSS",
             "port": 8086,
             "release_track": {
@@ -2166,11 +2166,11 @@
             },
             "requires_root": false,
             "staging": {
-                "candidate_version": "1.30.1",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (1.30.1)"
             },
             "test_status": "tested",
             "ui_port_variable": "FRESHRSS_WEB_PORT",
@@ -2596,9 +2596,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "grafana/grafana-oss",
-            "last_tested": "2026-10-05T17:57:33.707669+00:00",
-            "last_tested_version": "11.1.3",
-            "last_updated": "2026-10-05T17:57:33.707681+00:00",
+            "last_tested": "2026-10-06T08:16:16.025834+00:00",
+            "last_tested_version": "13.2.3",
+            "last_updated": "2026-10-06T08:11:14.242335+00:00",
             "name": "Grafana Stack",
             "package_id": "observability-analytics",
             "project_url": "https://grafana.com/",
@@ -2614,11 +2614,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "13.2.3",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": "Passed Proxmox LXC DOCKER test (11.1.3)"
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (13.2.3)"
             },
             "tags": [
                 "monitoring",
@@ -2961,9 +2961,9 @@
             "has_ui": true,
             "image_name": "homeassistant/home-assistant",
             "intent_questions": [],
-            "last_tested": "2026-10-05T17:58:27.316327+00:00",
-            "last_tested_version": "2026.9.4",
-            "last_updated": "2026-10-05T17:58:27.316339+00:00",
+            "last_tested": "2026-10-06T08:16:16.026097+00:00",
+            "last_tested_version": "2026.10.0",
+            "last_updated": "2026-10-06T08:13:01.094610+00:00",
             "name": "Home Assistant",
             "package_id": null,
             "podman_mode": "rootful",
@@ -2981,11 +2981,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "2026.10.0",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": "Passed Proxmox LXC DOCKER test (2026.9.4)"
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (2026.10.0)"
             },
             "supported_matrix": {
                 "engines": [
@@ -3214,9 +3214,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/immich-app/immich-server",
-            "last_tested": "2026-09-14T10:50:19.026808+00:00",
-            "last_tested_version": "v3.2.0",
-            "last_updated": "2026-09-14T10:50:19.026824+00:00",
+            "last_tested": "2026-10-06T08:16:16.026699+00:00",
+            "last_tested_version": "3.2.4",
+            "last_updated": "2026-10-06T08:15:05.366615+00:00",
             "name": "Immich",
             "package_id": "immich-stack",
             "protocol": "http",
@@ -3234,11 +3234,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "3.2.4",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (3.2.4)"
             },
             "tags": [
                 "photo",
@@ -3419,9 +3419,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/jellyfin",
             "intent_questions": [],
-            "last_tested": "2026-09-14T10:51:31.029034+00:00",
-            "last_tested_version": "12.1",
-            "last_updated": "2026-09-14T10:51:31.029048+00:00",
+            "last_tested": "2026-10-06T08:20:04.140792+00:00",
+            "last_tested_version": "12.2ubu2604-ls52",
+            "last_updated": "2026-10-06T08:20:04.140809+00:00",
             "name": "Jellyfin",
             "package_id": "media-stack",
             "project_url": "https://jellyfin.org/",
@@ -3437,11 +3437,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "12.2",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (12.2ubu2604-ls52)"
             },
             "tags": [
                 "self-hosted"
@@ -4385,9 +4385,9 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "n8nio/n8n",
-            "last_tested": "2026-09-14T11:06:12.304847+00:00",
-            "last_tested_version": "2.38.7",
-            "last_updated": "2026-09-14T11:06:12.304863+00:00",
+            "last_tested": "2026-10-06T08:21:53.315589+00:00",
+            "last_tested_version": "2.42.3",
+            "last_updated": "2026-10-06T08:21:53.315611+00:00",
             "name": "n8n",
             "project_url": "https://n8n.io/",
             "protocol": "http",
@@ -4397,11 +4397,11 @@
                 "track": "standard"
             },
             "staging": {
-                "candidate_version": "2.43.0",
-                "entered_staging_at": "2026-10-06T07:24:11.932000+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (2.42.3)"
             },
             "test_status": "tested",
             "ui_port_variable": "N8N_WEB_PORT",
@@ -5432,9 +5432,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/paperless-ngx/paperless-ngx",
-            "last_tested": "2026-10-05T18:05:38.823692+00:00",
-            "last_tested_version": "3.2.1",
-            "last_updated": "2026-10-05T18:05:38.823706+00:00",
+            "last_tested": "2026-10-06T08:36:25.024457+00:00",
+            "last_tested_version": "3.3.0",
+            "last_updated": "2026-10-06T08:36:25.024466+00:00",
             "name": "Paperless-ngx",
             "protocol": "http",
             "release_track": {
@@ -5443,11 +5443,11 @@
                 "track": "standard"
             },
             "staging": {
-                "candidate_version": "3.3.0",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.2.1)"
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (3.3.0)"
             },
             "supported_matrix": {
                 "engines": [
@@ -6424,9 +6424,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/sabnzbd",
             "intent_questions": [],
-            "last_tested": "2026-10-05T17:44:00.954189+00:00",
+            "last_tested": "2026-10-06T08:37:40.139803+00:00",
             "last_tested_version": "5.1.3-ls275",
-            "last_updated": "2026-10-05T17:44:00.954215+00:00",
+            "last_updated": "2026-10-06T08:37:40.139811+00:00",
             "name": "SABnzbd",
             "package_id": "media-stack",
             "project_url": "https://sabnzbd.org/",
@@ -6442,10 +6442,10 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "5.2.0",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
+                "status": "idle",
                 "test_result": "Passed Proxmox LXC DOCKER test (5.1.3-ls275)"
             },
             "tags": [
@@ -6920,9 +6920,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/sonarr",
             "intent_questions": [],
-            "last_tested": "2026-10-05T17:47:13.132644+00:00",
+            "last_tested": "2026-10-06T08:39:04.390648+00:00",
             "last_tested_version": "4.0.20.3014-ls326",
-            "last_updated": "2026-10-05T17:47:13.132664+00:00",
+            "last_updated": "2026-10-06T08:39:04.390670+00:00",
             "name": "Sonarr",
             "package_id": "media-stack",
             "project_url": "https://sonarr.tv/",
@@ -6938,10 +6938,10 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "6.4.4.10685",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
+                "status": "idle",
                 "test_result": "Passed Proxmox LXC DOCKER test (4.0.20.3014-ls326)"
             },
             "tags": [
@@ -7027,9 +7027,9 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "stirlingtools/stirling-pdf",
-            "last_tested": "2026-10-05T17:55:17.867790+00:00",
-            "last_tested_version": "3.0.2",
-            "last_updated": "2026-10-05T17:55:17.867803+00:00",
+            "last_tested": "2026-10-06T08:41:15.265630+00:00",
+            "last_tested_version": "3.1.0",
+            "last_updated": "2026-10-06T08:41:15.265646+00:00",
             "name": "Stirling PDF",
             "project_url": "https://stirlingpdf.com/",
             "protocol": "http",
@@ -7047,11 +7047,11 @@
                 "storage_type": "ssd"
             },
             "staging": {
-                "candidate_version": "3.1.0",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.0.2)"
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (3.1.0)"
             },
             "tags": [
                 "pdf",
@@ -7092,9 +7092,9 @@
             "has_ui": true,
             "image_name": "syncthing/syncthing",
             "is_agent": false,
-            "last_tested": "2026-09-14T11:35:48.725135+00:00",
-            "last_tested_version": "v2.1.5",
-            "last_updated": "2026-09-14T11:35:48.725149+00:00",
+            "last_tested": "2026-10-06T08:42:31.335389+00:00",
+            "last_tested_version": "v2.1.6",
+            "last_updated": "2026-10-06T08:42:31.335400+00:00",
             "name": "Syncthing",
             "port": 8384,
             "release_track": {
@@ -7104,11 +7104,11 @@
             },
             "requires_root": false,
             "staging": {
-                "candidate_version": "2.1.6",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (v2.1.6)"
             },
             "test_status": "tested",
             "ui_port_variable": "SYNCTHING_WEB_PORT",
@@ -7337,8 +7337,8 @@
             "has_ui": true,
             "image_name": "traefik",
             "intent_questions": [],
-            "last_tested": "2026-09-14T10:12:37.147776+00:00",
-            "last_tested_version": "v3.7.13",
+            "last_tested": "2026-10-06T08:17:24.401925+00:00",
+            "last_tested_version": "3.7.14",
             "last_updated": "2026-09-14T10:12:37.147790+00:00",
             "name": "Traefik",
             "package_id": null,
@@ -7357,10 +7357,10 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "3.7.14",
-                "entered_staging_at": "2026-10-06T07:41:29.673460+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
+                "status": "idle",
                 "test_result": null
             },
             "supported_matrix": {
@@ -7766,9 +7766,9 @@
             "has_ui": true,
             "image_name": "louislam/uptime-kuma",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:42:00.937166+00:00",
-            "last_tested_version": "1.23.16",
-            "last_updated": "2026-09-14T11:42:00.937180+00:00",
+            "last_tested": "2026-10-06T08:43:50.810555+00:00",
+            "last_tested_version": "latest",
+            "last_updated": "2026-10-06T08:43:50.810570+00:00",
             "name": "Uptime Kuma",
             "package_id": null,
             "podman_mode": "rootful",
@@ -7785,11 +7785,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "2.5.5",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (latest)"
             },
             "tags": [
                 "self-hosted"
@@ -7826,9 +7826,9 @@
             "has_ui": true,
             "image_name": "vaultwarden/server",
             "intent_questions": [],
-            "last_tested": "2026-09-18T14:53:44.173530+00:00",
-            "last_tested_version": "1.37.3",
-            "last_updated": "2026-09-18T14:53:44.173542+00:00",
+            "last_tested": "2026-10-06T08:18:33.325559+00:00",
+            "last_tested_version": "1.37.4",
+            "last_updated": "2026-10-06T08:18:33.325571+00:00",
             "name": "Vaultwarden",
             "package_id": null,
             "project_url": "https://github.com/dani-garcia/vaultwarden",
@@ -7844,11 +7844,11 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "1.37.4",
-                "entered_staging_at": "2026-10-06T06:51:17.497640+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "status": "awaiting_approval",
-                "test_result": null
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (1.37.4)"
             },
             "tags": [
                 "self-hosted"

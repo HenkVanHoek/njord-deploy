@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "12.0ubu2604-ls48"
-# platform_notes: "Tested on Proxmox LXC: docker (12.0ubu2604-ls48, 2026-09-14), podman (12.0ubu2604-ls48, 2026-09-14); Proxmox VM: docker (12.0ubu2604-ls48, 2026-09-14), podman (12.0ubu2604-ls48, 2026-09-14)."
+# last_tested_version: "12.2ubu2604-ls52"
+# platform_notes: "Tested on Proxmox LXC: docker (12.2ubu2604-ls52, 2026-10-06), podman (12.0ubu2604-ls48, 2026-09-14); Proxmox VM: docker (12.0ubu2604-ls48, 2026-09-14), podman (12.0ubu2604-ls48, 2026-09-14)."
 # breaking_changes: "None"
 services:
   jellyfin:
