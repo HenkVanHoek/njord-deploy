@@ -1,4 +1,5 @@
 /* NjordDeploy / SBCDeploy Official Futuristic Glassmorphic Theme */
+@import url("tokens.css");
 
 :root, html[data-theme="dark"], html[data-theme="futuristic-dark"] {
     /* Glowing Neon Accent Colors */
@@ -631,3 +632,58 @@ html[data-theme="light"] .modal .card {
     border: 1px solid rgba(0, 176, 255, 0.3) !important;
     color: #00b0ff !important;
 }
+
+/* ==========================================================================
+   14. Sovereign Stack Status Bolletjes & Telemetry Metrics
+   ========================================================================== */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.status-dot.healthy, .status-dot.online, .status-dot.ok {
+    background-color: var(--njord-status-healthy);
+    box-shadow: 0 0 8px var(--njord-status-healthy-glow);
+}
+.status-dot.warning, .status-dot.degraded {
+    background-color: var(--njord-status-warning);
+    box-shadow: 0 0 8px var(--njord-status-warning-glow);
+}
+.status-dot.critical, .status-dot.down, .status-dot.error {
+    background-color: var(--njord-status-critical);
+    box-shadow: 0 0 8px var(--njord-status-critical-glow);
+}
+.status-dot.offline, .status-dot.neutral {
+    background-color: var(--njord-status-offline);
+    box-shadow: none;
+}
+
+/* Metric / Telemetry Badges */
+.badge-njord {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--njord-radius-full);
+    border: 1px solid var(--njord-glass-border);
+    background: var(--njord-glass-bg);
+    color: var(--njord-text-primary);
+    backdrop-filter: var(--njord-glass-blur);
+}
+.badge-njord.badge-healthy {
+    border-color: rgba(0, 230, 118, 0.4);
+    color: var(--njord-status-healthy);
+}
+.badge-njord.badge-warning {
+    border-color: rgba(255, 171, 0, 0.4);
+    color: var(--njord-status-warning);
+}
+.badge-njord.badge-critical {
+    border-color: rgba(255, 23, 68, 0.4);
+    color: var(--njord-status-critical);
+}
+

@@ -409,6 +409,23 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertEqual(res_data["status"], "created")
         mock_update_template.assert_called_once()
 
+    def test_save_ai_component_rejects_ssti(self):
+        """OWASP LLM02: Verify saving component with SSTI payload returns 400."""
+        payload = {
+            "id": "exploit-app",
+            "metadata": {"name": "Exploit App"},
+            "docker_compose": "services:\n  bad:\n    command: {{ ''.__class__ }}\n",
+            "variables": [],
+            "overwrite": True,
+        }
+        response = self.client.post(
+            "/api/components/ai",
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("Forbidden template expression", response.data.decode("utf-8"))
+
     @patch("utils.ai_generator.AIGenerator.generate_component_data")
     def test_ai_generate_streaming_success(self, mock_generate):
         """Tests /api/ai/generate with stream=True yields SSE progress and result."""
@@ -474,3 +491,14 @@ class TestEditorAppAPI(unittest.TestCase):
         data_text = response.data.decode("utf-8")
         self.assertIn('"type": "error"', data_text)
         self.assertIn("Ollama connection timed out", data_text)
+
+    def test_static_css_and_tokens_routes(self):
+        """Tests that shared njorddeploy-style.css and tokens.css are served properly."""
+        resp_style = self.client.get("/static/css/njorddeploy-style.css")
+        self.assertEqual(resp_style.status_code, 200)
+        self.assertIn(b"NjordDeploy", resp_style.data)
+
+        resp_tokens = self.client.get("/static/css/tokens.css")
+        self.assertEqual(resp_tokens.status_code, 200)
+        self.assertIn(b"--njord-primary", resp_tokens.data)
+

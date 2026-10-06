@@ -18,6 +18,7 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.exceptions import HTTPException
 from werkzeug.utils import secure_filename
 
 from managers.component_manager import ComponentManager
@@ -792,6 +793,27 @@ def create_app(test_config=None):
 
         abort(404, "njorddeploy-style.css not found")
 
+    @app.route("/static/css/tokens.css")
+    def serve_tokens_css():
+        from flask import send_from_directory
+
+        from utils.resource_utils import resource_path
+
+        candidate_dirs = [
+            resource_path("src/editor_app/static/css"),
+            resource_path("src/configurator_app/static/css"),
+            project_root / "src" / "editor_app" / "static" / "css",
+            project_root / "src" / "configurator_app" / "static" / "css",
+            Path(__file__).parent / "static" / "css",
+            Path(__file__).parent.parent / "configurator_app" / "static" / "css",
+        ]
+        for css_dir in candidate_dirs:
+            if (css_dir / "tokens.css").exists():
+                return send_from_directory(css_dir, "tokens.css")
+
+        abort(404, "tokens.css not found")
+
+
     @app.route("/")
     def index():
         has_gemini_key = bool(os.environ.get("GEMINI_API_KEY"))
@@ -1479,6 +1501,28 @@ def create_app(test_config=None):
             abort(400, "Component ID must be alphanumeric and hyphens only")
         safe_component_id = secure_filename(component_id)
 
+        # Security Gatekeeper: Check for Server-Side Template Injection (SSTI)
+        if isinstance(docker_compose, str):
+            ssti_forbidden = [
+                "__class__",
+                "__mro__",
+                "__subclasses__",
+                "__globals__",
+                "__builtins__",
+                "__import__",
+                "eval(",
+                "exec(",
+                "os.popen",
+                "subprocess",
+            ]
+            for pattern in ssti_forbidden:
+                if pattern in docker_compose:
+                    abort(
+                        400,
+                        "Security violation: Forbidden template expression "
+                        f"'{pattern}'",
+                    )
+
         name = metadata.get("name", component_id.capitalize())
 
         try:
@@ -1622,6 +1666,8 @@ def create_app(test_config=None):
 
             return jsonify({"status": "created"}), 201
 
+        except HTTPException:
+            raise
         except ValueError as ve:
             err_msg = str(ve)
             if "already exists" in err_msg:

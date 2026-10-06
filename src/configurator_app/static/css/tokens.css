@@ -1,0 +1,298 @@
+/**
+ * NjordDeploy Sovereign Stack Design System - Unified Design Tokens
+ * Single Source of Truth (SST) for typography, colors, glassmorphism, and status indicators.
+ *
+ * Supported Themes:
+ *  - futuristic-dark (Default dark mode with cyan/green glowing neon accents)
+ *  - light (Clean modern slate light mode)
+ *  - high-contrast-dark (WCAG AAA compliant black/white/neon contrast)
+ *  - high-contrast-light (WCAG AAA compliant white/black contrast)
+ */
+
+:root,
+html[data-theme="dark"],
+html[data-theme="futuristic-dark"] {
+    /* 1. Core Brand & Accent Tokens */
+    --njord-green: #00e676;
+    --njord-green-glow: rgba(0, 230, 118, 0.35);
+    --njord-blue: #00b0ff;
+    --njord-blue-glow: rgba(0, 176, 255, 0.35);
+    --njord-violet: #7c4dff;
+    --njord-violet-glow: rgba(124, 77, 255, 0.35);
+    --njord-cyan: #00e5ff;
+    --njord-gray: #90a4ae;
+
+    /* Semantic Accents */
+    --njord-primary: var(--njord-blue);
+    --njord-primary-rgb: 0, 176, 255;
+    --njord-secondary: var(--njord-gray);
+    --njord-secondary-rgb: 144, 164, 174;
+    --njord-accent: var(--njord-green);
+    --njord-accent-rgb: 0, 230, 118;
+
+    /* 2. Surfaces & Backgrounds */
+    --njord-bg-start: #0a1128;
+    --njord-bg-end: #02040a;
+    --njord-surface: #0f172a;
+    --njord-surface-elevated: #1e293b;
+
+    /* Glassmorphism Tokens */
+    --njord-glass-bg: rgba(30, 41, 59, 0.55);
+    --njord-glass-bg-hover: rgba(30, 41, 59, 0.75);
+    --njord-glass-border: rgba(255, 255, 255, 0.10);
+    --njord-glass-border-focus: rgba(0, 176, 255, 0.50);
+    --njord-glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), 0 0 20px rgba(0, 176, 255, 0.15);
+    --njord-glass-blur: blur(14px);
+
+    /* 3. Text & Content Colors */
+    --njord-text-primary: #f8fafc;
+    --njord-text-secondary: #cbd5e1;
+    --njord-text-muted: #94a3b8;
+    --njord-text-inverted: #02040a;
+
+    /* 4. Form Controls & Inputs */
+    --njord-input-bg: rgba(15, 23, 42, 0.65);
+    --njord-input-border: rgba(255, 255, 255, 0.12);
+    --njord-input-color: #f8fafc;
+    --njord-input-focus-border: var(--njord-blue);
+    --njord-input-focus-shadow: 0 0 12px rgba(0, 176, 255, 0.35);
+
+    /* 5. Status Indicators (Bolletjes & Badges) */
+    --njord-status-healthy: #00e676;
+    --njord-status-healthy-glow: rgba(0, 230, 118, 0.5);
+    --njord-status-warning: #ffab00;
+    --njord-status-warning-glow: rgba(255, 171, 0, 0.5);
+    --njord-status-critical: #ff1744;
+    --njord-status-critical-glow: rgba(255, 23, 68, 0.5);
+    --njord-status-info: #00b0ff;
+    --njord-status-info-glow: rgba(0, 176, 255, 0.5);
+    --njord-status-offline: #64748b;
+
+    /* 6. Navigation & Navbar */
+    --njord-navbar-bg: rgba(15, 23, 42, 0.85);
+    --njord-navbar-border: rgba(255, 255, 255, 0.08);
+    --njord-navbar-color: #cbd5e1;
+
+    /* 7. Typography */
+    --njord-font-heading: 'Outfit', 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --njord-font-body: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --njord-font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+    /* 8. Radii & Spacing */
+    --njord-radius-xs: 4px;
+    --njord-radius-sm: 8px;
+    --njord-radius-md: 12px;
+    --njord-radius-lg: 16px;
+    --njord-radius-xl: 24px;
+    --njord-radius-full: 9999px;
+
+    /* 9. Elevation & Shadows */
+    --njord-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --njord-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+    --njord-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --njord-shadow-glow: 0 0 20px var(--njord-blue-glow);
+
+    /* 10. Backward Compatibility Aliases */
+    --brand-green: var(--njord-green);
+    --brand-blue: var(--njord-blue);
+    --brand-gray: var(--njord-gray);
+    --dark-bg-start: var(--njord-bg-start);
+    --dark-bg-end: var(--njord-bg-end);
+    --glass-bg: var(--njord-glass-bg);
+    --glass-border: var(--njord-glass-border);
+    --glass-shadow: var(--njord-glass-shadow);
+    --bs-body-bg: var(--njord-bg-end);
+    --bs-body-color: var(--njord-text-primary);
+    --bs-primary: var(--njord-primary);
+    --bs-primary-rgb: var(--njord-primary-rgb);
+    --bs-secondary: var(--njord-secondary);
+    --bs-secondary-rgb: var(--njord-secondary-rgb);
+    --bs-heading-color: #ffffff;
+    --navbar-bg: var(--njord-navbar-bg);
+    --navbar-color: var(--njord-navbar-color);
+    --input-bg: var(--njord-input-bg);
+    --input-border: var(--njord-input-border);
+    --input-color: var(--njord-input-color);
+    --text-muted-color: var(--njord-text-muted);
+
+    /* Site App Compatibility Aliases */
+    --bg-primary: var(--njord-bg-end);
+    --bg-secondary: var(--njord-surface);
+    --bg-card: var(--njord-surface-elevated);
+    --text-primary: var(--njord-text-primary);
+    --text-secondary: var(--njord-text-secondary);
+    --text-muted: var(--njord-text-muted);
+    --color-primary: var(--njord-accent);
+    --color-secondary: var(--njord-primary);
+    --border-color: var(--njord-glass-border);
+}
+
+/* Light Theme */
+html[data-theme="light"] {
+    --njord-green: #00c853;
+    --njord-green-glow: rgba(0, 200, 83, 0.25);
+    --njord-blue: #0284c7;
+    --njord-blue-glow: rgba(2, 132, 199, 0.25);
+    --njord-violet: #6366f1;
+    --njord-violet-glow: rgba(99, 102, 241, 0.25);
+    --njord-cyan: #0891b2;
+    --njord-gray: #64748b;
+
+    --njord-primary: var(--njord-blue);
+    --njord-primary-rgb: 2, 132, 199;
+    --njord-secondary: var(--njord-gray);
+    --njord-secondary-rgb: 100, 116, 139;
+    --njord-accent: var(--njord-green);
+    --njord-accent-rgb: 0, 200, 83;
+
+    --njord-bg-start: #f8fafc;
+    --njord-bg-end: #f1f5f9;
+    --njord-surface: #ffffff;
+    --njord-surface-elevated: #ffffff;
+
+    --njord-glass-bg: rgba(255, 255, 255, 0.88);
+    --njord-glass-bg-hover: rgba(255, 255, 255, 0.98);
+    --njord-glass-border: rgba(148, 163, 184, 0.25);
+    --njord-glass-border-focus: var(--njord-blue);
+    --njord-glass-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --njord-glass-blur: blur(10px);
+
+    --njord-text-primary: #0f172a;
+    --njord-text-secondary: #334155;
+    --njord-text-muted: #64748b;
+    --njord-text-inverted: #ffffff;
+
+    --njord-input-bg: #ffffff;
+    --njord-input-border: #cbd5e1;
+    --njord-input-color: #0f172a;
+    --njord-input-focus-border: var(--njord-blue);
+    --njord-input-focus-shadow: 0 0 0 0.25rem rgba(2, 132, 199, 0.25);
+
+    --njord-navbar-bg: rgba(255, 255, 255, 0.92);
+    --njord-navbar-border: rgba(148, 163, 184, 0.2);
+    --njord-navbar-color: #0f172a;
+
+    --brand-green: var(--njord-green);
+    --brand-blue: var(--njord-blue);
+    --brand-gray: var(--njord-gray);
+    --dark-bg-start: var(--njord-bg-start);
+    --dark-bg-end: var(--njord-bg-end);
+    --glass-bg: var(--njord-glass-bg);
+    --glass-border: var(--njord-glass-border);
+    --glass-shadow: var(--njord-glass-shadow);
+    --bs-body-bg: var(--njord-bg-end);
+    --bs-body-color: var(--njord-text-primary);
+    --bs-primary: var(--njord-primary);
+    --bs-primary-rgb: var(--njord-primary-rgb);
+    --bs-secondary: var(--njord-secondary);
+    --bs-secondary-rgb: var(--njord-secondary-rgb);
+    --bs-heading-color: #0f172a;
+    --navbar-bg: var(--njord-navbar-bg);
+    --navbar-color: var(--njord-navbar-color);
+    --input-bg: var(--njord-input-bg);
+    --input-border: var(--njord-input-border);
+    --input-color: var(--njord-input-color);
+    --text-muted-color: var(--njord-text-muted);
+
+    --bg-primary: var(--njord-bg-end);
+    --bg-secondary: #ffffff;
+    --bg-card: #ffffff;
+    --text-primary: var(--njord-text-primary);
+    --text-secondary: var(--njord-text-secondary);
+    --text-muted: var(--njord-text-muted);
+    --color-primary: var(--njord-accent);
+    --color-secondary: var(--njord-primary);
+    --border-color: var(--njord-glass-border);
+}
+
+/* High Contrast Dark Theme (WCAG AAA) */
+html[data-theme="high-contrast-dark"] {
+    --njord-green: #00e676;
+    --njord-blue: #00e5ff;
+    --njord-gray: #a1a1aa;
+    --njord-bg-start: #000000;
+    --njord-bg-end: #000000;
+    --njord-surface: #121212;
+    --njord-surface-elevated: #1a1a1a;
+    --njord-glass-bg: #121212;
+    --njord-glass-bg-hover: #1e1e1e;
+    --njord-glass-border: #ffffff;
+    --njord-glass-border-focus: var(--njord-blue);
+    --njord-glass-shadow: none;
+    --njord-glass-blur: none;
+    --njord-text-primary: #ffffff;
+    --njord-text-secondary: #f4f4f5;
+    --njord-text-muted: #a1a1aa;
+    --njord-text-inverted: #000000;
+    --njord-input-bg: #000000;
+    --njord-input-border: #ffffff;
+    --njord-input-color: #ffffff;
+    --njord-navbar-bg: #000000;
+    --njord-navbar-border: #ffffff;
+    --njord-navbar-color: #ffffff;
+
+    --brand-green: var(--njord-green);
+    --brand-blue: var(--njord-blue);
+    --brand-gray: var(--njord-gray);
+    --dark-bg-start: #000000;
+    --dark-bg-end: #000000;
+    --glass-bg: #121212;
+    --glass-border: #ffffff;
+    --glass-shadow: none;
+    --bs-body-bg: #000000;
+    --bs-body-color: #ffffff;
+    --bs-primary: var(--njord-blue);
+    --bs-primary-rgb: 0, 229, 255;
+    --bs-secondary: var(--njord-gray);
+    --bs-heading-color: #ffffff;
+    --input-bg: #000000;
+    --input-border: #ffffff;
+    --input-color: #ffffff;
+    --text-muted-color: #a1a1aa;
+}
+
+/* High Contrast Light Theme (WCAG AAA) */
+html[data-theme="high-contrast-light"] {
+    --njord-green: #00701a;
+    --njord-blue: #0000ee;
+    --njord-gray: #4b5563;
+    --njord-bg-start: #ffffff;
+    --njord-bg-end: #ffffff;
+    --njord-surface: #ffffff;
+    --njord-surface-elevated: #ffffff;
+    --njord-glass-bg: #ffffff;
+    --njord-glass-bg-hover: #f3f4f6;
+    --njord-glass-border: #000000;
+    --njord-glass-border-focus: var(--njord-blue);
+    --njord-glass-shadow: none;
+    --njord-glass-blur: none;
+    --njord-text-primary: #000000;
+    --njord-text-secondary: #111827;
+    --njord-text-muted: #374151;
+    --njord-text-inverted: #ffffff;
+    --njord-input-bg: #ffffff;
+    --njord-input-border: #000000;
+    --njord-input-color: #000000;
+    --njord-navbar-bg: #ffffff;
+    --njord-navbar-border: #000000;
+    --njord-navbar-color: #000000;
+
+    --brand-green: var(--njord-green);
+    --brand-blue: var(--njord-blue);
+    --brand-gray: var(--njord-gray);
+    --dark-bg-start: #ffffff;
+    --dark-bg-end: #ffffff;
+    --glass-bg: #ffffff;
+    --glass-border: #000000;
+    --glass-shadow: none;
+    --bs-body-bg: #ffffff;
+    --bs-body-color: #000000;
+    --bs-primary: var(--njord-blue);
+    --bs-primary-rgb: 0, 0, 238;
+    --bs-secondary: var(--njord-gray);
+    --bs-heading-color: #000000;
+    --input-bg: #ffffff;
+    --input-border: #000000;
+    --input-color: #000000;
+    --text-muted-color: #4b5563;
+}

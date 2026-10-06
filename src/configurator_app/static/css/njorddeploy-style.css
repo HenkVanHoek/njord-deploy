@@ -1,4 +1,5 @@
 /* NjordDeploy / SBCDeploy Official Futuristic Glassmorphic Theme */
+@import url("tokens.css");
 
 :root, html[data-theme="dark"], html[data-theme="futuristic-dark"] {
     /* Glowing Neon Accent Colors */
@@ -632,35 +633,57 @@ html[data-theme="light"] .modal .card {
     color: #00b0ff !important;
 }
 
-/* User Session Badge in Top Navbar */
-.user-badge-nav {
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 6px !important;
-    padding: 4px 12px !important;
-    border-radius: 50px !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
-    line-height: 1.2 !important;
-    background: rgba(14, 165, 233, 0.18) !important;
-    border: 1px solid rgba(56, 189, 248, 0.5) !important;
-    color: #38bdf8 !important;
-    text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
-    transition: all 0.2s ease;
+/* ==========================================================================
+   14. Sovereign Stack Status Bolletjes & Telemetry Metrics
+   ========================================================================== */
+.status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.status-dot.healthy, .status-dot.online, .status-dot.ok {
+    background-color: var(--njord-status-healthy);
+    box-shadow: 0 0 8px var(--njord-status-healthy-glow);
+}
+.status-dot.warning, .status-dot.degraded {
+    background-color: var(--njord-status-warning);
+    box-shadow: 0 0 8px var(--njord-status-warning-glow);
+}
+.status-dot.critical, .status-dot.down, .status-dot.error {
+    background-color: var(--njord-status-critical);
+    box-shadow: 0 0 8px var(--njord-status-critical-glow);
+}
+.status-dot.offline, .status-dot.neutral {
+    background-color: var(--njord-status-offline);
+    box-shadow: none;
 }
 
-html[data-theme="light"] .user-badge-nav,
-html[data-theme="high-contrast-light"] .user-badge-nav {
-    background: #e0f2fe !important;
-    border: 1px solid #0284c7 !important;
-    color: #0369a1 !important;
-    text-shadow: none !important;
+/* Metric / Telemetry Badges */
+.badge-njord {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: var(--njord-radius-full);
+    border: 1px solid var(--njord-glass-border);
+    background: var(--njord-glass-bg);
+    color: var(--njord-text-primary);
+    backdrop-filter: var(--njord-glass-blur);
+}
+.badge-njord.badge-healthy {
+    border-color: rgba(0, 230, 118, 0.4);
+    color: var(--njord-status-healthy);
+}
+.badge-njord.badge-warning {
+    border-color: rgba(255, 171, 0, 0.4);
+    color: var(--njord-status-warning);
+}
+.badge-njord.badge-critical {
+    border-color: rgba(255, 23, 68, 0.4);
+    color: var(--njord-status-critical);
 }
 
-html[data-theme="dark"] .user-badge-nav,
-html[data-theme="futuristic-dark"] .user-badge-nav,
-html[data-theme="high-contrast-dark"] .user-badge-nav {
-    background: rgba(14, 165, 233, 0.22) !important;
-    border: 1px solid rgba(56, 189, 248, 0.6) !important;
-    color: #38bdf8 !important;
-}
