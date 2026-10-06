@@ -474,8 +474,57 @@ def dispatch_success_report(
     send_signal_alert("\n".join(lines))
 
 
+def ensure_clock_synchronized() -> None:
+    """Checks whether the system clock has drifted (e.g. after host sleep) and resyncs."""
+    import socket
+    import struct
+
+    ntp_servers = [
+        "192.168.178.1",    # Local router (< 2ms)
+        "192.168.178.118",  # Mail/Pi
+        "time.cloudflare.com",
+        "pool.ntp.org",
+    ]
+    drift = None
+    for srv in ntp_servers:
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            client.settimeout(1.5)
+            data = b"\x1b" + 47 * b"\0"
+            t_send = time.time()
+            client.sendto(data, (srv, 123))
+            resp, _ = client.recvfrom(1024)
+            t_recv = time.time()
+            client.close()
+            val = struct.unpack("!12I", resp)[10] - 2208988800
+            rtt = t_recv - t_send
+            est_server_time = val + (rtt / 2.0)
+            drift = abs(t_recv - est_server_time)
+            break
+        except Exception:
+            continue
+
+    if drift is not None and drift >= 3.0:
+        logger.warning(
+            "Klokafwijking van %.1fs gedetecteerd (mogelijk na ontwaken uit slaapstand). "
+            "Klok wordt gesynchroniseerd...",
+            drift,
+        )
+        try:
+            subprocess.run(
+                ["sudo", "-n", "systemctl", "restart", "systemd-timesyncd"],
+                check=False,
+                timeout=5,
+            )
+            time.sleep(1.5)
+            logger.info("systemd-timesyncd automatisch herstart.")
+        except Exception as exc:
+            logger.debug("Kon timesyncd niet automatisch herstarten: %s", exc)
+
+
 def main() -> int:
     """Main orchestrator routine."""
+    ensure_clock_synchronized()
     parser = argparse.ArgumentParser(
         description="NjordDeploy Component Lifecycle Autopilot"
     )
