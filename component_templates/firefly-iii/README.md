@@ -9,7 +9,7 @@
 > Free and open source personal finance manager to track expenses, income, budgets, and bank accounts.
 
 - **Upstream Project:** [Firefly III](https://www.firefly-iii.org/)
-- **Source Repository:** [github.com/fireflyiii/core](https://github.com/fireflyiii/core)
+- **Source Repository:** [github.com/firefly-iii/firefly-iii](https://github.com/firefly-iii/firefly-iii)
 - **Container Image:** `fireflyiii/core`
 
 ---

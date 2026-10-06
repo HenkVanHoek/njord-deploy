@@ -9,7 +9,7 @@
 > Technitium DNS Server is an open source authoritative and recursive DNS server for privacy & security. It features built-in ad and malware blocking, supports DNS-over-TLS (DoT), DNS-over-HTTPS (DoH), and DNS-over-QUIC (DoQ), and provides a comprehensive web management console.
 
 - **Upstream Project:** [Technitium DNS Server](https://technitium.com/dns/)
-- **Source Repository:** [github.com/technitium/dns-server](https://github.com/technitium/dns-server)
+- **Source Repository:** [github.com/TechnitiumSoftware/DnsServer](https://github.com/TechnitiumSoftware/DnsServer)
 - **Container Image:** `technitium/dns-server`
 
 ---

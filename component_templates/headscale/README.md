@@ -8,7 +8,7 @@
 
 > An open source, self-hosted implementation of the Tailscale control server, providing a private network for your devices.
 
-- **Source Repository:** [github.com/headscale/headscale](https://github.com/headscale/headscale)
+- **Source Repository:** [github.com/juanfont/headscale](https://github.com/juanfont/headscale)
 - **Container Image:** `headscale/headscale`
 
 ---

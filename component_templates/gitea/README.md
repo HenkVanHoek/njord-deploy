@@ -8,7 +8,7 @@
 
 > A painless, self-hosted Git service written in Go with repository management, code review, issues, and wikis.
 
-- **Source Repository:** [github.com/gitea/gitea](https://github.com/gitea/gitea)
+- **Source Repository:** [github.com/go-gitea/gitea](https://github.com/go-gitea/gitea)
 - **Container Image:** `gitea/gitea`
 
 ---

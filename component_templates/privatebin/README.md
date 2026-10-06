@@ -9,7 +9,7 @@
 > Zero-knowledge, client-side encrypted minimalist pastebin application.
 
 - **Upstream Project:** [PrivateBin](https://privatebin.info/)
-- **Source Repository:** [github.com/privatebin/nginx-fpm-alpine](https://github.com/privatebin/nginx-fpm-alpine)
+- **Source Repository:** [github.com/PrivateBin/docker-nginx-fpm-alpine](https://github.com/PrivateBin/docker-nginx-fpm-alpine)
 - **Container Image:** `privatebin/nginx-fpm-alpine`
 
 ---

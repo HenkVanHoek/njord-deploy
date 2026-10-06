@@ -9,7 +9,7 @@
 > Self-hosted data logger for your Tesla vehicle with detailed driving, battery, and charging analytics.
 
 - **Upstream Project:** [TeslaMate](https://docs.teslamate.org/)
-- **Source Repository:** [github.com/teslamate/teslamate](https://github.com/teslamate/teslamate)
+- **Source Repository:** [github.com/teslamate-org/teslamate](https://github.com/teslamate-org/teslamate)
 - **Container Image:** `postgres:16-alpine`
 
 ---

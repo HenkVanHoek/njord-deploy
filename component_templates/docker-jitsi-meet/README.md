@@ -9,7 +9,7 @@
 > Jitsi Meet is a collection of open-source projects that provides a secure, simple, and scalable video conferencing solution. This component sets up a complete Jitsi Meet instance with optional Etherpad collaboration and recording capabilities.
 
 - **Upstream Project:** [jitsi-meet](https://jitsi.org/)
-- **Source Repository:** [github.com/jitsi/web](https://github.com/jitsi/web)
+- **Source Repository:** [github.com/jitsi/docker-jitsi-meet](https://github.com/jitsi/docker-jitsi-meet)
 - **Container Image:** `jitsi/prosody:stable`
 
 ---

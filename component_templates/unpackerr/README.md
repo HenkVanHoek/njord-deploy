@@ -9,7 +9,7 @@
 > Automatically extracts downloaded archives for Radarr, Sonarr, Lidarr, and torrent downloads.
 
 - **Upstream Project:** [Unpackerr](https://unpackerr.zip/)
-- **Source Repository:** [github.com/golift/unpackerr](https://github.com/golift/unpackerr)
+- **Source Repository:** [github.com/unpackerr/unpackerr](https://github.com/unpackerr/unpackerr)
 - **Container Image:** `golift/unpackerr`
 
 ---

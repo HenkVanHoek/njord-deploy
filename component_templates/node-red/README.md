@@ -8,7 +8,7 @@
 
 > Low-code programming for event-driven applications, connecting hardware devices, APIs and online services.
 
-- **Source Repository:** [github.com/nodered/node-red](https://github.com/nodered/node-red)
+- **Source Repository:** [github.com/node-red/node-red](https://github.com/node-red/node-red)
 - **Container Image:** `nodered/node-red`
 
 ---

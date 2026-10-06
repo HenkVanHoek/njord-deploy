@@ -8,7 +8,7 @@
 
 > Web app for browsing, reading and downloading eBooks.
 
-- **Source Repository:** [github.com/linuxserver/calibre-web](https://github.com/linuxserver/calibre-web)
+- **Source Repository:** [github.com/janeczku/calibre-web](https://github.com/janeczku/calibre-web)
 - **Container Image:** `linuxserver/calibre-web`
 
 ---

@@ -8,7 +8,7 @@
 
 > The Cyber Swiss Army Knife - a web app for encryption, encoding, compression, and data analysis.
 
-- **Source Repository:** [github.com/mpepping/cyberchef](https://github.com/mpepping/cyberchef)
+- **Source Repository:** [github.com/gchq/CyberChef](https://github.com/gchq/CyberChef)
 - **Container Image:** `mpepping/cyberchef`
 
 ---

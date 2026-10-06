@@ -8,7 +8,7 @@
 
 > A privacy-first, lightweight note-taking service with markdown support and social timeline view.
 
-- **Source Repository:** [github.com/neosmemo/memos](https://github.com/neosmemo/memos)
+- **Source Repository:** [github.com/usememos/memos](https://github.com/usememos/memos)
 - **Container Image:** `neosmemo/memos`
 
 ---

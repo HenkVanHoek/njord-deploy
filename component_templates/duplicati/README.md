@@ -9,7 +9,7 @@
 > Encrypted, incremental, and deduplicated backup client for cloud storage and local drives.
 
 - **Upstream Project:** [Duplicati](https://www.duplicati.com/)
-- **Source Repository:** [github.com/linuxserver/duplicati](https://github.com/linuxserver/duplicati)
+- **Source Repository:** [github.com/duplicati/duplicati](https://github.com/duplicati/duplicati)
 - **Container Image:** `linuxserver/duplicati`
 
 ---

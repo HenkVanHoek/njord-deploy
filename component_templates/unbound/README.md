@@ -9,7 +9,7 @@
 > A secure, validating, recursive, and caching DNS resolver designed for privacy, preventing upstream ISP DNS logging when paired with Pi-hole or AdGuard.
 
 - **Upstream Project:** [Unbound](https://www.nlnetlabs.nl/projects/unbound/about/)
-- **Source Repository:** [github.com/mvance/unbound](https://github.com/mvance/unbound)
+- **Source Repository:** [github.com/NLnetLabs/unbound](https://github.com/NLnetLabs/unbound)
 - **Container Image:** `mvance/unbound`
 
 ---

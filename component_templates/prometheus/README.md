@@ -9,7 +9,7 @@
 > Prometheus, a Cloud Native Computing Foundation project, is a systems and service monitoring system. It collects metrics from configured targets at given intervals, evaluates rule expressions, displays the results, and can trigger alerts when specified conditions are observed. This stack includes Prometheus, Node Exporter, and cAdvisor for comprehensive system and container monitoring.
 
 - **Upstream Project:** [Prometheus Stack](https://prometheus.io/)
-- **Source Repository:** [github.com/prom/prometheus](https://github.com/prom/prometheus)
+- **Source Repository:** [github.com/prometheus/prometheus](https://github.com/prometheus/prometheus)
 - **Container Image:** `prom/node-exporter:v1.8.2`
 
 ---

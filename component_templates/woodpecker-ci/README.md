@@ -8,7 +8,7 @@
 
 > Simple yet powerful community-driven continuous integration engine with container-native pipelines.
 
-- **Source Repository:** [github.com/woodpeckerci/woodpecker-server](https://github.com/woodpeckerci/woodpecker-server)
+- **Source Repository:** [github.com/woodpecker-ci/woodpecker](https://github.com/woodpecker-ci/woodpecker)
 - **Container Image:** `woodpeckerci/woodpecker-server`
 
 ---

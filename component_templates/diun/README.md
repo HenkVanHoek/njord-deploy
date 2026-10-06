@@ -9,7 +9,7 @@
 > CLI application to analyze Docker images and send notifications when image updates are published.
 
 - **Upstream Project:** [Diun (Update Notifier)](https://crazymax.dev/diun/)
-- **Source Repository:** [github.com/crazymax/diun](https://github.com/crazymax/diun)
+- **Source Repository:** [github.com/crazy-max/diun](https://github.com/crazy-max/diun)
 - **Container Image:** `crazymax/diun`
 
 ---

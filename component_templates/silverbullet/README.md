@@ -9,7 +9,7 @@
 > Extensible, open-source personal knowledge management system written in clean TypeScript.
 
 - **Upstream Project:** [SilverBullet](https://silverbullet.md/)
-- **Source Repository:** [github.com/zefhemel/silverbullet](https://github.com/zefhemel/silverbullet)
+- **Source Repository:** [github.com/silverbulletmd/silverbullet](https://github.com/silverbulletmd/silverbullet)
 - **Container Image:** `zefhemel/silverbullet`
 
 ---

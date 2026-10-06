@@ -9,7 +9,7 @@
 > Highly customizable open source online editor providing collaborative real-time editing.
 
 - **Upstream Project:** [Etherpad Lite](https://etherpad.org/)
-- **Source Repository:** [github.com/etherpad/etherpad](https://github.com/etherpad/etherpad)
+- **Source Repository:** [github.com/ether/etherpad-lite](https://github.com/ether/etherpad-lite)
 - **Container Image:** `etherpad/etherpad`
 
 ---

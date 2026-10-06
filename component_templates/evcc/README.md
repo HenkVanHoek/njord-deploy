@@ -9,7 +9,7 @@
 > Extensible EV Charge Controller with support for solar/PV charging and dynamic tariffs.
 
 - **Upstream Project:** [evcc](https://evcc.io/)
-- **Source Repository:** [github.com/evcc/evcc](https://github.com/evcc/evcc)
+- **Source Repository:** [github.com/evcc-io/evcc](https://github.com/evcc-io/evcc)
 - **Container Image:** `evcc/evcc`
 
 ---

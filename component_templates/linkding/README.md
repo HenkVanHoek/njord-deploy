@@ -9,7 +9,7 @@
 > Minimal, fast, and privacy-focused bookmark manager designed for speed.
 
 - **Upstream Project:** [linkding](https://github.com/sissbruecker/linkding)
-- **Source Repository:** [github.com/sissbruecker/linkdin](https://github.com/sissbruecker/linkdin)
+- **Source Repository:** [github.com/sissbruecker/linkding](https://github.com/sissbruecker/linkding)
 - **Container Image:** `sissbruecker/linkding`
 
 ---

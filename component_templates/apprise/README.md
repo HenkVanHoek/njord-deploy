@@ -9,7 +9,7 @@
 > Push notification gateway for over 90 notification services (Telegram, Discord, Pushover, etc.).
 
 - **Upstream Project:** [Apprise API](https://github.com/caronc/apprise-api)
-- **Source Repository:** [github.com/caronc/apprise-ap](https://github.com/caronc/apprise-ap)
+- **Source Repository:** [github.com/caronc/apprise-api](https://github.com/caronc/apprise-api)
 - **Container Image:** `caronc/apprise`
 
 ---

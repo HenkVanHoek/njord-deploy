@@ -11304,5 +11304,25 @@
         "first_run_auth_type": "wizard",
         "first_run_token": null,
         "first_run_token_missing": false
+    },
+    {
+        "timestamp": "2026-10-06 10:05:43",
+        "component_id": "it-tools",
+        "mode": "LXC",
+        "engine": "DOCKER",
+        "status": "success",
+        "vmid": 107,
+        "ip": "192.168.178.122",
+        "deployment": "success",
+        "running": true,
+        "http_ok": true,
+        "http_url": "http://192.168.178.122:8080",
+        "port": null,
+        "report_file": "PROXMOX_TESTS_it-tools_20261006_100458.md",
+        "error_logs": false,
+        "error_message": "",
+        "first_run_auth_type": "wizard",
+        "first_run_token": null,
+        "first_run_token_missing": false
     }
 ]
