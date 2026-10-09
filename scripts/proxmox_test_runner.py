@@ -795,8 +795,17 @@ def update_template_status(
     """Updates status, last tested version and platform notes in template."""
     template_file = templates_path / component_id / "docker-compose.template.yml"
     if not template_file.exists():
-        logger.warning(f"Template file not found to update status: {template_file}")
-        return
+        priv_file = (
+            templates_path.parent
+            / "private_components"
+            / component_id
+            / "docker-compose.template.yml"
+        )
+        if priv_file.exists():
+            template_file = priv_file
+        else:
+            logger.warning(f"Template file not found to update status: {template_file}")
+            return
 
     try:
         content = template_file.read_text(encoding="utf-8")
@@ -835,7 +844,16 @@ def get_template_status(templates_path: Path, component_id: str) -> str:
     """Reads the status of a component from its template header."""
     template_file = templates_path / component_id / "docker-compose.template.yml"
     if not template_file.exists():
-        return "untested"
+        priv_file = (
+            templates_path.parent
+            / "private_components"
+            / component_id
+            / "docker-compose.template.yml"
+        )
+        if priv_file.exists():
+            template_file = priv_file
+        else:
+            return "untested"
     # noinspection PyBroadException
     try:
         content = template_file.read_text(encoding="utf-8")
@@ -2307,7 +2325,10 @@ def run_environment_tests(
                     for var in variables_list:
                         var_name = var.get("id") or var.get("name")
                         if var_name:
-                            user_vars[var_name] = var.get("default")
+                            val = var.get("default")
+                            if (not val) and var.get("type") == "password":
+                                val = "NjordSecureTestPassword123!"
+                            user_vars[var_name] = val
                 for var_name, override_val in TEST_PORT_OVERRIDES.items():
                     if var_name in user_vars:
                         user_vars[var_name] = override_val
@@ -2470,16 +2491,28 @@ def run_environment_tests(
                             )
 
                     detected_version = health.get("detected_version")
-                    version_to_record = (
-                        detected_version
-                        if (
-                            detected_version
-                            and detected_version.lower()
-                            not in ("none", "latest", "unknown")
-                            and "{" not in detected_version
-                        )
-                        else comp.get("component_version", "latest")
+                    comp_raw = comp_mgr.get_component_details(comp_id) or {}
+                    staging_data = dict(comp_raw.get("staging") or {})
+                    candidate_ver = (
+                        staging_data.get("candidate_version")
+                        or staging_data.get("version")
                     )
+
+                    # If this test was run for an upstream candidate version from staging,
+                    # the verified candidate version takes precedence over internal base image labels
+                    # (e.g. Nginx/Alpine labels in mpepping/cyberchef or OS labels in drawio).
+                    if candidate_ver and str(candidate_ver).strip():
+                        version_to_record = str(candidate_ver).strip()
+                    elif (
+                        detected_version
+                        and detected_version.lower()
+                        not in ("none", "latest", "unknown")
+                        and "{" not in detected_version
+                    ):
+                        version_to_record = detected_version
+                    else:
+                        version_to_record = comp.get("component_version", "latest")
+
                     if "{" in str(version_to_record):
                         version_to_record = "latest"
                     update_template_status(
@@ -2492,8 +2525,6 @@ def run_environment_tests(
                     )
                     # Update verified version and clear staging in metadata
                     try:
-                        comp_raw = comp_mgr.get_component_details(comp_id) or {}
-                        staging_data = dict(comp_raw.get("staging") or {})
                         staging_data["candidate_version"] = None
                         staging_data["status"] = "idle"
                         staging_data["test_result"] = (

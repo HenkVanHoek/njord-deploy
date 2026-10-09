@@ -294,7 +294,7 @@ def promote_verified_candidate(comp_id: str, version: str) -> None:
         except ImportError:
             from watch_components_lifecycle import promote_candidate
 
-        promote_candidate(comp_id)
+        promote_candidate(comp_id, target_version=version)
         logger.info("Promoted candidate '%s' (v%s) to operational.", comp_id, version)
     except Exception as exc:
         logger.error("Error promoting candidate '%s': %s", comp_id, exc)

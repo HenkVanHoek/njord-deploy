@@ -145,7 +145,8 @@ def sync_to_sysopswatch() -> None:
 
 
 PRERELEASE_PATTERN = re.compile(
-    r"-(rc|alpha|beta|b\.|dev|preview|canary|pre|nightly)", re.I
+    r"(^|[-._])(rc|alpha|beta|b|dev|develop|preview|canary|pre|nightly)([-._]|\d|$)",
+    re.I,
 )
 IGNORED_TAGS = {"stable", "latest", "master", "main", "nightly", "edge"}
 
@@ -245,6 +246,20 @@ def parse_latest_release(xml_content: str) -> Optional[Dict[str, Any]]:
 
             # Filter out pre-releases, alphas, betas, RCs, and branch names
             if is_prerelease_or_invalid(tag):
+                continue
+
+            # Filter out non-release commits (e.g. Weblate translations or ignore-downstream)
+            content_el = entry.find("atom:content", ATOM_NS)
+            content_text = content_el.text if content_el is not None and content_el.text else ""
+            if "ignore-downstream" in content_text.lower():
+                continue
+            author_el = entry.find("atom:author/atom:name", ATOM_NS)
+            author_name = author_el.text if author_el is not None and author_el.text else ""
+            if (
+                author_name.lower() == "weblate"
+                or "weblate" in title.lower()
+                or "translations updated" in title.lower()
+            ):
                 continue
 
             clean_ver = clean_tag_version(tag)
@@ -509,7 +524,7 @@ def show_wachtkamer() -> None:
     print("=" * 80)
 
 
-def promote_candidate(comp_id: str) -> None:
+def promote_candidate(comp_id: str, target_version: Optional[str] = None) -> None:
     """Promotes candidate to production version and syncs template."""
     with open(CATALOG_METADATA_PATH, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -524,7 +539,7 @@ def promote_candidate(comp_id: str) -> None:
 
     comp = comps[comp_id]
     staging = comp.get("staging", {})
-    candidate = staging.get("candidate_version") or staging.get("version")
+    candidate = target_version or staging.get("candidate_version") or staging.get("version")
 
     if not candidate:
         print(
