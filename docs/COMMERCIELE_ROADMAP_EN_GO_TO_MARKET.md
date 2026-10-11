@@ -21,11 +21,13 @@ Dit document presenteert de aangescherpte positionering, de doelgroepen, het pri
 
 ```mermaid
 flowchart TD
-    A["NjordDeploy Core & Configurator<br/>(Visuele App Store)"] --> B["Stripe Monetization Engine<br/>(Free Tier vs. Pro € 5,-/mnd)"]
-    B --> C["Geverifieerde Componenten Catalogus<br/>(Nextcloud, Vaultwarden, Paperless)"]
-    C --> D["NjordWatch Telemetry Add-on<br/>(Exclusieve Pro Companion)"]
+    A["<b>NjordDeploy Core & Configurator</b><br/><i>(Visuele App Store voor de Eigen Server)</i>"]
+    B["<b>Stripe Monetization Engine</b><br/><i>(Free Tier vs. Pro € 5,-/mnd)</i>"]
+    C["<b>Geverifieerde Catalogus</b><br/><i>(Nextcloud, Vaultwarden, Paperless)</i>"]
+    D["<b>NjordWatch Telemetrie Add-on</b><br/><i>(Exclusieve Pro Companion)</i>"]
+    E["<b>🎯 Doelgroepen:</b><br/>• 1. Homelabbers & Self-hosters<br/>• 2. ZZP & Privacy-bewust MKB<br/>• 3. Lokale MSP's & IT-Beheerders"]
 
-    D --> E["💥 DOELGROEPEN:<br/>1. Homelabbers & Self-hosters<br/>2. ZZP & Privacy-bewust MKB<br/>3. Lokale IT-Dienstverleners / MSP's"]
+    A --> B --> C --> D --> E
 ```
 
 ---
@@ -61,19 +63,23 @@ NjordDeploy is géén concept meer op de tekentafel; het fundament is al gebouwd
 Het verdienmodel is gebaseerd op het beproefde **Freemium "Land and Expand" model** (zoals Docker, Portainer en Tailscale):
 
 ```mermaid
-graph LR
-    subgraph "Free Tier (€ 0,-)"
-        F1["Tot 2 doel-servers"]
-        F2["Volledige componentencatalogus"]
-        F3["Community support (GitHub / Forum)"]
+flowchart TD
+    subgraph S1["<b>Free Tier (€ 0,- / maand)</b>"]
+        direction TB
+        F1["• Tot 2 doel-servers"]
+        F2["• Volledige componentencatalogus"]
+        F3["• Community support via GitHub & Forum"]
     end
 
-    subgraph "Pro Tier (€ 5,- / maand)"
-        P1["Onbeperkt aantal servers"]
-        P2["Geautomatiseerde Encrypted S3 Cloud Backups"]
-        P3["NjordWatch Telemetrie Companion Add-on"]
-        P4["Prioriteitsupdates & Early-Access componenten"]
+    subgraph S2["<b>Pro Tier (€ 5,- / mnd of € 50,- / jr)</b>"]
+        direction TB
+        P1["• Onbeperkt aantal servers"]
+        P2["• Geautomatiseerde encrypted S3 backups"]
+        P3["• NjordWatch telemetrie companion"]
+        P4["• Prioriteitsupdates & early-access"]
     end
+
+    S1 ==>|Upgrade pad| S2
 ```
 
 ### Waarom € 5,- per maand de "Sweet Spot" is:
@@ -86,10 +92,11 @@ graph LR
 ## 4. De 4-Fasen Commerciële Roadmap
 
 ```mermaid
-flowchart LR
-    F1["<b>Fase 1 (M1-M2)</b><br/>Soft Launch & Community<br/>• Reddit / Tweakers<br/>• GitHub Stars"] --> F2["<b>Fase 2 (M3-M4)</b><br/>Content & Bundels<br/>• Video Tutorials<br/>• Kantoor/Media Bundels"]
-    F2 --> F3["<b>Fase 3 (M5-M6)</b><br/>NjordWatch Pro Add-on<br/>• Realtime Ringen<br/>• Exclusief Pro"]
-    F3 --> F4["<b>Fase 4 (M6-M12)</b><br/>Hardware Partnerships<br/>• Turnkey Mini-Servers<br/>• Lokale MSP/MKB"]
+flowchart TD
+    F1["<b>Fase 1 (M1–M2): Soft Launch & Community</b><br/>• Reddit (r/selfhosted, r/homelab) & Tweakers<br/>• Hacker News 'Show HN' & GitHub stars actie<br/>• Snelle 1-regel curl installatie"]
+    --> F2["<b>Fase 2 (M3–M4): Content & Use-Case Bundels</b><br/>• Korte video tutorials (3-5 min YouTube)<br/>• Kantoor-, Media- en Smart Home-bundels<br/>• Focus op plug-and-play soevereiniteit"]
+    --> F3["<b>Fase 3 (M5–M6): NjordWatch Pro Telemetrie</b><br/>• Live dashboard met concentrische ringen<br/>• Exclusief conversie-instrument voor Pro<br/>• 1-klik companion activatie"]
+    --> F4["<b>Fase 4 (M6–M12): Turnkey Hardware Partnerships</b><br/>• Pre-geïnstalleerde mini-servers ('Njord Box')<br/>• Uitrol naar lokale MSP's, MKB & praktijken<br/>• Marge op hardware + doorlopend beheer"]
 ```
 
 ### Fase 1: Soft Launch & Community Adoptie (Maand 1 – 2)
