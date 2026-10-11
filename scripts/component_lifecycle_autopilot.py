@@ -403,6 +403,21 @@ def sync_and_publish_all(passed_comps: List[Tuple[str, str]]) -> bool:
     logger.info("Committing and pushing changes in main njord-deploy repository...")
     # noinspection PyBroadException
     try:
+        # 3a. Pre-push automated quality gate: ensure autopilot tests pass before pushing
+        pytest_gate = subprocess.run(
+            [sys.executable, "-m", "pytest", "tests/test_component_lifecycle_autopilot.py"],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if pytest_gate.returncode != 0:
+            logger.error(
+                "Pre-push verification failed! Aborting git push to prevent broken CI on GitHub: %s",
+                pytest_gate.stdout or pytest_gate.stderr,
+            )
+            return False
+
         git_add = [
             "git",
             "add",

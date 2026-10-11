@@ -250,7 +250,7 @@ def test_promote_verified_candidate_calls_watcher(mock_promote_candidate):
     from scripts.component_lifecycle_autopilot import promote_verified_candidate
 
     promote_verified_candidate("vaultwarden", "1.37.4")
-    mock_promote_candidate.assert_called_once_with("vaultwarden")
+    mock_promote_candidate.assert_called_once_with("vaultwarden", target_version="1.37.4")
 
 
 @patch("scripts.component_lifecycle_autopilot.load_metadata")
