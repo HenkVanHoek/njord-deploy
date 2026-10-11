@@ -64,22 +64,14 @@ Het verdienmodel is gebaseerd op het beproefde **Freemium "Land and Expand" mode
 
 ```mermaid
 flowchart TD
-    subgraph S1["<b>Free Tier (€ 0,- / maand)</b>"]
-        direction TB
-        F1["• Tot 2 doel-servers"]
-        F2["• Volledige componentencatalogus"]
-        F3["• Community support via GitHub & Forum"]
-    end
+    S1["<b>Free Tier (€ 0,- / maand)</b><br/>────────────────────────────────────<br/>• Tot 2 doel-servers<br/>• Volledige componentencatalogus<br/>• Community support via GitHub & Forum"]
 
-    subgraph S2["<b>Pro Tier (€ 5,- / mnd of € 50,- / jr)</b>"]
-        direction TB
-        P1["• Onbeperkt aantal servers"]
-        P2["• Geautomatiseerde encrypted S3 backups"]
-        P3["• NjordWatch telemetrie companion"]
-        P4["• Prioriteitsupdates & early-access"]
-    end
+    S2["<b>🚀 Pro Tier (€ 5,- / mnd of € 50,- / jr)</b><br/>────────────────────────────────────<br/>• Onbeperkt aantal doel-servers<br/>• Geautomatiseerde encrypted S3 cloud backups<br/>• NjordWatch live telemetrie add-on<br/>• Prioriteitsupdates & early-access componenten"]
 
-    S1 ==>|Upgrade pad| S2
+    S1 ==>|Directe upgrade via Stripe| S2
+
+    style S1 fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,color:#1e293b
+    style S2 fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e3a8a
 ```
 
 ### Waarom € 5,- per maand de "Sweet Spot" is:
