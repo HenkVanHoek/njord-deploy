@@ -112,7 +112,7 @@ def test_generate_component_readme(tmp_path: Path) -> None:
     readme = generate_component_readme("adguard-home", comp_dir, comp_meta)
     assert "# 🏗️ NjordDeploy: AdGuard Home" in readme
     assert "Network-wide ad-blocking DNS server." in readme
-    assert "https://adguard.com" in readme
+    assert "(https://adguard.com)" in readme
     assert "Visit port 3000 to setup." in readme
     assert "Tested%20Passing" in readme
 
