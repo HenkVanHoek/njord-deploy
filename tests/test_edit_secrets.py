@@ -61,3 +61,31 @@ def test_check_status_and_set_variable(tmp_path: Path) -> None:
         # 3. Check status when all required are present
         res_ok = check_status()
         assert res_ok == 0
+
+
+def test_get_secrets_data_and_batch_set(tmp_path: Path) -> None:
+    from scripts.edit_secrets import get_secrets_data, set_variables
+
+    test_env = tmp_path / ".env"
+    with patch("scripts.edit_secrets.ENV_FILE", test_env):
+        # Batch set variables
+        res = set_variables(
+            {
+                "PROXMOX_HOST": "https://10.0.0.1:8006",
+                "CUSTOM_VAR": "secret_abc",
+            }
+        )
+        assert res["success"] is True
+        assert res["updated_count"] == 2
+
+        # Dump structured data
+        data = get_secrets_data()
+        assert data["project"] == "njord-deploy"
+        assert data["type"] == "dotenv"
+        keys = [item["key"] for item in data["secrets"]]
+        assert "PROXMOX_HOST" in keys
+        assert "CUSTOM_VAR" in keys
+
+        # No changes when re-setting same values
+        res_noop = set_variables({"PROXMOX_HOST": "https://10.0.0.1:8006"})
+        assert res_noop["updated_count"] == 0

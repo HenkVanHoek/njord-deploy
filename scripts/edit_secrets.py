@@ -16,6 +16,7 @@ Gebruik:
 """
 
 import argparse
+import json
 import os
 import subprocess  # nosec B404
 import sys
@@ -323,6 +324,82 @@ def interactive_edit() -> int:
     return 0
 
 
+def get_secrets_data() -> dict:
+    """Retourneert gestructureerde JSON-compatibele metadata voor SysOps Cockpit."""
+    env_vars = load_env_dict(ENV_FILE)
+    secrets_list = []
+    handled_keys = set()
+
+    for key, desc, default_val, required, group in CONFIG_SCHEMA:
+        val = env_vars.get(key, default_val)
+        handled_keys.add(key)
+        secrets_list.append(
+            {
+                "key": key,
+                "description": desc,
+                "group": group,
+                "file": ".env",
+                "value": val,
+                "masked": mask_secret(key, val),
+                "is_set": bool(val),
+                "required": required,
+            }
+        )
+
+    for k in sorted(env_vars.keys()):
+        if k not in handled_keys:
+            val = env_vars[k]
+            secrets_list.append(
+                {
+                    "key": k,
+                    "description": f"Aangepaste omgevingsvariabele {k}",
+                    "group": "Overige & Maatwerk Variabelen",
+                    "file": ".env",
+                    "value": val,
+                    "masked": mask_secret(k, val),
+                    "is_set": bool(val),
+                    "required": False,
+                }
+            )
+
+    return {
+        "project": "njord-deploy",
+        "title": "NjordDeploy Core Engine",
+        "type": "dotenv",
+        "project_root": str(PROJECT_ROOT),
+        "secrets": secrets_list,
+    }
+
+
+def set_variables(updates: Dict[str, str]) -> dict:
+    """Werkt variabelen bij in .env met behoud van permissies 0600."""
+    env_vars = load_env_dict(ENV_FILE)
+    changes = 0
+    updated_keys = []
+
+    for k, v in updates.items():
+        k = str(k).strip()
+        new_v = str(v).strip()
+        if env_vars.get(k) != new_v:
+            env_vars[k] = new_v
+            changes += 1
+            updated_keys.append(k)
+
+    if changes > 0:
+        save_env_file(ENV_FILE, env_vars)
+
+    return {
+        "success": True,
+        "updated_count": changes,
+        "updated_keys": updated_keys,
+        "message": (
+            f"{changes} variabele(n) succesvol opgeslagen in .env (permissies 0600)!"
+            if changes > 0
+            else "Geen wijzigingen opgeslagen (waarden waren identiek)."
+        ),
+    }
+
+
 def set_variable(kv_pair: str) -> int:
     """Stelt direct een sleutel/waarde-paar in via de CLI."""
     if "=" not in kv_pair:
@@ -332,12 +409,10 @@ def set_variable(kv_pair: str) -> int:
     key = key.strip()
     val = val.strip().strip("'\"")
 
-    env_vars = load_env_dict(ENV_FILE)
-    env_vars[key] = val
-    save_env_file(ENV_FILE, env_vars)
+    res = set_variables({key: val})
     masked = mask_secret(key, val)
     print(f"[+] Variabele '{key}' succesvol ingesteld op: {masked}")
-    return 0
+    return 0 if res["success"] else 1
 
 
 def main() -> int:
@@ -350,18 +425,49 @@ def main() -> int:
         help="Toon gemaskeerde pre-flight status van alle credentials.",
     )
     parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Dump gestructureerde JSON van alle secrets voor SysOps Cockpit.",
+    )
+    parser.add_argument(
         "--set",
         type=str,
         metavar="KEY=VALUE",
         help="Stel direct een sleutel/waarde-paar in zonder de editor te openen.",
+    )
+    parser.add_argument(
+        "--set-json",
+        nargs="?",
+        const="-",
+        type=str,
+        metavar="JSON_OR_DASH",
+        help="Update variabelen via JSON payload (stdin bij -).",
     )
 
     args = parser.parse_args()
 
     if args.check:
         return check_status()
+    elif args.json:
+        data = get_secrets_data()
+        print(json.dumps(data, indent=2))
+        return 0
     elif args.set:
         return set_variable(args.set)
+    elif args.set_json is not None:
+        payload_str = args.set_json
+        if payload_str == "-":
+            payload_str = sys.stdin.read()
+        try:
+            updates = json.loads(payload_str)
+            if not isinstance(updates, dict):
+                raise ValueError("JSON payload moet een object/dictionary zijn.")
+        except Exception as e:
+            print(json.dumps({"success": False, "error": f"Ongeldige JSON: {e}"}))
+            return 1
+        res = set_variables(updates)
+        print(json.dumps(res, indent=2))
+        return 0 if res["success"] else 1
     else:
         return interactive_edit()
 
