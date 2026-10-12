@@ -340,7 +340,7 @@
                 "pi-hole"
             ],
             "depends_on": [],
-            "description": "AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a \u201cblack hole\u201d, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0).",
+            "description": "AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0).",
             "docker_service_name": "adguardhome",
             "first_run_info": {
                 "auth_type": "wizard",
@@ -1748,9 +1748,9 @@
             "has_ui": true,
             "image_name": "etherpad/etherpad",
             "intent_questions": [],
-            "last_tested": "2026-10-07T05:25:10.410613+00:00",
-            "last_tested_version": "3.3.7",
-            "last_updated": "2026-10-07T05:25:10.410621+00:00",
+            "last_tested": "2026-10-12T09:30:35.470478+00:00",
+            "last_tested_version": "3.3.8",
+            "last_updated": "2026-10-12T09:30:29.897790+00:00",
             "name": "Etherpad Lite",
             "package_id": null,
             "podman_mode": "rootful",
@@ -1768,13 +1768,12 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "3.3.8",
-                "entered_staging_at": "2026-10-12T05:15:01.473951+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "last_test_error": "Exited with code 1",
-                "last_test_timestamp": "2026-10-12T05:16:04.165531+00:00",
-                "status": "needs_review",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.3.7)"
+                "last_test_timestamp": "2026-10-12T08:56:58.116347+00:00",
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (3.3.8)"
             },
             "tags": [
                 "notes",
@@ -7262,9 +7261,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "technitium/dns-server",
-            "last_tested": "2026-10-07T05:18:24.037144+00:00",
-            "last_tested_version": "15.6.0",
-            "last_updated": "2026-10-07T05:18:24.037190+00:00",
+            "last_tested": "2026-10-12T09:29:05.479603+00:00",
+            "last_tested_version": "15.6.1",
+            "last_updated": "2026-10-12T09:29:00.690612+00:00",
             "name": "Technitium DNS Server",
             "package_id": null,
             "podman_mode": "rootful",
@@ -7285,13 +7284,12 @@
                 "storage_type": "persistent"
             },
             "staging": {
-                "candidate_version": "15.6.1",
-                "entered_staging_at": "2026-10-12T05:15:01.473951+00:00",
+                "candidate_version": null,
+                "entered_staging_at": null,
                 "grace_days": 14,
-                "last_test_error": "Exited with code 1",
-                "last_test_timestamp": "2026-10-12T05:16:02.675760+00:00",
-                "status": "needs_review",
-                "test_result": "Passed Proxmox LXC DOCKER test (15.6.0)"
+                "last_test_timestamp": "2026-10-12T08:56:56.340671+00:00",
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (15.6.1)"
             },
             "supported_matrix": {
                 "engines": [
