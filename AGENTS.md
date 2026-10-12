@@ -22,6 +22,10 @@ CRITICAL WORKFLOW & OUTPUT DIRECTIVES
 - Direct File Updates: Use filesystem edit tools to modify files. Do not output entire file contents in the chat panel unless requested; provide only concise descriptions and diff summaries of the changes to save context tokens.
 - Standard Markdown and Formatting: Standard Markdown features (including inline backticks for code symbols and standard fenced code blocks with language specifiers) are fully supported and should be used for clarity.
 - Prioritize Objective Evidence: Treat automated tool outputs, logs, linter results, and test suite reports as the source of truth for diagnosing issues.
+- ZERO-LEAK CREDENTIAL REDACTION (CRITICAL & ABSOLUTE MANDATE):
+    1. NEVER output, quote, echo, or display plaintext passwords, secret keys, API tokens, SSH private keys, authentication hashes, or sensitive .env values in chat responses, diffs, code examples, logs, or artifacts.
+    2. Unconditional Redaction: Whenever referencing credentials or configuration snippets, always replace secret values with `***REDACTED***` or `<redacted>` (e.g., `PROXMOX_VM_PASSWORD="***REDACTED***"`, `API_KEY="***REDACTED***"`).
+    3. Discuss Keys Only, Never Secrets: Only refer to the existence, presence, or variable names of credentials (e.g., "PROXMOX_VM_PASSWORD is configured in .env"), never their literal plaintext content.
 
 CRITICAL CODE QUALITY DIRECTIVES (Python & JavaScript)
 - All generated code must be "Air Traffic Control" grade.

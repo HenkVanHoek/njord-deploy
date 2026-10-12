@@ -32,6 +32,7 @@
 
 ## File Modification Workflow
 - **Data Protection:** `config/components_metadata.json` must only be modified programmatically via the `editor_app` API, the `ComponentManager` DAL, or validated synchronization tools. Never introduce raw unvalidated overrides or corrupt schema formatting.
+- **Zero-Leak Credential Policy (CRITICAL):** NEVER display plaintext passwords, API keys, private keys, or .env secrets in chat responses. Mask all secret values as `***REDACTED***`.
 - **Version Management:** Do not place the version number inside the main application code. It must only be maintained in `version.py`.
 - **Markdown Output:** Always output files ending in `.md` in raw text/markdown format.
 
