@@ -538,13 +538,16 @@ def create_app(test_config=None):
     @app.route("/api/sync/all", methods=["POST"])
     def sync_all_route():
         try:
-            success = sync_manager.sync_all()
+            req_data = request.get_json(silent=True) or {}
+            force = bool(req_data.get("force", False))
+            preserve_local = bool(req_data.get("preserve_local", True))
+            success = sync_manager.sync_all(force=force, preserve_local=preserve_local)
             if success:
                 return (
                     jsonify(
                         {
                             "status": "success",
-                            "message": "Successfully synchronized " "all components",
+                            "message": "Successfully synchronized all components",
                         }
                     ),
                     200,
@@ -559,9 +562,30 @@ def create_app(test_config=None):
                     ),
                     500,
                 )
+        except ValueError as ve:
+            logging.warning("sync_all rejected due to safety check: %s", ve)
+            return (
+                jsonify(
+                    {
+                        "status": "error",
+                        "message": str(ve),
+                        "local_only_warning": True,
+                    }
+                ),
+                400,
+            )
         except Exception as e:
             logging.error(f"Failed to sync all components: {e}", exc_info=True)
             abort(500, "Internal error syncing all components")
+
+    @app.route("/api/sync/preflight", methods=["GET"])
+    def sync_preflight_route():
+        try:
+            preflight = sync_manager.check_preflight_sync()
+            return jsonify(preflight), 200
+        except Exception as e:
+            logging.error(f"Failed to check preflight sync: {e}", exc_info=True)
+            abort(500, "Internal error checking preflight sync")
 
     @app.route("/api/git/check_permission", methods=["GET"])
     def git_check_permission():
@@ -812,7 +836,6 @@ def create_app(test_config=None):
                 return send_from_directory(css_dir, "tokens.css")
 
         abort(404, "tokens.css not found")
-
 
     @app.route("/")
     def index():

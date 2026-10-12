@@ -2990,14 +2990,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (gitSyncAllBtn) {
             gitSyncAllBtn.addEventListener('click', async () => {
-                if (!confirm('Are you sure you want to synchronize all components from remote repository? This will overwrite your local changes.')) {
+                if (!confirm('Are you sure you want to synchronize all components from remote repository? Local-only components will be safely preserved.')) {
                     return;
                 }
                 gitSyncAllBtn.disabled = true;
                 gitSyncAllBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Syncing all...';
                 try {
-                    await fetchJson('/api/sync/all', { method: 'POST' });
-                    showAlert('All components successfully synchronized!', 'success');
+                    await fetchJson('/api/sync/all', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ preserve_local: true, force: false })
+                    });
+                    showAlert('All components successfully synchronized (local-only components safely preserved)!', 'success');
                     gitSyncModal.hide();
                     await loadComponents();
                     const currentCompIdEl = document.getElementById('comp-id');

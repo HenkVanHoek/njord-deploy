@@ -502,21 +502,143 @@ class SyncManager:
             logger.error(f"Failed to sync templates for {component_id}: {e}")
             return False
 
-    def sync_all(self) -> bool:
+    def get_local_only_components(self) -> list[str]:
+        """Returns a sorted list of component IDs that only exist locally."""
+        if not self.cache_metadata_path.exists():
+            return []
+        local_data = self._load_json(self.local_metadata_path)
+        remote_data = self._load_json(self.cache_metadata_path)
+
+        local_comps = set(local_data.get("components", {}).keys())
+        remote_comps = set(remote_data.get("components", {}).keys())
+
+        if self.local_templates_path.exists():
+            for p in self.local_templates_path.iterdir():
+                if p.is_dir() and (p / "docker-compose.template.yml").exists():
+                    local_comps.add(p.name)
+
+        return sorted(list(local_comps - remote_comps))
+
+    def check_preflight_sync(self) -> dict[str, Any]:
+        """
+        Pre-flight check before modifying or adding components.
+        Returns whether the local repository is in sync with the remote repository.
+        """
+        if not self.is_remote_sync_enabled():
+            return {
+                "is_synced": True,
+                "reason": "remote_sync_disabled",
+                "local_only": [],
+                "modified": [],
+                "remote_only": [],
+                "global_metadata_out_of_sync": False,
+            }
+
+        if not self.cache_metadata_path.exists():
+            self.fetch_from_remote()
+
+        status = self.get_sync_status()
+        comp_statuses = status.get("components", {})
+        local_only = [cid for cid, s in comp_statuses.items() if s == "local_only"]
+        modified = [cid for cid, s in comp_statuses.items() if s == "modified"]
+        remote_only = [cid for cid, s in comp_statuses.items() if s == "remote_only"]
+        global_out_of_sync = status.get("global_metadata_out_of_sync", False)
+
+        is_synced = not (local_only or modified or remote_only or global_out_of_sync)
+        return {
+            "is_synced": is_synced,
+            "local_only": local_only,
+            "modified": modified,
+            "remote_only": remote_only,
+            "global_metadata_out_of_sync": global_out_of_sync,
+            "remote_updates_available": status.get("remote_updates_available", 0),
+        }
+
+    def sync_all(self, force: bool = False, preserve_local: bool = True) -> bool:
         """
         Synchronizes all components from the remote cache to local.
+        Safely protects local-only components when preserve_local=True.
         """
         if not self.cache_metadata_path.exists():
             return False
 
+        local_only = self.get_local_only_components()
+        if local_only and not preserve_local and not force:
+            logger.warning(
+                "sync_all aborted: local-only components detected (%s)",
+                ", ".join(local_only),
+            )
+            raise ValueError(
+                "Sync aborted to prevent data loss: local-only component(s) "
+                f"detected: {', '.join(local_only)}. "
+                "Upload them first or use force=True to overwrite."
+            )
+
         try:
             self.local_metadata_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(self.cache_metadata_path, self.local_metadata_path)
 
-            if self.local_templates_path.exists():
-                shutil.rmtree(self.local_templates_path)
+            if force or (not local_only):
+                shutil.copy2(self.cache_metadata_path, self.local_metadata_path)
+
+                if self.local_templates_path.exists():
+                    shutil.rmtree(self.local_templates_path)
+                if self.cache_templates_path.exists():
+                    shutil.copytree(
+                        self.cache_templates_path, self.local_templates_path
+                    )
+                return True
+
+            # Non-destructive safe merge for local-only components
+            local_data = self._load_json(self.local_metadata_path)
+            remote_data = self._load_json(self.cache_metadata_path)
+
+            merged_components = dict(remote_data.get("components", {}))
+            for cid in local_only:
+                if cid in local_data.get("components", {}):
+                    merged_components[cid] = local_data["components"][cid]
+
+            merged_packages = dict(remote_data.get("packages", {}))
+            for pkg_id, pkg_info in local_data.get("packages", {}).items():
+                if pkg_id not in merged_packages:
+                    merged_packages[pkg_id] = pkg_info
+                else:
+                    pkg_comps = merged_packages[pkg_id].setdefault("components", [])
+                    for cid in pkg_info.get("components", []):
+                        if cid in local_only and cid not in pkg_comps:
+                            pkg_comps.append(cid)
+
+            merged_meta = dict(remote_data)
+            merged_meta["components"] = merged_components
+            merged_meta["packages"] = merged_packages
+
+            local_rules = local_data.get("_njorddeploy", {}).get("group_rules", {})
+            remote_rules = merged_meta.setdefault("_njorddeploy", {}).setdefault(
+                "group_rules", {}
+            )
+            for gid, grule in local_rules.items():
+                if gid not in remote_rules:
+                    remote_rules[gid] = grule
+
+            local_order = local_data.get("_njorddeploy", {}).get("group_order", [])
+            remote_order = merged_meta.setdefault("_njorddeploy", {}).setdefault(
+                "group_order", []
+            )
+            for gid in local_order:
+                if gid not in remote_order:
+                    remote_order.append(gid)
+
+            with open(self.local_metadata_path, "w", encoding="utf-8") as f:
+                json.dump(merged_meta, f, indent=4, sort_keys=True)
+
+            self.local_templates_path.mkdir(parents=True, exist_ok=True)
             if self.cache_templates_path.exists():
-                shutil.copytree(self.cache_templates_path, self.local_templates_path)
+                for remote_comp_dir in self.cache_templates_path.iterdir():
+                    if remote_comp_dir.is_dir():
+                        target_dir = self.local_templates_path / remote_comp_dir.name
+                        if target_dir.exists():
+                            shutil.rmtree(target_dir)
+                        shutil.copytree(remote_comp_dir, target_dir)
+
             return True
         except Exception as e:
             logger.error(f"Failed to sync all components: {e}")
