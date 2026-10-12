@@ -20,6 +20,7 @@
 | [`nextcloud-db-dumper`](../../component_templates/nextcloud-db-dumper/README.md) | databases | An automated backup utility container that periodically exports SQL dumps of the Nextcloud MariaDB database for disas... | Nextcloud DB Dumper |
 | [`notify-push`](../../component_templates/notify-push/README.md) | utilities | Realtime notification and file-sync daemon for Nextcloud written in Rust. | Nextcloud High-Performance Push |
 | [`vaultwarden`](../../component_templates/vaultwarden/README.md) | Security & Utilities | A lightweight, self-hosted password manager compatible with Bitwarden clients. It provides almost all of the features... | [Vaultwarden](https://github.com/dani-garcia/vaultwarden) |
+| [`clamav`](../../component_templates/clamav/README.md) | Security | Open-source antivirus engine and daemon for real-time malware and attachment scanning over TCP socket. | [ClamAV Antivirus Daemon](https://github.com/Cisco-Talos/clamav) |
 
 ---
 
@@ -34,6 +35,7 @@ flowchart TD
         nextcloud-db-dumper["Nextcloud DB Dumper"]
         notify-push["Nextcloud High-Performance Push"]
         vaultwarden["Vaultwarden"]
+        clamav["ClamAV Antivirus Daemon"]
     end
 ```
 

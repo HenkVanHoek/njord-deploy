@@ -1,0 +1,25 @@
+# status: "tested"
+# last_tested_version: "latest"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  clamav:
+    image: clamav/clamav:latest
+    container_name: clamav
+    restart: unless-stopped
+    environment:
+      CLAMAV_NO_FRESHCLAMD: "false"
+      TZ: "{{ TZ }}"
+    volumes:
+      - "{{ CLAMAV_DATA_PATH }}:/var/lib/clamav"
+    expose:
+      - 3310
+    networks:
+      - njorddeploy_net
+      - nextcloud-internal
+
+networks:
+  njorddeploy_net:
+    external: true
+  nextcloud-internal:
+    name: nextcloud-internal

@@ -1,0 +1,12 @@
+{
+  "variables": [
+    {
+      "id": "CLAMAV_DATA_PATH",
+      "label": "ClamAV Data Path",
+      "description": "Host directory for persistent ClamAV virus signatures database",
+      "type": "path",
+      "default": "{{ CONFIG_BASE_PATH }}/clamav",
+      "required": "always"
+    }
+  ]
+}
