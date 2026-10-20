@@ -13,7 +13,7 @@ services:
     environment:
       - "WHISPER__COMPUTE_TYPE={{ SPEACHES_COMPUTE_TYPE | default('default') }}"
       - 'PRELOAD_MODELS=["{{ SPEACHES_MODEL | default("Systran/faster-whisper-small") }}"]'
-      - "API_KEY={{ SPEACHES_API_KEY | default('') }}"
+      - "API_KEY={{ SPEACHES_API_KEY | default('speaches') }}"
     networks:
       - njorddeploy_net
     restart: unless-stopped

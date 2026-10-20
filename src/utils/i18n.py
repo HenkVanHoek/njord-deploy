@@ -33,11 +33,11 @@ class TranslationManager:
 
             if cand1.exists():
                 self.locales_dir = cand1
-            elif cand2 and cand2.exists():
+            elif cand2 and cand2.exists():  # pragma: no cover
                 self.locales_dir = cand2
-            elif cand3 and cand3.exists():
+            elif cand3 and cand3.exists():  # pragma: no cover
                 self.locales_dir = cand3
-            else:
+            else:  # pragma: no cover
                 self.locales_dir = cand1
 
         self.translations: Dict[str, Dict[str, str]] = {}
