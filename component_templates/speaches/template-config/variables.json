@@ -8,17 +8,23 @@
             "type": "port"
         },
         {
+            "default": "Systran/faster-whisper-small",
+            "description": "Whisper spraakmodel voor transcriptie. 'Systran/faster-whisper-small' is de aanbevolen standaard voor uitstekend Nederlands op standaard CPU (~1 GB RAM).",
+            "id": "SPEACHES_MODEL",
+            "label": "Whisper Spraakmodel",
+            "options": [
+                "Systran/faster-whisper-small",
+                "Systran/faster-whisper-medium",
+                "Systran/faster-whisper-large-v3-turbo",
+                "Systran/faster-whisper-base"
+            ],
+            "type": "select"
+        },
+        {
             "default": "default",
             "description": "Whisper compute type (e.g. default, int8, float16, int8_float16).",
             "id": "SPEACHES_COMPUTE_TYPE",
             "label": "Whisper Compute Type",
-            "type": "string"
-        },
-        {
-            "default": "[\"Systran/faster-whisper-medium\"]",
-            "description": "JSON array of Whisper or TTS models to preload into memory on startup.",
-            "id": "SPEACHES_PRELOAD_MODELS",
-            "label": "Preload Models",
             "type": "string"
         }
     ]

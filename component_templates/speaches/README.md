@@ -44,7 +44,7 @@ services:
       - "8008:8000"
     environment:
       - "WHISPER__COMPUTE_TYPE=default"
-      - 'PRELOAD_MODELS=["Systran/faster-whisper-medium"]'
+      - 'PRELOAD_MODELS=["Systran/faster-whisper-small"]'
       - "API_KEY="
     networks:
       - njorddeploy_net
@@ -66,8 +66,8 @@ docker compose up -d
 | Variable | Default Value | Description |
 |---|---|---|
 | `SPEACHES_PORT` | `8008` | The host port to expose the Speaches STT/TTS API. |
+| `SPEACHES_MODEL` | `Systran/faster-whisper-small` | Whisper spraakmodel voor transcriptie. 'Systran/faster-whisper-small' is de aanbevolen standaard voor uitstekend Nederlands op standaard CPU (~1 GB RAM). |
 | `SPEACHES_COMPUTE_TYPE` | `default` | Whisper compute type (e.g. default, int8, float16, int8_float16). |
-| `SPEACHES_PRELOAD_MODELS` | `["Systran/faster-whisper-medium"]` | JSON array of Whisper or TTS models to preload into memory on startup. |
 
 ---
 

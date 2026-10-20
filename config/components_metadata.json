@@ -8458,6 +8458,18 @@
             "name": "Immich Photo & Kiosk Suite",
             "network_type": "bridge"
         },
+        "loes-ai-studio": {
+            "badge": "European Sovereign AI",
+            "components": [
+                "open-webui",
+                "litellm",
+                "speaches"
+            ],
+            "description": "Turnkey GDPR-compliant sovereign AI studio connecting Open WebUI and Speaches local voice transcription directly to the Loes.ai (HostYourAI) European sovereign LLM cluster.",
+            "icon": "fa-solid fa-brain",
+            "name": "Loes.ai Sovereign AI Studio",
+            "network_type": "bridge"
+        },
         "media-stack": {
             "badge": "Media Suite",
             "components": [

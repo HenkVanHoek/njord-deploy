@@ -12,7 +12,7 @@ services:
       - "{{ SPEACHES_PORT | default('8008') }}:8000"
     environment:
       - "WHISPER__COMPUTE_TYPE={{ SPEACHES_COMPUTE_TYPE | default('default') }}"
-      - 'PRELOAD_MODELS={{ SPEACHES_PRELOAD_MODELS | default("[\"Systran/faster-whisper-medium\"]") }}'
+      - 'PRELOAD_MODELS=["{{ SPEACHES_MODEL | default("Systran/faster-whisper-small") }}"]'
       - "API_KEY={{ SPEACHES_API_KEY | default('') }}"
     networks:
       - njorddeploy_net
