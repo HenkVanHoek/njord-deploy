@@ -1515,20 +1515,19 @@ def test_configurator_app_coverage_boost(configurator_final_env, tmp_path, monke
         assert res_login_limited.status_code == 429
 
     # 17. Register duplicate email
-    mock_db_email = MagicMock()
-    mock_db_email.get_user_by_username.return_value = None
-    mock_db_email.get_user_by_email.return_value = {
-        "id": 1,
-        "email": "taken@example.com",
-    }
-    with patch(
-        "managers.database_manager.DatabaseManager.get_instance",
-        return_value=mock_db_email,
+    from managers.database_manager import DatabaseManager
+    target_db = DatabaseManager.get_instance()
+    with patch.object(
+        target_db, "get_user_by_username", return_value=None
+    ), patch.object(
+        target_db,
+        "get_user_by_email",
+        return_value={"id": 1, "email": "taken@example.com"},
     ):
         res_reg_dup_email = client.post(
             "/register",
             json={
-                "username": "uniqueuser",
+                "username": "uniqueuser_dup",
                 "password": "ValidStrongPassword2026!",
                 "email": "taken@example.com",
             },
