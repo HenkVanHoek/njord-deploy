@@ -71,3 +71,46 @@ def test_escalate_p1_admin(mock_post):
     call_args, call_kwargs = mock_post.call_args
     assert "P1 ESCALATIE" in call_kwargs["json"]["message"]
     assert "HERSTELD" in call_kwargs["json"]["message"]
+
+
+def test_fums_notifier_unconfigured_and_errors():
+    """Test unconfigured, invalid url, failed responses, and exceptions."""
+    # 1. Unconfigured
+    empty = FUMSNotifier()
+    assert empty.send_signal("msg", "+316") is False
+    assert empty.send_matrix("!room", "msg") is False
+    assert empty.escalate_p1_admin("app", "host", "err") is False
+
+    # 2. Invalid API URL
+    bad_url_notifier = FUMSNotifier(
+        signal_api="javascript:alert(1)",
+        signal_sender="+316",
+        matrix_homeserver="ftp://bad",
+        matrix_token="tok",
+    )
+    assert bad_url_notifier.send_signal("msg", "+316") is False
+    assert bad_url_notifier.send_matrix("!room", "msg") is False
+
+    # 3. HTTP status 500 and exceptions
+    with patch("requests.post") as mock_post:
+        mock_post.return_value = MagicMock(status_code=500)
+        n = FUMSNotifier(
+            signal_api="https://sig.local",
+            signal_sender="+316",
+            matrix_homeserver="https://mat.local",
+            matrix_token="tok",
+            admin_signal_recipient="+3169",
+        )
+        assert n.send_signal("msg", "+316") is False
+        assert n.send_matrix("!room", "msg") is False
+
+        # Rollback not performed check
+        mock_post.return_value = MagicMock(status_code=200)
+        n.escalate_p1_admin("app", "host", "err", rollback_performed=False)
+        last_kwargs = mock_post.call_args[1]
+        assert "ROLLBACK NIET BEVESTIGD" in last_kwargs["json"]["message"]
+
+        # Exceptions
+        mock_post.side_effect = Exception("network down")
+        assert n.send_signal("msg", "+316") is False
+        assert n.send_matrix("!room", "msg") is False

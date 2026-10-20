@@ -35,5 +35,241 @@
         },
         "report_file": "PROXMOX_PACKAGE_TESTS_immich-stack_vm_docker_20260927_150428.md",
         "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 14:40:38",
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 107,
+        "ip": "192.168.178.199",
+        "deployment": "success",
+        "components": {
+            "ollama": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null,
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            },
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_open-webui-ollama_lxc_docker_20261020_144038.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 14:47:18",
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "podman",
+        "vmid": 107,
+        "ip": "192.168.178.199",
+        "deployment": "success",
+        "components": {
+            "ollama": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null,
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            },
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_open-webui-ollama_lxc_podman_20261020_144718.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 14:55:33",
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 107,
+        "ip": "192.168.178.199",
+        "deployment": "success",
+        "components": {
+            "ollama": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null,
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            },
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_open-webui-ollama_vm_docker_20261020_145533.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 15:04:45",
+        "package_id": "open-webui-ollama",
+        "package_name": "Open WebUI & Ollama AI Studio",
+        "status": "success",
+        "mode": "vm",
+        "engine": "podman",
+        "vmid": 107,
+        "ip": "192.168.178.199",
+        "deployment": "success",
+        "components": {
+            "ollama": {
+                "running": true,
+                "http_ok": null,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": null,
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            },
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_open-webui-ollama_vm_podman_20261020_150445.md",
+        "error_message": ""
     }
 ]

@@ -28,7 +28,7 @@
   - **CPU Profile:** Medium
   - **Storage:** Persistent
 > **Platform Verification Notes:**
-> Tested on Proxmox LXC: docker (main-stable, 2026-09-14), podman (1.19, 2026-09-14); Proxmox VM: docker (main-stable, 2026-09-14), podman (16.15-1.pgdg13+2, 2026-09-14).
+> Tested on Proxmox LXC: docker (16.15-1.pgdg13+2, 2026-10-20), podman (16.15-1.pgdg13+2, 2026-10-20); Proxmox VM: docker (16.15-1.pgdg13+2, 2026-10-20), podman (16.15-1.pgdg13+2, 2026-10-20).
 ---
 
 ## 🚀 Quick Start (Standalone Docker Compose)
@@ -45,6 +45,7 @@ services:
     command:
       - "--config=/app/config.yaml"
     environment:
+      - "LITELLM_MASTER_KEY=sk-njorddeploy-litellm-master-key"
       - "DATABASE_URL=postgresql://llmproxy:njorddeploy_db_password_123@njorddeploy-litellm-db:5432/litellm"
       - "STORE_MODEL_IN_DB=True"
       - "OPENAI_API_KEY=openai_api_key"
@@ -111,6 +112,7 @@ docker compose up -d
 
 | Variable | Default Value | Description |
 |---|---|---|
+| `LITELLM_MASTER_KEY` | `sk-njorddeploy-litellm-master-key` | Master key for LiteLLM proxy authentication and administrative operations. |
 | `LITELLM_WEB_PORT` | `4000` | The external port for accessing the LiteLLM AI Gateway web interface. |
 | `LITELLM_DB_NAME` | `litellm` | The name of the PostgreSQL database for LiteLLM. |
 | `LITELLM_DB_USER` | `llmproxy` | The username for accessing the PostgreSQL database. |

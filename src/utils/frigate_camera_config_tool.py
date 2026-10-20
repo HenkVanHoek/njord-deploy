@@ -62,7 +62,7 @@ async def discover_onvif_cameras():
         return []
 
     # Segment the local class C subnet (e.g., 192.168.178.)
-    ip_base = primary_ip.rsplit(".", 1)[0]
+    ip_base, *_ = primary_ip.rsplit(".", 1)
     print(f"Scanning local network segment {ip_base}.1-254 for ONVIF ports...")
 
     # Scan ports 80 and 8899 concurrently across the subnet range
@@ -153,7 +153,8 @@ async def main():
         clean_model = cam["name"].replace(" ", "_").replace(".", "_").lower()
         camera_name = f"{clean_model}_{ip_suffix}"
 
-        rtsp_url = cam["rtsp_urls"][0] if cam["rtsp_urls"] else ""
+        rtsp_urls = cam.get("rtsp_urls", [])
+        rtsp_url = next(iter(rtsp_urls), "")
 
         if rtsp_url:
             # Fixed: Corrected variable typo from rts_url to rtsp_url

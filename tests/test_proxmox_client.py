@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import MagicMock, patch
 
-from src.utils.proxmox_client import ProxmoxClient
+from utils.proxmox_client import ProxmoxClient
 
 
 class TestProxmoxClient(unittest.TestCase):
@@ -259,6 +259,137 @@ class TestProxmoxClient(unittest.TestCase):
 
         self.assertEqual(containers, [])
 
+    @patch("requests.post")
+    def test_post_and_put_http_error(self, mock_post):
+        """Verify post and put raise RuntimeError on HTTP error."""
+        import requests
 
-if __name__ == "__main__":
-    unittest.main()
+        mock_resp = MagicMock()
+        mock_resp.status_code = 500
+        mock_resp.text = "Internal Server Error"
+        mock_resp.raise_for_status.side_effect = requests.HTTPError("Server error")
+        mock_post.return_value = mock_resp
+
+        with self.assertRaises(RuntimeError):
+            self.client.post("test/endpoint", data={"a": 1})
+
+        with patch("requests.put") as mock_put:
+            mock_put.return_value = mock_resp
+            with self.assertRaises(RuntimeError):
+                self.client.put("test/endpoint", data={"a": 1})
+
+    @patch("requests.get")
+    def test_get_next_vmid_invalid(self, mock_get):
+        """Verify get_next_vmid raises ValueError when data is missing."""
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": None}
+        mock_get.return_value = mock_resp
+
+        with self.assertRaises(ValueError):
+            self.client.get_next_vmid()
+
+    @patch("requests.post")
+    def test_lxc_lifecycle_methods(self, mock_post):
+        """Verify clone_lxc, create_lxc, template conversion, and power actions."""
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": "OK"}
+        mock_post.return_value = mock_resp
+
+        # clone_lxc
+        self.client.clone_lxc("pve", 100, 200, hostname="my-lxc", full=True)
+        # create_lxc
+        self.client.create_lxc("pve", {"vmid": 201})
+        # convert_to_template
+        self.client.convert_to_template("pve", 200, is_lxc=True)
+        self.client.convert_to_template("pve", 100, is_lxc=False)
+        # start_lxc and stop_lxc
+        self.client.start_lxc("pve", 200)
+        self.client.stop_lxc("pve", 200)
+        # reset_vm
+        self.client.reset_vm("pve", 100)
+
+        self.assertTrue(mock_post.called)
+
+    @patch("requests.put")
+    @patch("requests.get")
+    @patch("requests.delete")
+    def test_status_config_destroy_and_vm_list(self, mock_del, mock_get, mock_put):
+        """Verify configure_lxc, get_status, destroy_lxc, and get_vm_list."""
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": [{"vmid": 100, "name": "vm1"}]}
+        mock_get.return_value = mock_resp
+        mock_put.return_value = mock_resp
+        mock_del.return_value = mock_resp
+
+        self.client.configure_lxc("pve", 200, {"cores": 2})
+        self.client.get_vm_status("pve", 100)
+        self.client.get_lxc_status("pve", 200)
+        self.client.destroy_lxc("pve", 200)
+
+        vm_list = self.client.get_vm_list("pve")
+        self.assertEqual(len(vm_list), 1)
+
+        # VM list on API error
+        mock_get.side_effect = Exception("API down")
+        self.assertEqual(self.client.get_vm_list("pve"), [])
+
+    @patch("requests.get")
+    def test_get_vm_ip_edge_cases(self, mock_get):
+        """Verify get_vm_ip when no interfaces or non-ipv4 addresses exist."""
+        # Empty interfaces
+        mock_resp = MagicMock()
+        mock_resp.json.return_value = {"data": {"result": []}}
+        mock_get.return_value = mock_resp
+        self.assertIsNone(self.client.get_vm_ip("pve", 100))
+
+        mock_resp.json.return_value = {
+            "data": {
+                "result": [
+                    {
+                        "ip-addresses": [
+                            {
+                                "ip-address-type": "ipv4",
+                                "ip-address": "127.0.0.1",
+                            },
+                            {
+                                "ip-address-type": "ipv6",
+                                "ip-address": "fe80::1",
+                            },
+                        ]
+                    }
+                ]
+            }
+        }
+        self.assertIsNone(self.client.get_vm_ip("pve", 100))
+
+        # Interface without ips (line 257)
+        mock_resp.json.return_value = {
+            "data": {
+                "result": [
+                    {"ip-addresses": []},
+                    {
+                        "ip-addresses": [
+                            {
+                                "ip-address-type": "ipv4",
+                                "ip-address": "192.168.1.50",
+                            }
+                        ]
+                    },
+                ]
+            }
+        }
+        self.assertEqual(self.client.get_vm_ip("pve", 100), "192.168.1.50")
+
+    def test_headers_with_exclamation_in_token_id(self):
+        """Verify headers when token_id contains username and exclamation."""
+        c = ProxmoxClient(
+            host="https://192.168.178.51:8006",
+            user="root@pam",
+            token_id="root@pam!clean-token",
+            token_secret="testsecret",
+            verify_ssl=False,
+        )
+        self.assertEqual(
+            c.headers["Authorization"],
+            "PVEAPIToken=root@pam!clean-token=testsecret",
+        )

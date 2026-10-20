@@ -3,7 +3,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,17 @@ class ComponentWriter:
     Responsible for all file system mutations and metadata updates.
     """
 
-    def __init__(self, metadata_path: Path, templates_path: Path):
+    def __init__(
+        self,
+        metadata_path: Path,
+        templates_path: Path,
+        private_templates_path: Optional[Path] = None,
+    ):
         self.metadata_file = Path(metadata_path)
         self.templates_path = Path(templates_path)
+        self.private_templates_path = (
+            Path(private_templates_path) if private_templates_path else None
+        )
 
     def _save_json(self, file_path: Path, data: Any) -> bool:
         """Writes data to a JSON file with proper indentation."""
@@ -103,7 +111,21 @@ class ComponentWriter:
             self.templates_path / component_id / "docker-compose.template.yml"
         )
         if not template_file.exists():
-            return False
+            if (
+                self.private_templates_path
+                and (
+                    self.private_templates_path
+                    / component_id
+                    / "docker-compose.template.yml"
+                ).exists()
+            ):
+                template_file = (
+                    self.private_templates_path
+                    / component_id
+                    / "docker-compose.template.yml"
+                )
+            else:
+                return False
         # noinspection PyBroadException
         try:
             content = template_file.read_text(encoding="utf-8")

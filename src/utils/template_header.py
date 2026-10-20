@@ -89,9 +89,6 @@ def merge_platform_notes(
 
     # Format result string
     ordered_plats = [p for p in ["Proxmox LXC", "Proxmox VM"] if p in platforms]
-    for p in sorted(platforms.keys()):
-        if p not in ordered_plats:
-            ordered_plats.append(p)
 
     plat_strs = []
     for plat in ordered_plats:
@@ -107,12 +104,6 @@ def merge_platform_notes(
             eng_parts.append(f"{eng} ({info['version']}, {info['date']})")
 
         plat_strs.append(f"{plat}: {', '.join(eng_parts)}")
-
-    if not plat_strs:
-        return (
-            f"Tested on Proxmox {clean_mode}: "
-            f"{clean_engine} ({clean_version}, {test_date})."
-        )
 
     return f"Tested on {'; '.join(plat_strs)}."
 

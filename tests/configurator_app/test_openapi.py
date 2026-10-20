@@ -69,3 +69,28 @@ class OpenApiTestCase(unittest.TestCase):
         content = response.data.decode("utf-8")
         self.assertIn("swagger-ui", content)
         self.assertIn("/api/openapi.json", content)
+
+    def test_openapi_fallback_import(self):
+        """Verify fallback import in openapi.py when utils.resource_utils
+        triggers ImportError.
+        """
+        import importlib
+        import sys
+
+        real_utils = sys.modules.get("utils.resource_utils")
+        try:
+            sys.modules["utils.resource_utils"] = None  # Force ImportError
+            # Reload module to trigger except block
+            import src.configurator_app.openapi as oapi
+
+            importlib.reload(oapi)
+            spec = oapi.get_openapi_spec()
+            self.assertIn("info", spec)
+        finally:
+            if real_utils is not None:
+                sys.modules["utils.resource_utils"] = real_utils
+            else:
+                sys.modules.pop("utils.resource_utils", None)
+            import src.configurator_app.openapi as oapi
+
+            importlib.reload(oapi)

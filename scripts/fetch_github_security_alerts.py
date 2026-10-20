@@ -70,27 +70,31 @@ def get_auth_token(cli_token: Optional[str] = None) -> Optional[str]:
     if env_token and env_token.strip():
         return env_token.strip()
 
-    # Check .env file in workspace
-    env_file = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
-    )
-    if os.path.exists(env_file):
-        # noinspection PyBroadException
-        try:
-            with open(env_file, "r", encoding="utf-8") as f:
-                for line in f:
-                    stripped = line.strip()
-                    if stripped.startswith("GITHUB_TOKEN=") or stripped.startswith(
-                        "GH_TOKEN="
-                    ):
-                        parts = stripped.split("=", 1)
-                        if len(parts) == 2:
-                            _, val = parts
-                            cleaned_val = val.strip("\"' ")
-                            if cleaned_val:
-                                return cleaned_val
-        except Exception:  # nosec B110
-            pass
+    # Check .env file in workspace and global config fallback
+    candidate_files = [
+        os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+        ),
+        os.path.expanduser("~/.gemini/config/.env"),
+    ]
+    for env_file in candidate_files:
+        if os.path.exists(env_file):
+            # noinspection PyBroadException
+            try:
+                with open(env_file, "r", encoding="utf-8") as f:
+                    for line in f:
+                        stripped = line.strip()
+                        if stripped.startswith("GITHUB_TOKEN=") or stripped.startswith(
+                            "GH_TOKEN="
+                        ):
+                            parts = stripped.split("=", 1)
+                            if len(parts) == 2:
+                                _, val = parts
+                                cleaned_val = val.strip("\"' ")
+                                if cleaned_val:
+                                    return cleaned_val
+            except Exception:  # nosec B110
+                pass
 
     return None
 

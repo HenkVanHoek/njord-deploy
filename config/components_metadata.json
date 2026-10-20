@@ -1,17 +1,36 @@
 {
     "_njorddeploy": {
         "components_order": [
+            "actual-budget",
             "adguard-home",
             "adminer",
             "audiobookshelf",
+            "bazarr",
+            "beszel",
             "caddy",
+            "calibre-web",
+            "changedetection",
+            "clamav",
             "conduit",
+            "cyberchef",
             "docker-jitsi-meet",
+            "dockge",
+            "drawio",
+            "esphome",
+            "excalidraw",
             "filebrowser",
+            "flatnotes",
+            "focalboard",
+            "forgejo",
+            "freshrss",
             "frigate",
+            "gitea",
             "gitlab",
             "gluetun",
+            "gotify",
             "grafana",
+            "grocy",
+            "headscale",
             "heimdall",
             "homarr",
             "homeassistant",
@@ -19,21 +38,37 @@
             "homer",
             "immich",
             "immich-kiosk",
+            "it-tools",
             "jellyfin",
+            "jellyseerr",
+            "kavita",
+            "librechat",
+            "lidarr",
             "litellm",
             "lora-service",
+            "mealie",
+            "memos",
             "microbin",
+            "minio",
+            "mosquitto",
             "n8n",
+            "navidrome",
+            "netdata",
             "nextcloud",
             "nextcloud-db",
             "nextcloud-db-dumper",
             "nextcloud-redis",
             "nginx-proxy-manager",
+            "nocodb",
+            "node-red",
             "notify-push",
+            "ntfy",
             "octoprint",
             "ollama",
             "open-webui",
             "organizr",
+            "paperless-ngx",
+            "pgadmin4",
             "phpmyadmin",
             "pi-hole",
             "pish-fluffychat-web",
@@ -44,66 +79,32 @@
             "prowlarr",
             "qbittorrent",
             "radarr",
+            "romm",
             "sabnzbd",
             "scrypted",
+            "searxng",
             "semaphore",
+            "shlink",
             "sonarr",
+            "speaches",
+            "speedtest-tracker",
             "stirling-pdf",
+            "syncthing",
+            "tautulli",
             "technitium-dns",
             "traefik",
+            "trilium",
             "umami",
             "unbound",
             "unifi-controller",
             "uptime-kuma",
             "vaultwarden",
-            "web-notepad",
-            "zigbee2mqtt",
-            "it-tools",
-            "actual-budget",
-            "mealie",
-            "paperless-ngx",
-            "librechat",
-            "searxng",
-            "headscale",
-            "ntfy",
-            "navidrome",
-            "calibre-web",
-            "kavita",
-            "romm",
-            "gitea",
-            "dockge",
-            "minio",
-            "beszel",
-            "freshrss",
-            "memos",
-            "trilium",
-            "flatnotes",
-            "syncthing",
-            "changedetection",
-            "shlink",
-            "gotify",
             "vikunja",
-            "nocodb",
-            "grocy",
-            "focalboard",
-            "jellyseerr",
-            "bazarr",
-            "lidarr",
-            "tautulli",
-            "node-red",
-            "mosquitto",
-            "netdata",
-            "speedtest-tracker",
-            "esphome",
-            "drawio",
-            "excalidraw",
-            "cyberchef",
             "wallabag",
-            "woodpecker-ci",
-            "pgadmin4",
+            "web-notepad",
             "wg-easy",
-            "forgejo",
-            "clamav"
+            "woodpecker-ci",
+            "zigbee2mqtt"
         ],
         "default_group": "general",
         "global_variables": [
@@ -328,7 +329,7 @@
                 "deprecation_note": "No releases for 597 days (stale/unmaintained).",
                 "github_repo": "actualbudget/actual-server",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "25.2.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/actualbudget/actual-server/releases.atom"
@@ -340,7 +341,7 @@
                 "pi-hole"
             ],
             "depends_on": [],
-            "description": "AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a “black hole”, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0).",
+            "description": "AdGuard Home is a free and open-source network-wide software for blocking ads and tracking. It operates as a DNS server that re-routes tracking domains to a \u201cblack hole\u201d, thus preventing your devices from connecting to those servers. It provides a web UI for configuration and monitoring. AdGuard Home is capable of running without root privileges, but for persistent volume access, the container is set to run as root (user: 0:0).",
             "docker_service_name": "adguardhome",
             "first_run_info": {
                 "auth_type": "wizard",
@@ -394,7 +395,7 @@
                 "deprecation_note": null,
                 "github_repo": "AdguardTeam/AdGuardHome",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.107.79",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/AdguardTeam/AdGuardHome/releases.atom"
@@ -521,7 +522,7 @@
             "upstream": {
                 "github_repo": "caronc/apprise-api",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.0.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/caronc/apprise-api/releases.atom"
@@ -583,7 +584,7 @@
                 "deprecation_note": null,
                 "github_repo": "advplyr/audiobookshelf",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.37.1",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/advplyr/audiobookshelf/releases.atom"
@@ -683,7 +684,7 @@
                 "deprecation_note": null,
                 "github_repo": "henrygd/beszel",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.21.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/henrygd/beszel/releases.atom"
@@ -815,7 +816,7 @@
                 "deprecation_note": null,
                 "github_repo": "caddyserver/caddy",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.11.7",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/caddyserver/caddy/releases.atom"
@@ -881,7 +882,7 @@
             "upstream": {
                 "github_repo": "janeczku/calibre-web",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.6.27",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/janeczku/calibre-web/releases.atom"
@@ -907,8 +908,8 @@
             "has_ui": true,
             "image_name": "ghcr.io/dgtlmoon/changedetection.io",
             "is_agent": false,
-            "last_tested": "2026-10-05T17:40:38.902768+00:00",
-            "last_tested_version": "0.60.8",
+            "last_tested": "2026-10-13T09:27:37.904571+00:00",
+            "last_tested_version": "0.60.9",
             "last_updated": "2026-10-05T17:40:38.902781+00:00",
             "name": "ChangeDetection.io",
             "port": 5002,
@@ -931,8 +932,8 @@
                 "deprecation_note": null,
                 "github_repo": "dgtlmoon/changedetection.io",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.60.8",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.60.9",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/dgtlmoon/changedetection.io/releases.atom"
             }
@@ -1044,8 +1045,8 @@
                 "deprecation_note": null,
                 "github_repo": "Cisco-Talos/clamav",
                 "is_deprecated": false,
-                "last_upstream_check": null,
-                "latest_upstream_version": "latest",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "1.5.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Cisco-Talos/clamav/releases.atom"
             }
@@ -1101,7 +1102,7 @@
             "upstream": {
                 "github_repo": "famedly/conduit",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.10.15",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://gitlab.com/famedly/conduit/-/releases.atom"
@@ -1150,7 +1151,7 @@
             "upstream": {
                 "github_repo": "gchq/CyberChef",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "11.5.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/gchq/CyberChef/releases.atom"
@@ -1214,7 +1215,7 @@
                 "deprecation_note": null,
                 "github_repo": "mauricenino/dashdot",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "6.3.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/mauricenino/dashdot/releases.atom"
@@ -1277,7 +1278,7 @@
             "upstream": {
                 "github_repo": "crazy-max/diun",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "4.33.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/crazy-max/diun/releases.atom"
@@ -1340,7 +1341,7 @@
             "upstream": {
                 "github_repo": "jitsi/docker-jitsi-meet",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "stable-11248",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/jitsi/docker-jitsi-meet/releases.atom"
@@ -1391,7 +1392,7 @@
                 "deprecation_note": "No releases for 545 days (stale/unmaintained).",
                 "github_repo": "louislam/dockge",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "1.5.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/louislam/dockge/releases.atom"
@@ -1456,7 +1457,7 @@
                 "deprecation_note": null,
                 "github_repo": "docmost/docmost",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.96.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/docmost/docmost/releases.atom"
@@ -1481,9 +1482,9 @@
             "has_ui": true,
             "image_name": "amir20/dozzle",
             "intent_questions": [],
-            "last_tested": "2026-10-11T05:17:14.181170+00:00",
-            "last_tested_version": "11.3.1",
-            "last_updated": "2026-10-11T05:17:09.385834+00:00",
+            "last_tested": "2026-10-20T05:17:07.222037+00:00",
+            "last_tested_version": "11.3.3",
+            "last_updated": "2026-10-20T05:17:02.032717+00:00",
             "name": "Dozzle",
             "package_id": null,
             "podman_mode": "rootful",
@@ -1505,7 +1506,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (11.3.1)"
+                "test_result": "Passed Proxmox LXC DOCKER test (11.3.3)"
             },
             "tags": [
                 "docker",
@@ -1520,8 +1521,8 @@
                 "deprecation_note": null,
                 "github_repo": "amir20/dozzle",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "11.3.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "11.3.3",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/amir20/dozzle/releases.atom"
             }
@@ -1546,9 +1547,9 @@
             "has_ui": true,
             "image_name": "jgraph/drawio",
             "is_agent": false,
-            "last_tested": "2026-10-09T05:19:27.392943+00:00",
-            "last_tested_version": "32.4.1",
-            "last_updated": "2026-10-09T05:19:27.392960+00:00",
+            "last_tested": "2026-10-19T05:18:34.841898+00:00",
+            "last_tested_version": "32.5.5",
+            "last_updated": "2026-10-19T05:18:29.540921+00:00",
             "name": "Draw.io",
             "port": 8082,
             "release_track": {
@@ -1562,7 +1563,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (26.04)"
+                "test_result": "Passed Proxmox LXC DOCKER test (32.5.5)"
             },
             "test_status": "tested",
             "ui_port_variable": "DRAWIO_WEB_PORT",
@@ -1570,8 +1571,8 @@
                 "deprecation_note": null,
                 "github_repo": "jgraph/drawio",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "32.4.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "32.5.5",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/jgraph/drawio/releases.atom"
             }
@@ -1634,7 +1635,7 @@
             "upstream": {
                 "github_repo": "duplicati/duplicati",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.4.0.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/duplicati/duplicati/releases.atom"
@@ -1723,7 +1724,7 @@
                 "deprecation_note": null,
                 "github_repo": "esphome/esphome",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2026.10.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/esphome/esphome/releases.atom"
@@ -1748,9 +1749,9 @@
             "has_ui": true,
             "image_name": "etherpad/etherpad",
             "intent_questions": [],
-            "last_tested": "2026-10-12T09:30:35.470478+00:00",
-            "last_tested_version": "3.3.8",
-            "last_updated": "2026-10-12T09:30:29.897790+00:00",
+            "last_tested": "2026-10-19T05:20:10.601578+00:00",
+            "last_tested_version": "3.3.9",
+            "last_updated": "2026-10-19T05:20:05.578873+00:00",
             "name": "Etherpad Lite",
             "package_id": null,
             "podman_mode": "rootful",
@@ -1773,7 +1774,7 @@
                 "grace_days": 14,
                 "last_test_timestamp": "2026-10-12T08:56:58.116347+00:00",
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.3.8)"
+                "test_result": "Passed Proxmox LXC DOCKER test (3.3.9)"
             },
             "tags": [
                 "notes",
@@ -1787,8 +1788,8 @@
             "upstream": {
                 "github_repo": "ether/etherpad",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.3.8",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.3.9",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/ether/etherpad/releases.atom"
             }
@@ -1851,8 +1852,8 @@
             "upstream": {
                 "github_repo": "evcc-io/evcc",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.317.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.317.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/evcc-io/evcc/releases.atom"
             }
@@ -1901,7 +1902,7 @@
                 "deprecation_note": null,
                 "github_repo": "excalidraw/excalidraw",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.18.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/excalidraw/excalidraw/releases.atom"
@@ -1960,7 +1961,7 @@
                 "deprecation_note": null,
                 "github_repo": "filebrowser/filebrowser",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.63.23",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/filebrowser/filebrowser/releases.atom"
@@ -2023,7 +2024,7 @@
             "upstream": {
                 "github_repo": "firefly-iii/firefly-iii",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-17T05:15:01.647560+00:00",
                 "latest_upstream_version": "6.7.9",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/firefly-iii/firefly-iii/releases.atom"
@@ -2073,7 +2074,7 @@
                 "deprecation_note": null,
                 "github_repo": "dullage/flatnotes",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.5.5",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/dullage/flatnotes/releases.atom"
@@ -2123,7 +2124,7 @@
                 "deprecation_note": "No releases for 831 days (stale/unmaintained).",
                 "github_repo": "mattermost-community/focalboard",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "8.0.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/mattermost-community/focalboard/releases.atom"
@@ -2220,9 +2221,9 @@
             "has_ui": true,
             "image_name": "freshrss/freshrss",
             "is_agent": false,
-            "last_tested": "2026-10-06T08:16:16.025578+00:00",
-            "last_tested_version": "1.30.1",
-            "last_updated": "2026-10-06T08:09:53.994311+00:00",
+            "last_tested": "2026-10-20T05:18:10.096702+00:00",
+            "last_tested_version": "1.30.2",
+            "last_updated": "2026-10-20T05:18:05.108270+00:00",
             "name": "FreshRSS",
             "port": 8086,
             "release_track": {
@@ -2236,7 +2237,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (1.30.1)"
+                "test_result": "Passed Proxmox LXC DOCKER test (1.30.2)"
             },
             "test_status": "tested",
             "ui_port_variable": "FRESHRSS_WEB_PORT",
@@ -2244,8 +2245,8 @@
                 "deprecation_note": null,
                 "github_repo": "freshrss/freshrss",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "1.30.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "1.30.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/freshrss/freshrss/releases.atom"
             }
@@ -2309,8 +2310,8 @@
                 "deprecation_note": null,
                 "github_repo": "blakeblackshear/frigate",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.18.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.18.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/blakeblackshear/frigate/releases.atom"
             }
@@ -2397,8 +2398,8 @@
             "upstream": {
                 "github_repo": "go-gitea/gitea",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "28.1.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "28.2.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/go-gitea/gitea/releases.atom"
             }
@@ -2526,8 +2527,8 @@
                 "deprecation_note": null,
                 "github_repo": "glanceapp/glance",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.8.6",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.8.7",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/glanceapp/glance/releases.atom"
             }
@@ -2582,7 +2583,7 @@
                 "deprecation_note": null,
                 "github_repo": "passteque/gluetun",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "3.41.3",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/passteque/gluetun/releases.atom"
@@ -2632,7 +2633,7 @@
                 "deprecation_note": null,
                 "github_repo": "gotify/server",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "3.1.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/gotify/server/releases.atom"
@@ -2662,9 +2663,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "grafana/grafana-oss",
-            "last_tested": "2026-10-06T08:16:16.025834+00:00",
-            "last_tested_version": "13.2.3",
-            "last_updated": "2026-10-06T08:11:14.242335+00:00",
+            "last_tested": "2026-10-14T05:18:44.082452+00:00",
+            "last_tested_version": "13.2.4",
+            "last_updated": "2026-10-14T05:18:39.827042+00:00",
             "name": "Grafana Stack",
             "package_id": "observability-analytics",
             "project_url": "https://grafana.com/",
@@ -2684,7 +2685,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (13.2.3)"
+                "test_result": "Passed Proxmox LXC DOCKER test (13.2.4)"
             },
             "tags": [
                 "monitoring",
@@ -2699,8 +2700,8 @@
                 "deprecation_note": null,
                 "github_repo": "grafana/grafana",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "13.2.3",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "13.2.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/grafana/grafana/releases.atom"
             },
@@ -2881,8 +2882,8 @@
             "upstream": {
                 "github_repo": "juanfont/headscale",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.29.4",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.29.5",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/juanfont/headscale/releases.atom"
             }
@@ -2906,9 +2907,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/heimdall",
             "intent_questions": [],
-            "last_tested": "2026-10-10T05:17:25.008806+00:00",
-            "last_tested_version": "2.8.3-ls366",
-            "last_updated": "2026-10-10T05:17:20.190104+00:00",
+            "last_tested": "2026-10-18T05:19:27.973570+00:00",
+            "last_tested_version": "2.8.3-ls367",
+            "last_updated": "2026-10-18T05:19:22.948082+00:00",
             "name": "Heimdall",
             "package_id": null,
             "project_url": "https://heimdall.site/",
@@ -2928,7 +2929,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2.8.3-ls366)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.8.3-ls367)"
             },
             "tags": [
                 "self-hosted"
@@ -2940,8 +2941,8 @@
                 "deprecation_note": null,
                 "github_repo": "linuxserver/docker-heimdall",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.8.3-ls366",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.8.3-ls367",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/linuxserver/docker-heimdall/releases.atom"
             }
@@ -3002,7 +3003,7 @@
                 "deprecation_note": null,
                 "github_repo": "ajnart/homarr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.16.1",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/ajnart/homarr/releases.atom"
@@ -3027,9 +3028,9 @@
             "has_ui": true,
             "image_name": "homeassistant/home-assistant",
             "intent_questions": [],
-            "last_tested": "2026-10-11T05:19:14.134840+00:00",
-            "last_tested_version": "2026.10.1",
-            "last_updated": "2026-10-11T05:19:09.501416+00:00",
+            "last_tested": "2026-10-17T05:17:43.967954+00:00",
+            "last_tested_version": "2026.10.2",
+            "last_updated": "2026-10-17T05:17:38.754068+00:00",
             "name": "Home Assistant",
             "package_id": null,
             "podman_mode": "rootful",
@@ -3051,7 +3052,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2026.10.1)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2026.10.2)"
             },
             "supported_matrix": {
                 "engines": [
@@ -3074,8 +3075,8 @@
                 "deprecation_note": null,
                 "github_repo": "home-assistant/core",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2026.10.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2026.10.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/home-assistant/core/releases.atom"
             }
@@ -3138,7 +3139,7 @@
                 "deprecation_note": null,
                 "github_repo": "homebridge/homebridge",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.4.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/homebridge/homebridge/releases.atom"
@@ -3163,9 +3164,9 @@
             "has_traefik_support": false,
             "has_ui": true,
             "image_name": "ghcr.io/gethomepage/homepage",
-            "last_tested": "2026-10-11T05:20:40.754350+00:00",
-            "last_tested_version": "2.5.0",
-            "last_updated": "2026-10-11T05:20:36.100026+00:00",
+            "last_tested": "2026-10-18T05:20:32.177083+00:00",
+            "last_tested_version": "2.6.0",
+            "last_updated": "2026-10-18T05:20:27.058286+00:00",
             "name": "Homepage",
             "package_id": null,
             "project_url": "https://gethomepage.dev/",
@@ -3180,7 +3181,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2.5.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.6.0)"
             },
             "tags": [
                 "dashboard",
@@ -3195,8 +3196,8 @@
                 "deprecation_note": null,
                 "github_repo": "gethomepage/homepage",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.5.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.6.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/gethomepage/homepage/releases.atom"
             }
@@ -3254,7 +3255,7 @@
                 "deprecation_note": null,
                 "github_repo": "bastienwirtz/homer",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "26.08.3",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/bastienwirtz/homer/releases.atom"
@@ -3265,7 +3266,7 @@
             "component_version": "latest",
             "conflicts_with": [],
             "depends_on": [],
-            "description": "Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: \"0:0\"`) to prevent common permission issues with mounted volumes.",
+            "description": "Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: '0:0'`) to prevent common permission issues with mounted volumes.",
             "docker_service_name": "immich-proxy",
             "first_run_info": {
                 "auth_type": "wizard",
@@ -3280,9 +3281,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/immich-app/immich-server",
-            "last_tested": "2026-10-09T05:24:13.485120+00:00",
-            "last_tested_version": "v3.3.1",
-            "last_updated": "2026-10-09T05:24:13.485134+00:00",
+            "last_tested": "2026-10-15T05:17:52.348963+00:00",
+            "last_tested_version": "3.3.3",
+            "last_updated": "2026-10-18T11:08:18.888823+00:00",
             "name": "Immich",
             "package_id": "immich-stack",
             "protocol": "http",
@@ -3304,7 +3305,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (v3.3.1)"
+                "test_result": "Passed Proxmox LXC DOCKER test (3.3.3)"
             },
             "tags": [
                 "photo",
@@ -3320,8 +3321,8 @@
                 "deprecation_note": null,
                 "github_repo": "immich-app/immich",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.3.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.3.3",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/immich-app/immich/releases.atom"
             }
@@ -3393,8 +3394,8 @@
                 "deprecation_note": null,
                 "github_repo": "damongolding/immich-kiosk",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.44.2",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.45.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/damongolding/immich-kiosk/releases.atom"
             }
@@ -3460,7 +3461,7 @@
                 "deprecation_note": "No releases for 704 days (stale/unmaintained).",
                 "github_repo": "corentinth/it-tools",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2024.10.22-7ca5933",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/corentinth/it-tools/releases.atom"
@@ -3519,7 +3520,7 @@
                 "deprecation_note": null,
                 "github_repo": "jellyfin/jellyfin",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "12.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/jellyfin/jellyfin/releases.atom"
@@ -3569,8 +3570,8 @@
                 "deprecation_note": null,
                 "github_repo": "seerr-team/seerr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.5.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.7.3-deprecated",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/seerr-team/seerr/releases.atom"
             }
@@ -3638,7 +3639,7 @@
                 "deprecation_note": null,
                 "github_repo": "kareadita/kavita",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.9.1.4",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/kareadita/kavita/releases.atom"
@@ -3663,9 +3664,9 @@
             "has_ui": true,
             "image_name": "gotson/komga",
             "intent_questions": [],
-            "last_tested": "2026-09-14T10:53:36.940177+00:00",
-            "last_tested_version": "1.28.1",
-            "last_updated": "2026-09-14T10:53:36.940192+00:00",
+            "last_tested": "2026-10-14T05:20:00.200047+00:00",
+            "last_tested_version": "1.29.1",
+            "last_updated": "2026-10-14T05:19:55.867859+00:00",
             "name": "Komga",
             "package_id": null,
             "podman_mode": "rootful",
@@ -3687,7 +3688,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": null
+                "test_result": "Passed Proxmox LXC DOCKER test (1.29.1)"
             },
             "tags": [
                 "comics",
@@ -3703,8 +3704,8 @@
                 "deprecation_note": null,
                 "github_repo": "gotson/komga",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "1.28.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "1.29.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/gotson/komga/releases.atom"
             }
@@ -3734,9 +3735,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/danny-avila/librechat",
-            "last_tested": "2026-09-14T10:58:37.663141+00:00",
-            "last_tested_version": "0.8.8",
-            "last_updated": "2026-09-14T10:58:37.663151+00:00",
+            "last_tested": "2026-10-17T05:20:01.032989+00:00",
+            "last_tested_version": "3.0.0",
+            "last_updated": "2026-10-17T05:19:55.984434+00:00",
             "name": "LibreChat",
             "protocol": "http",
             "release_track": {
@@ -3749,7 +3750,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": null
+                "test_result": "Passed Proxmox LXC DOCKER test (3.0.0)"
             },
             "supported_matrix": {
                 "engines": [
@@ -3775,8 +3776,8 @@
                 "deprecation_note": null,
                 "github_repo": "LibreChat-AI/LibreChat",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.8.8",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.0.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/LibreChat-AI/LibreChat/releases.atom"
             }
@@ -3888,7 +3889,7 @@
             "upstream": {
                 "github_repo": "sissbruecker/linkding",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "1.47.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/sissbruecker/linkding/releases.atom"
@@ -3950,8 +3951,8 @@
                 "deprecation_note": null,
                 "github_repo": "BerriAI/litellm",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "1.105.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "1.104.4",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/BerriAI/litellm/releases.atom"
             }
@@ -4027,9 +4028,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/mealie-recipes/mealie",
-            "last_tested": "2026-10-05T17:38:35.807468+00:00",
-            "last_tested_version": "v3.28.0",
-            "last_updated": "2026-10-05T17:38:35.807484+00:00",
+            "last_tested": "2026-10-18T05:21:56.558287+00:00",
+            "last_tested_version": "3.29.0",
+            "last_updated": "2026-10-18T05:21:51.327135+00:00",
             "name": "Mealie",
             "protocol": "http",
             "release_track": {
@@ -4042,7 +4043,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (v3.28.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (3.29.0)"
             },
             "supported_matrix": {
                 "engines": [
@@ -4068,8 +4069,8 @@
                 "deprecation_note": null,
                 "github_repo": "mealie-recipes/mealie",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.28.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.29.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/mealie-recipes/mealie/releases.atom"
             }
@@ -4117,7 +4118,7 @@
             "upstream": {
                 "github_repo": "usememos/memos",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.31.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/usememos/memos/releases.atom"
@@ -4182,8 +4183,8 @@
                 "deprecation_note": null,
                 "github_repo": "alexta69/metube",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2026.10.09",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2026.10.19",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/alexta69/metube/releases.atom"
             }
@@ -4246,7 +4247,7 @@
                 "deprecation_note": null,
                 "github_repo": "szabodanika/microbin",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.1.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/szabodanika/microbin/releases.atom"
@@ -4271,9 +4272,9 @@
             "has_ui": true,
             "image_name": "miniflux/miniflux",
             "intent_questions": [],
-            "last_tested": "2026-09-14T11:04:43.425803+00:00",
-            "last_tested_version": "2.3.3",
-            "last_updated": "2026-09-14T11:04:43.425816+00:00",
+            "last_tested": "2026-10-20T05:19:17.742359+00:00",
+            "last_tested_version": "2.3.4",
+            "last_updated": "2026-10-20T05:19:12.686308+00:00",
             "name": "Miniflux",
             "package_id": null,
             "podman_mode": "rootful",
@@ -4295,7 +4296,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": null
+                "test_result": "Passed Proxmox LXC DOCKER test (2.3.4)"
             },
             "tags": [
                 "rss",
@@ -4310,8 +4311,8 @@
                 "deprecation_note": null,
                 "github_repo": "miniflux/v2",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.3.3",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.3.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/miniflux/v2/releases.atom"
             }
@@ -4451,9 +4452,9 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "n8nio/n8n",
-            "last_tested": "2026-10-10T05:19:07.485405+00:00",
-            "last_tested_version": "2.43.3",
-            "last_updated": "2026-10-10T05:19:02.618111+00:00",
+            "last_tested": "2026-10-20T05:20:51.760192+00:00",
+            "last_tested_version": "2.44.4",
+            "last_updated": "2026-10-20T05:20:47.167377+00:00",
             "name": "n8n",
             "project_url": "https://n8n.io/",
             "protocol": "http",
@@ -4467,7 +4468,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2.43.3)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.44.4)"
             },
             "test_status": "tested",
             "ui_port_variable": "N8N_WEB_PORT",
@@ -4475,8 +4476,8 @@
                 "deprecation_note": null,
                 "github_repo": "n8n-io/n8n",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.43.3",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.44.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/n8n-io/n8n/releases.atom"
             }
@@ -4542,7 +4543,7 @@
                 "deprecation_note": null,
                 "github_repo": "navidrome/navidrome",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.64.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/navidrome/navidrome/releases.atom"
@@ -4592,7 +4593,7 @@
                 "deprecation_note": null,
                 "github_repo": "netdata/netdata",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.12.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/netdata/netdata/releases.atom"
@@ -4693,7 +4694,7 @@
                 "deprecation_note": null,
                 "github_repo": "nextcloud/server",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "35.0.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/nextcloud/server/releases.atom"
@@ -4916,7 +4917,7 @@
                 "deprecation_note": null,
                 "github_repo": "NginxProxyManager/nginx-proxy-manager",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.16.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/NginxProxyManager/nginx-proxy-manager/releases.atom"
@@ -4966,7 +4967,7 @@
                 "deprecation_note": null,
                 "github_repo": "nocodb/nocodb",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2026.09.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/nocodb/nocodb/releases.atom"
@@ -5015,7 +5016,7 @@
             "upstream": {
                 "github_repo": "node-red/node-red",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.0.8",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/node-red/node-red/releases.atom"
@@ -5144,8 +5145,8 @@
                 "deprecation_note": null,
                 "github_repo": "binwiederhier/ntfy",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.29.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.32.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/binwiederhier/ntfy/releases.atom"
             }
@@ -5199,7 +5200,7 @@
                 "deprecation_note": null,
                 "github_repo": "OctoPrint/OctoPrint",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.0.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/OctoPrint/OctoPrint/releases.atom"
@@ -5267,8 +5268,8 @@
                 "deprecation_note": null,
                 "github_repo": "ollama/ollama",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.40.3",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.40.6",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/ollama/ollama/releases.atom"
             }
@@ -5293,9 +5294,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/open-webui/open-webui",
-            "last_tested": "2026-10-11T05:23:19.162201+00:00",
-            "last_tested_version": "0.12.0",
-            "last_updated": "2026-10-11T05:23:13.790542+00:00",
+            "last_tested": "2026-10-17T05:24:20.789118+00:00",
+            "last_tested_version": "0.12.3",
+            "last_updated": "2026-10-17T05:24:15.610764+00:00",
             "name": "Open WebUI",
             "package_id": "open-webui-ollama",
             "project_url": "https://openwebui.com/",
@@ -5318,7 +5319,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (0.12.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (0.12.3)"
             },
             "supported_matrix": {
                 "engines": [
@@ -5346,8 +5347,8 @@
                 "deprecation_note": null,
                 "github_repo": "open-webui/open-webui",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "0.12.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "0.12.3",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/open-webui/open-webui/releases.atom"
             }
@@ -5498,9 +5499,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "ghcr.io/paperless-ngx/paperless-ngx",
-            "last_tested": "2026-10-06T08:36:25.024457+00:00",
-            "last_tested_version": "3.3.0",
-            "last_updated": "2026-10-06T08:36:25.024466+00:00",
+            "last_tested": "2026-10-20T05:24:43.010732+00:00",
+            "last_tested_version": "3.3.3",
+            "last_updated": "2026-10-20T05:24:37.856917+00:00",
             "name": "Paperless-ngx",
             "protocol": "http",
             "release_track": {
@@ -5513,7 +5514,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.3.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (3.3.3)"
             },
             "supported_matrix": {
                 "engines": [
@@ -5539,8 +5540,8 @@
                 "deprecation_note": null,
                 "github_repo": "paperless-ngx/paperless-ngx",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.3.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.3.3",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/paperless-ngx/paperless-ngx/releases.atom"
             }
@@ -5680,9 +5681,9 @@
             "has_ui": true,
             "image_name": "pihole/pihole",
             "intent_questions": [],
-            "last_tested": "2026-10-05T17:49:03.910898+00:00",
-            "last_tested_version": "2026.09.0",
-            "last_updated": "2026-10-05T17:49:03.910911+00:00",
+            "last_tested": "2026-10-18T05:17:15.922298+00:00",
+            "last_tested_version": "2026.10.0",
+            "last_updated": "2026-10-18T05:17:11.353795+00:00",
             "name": "Pi-hole",
             "package_id": null,
             "podman_mode": "rootful",
@@ -5704,7 +5705,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2026.09.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2026.10.0)"
             },
             "tags": [
                 "self-hosted"
@@ -5718,8 +5719,8 @@
                 "deprecation_note": null,
                 "github_repo": "pi-hole/docker-pi-hole",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2026.09.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2026.10.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/pi-hole/docker-pi-hole/releases.atom"
             }
@@ -5970,7 +5971,7 @@
                 "deprecation_note": null,
                 "github_repo": "portainer/portainer",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.45.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/portainer/portainer/releases.atom"
@@ -5995,9 +5996,9 @@
             "has_ui": true,
             "image_name": "privatebin/nginx-fpm-alpine",
             "intent_questions": [],
-            "last_tested": "2026-10-09T05:17:09.781152+00:00",
-            "last_tested_version": "2.0.6-alpine3.24",
-            "last_updated": "2026-10-09T05:17:09.781194+00:00",
+            "last_tested": "2026-10-19T05:17:10.211633+00:00",
+            "last_tested_version": "2.1.0-alpine3.24",
+            "last_updated": "2026-10-19T05:17:05.037854+00:00",
             "name": "PrivateBin",
             "package_id": null,
             "podman_mode": "rootful",
@@ -6019,7 +6020,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2.0.6)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.1.0-alpine3.24)"
             },
             "tags": [
                 "pastebin",
@@ -6033,8 +6034,8 @@
             "upstream": {
                 "github_repo": "PrivateBin/docker-nginx-fpm-alpine",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.0.6-alpine3.24",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.1.0-alpine3.24",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/PrivateBin/docker-nginx-fpm-alpine/releases.atom"
             }
@@ -6096,7 +6097,7 @@
             "upstream": {
                 "github_repo": "prometheus/prometheus",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "3.13.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/prometheus/prometheus/releases.atom"
@@ -6232,7 +6233,7 @@
                 "deprecation_note": null,
                 "github_repo": "Prowlarr/Prowlarr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.6.5.5623",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Prowlarr/Prowlarr/releases.atom"
@@ -6291,7 +6292,7 @@
                 "deprecation_note": null,
                 "github_repo": "linuxserver/docker-qbittorrent",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.2.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/linuxserver/docker-qbittorrent/releases.atom"
@@ -6350,7 +6351,7 @@
                 "deprecation_note": null,
                 "github_repo": "Radarr/Radarr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "6.4.4.10685",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Radarr/Radarr/releases.atom"
@@ -6400,7 +6401,7 @@
                 "deprecation_note": null,
                 "github_repo": "rommapp/romm",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.4.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/rommapp/romm/releases.atom"
@@ -6465,7 +6466,7 @@
                 "deprecation_note": null,
                 "github_repo": "rustdesk/rustdesk-server",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "1.1.16",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/rustdesk/rustdesk-server/releases.atom"
@@ -6524,7 +6525,7 @@
                 "deprecation_note": null,
                 "github_repo": "sabnzbd/sabnzbd",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.2.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/sabnzbd/sabnzbd/releases.atom"
@@ -6589,7 +6590,7 @@
                 "deprecation_note": null,
                 "github_repo": "AnalogJ/scrutiny",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.9.5",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/AnalogJ/scrutiny/releases.atom"
@@ -6648,7 +6649,7 @@
                 "deprecation_note": null,
                 "github_repo": "koush/scrypted",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.147.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/koush/scrypted/releases.atom"
@@ -6743,9 +6744,9 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "semaphoreui/semaphore",
-            "last_tested": "2026-10-09T05:31:33.994640+00:00",
-            "last_tested_version": "2.19.16",
-            "last_updated": "2026-10-09T05:31:33.994660+00:00",
+            "last_tested": "2026-10-20T09:21:41.182695+00:00",
+            "last_tested_version": "2.19.17",
+            "last_updated": "2026-10-20T09:21:21.857969+00:00",
             "name": "Semaphore UI",
             "project_url": "https://semaphoreui.com/",
             "protocol": "http",
@@ -6767,7 +6768,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (v2.18.31)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.19.17)"
             },
             "tags": [
                 "ansible",
@@ -6782,8 +6783,8 @@
                 "deprecation_note": null,
                 "github_repo": "semaphoreui/semaphore",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.19.16",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.19.17",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/semaphoreui/semaphore/releases.atom"
             }
@@ -6847,7 +6848,7 @@
                 "deprecation_note": null,
                 "github_repo": "drakkan/sftpgo",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.7.6",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/drakkan/sftpgo/releases.atom"
@@ -6897,7 +6898,7 @@
                 "deprecation_note": null,
                 "github_repo": "shlinkio/shlink",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "5.1.7",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/shlinkio/shlink/releases.atom"
@@ -6922,9 +6923,9 @@
             "has_ui": true,
             "image_name": "zefhemel/silverbullet",
             "intent_questions": [],
-            "last_tested": "2026-10-07T05:36:45.553802+00:00",
-            "last_tested_version": "2.12.0",
-            "last_updated": "2026-10-07T05:36:45.553813+00:00",
+            "last_tested": "2026-10-13T09:35:30.110820+00:00",
+            "last_tested_version": "2.12.1",
+            "last_updated": "2026-10-13T09:35:25.809859+00:00",
             "name": "SilverBullet",
             "package_id": null,
             "podman_mode": "rootful",
@@ -6946,7 +6947,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (2.12.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (2.12.1)"
             },
             "tags": [
                 "notes",
@@ -6961,8 +6962,8 @@
             "upstream": {
                 "github_repo": "silverbulletmd/silverbullet",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "2.12.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "2.12.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/silverbulletmd/silverbullet/releases.atom"
             }
@@ -6986,9 +6987,9 @@
             "has_ui": true,
             "image_name": "lscr.io/linuxserver/sonarr",
             "intent_questions": [],
-            "last_tested": "2026-10-09T05:32:48.378858+00:00",
-            "last_tested_version": "4.0.20.3014",
-            "last_updated": "2026-10-09T05:32:48.378889+00:00",
+            "last_tested": "2026-10-19T05:21:33.414377+00:00",
+            "last_tested_version": "5.0.0.2701",
+            "last_updated": "2026-10-19T05:21:28.405763+00:00",
             "name": "Sonarr",
             "package_id": "media-stack",
             "project_url": "https://sonarr.tv/",
@@ -7008,7 +7009,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (4.0.20.3014-ls326)"
+                "test_result": "Passed Proxmox LXC DOCKER test (5.0.0.2701)"
             },
             "tags": [
                 "self-hosted"
@@ -7020,10 +7021,80 @@
                 "deprecation_note": null,
                 "github_repo": "Sonarr/Sonarr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "4.0.20.3014",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "5.0.0.2701",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Sonarr/Sonarr/releases.atom"
+            }
+        },
+        "speaches": {
+            "component_version": "latest-cpu",
+            "conflicts_with": [],
+            "depends_on": [],
+            "description": "Speaches is an open-source, OpenAI-compatible Speech-to-Text (faster-whisper) and Text-to-Speech (Kokoro/Piper) server supporting GPU acceleration.",
+            "docker_service_name": "speaches",
+            "first_run_info": {
+                "auth_type": "none",
+                "default_username": null,
+                "doc_url": "https://github.com/speaches-ai/speaches",
+                "log_token_regex": null,
+                "onboarding_guide": "Speaches REST API and OpenAPI docs are available at /docs. Configure Open WebUI audio transcription settings to point to http://speaches:8000/v1.",
+                "token_label": null
+            },
+            "group": "AI & LLM Services",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "ghcr.io/speaches-ai/speaches",
+            "last_tested": "2026-10-20T11:57:45.078727+00:00",
+            "last_tested_version": "24.04",
+            "last_updated": "2026-10-20T11:57:45.078740+00:00",
+            "name": "Speaches Speech-to-Text & Audio",
+            "package_id": "open-webui-ollama",
+            "project_url": "https://github.com/speaches-ai/speaches",
+            "protocol": "http",
+            "release_track": {
+                "lts_identifier": null,
+                "otap_role": "production",
+                "track": "standard"
+            },
+            "staging": {
+                "candidate_version": null,
+                "entered_staging_at": null,
+                "grace_days": 14,
+                "status": "idle",
+                "test_result": "Passed Proxmox VM PODMAN test (24.04)"
+            },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "Supports CPU and NVIDIA GPU CUDA acceleration (RTX 3060 / Pascal+)."
+            },
+            "tags": [
+                "AI",
+                "Audio",
+                "Speech-to-Text",
+                "Whisper",
+                "TTS",
+                "OpenAI-Compatible"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 8000,
+            "ui_port_variable": "SPEACHES_PORT",
+            "upstream": {
+                "deprecation_note": null,
+                "github_repo": "speaches-ai/speaches",
+                "is_deprecated": false,
+                "last_upstream_check": "2026-10-20T11:40:16.036179+00:00",
+                "latest_upstream_version": "0.8.3",
+                "registry_type": "ghcr",
+                "rss_feed": "https://github.com/speaches-ai/speaches/releases.atom"
             }
         },
         "speedtest-tracker": {
@@ -7093,9 +7164,9 @@
             "has_configuration": true,
             "has_ui": true,
             "image_name": "stirlingtools/stirling-pdf",
-            "last_tested": "2026-10-06T08:41:15.265630+00:00",
-            "last_tested_version": "3.1.0",
-            "last_updated": "2026-10-06T08:41:15.265646+00:00",
+            "last_tested": "2026-10-16T05:21:38.581245+00:00",
+            "last_tested_version": "3.2.0",
+            "last_updated": "2026-10-16T05:21:34.311783+00:00",
             "name": "Stirling PDF",
             "project_url": "https://stirlingpdf.com/",
             "protocol": "http",
@@ -7117,7 +7188,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (3.1.0)"
+                "test_result": "Passed Proxmox LXC DOCKER test (3.2.0)"
             },
             "tags": [
                 "pdf",
@@ -7132,8 +7203,8 @@
                 "deprecation_note": null,
                 "github_repo": "Stirling-Tools/Stirling-PDF",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.1.0",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.2.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Stirling-Tools/Stirling-PDF/releases.atom"
             }
@@ -7182,7 +7253,7 @@
                 "deprecation_note": null,
                 "github_repo": "syncthing/syncthing",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.1.6",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/syncthing/syncthing/releases.atom"
@@ -7261,9 +7332,9 @@
             "has_traefik_support": true,
             "has_ui": true,
             "image_name": "technitium/dns-server",
-            "last_tested": "2026-10-12T09:29:05.479603+00:00",
-            "last_tested_version": "15.6.1",
-            "last_updated": "2026-10-12T09:29:00.690612+00:00",
+            "last_tested": "2026-10-18T05:18:21.202161+00:00",
+            "last_tested_version": "15.6.2",
+            "last_updated": "2026-10-18T05:18:16.163165+00:00",
             "name": "Technitium DNS Server",
             "package_id": null,
             "podman_mode": "rootful",
@@ -7289,7 +7360,7 @@
                 "grace_days": 14,
                 "last_test_timestamp": "2026-10-12T08:56:56.340671+00:00",
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (15.6.1)"
+                "test_result": "Passed Proxmox LXC DOCKER test (15.6.2)"
             },
             "supported_matrix": {
                 "engines": [
@@ -7315,8 +7386,8 @@
             "upstream": {
                 "github_repo": "TechnitiumSoftware/DnsServer",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "15.6.1",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "15.6.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/TechnitiumSoftware/DnsServer/releases.atom"
             }
@@ -7379,7 +7450,7 @@
             "upstream": {
                 "github_repo": "teslamate-org/teslamate",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "4.3.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/teslamate-org/teslamate/releases.atom"
@@ -7404,8 +7475,8 @@
             "has_ui": true,
             "image_name": "traefik",
             "intent_questions": [],
-            "last_tested": "2026-10-06T08:17:24.401925+00:00",
-            "last_tested_version": "3.7.14",
+            "last_tested": "2026-10-16T05:16:56.246948+00:00",
+            "last_tested_version": "3.7.15",
             "last_updated": "2026-09-14T10:12:37.147790+00:00",
             "name": "Traefik",
             "package_id": null,
@@ -7449,8 +7520,8 @@
                 "deprecation_note": null,
                 "github_repo": "traefik/traefik",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "3.7.14",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "3.7.15",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/traefik/traefik/releases.atom"
             }
@@ -7513,7 +7584,7 @@
                 "deprecation_note": null,
                 "github_repo": "linuxserver/docker-transmission",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "4.1.3-r0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/linuxserver/docker-transmission/releases.atom"
@@ -7563,7 +7634,7 @@
                 "deprecation_note": "No releases for 468 days (stale/unmaintained).",
                 "github_repo": "triliumnext/notes",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.95.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/triliumnext/notes/releases.atom"
@@ -7629,7 +7700,7 @@
                 "deprecation_note": null,
                 "github_repo": "umami-software/umami",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "3.4.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/umami-software/umami/releases.atom"
@@ -7685,7 +7756,7 @@
             "upstream": {
                 "github_repo": "NLnetLabs/unbound",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "1.26.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/NLnetLabs/unbound/releases.atom"
@@ -7808,7 +7879,7 @@
             "upstream": {
                 "github_repo": "unpackerr/unpackerr",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "0.16.1",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/unpackerr/unpackerr/releases.atom"
@@ -7868,7 +7939,7 @@
                 "deprecation_note": null,
                 "github_repo": "louislam/uptime-kuma",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.5.6",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/louislam/uptime-kuma/releases.atom"
@@ -7927,7 +7998,7 @@
                 "deprecation_note": null,
                 "github_repo": "dani-garcia/vaultwarden",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "1.37.4",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/dani-garcia/vaultwarden/releases.atom"
@@ -8027,7 +8098,7 @@
                 "deprecation_note": "No releases for 366 days (stale/unmaintained).",
                 "github_repo": "wallabag/wallabag",
                 "is_deprecated": true,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.6.14",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/wallabag/wallabag/releases.atom"
@@ -8052,9 +8123,9 @@
             "has_ui": true,
             "image_name": "bellamy/wallos",
             "intent_questions": [],
-            "last_tested": "2026-10-05T17:41:40.288917+00:00",
-            "last_tested_version": "5.8.3",
-            "last_updated": "2026-10-05T17:41:40.288940+00:00",
+            "last_tested": "2026-10-18T05:24:15.013612+00:00",
+            "last_tested_version": "5.10.0",
+            "last_updated": "2026-10-18T05:24:09.866213+00:00",
             "name": "Wallos",
             "package_id": null,
             "podman_mode": "rootful",
@@ -8076,7 +8147,7 @@
                 "entered_staging_at": null,
                 "grace_days": 14,
                 "status": "idle",
-                "test_result": "Passed Proxmox LXC DOCKER test (5.8.3)"
+                "test_result": "Passed Proxmox LXC DOCKER test (5.10.0)"
             },
             "tags": [
                 "finance",
@@ -8091,8 +8162,8 @@
                 "deprecation_note": null,
                 "github_repo": "ellite/Wallos",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
-                "latest_upstream_version": "5.8.3",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
+                "latest_upstream_version": "5.10.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/ellite/Wallos/releases.atom"
             }
@@ -8208,7 +8279,7 @@
                 "deprecation_note": null,
                 "github_repo": "wg-easy/wg-easy",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "15.4.0",
                 "registry_type": "ghcr",
                 "rss_feed": "https://github.com/wg-easy/wg-easy/releases.atom"
@@ -8257,7 +8328,7 @@
             "upstream": {
                 "github_repo": "woodpecker-ci/woodpecker",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "3.19.0",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/woodpecker-ci/woodpecker/releases.atom"
@@ -8319,7 +8390,7 @@
                 "deprecation_note": null,
                 "github_repo": "Koenkk/zigbee2mqtt",
                 "is_deprecated": false,
-                "last_upstream_check": "2026-10-12T05:15:01.473951+00:00",
+                "last_upstream_check": "2026-10-20T05:15:01.477740+00:00",
                 "latest_upstream_version": "2.14.2",
                 "registry_type": "dockerhub",
                 "rss_feed": "https://github.com/Koenkk/zigbee2mqtt/releases.atom"
@@ -8438,7 +8509,8 @@
             "components": [
                 "ollama",
                 "open-webui",
-                "litellm"
+                "litellm",
+                "speaches"
             ],
             "description": "Integrated sovereign AI chatbot and inference platform combining Open WebUI with the local Ollama LLM engine and LiteLLM unified gateway.",
             "icon": "fa-solid fa-robot",

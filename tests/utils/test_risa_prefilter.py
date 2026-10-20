@@ -77,3 +77,32 @@ def test_filter_changelog_for_risa():
     filtered = filter_changelog_for_risa(raw, max_tokens_approx=50)
     assert "MIGRATION" in filtered
     assert "Fixed typo in README" in filtered or "Table users" in filtered
+
+    # Empty changelog
+    assert filter_changelog_for_risa("") == ""
+
+    # Truncation when exceeding max_tokens_approx * 4 chars
+    long_raw = "MIGRATION: " + ("A" * 100)
+    truncated = filter_changelog_for_risa(long_raw, max_tokens_approx=5)
+    assert "[TRUNCATED FOR TOKEN HYGIENE]" in truncated
+
+
+def test_classify_update_risk_orange_compose_diff():
+    res = classify_update_risk(
+        "v1.0.0", "v1.0.1", signal_lines=[], has_compose_diff=True
+    )
+    assert res["risk_level"] == "ORANGE"
+    assert any("Docker Compose" in r for r in res["reasons"])
+
+
+def test_extract_signal_lines_gap_separator():
+    sample = (
+        "BREAKING change here\n"
+        "line 1\n"
+        "line 2\n"
+        "line 3\n"
+        "line 4\n"
+        "DATABASE migration here\n"
+    )
+    extracted = extract_signal_lines(sample, max_context_lines=0)
+    assert "---" in extracted

@@ -852,6 +852,72 @@ def wait_for_proxmox_task(
     raise TimeoutError("Proxmox task timed out.")
 
 
+def build_package_signal_report_message(
+    results_summary: List[Dict[str, Any]],
+    passed_count: int,
+    failed_count: int,
+) -> str:
+    """Builds a structured, human-readable notification message for package tests."""
+    overall_status = "✅ ALL SUCCESSFUL" if failed_count == 0 else "❌ FAILED"
+
+    tested_packages: List[str] = []
+    for r in results_summary:
+        pid = r.get("package_id")
+        if pid and pid not in tested_packages:
+            tested_packages.append(pid)
+
+    if len(tested_packages) == 1:
+        first_pkg, *_ = tested_packages
+        header = f"🚢 NjordDeploy Proxmox Package Test Report: {first_pkg}"
+        pkg_line = f"Package: {first_pkg}\n"
+    elif 1 < len(tested_packages) <= 8:
+        header = (
+            f"🚢 NjordDeploy Proxmox Package Test Report "
+            f"({len(tested_packages)} packages)"
+        )
+        pkg_line = f"Packages: {', '.join(tested_packages)}\n"
+    elif len(tested_packages) > 8:
+        header = (
+            f"🚢 NjordDeploy Proxmox Package Test Report "
+            f"({len(tested_packages)} packages)"
+        )
+        subset_pkgs = tested_packages[:6]
+        pkg_line = (
+            f"Packages: {len(tested_packages)} items "
+            f"({', '.join(subset_pkgs)}, ...)\n"
+        )
+    else:
+        header = "🚢 NjordDeploy Proxmox Package Test Report"
+        pkg_line = ""
+
+    signal_msg = (
+        f"{header}\n"
+        f"{pkg_line}"
+        f"Status: {overall_status}\n"
+        f"Total packages tested: {len(results_summary)}\n"
+        f"Passed: {passed_count}\n"
+        f"Failed: {failed_count}"
+    )
+
+    if passed_count > 0 and len(tested_packages) > 1 and passed_count <= 8:
+        passed_list = [
+            f"{r['package_id']} ({r.get('mode', 'LXC')})"
+            for r in results_summary
+            if r.get("status") == "success"
+        ]
+        signal_msg += f"\nPassed: {', '.join(passed_list)}"
+
+    if failed_count > 0:
+        failed_list = [
+            f"{r['package_id']} ({r.get('mode')})"
+            for r in results_summary
+            if r.get("status") != "success"
+        ]
+        signal_msg += f"\nFailed: {', '.join(failed_list)}"
+
+    return signal_msg
+
+
 def send_signal_message(message: str) -> None:
     """Sends a Signal message using the configured Signal API in the environment."""
     signal_api = os.getenv("SIGNAL_API")
@@ -2284,24 +2350,12 @@ def run_proxmox_package_tests(cli_args) -> int:
     logger.info(f"Saved human-readable markdown report to: {report_path}")
 
     # Send Signal Notification
-    overall_status = "✅ ALL SUCCESSFUL" if failed_count == 0 else "❌ FAILED"
     passed_count = len(results_summary) - failed_count
-
-    signal_msg = (
-        f"🚢 NjordDeploy Proxmox Package Test Report\n"
-        f"Status: {overall_status}\n"
-        f"Total packages tested: {len(results_summary)}\n"
-        f"Passed: {passed_count}\n"
-        f"Failed: {failed_count}"
+    signal_msg = build_package_signal_report_message(
+        results_summary=results_summary,
+        passed_count=passed_count,
+        failed_count=failed_count,
     )
-    if failed_count > 0:
-        failed_list = [
-            f"{r['package_id']} ({r.get('mode')})"
-            for r in results_summary
-            if r["status"] != "success"
-        ]
-        signal_msg += f"\nFailed: {', '.join(failed_list)}"
-
     send_signal_message(signal_msg)
 
     return failed_count
@@ -2499,6 +2553,7 @@ def write_markdown_report(
                         f_status = "⚠️ TOKEN MISSING"
                     else:
                         display_text = "—"
+                        f_status = "ℹ️ NONE"
                     fr_rows.append(
                         [
                             f"`{cid}`",

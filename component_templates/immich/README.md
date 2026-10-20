@@ -6,7 +6,7 @@
 [![Data Sovereignty](https://img.shields.io/badge/Data%20Sovereignty-100%25%20Self--Hosted-green.svg)]()
 [![Category](https://img.shields.io/badge/Category-Media%20Servers-purple.svg)]()
 
-> Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: "0:0"`) to prevent common permission issues with mounted volumes.
+> Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: '0:0'`) to prevent common permission issues with mounted volumes.
 
 - **Source Repository:** [github.com/immich-app/immich](https://github.com/immich-app/immich)
 - **Container Image:** `ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0`
@@ -27,7 +27,7 @@
   - **CPU Profile:** Medium
   - **Storage:** Persistent
 > **Platform Verification Notes:**
-> Tested on Proxmox LXC: docker (v3.3.1, 2026-10-09), podman (v3.2.0, 2026-09-14); Proxmox VM: docker (v3.2.0, 2026-09-27), podman (v3.2.0, 2026-09-14).
+> Tested on Proxmox LXC: docker (3.3.3, 2026-10-15), podman (v3.2.0, 2026-09-14); Proxmox VM: docker (v3.2.0, 2026-09-27), podman (v3.2.0, 2026-09-14).
 ---
 
 ## 🚀 Quick Start (Standalone Docker Compose)

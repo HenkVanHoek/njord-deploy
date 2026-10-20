@@ -179,3 +179,72 @@ class TestAIProviderManager(unittest.TestCase):
         with patch.dict(os.environ, {"AI_TIME_OUT": "95.0"}):
             timeout = get_ai_timeout("hostyourai")
             self.assertEqual(timeout, 95.0)
+
+    def test_ai_provider_manager_additional_coverage(self):
+        """Test float parsing, corrupt config fallback, model saving,
+        and custom provider."""
+        # 1. _parse_float_or_none and set_env_key_value
+        from utils.ai_provider_manager import _parse_float_or_none, set_env_key_value
+
+        self.assertIsNone(_parse_float_or_none("invalid_float"))
+        self.assertIsNone(_parse_float_or_none(""))
+        self.assertEqual(set_env_key_value(["A=1\n"], "A", "2"), ["A=2\n"])
+
+        # 2. Corrupt providers JSON fallback
+        with tempfile.NamedTemporaryFile("w", delete=False) as tf:
+            tf.write("{ not valid json")
+            corrupt_path = Path(tf.name)
+        try:
+            with patch(
+                "utils.ai_provider_manager.get_providers_json_path",
+                return_value=corrupt_path,
+            ):
+                reg = load_ai_providers_registry()
+                self.assertIn("gemini", reg)
+        finally:
+            corrupt_path.unlink()
+
+        # 3. Model saving and custom provider env vars
+        with tempfile.TemporaryDirectory() as td:
+            tp = Path(td)
+            # File with trailing text without newline
+            (tp / ".env").write_text("FOO=bar")
+
+            # Save model and custom base_url
+            saved = save_api_key_to_env_file(
+                provider="custom",
+                base_url="http://custom.ai/v1",
+                model="custom-coder-v1",
+                project_root=tp,
+            )
+            self.assertTrue(saved)
+            txt = (tp / ".env").read_text()
+            self.assertIn("CUSTOM_AI_BASE_URL=http://custom.ai/v1", txt)
+            self.assertIn("CUSTOM_AI_MODEL=custom-coder-v1", txt)
+
+            # Nothing to save returns False
+            self.assertFalse(save_api_key_to_env_file(project_root=tp))
+
+        # 4. Custom provider resolved config from environment
+        with patch.dict(
+            os.environ,
+            {
+                "CUSTOM_AI_BASE_URL": "http://mycustom:8000/v1",
+                "HOSTYOURAI_BASE_URL": "http://hy:8000/v1",
+                "OLLAMA_BASE_URL": "http://ollama:11434",
+                "OLLAMA_MODEL": "llama3.2:3b",
+            },
+        ):
+            c_cfg = get_provider_resolved_config("custom")
+            self.assertEqual(c_cfg["base_url"], "http://mycustom:8000/v1")
+
+            hy_cfg = get_provider_resolved_config("hostyourai")
+            self.assertEqual(hy_cfg["base_url"], "http://hy:8000/v1")
+
+            o_cfg = get_provider_resolved_config("ollama")
+            self.assertEqual(o_cfg["base_url"], "http://ollama:11434")
+            self.assertEqual(o_cfg["model"], "llama3.2:3b")
+
+        # 5. Default project_root in save_api_key_to_env_file
+        with patch.object(Path, "exists", return_value=False):
+            self.assertFalse(save_api_key_to_env_file(project_root=None))

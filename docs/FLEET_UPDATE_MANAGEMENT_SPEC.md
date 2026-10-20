@@ -29,206 +29,206 @@ This design document outlines the **Fleet Update Management System (FUMS)**. FUM
 ```mermaid
 flowchart TD
     %% 1. Detection & AI Intelligence
-    subgraph S1 ["1. Detectie & AI Release Intelligence (VM 140 Hub)"]
-        MON["DIUN / Registry Monitor"] -->|Nieuwe versie gedetecteerd| AI_AGENT["🤖 Release Intelligence AI Agent (RISA)"]
+    subgraph S1 ["1. Detection & AI Release Intelligence (VM 140 Hub)"]
+        MON["DIUN / Registry Monitor"] -->|New version detected| AI_AGENT["🤖 Release Intelligence AI Agent (RISA)"]
 
-        subgraph RISA_Process ["RISA Deep Inspection Cyclus"]
-            AI_AGENT --> GITHUB_API["1. Analyseer GitHub Release Notes & Changelogs"]
+        subgraph RISA_Process ["RISA Deep Inspection Cycle"]
+            AI_AGENT --> GITHUB_API["1. Analyze GitHub Release Notes & Changelogs"]
             AI_AGENT --> DIFF_CHECK["2. Git Diff Compose/Env & Schema Changes"]
-            AI_AGENT --> RISK_CLASSIFY["3. Risico Classificatie:<br/>(Groen: Routine / Oranje: Env / Rood: Major/Breaking)"]
+            AI_AGENT --> RISK_CLASSIFY["3. Risk Classification:<br/>(Green: Routine / Orange: Env / Red: Major/Breaking)"]
         end
     end
 
-    %% 2. De Proeftuin Sandbox (Modus A: Gatekeeper)
-    subgraph S2 ["2. Proeftuin Modus A: Geautomatiseerde Gatekeeper (Proxmox)"]
-        RISK_CLASSIFY -->|Rood of Major Versie Update| SANDBOX["Start Ephemeral Proxmox Sandbox"]
-        SANDBOX --> PROV["Start tijdelijke kloon / LXC container"]
-        PROV --> SEED["Seed met geanonimiseerd DB schema / doelconfiguratie"]
-        SEED --> TEST_UPDATE["Voer migratie & container start uit"]
-        TEST_UPDATE --> TEST_HC{"Geautomatiseerde Integratie & Health Test"}
+    %% 2. The Proeftuin Sandbox (Mode A: Gatekeeper)
+    subgraph S2 ["2. Proeftuin Mode A: Automated Gatekeeper (Proxmox)"]
+        RISK_CLASSIFY -->|Red or Major Version Update| SANDBOX["Launch Ephemeral Proxmox Sandbox"]
+        SANDBOX --> PROV["Spin up temporary clone / LXC container"]
+        PROV --> SEED["Seed with anonymized DB schema / target config"]
+        SEED --> TEST_UPDATE["Execute migration & container launch"]
+        TEST_UPDATE --> TEST_HC{"Automated Integration & Health Test"}
 
-        TEST_HC -->|Test Faalt| AI_DIAG["AI Foutanalyse & Quarantaine<br/>(Meld direct aan Henk; Update NIET aanbieden aan klanten)"]
-        TEST_HC -->|Test Slaagt 100%| CERT["✅ Release Gecertificeerd in Proeftuin"]
-        CERT --> DESTROY_GK["Vernietig Gatekeeper container (Schoon)"]
+        TEST_HC -->|Test Fails| AI_DIAG["AI Root Cause Analysis & Quarantine<br/>(Alert Henk directly; DO NOT offer update to clients)"]
+        TEST_HC -->|Test 100% Passes| CERT["✅ Release Certified in Proeftuin Sandbox"]
+        CERT --> DESTROY_GK["Destroy Gatekeeper Container (Clean)"]
     end
 
-    %% 3. Klant Interactie & Keuzematrix
-    subgraph S3 ["3. Klantkeuze & Keuzematrix (Signal / Matrix / Mail)"]
-        RISK_CLASSIFY -->|Groen / Routine Patch| DISP["Notification Dispatcher"]
+    %% 3. Customer Interaction & Decision Matrix
+    subgraph S3 ["3. Customer Interaction & Decision Matrix (Signal / Matrix / Email)"]
+        RISK_CLASSIFY -->|Green / Routine Patch| DISP["Notification Dispatcher"]
         CERT --> DISP
 
-        DISP -->|Advies + Certificering + Opties| NOTIF["Klantkanaal<br/>(Signal / Matrix / Mail / Web)"]
+        DISP -->|Recommendation + Certification + Options| NOTIF["Customer Channel<br/>(Signal / Matrix / Email / Web)"]
 
-        NOTIF --> CLIENT{"Klant Keuze:"}
+        NOTIF --> CLIENT{"Customer Decision:"}
 
-        %% Keuze 1: Direct of Gepland naar Productie
-        CLIENT -->|Optie 1: Productie Uitrol| PROD_REQ["Selecteer Timing (Nu/Nacht/Datum)<br/>& Methode (High-Safety / Fast)"]
+        %% Option 1: Direct or Scheduled Production Rollout
+        CLIENT -->|Option 1: Production Rollout| PROD_REQ["Select Timing (Immediate/Night/Date)<br/>& Method (High-Safety / Fast)"]
         PROD_REQ --> API["NjordDeploy Approval API<br/>(VM 140:5001)"]
 
-        %% Keuze 2: Interactieve Trainings-Proeftuin
-        CLIENT -->|Optie 2: Aanvraag Training/UAT| TRAIN_REQ["Aanvraag Trainings-Sandbox<br/>(bijv. 7 of 14 dagen TTL)"]
+        %% Option 2: Interactive Training Sandbox
+        CLIENT -->|Option 2: Request Training/UAT| TRAIN_REQ["Request Training Sandbox<br/>(e.g., 7 or 14 days TTL)"]
         TRAIN_REQ --> API
     end
 
-    %% 4. Proeftuin Modus B: Interactieve Klant Trainings-omgeving
-    subgraph S4 ["4. Proeftuin Modus B: Interactieve Klant Sandbox (Training & UAT)"]
-        API -->|Bij Trainingsaanvraag| PROV_TRAIN["Spin-up Geïsoleerde Trainings-LXC op Proxmox"]
-        PROV_TRAIN --> MASK_DATA["Importeer gemaskeerde/geanonimiseerde data"]
-        MASK_DATA --> TRAIN_URL["Geef beveiligde URL uit:<br/>https://training-klant.njorddeploy.com"]
+    %% 4. Proeftuin Mode B: Interactive Customer Training Environment
+    subgraph S4 ["4. Proeftuin Mode B: Interactive Customer Sandbox (Training & UAT)"]
+        API -->|On Training Request| PROV_TRAIN["Spin up Isolated Training LXC on Proxmox"]
+        PROV_TRAIN --> MASK_DATA["Import masked/anonymized data"]
+        MASK_DATA --> TRAIN_URL["Issue Secure URL:<br/>https://training-client.njorddeploy.com"]
 
-        TRAIN_URL --> TRAIN_OPS["Klant traint personeel, maakt handleidingen<br/>en voert UAT acceptatietesten uit"]
-        TRAIN_OPS --> UAT_SIGNOFF["Key-User geeft formele UAT Sign-off"]
+        TRAIN_URL --> TRAIN_OPS["Customer trains staff, prepares documentation<br/>and executes UAT acceptance tests"]
+        TRAIN_OPS --> UAT_SIGNOFF["Key User grants formal UAT Sign-off"]
         UAT_SIGNOFF --> API
-        UAT_SIGNOFF --> DESTROY_TRAIN["Afbraak & opschonen Trainings-omgeving"]
+        UAT_SIGNOFF --> DESTROY_TRAIN["Teardown & Cleanup of Training Environment"]
     end
 
-    %% 5. Planning & Taakqueue
-    subgraph S5 ["5. Planning & Orchestratie (VM 140 Hub)"]
-        API -->|Bij Productie Go-Live| DB[("SQLite Task Queue<br/>(Geplande jobs & methodes)")]
-        DB -->|Trigger op gepland moment| LOCK["Verkrijg Lockfile<br/>(/run/njord_updating.lock)"]
+    %% 5. Scheduling & Task Queue
+    subgraph S5 ["5. Scheduling & Task Queue (VM 140 Hub)"]
+        API -->|On Production Go-Live| DB[("SQLite Task Queue<br/>(Scheduled jobs & methods)")]
+        DB -->|Trigger at scheduled time| LOCK["Acquire Lockfile<br/>(/run/njord_updating.lock)"]
         LOCK --> RUNNER["Ansible Update Orchestrator"]
     end
 
-    %% 6. Doelhost Uitvoering
-    subgraph S6 ["6. Doelhost / Klant Stack (LXC / VM)"]
-        RUNNER --> PRE_CHECK{"Disk Space Pre-flight:<br/>>= 2.5x Image + DB omvang?"}
+    %% 6. Target Host Execution
+    subgraph S6 ["6. Target Host / Customer Stack (LXC / VM)"]
+        RUNNER --> PRE_CHECK{"Disk Space Pre-flight:<br/>>= 2.5x Image + DB size?"}
 
-        PRE_CHECK -->|Onvoldoende ruimte| FAIL_SPACE["Afbreken & Melden: Schijf vol"]
-        PRE_CHECK -->|Voldoende ruimte| PRE_ACTION["Pre-Flight Strategie (RISA Recept):<br/>- CoW Snapshot of Atomaire DB Dump + Config<br/>(Bulk media uploads uitsluiten!)"]
+        PRE_CHECK -->|Insufficient space| FAIL_SPACE["Abort & Report: Disk full"]
+        PRE_CHECK -->|Sufficient space| PRE_ACTION["Pre-Flight Strategy (RISA Recipe):<br/>- CoW Snapshot or Atomic DB Dump + Config<br/>(Exclude bulk media uploads!)"]
 
         PRE_ACTION --> DEPLOY["Container Update:<br/>docker/podman compose pull & up -d"]
         DEPLOY --> HC{"Health Check OK?<br/>(HTTP 200 & Container State)"}
 
-        HC -->|JA: Succes| CLEAN["Snapshot bewaren & Oude images opschonen"]
-        HC -->|NEE: Fout| ROLLBACK["Automatische Atomaire Rollback:<br/>Herstel DB Dump/Volume + herstart vorige tag"]
+        HC -->|YES: Success| CLEAN["Retain snapshot & prune old images"]
+        HC -->|NO: Failure| ROLLBACK["Automated Atomic Rollback:<br/>Restore DB Dump/Volume + restart previous tag"]
     end
 
-    %% 7. Terugkoppeling, Decharge & Escalatie
-    subgraph S7 ["7. Terugkoppeling, Decharge & Escalatie"]
-        CLEAN --> REPORT_OK["Statusrapport: SUCCES<br/>- Downtime duur geregistreerd<br/>- Nieuwe versienummers actief"]
-        ROLLBACK --> REPORT_FAIL["Alarmrapport: GEFAALD & HERSTELD<br/>- Reden van falen inzichtelijk<br/>- Rollback status geverifieerd"]
+    %% 7. Feedback, Sign-off & Escalation
+    subgraph S7 ["7. Feedback, Sign-off & Escalation"]
+        CLEAN --> REPORT_OK["Status Report: SUCCESS<br/>- Downtime duration recorded<br/>- New version numbers active"]
+        ROLLBACK --> REPORT_FAIL["Alert Report: FAILED & RESTORED<br/>- Failure reason transparent<br/>- Rollback status verified"]
 
-        REPORT_OK --> CLIENT_FEEDBACK["Klant Notificatie (Signal / Matrix / Mail)"]
+        REPORT_OK --> CLIENT_FEEDBACK["Customer Notification (Signal / Matrix / Email)"]
         REPORT_FAIL --> CLIENT_FEEDBACK
 
-        REPORT_FAIL --> ADMIN_ESCALATE["🚨 Prioriteit Melding naar Beheerder (Henk)<br/>(Direct signaal via Signal voor recept-onderzoek)"]
+        REPORT_FAIL --> ADMIN_ESCALATE["🚨 Priority Alert to Administrator (Henk)<br/>(Instant alert via Signal for recipe investigation)"]
 
-        REPORT_OK --> AUDIT[("Audit Log & Obsidian Logboek<br/>(Henks Geheugen)")]
+        REPORT_OK --> AUDIT[("Audit Log & Obsidian Logbook<br/>(Henk's Memory)")]
         REPORT_FAIL --> AUDIT
     end
 ```
 
 ---
 
-## 3. De Twee Modi van "De Proeftuin"
+## 3. The Two Modes of "The Proeftuin" (Staging Sandbox)
 
-### 3.1. Modus A: Geautomatiseerde Gatekeeper (Synthetisch & Vluchtig)
-* **Doel:** 100% voorkomen dat een kapotte upstream update of falende database-migratie bij een klant terechtkomt.
-* **Trigger:** Volledig autonoom zodra RISA een update classificeert als **ROOD** of **Major Version**.
-* **Duur:** Enkele minuten.
-* **Werking:**
-  1. Start een ephemeral LXC/kloon op Proxmox via [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py).
-  2. Voert de migratie uit tegen een geanonimiseerd schema.
-  3. Verifieert container-status en API-endpoints (`healthy` status / HTTP 200).
-  4. Bij falen: **Quarantaine**. Henk ontvangt direct een bug-rapport; de update wordt geblokkeerd.
-  5. Bij succes: Keurmerk *"Gecertificeerd in Proeftuin"* wordt toegekend. De container wordt direct vernietigd.
+### 3.1. Mode A: Automated Gatekeeper (Synthetic & Ephemeral)
+* **Objective:** 100% prevention of broken upstream updates or failing database migrations from ever reaching a customer.
+* **Trigger:** Fully autonomous as soon as RISA classifies an update as **RED** or **Major Version**.
+* **Duration:** A few minutes.
+* **Operation:**
+  1. Spawns an ephemeral LXC/clone on Proxmox via [`scripts/proxmox_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/proxmox_test_runner.py).
+  2. Executes the migration against an anonymized database schema.
+  3. Verifies container status and API endpoints (`healthy` status / HTTP 200).
+  4. On failure: **Quarantine**. Henk receives an instant bug report; the update is blocked and never offered to clients.
+  5. On success: The certification badge *"Certified in Proeftuin Sandbox"* is awarded. The container is immediately destroyed.
 
-### 3.2. Modus B: Interactieve Klant Sandbox (Training & UAT)
-* **Doel:** Medewerkers trainen, screenshots/handleidingen maken en formele Customer Acceptance Testing (UAT) uitvoeren vóór de livegang.
-* **Trigger:** On-demand aangevraagd door de klant via Signal/Matrix of het webportaal bij een major update.
-* **Duur:** 7 tot 14 dagen (met automatische Time-To-Live).
+### 3.2. Mode B: Interactive Customer Sandbox (Training & UAT)
+* **Objective:** Train staff, capture screenshots/manuals, and conduct formal Customer Acceptance Testing (UAT) prior to go-live.
+* **Trigger:** Requested on-demand by the customer via Signal/Matrix or the web portal upon a major update.
+* **Duration:** 7 to 14 days (with automated Time-To-Live).
 * **Data Privacy & Dummy Seeding (KISS):**
-  - *Standaard:* Gebruikt een **schone 'seed'-database** met dummy-accounts en testdata. Volledig AVG/GDPR-veilig, direct operationeel en geen risico op lekken van persoonsgegevens.
-  - *Custom:* Data-masking op klantdata uitsluitend op expliciet verzoek met specifieke transformatiescripts en verwerkersovereenkomst.
-* **Netwerk-Isolatie & Mailpit Catcher:**
-  - Uitgaande SMTP- en webhook-verbindingen worden in trainingsomgevingen afgevangen en omgeleid naar een lokale dummy-catcher (**Mailpit**). Voorkomt dat cursisten per ongeluk echte klanten of leveranciers mailen.
-* **Resource Beheer & Concurrency Quota:**
-  - **Quotum:** Maximaal 3 gelijktijdige actieve klant-sandboxes op Proxmox.
-  - **Nightly Sleep:** Trainingscontainers worden buiten kantoortijden (19:00 - 07:00) automatisch gepauzeerd/gestopt om CPU en RAM vrij te houden.
-* **UAT Sign-off:** Zodra de key-user de formele **UAT Sign-off** geeft, plant FUMS de echte productie-update in en breekt de trainingscontainer automatisch af.
+  - *Default:* Uses a **clean 'seed' database** with dummy accounts and test data. Fully GDPR/AVG compliant, instantly operational, and eliminates all risk of leaking personal data.
+  - *Custom:* Data-masking on customer data strictly upon explicit request with dedicated transformation scripts and a formal Data Processing Agreement (DPA).
+* **Network Isolation & Mailpit Catcher:**
+  - Outgoing SMTP and webhook connections in training environments are intercepted and routed to a local dummy catcher (**Mailpit**). Prevents trainees from accidentally emailing real clients or suppliers.
+* **Resource Management & Concurrency Quota:**
+  - **Quota:** Maximum of 3 concurrent active customer sandboxes on Proxmox.
+  - **Nightly Sleep:** Training containers are automatically paused/stopped outside business hours (19:00 - 07:00) to keep CPU and RAM available.
+* **UAT Sign-off:** As soon as the key user provides formal **UAT Sign-off**, FUMS schedules the production update and automatically tears down the training container.
 
 ---
 
-## 4. Technische Pijlers & Safeguards
+## 4. Technical Pillars & Safeguards
 
 ### 4.1. Release Intelligence AI Agent (RISA) Token Hygiene
-* Om token-explosies en context-window overflow bij omvangrijke upstream changelogs te voorkomen, hanteert RISA een **pre-filtering pipeline**:
-  - **Targeted File Inspection:** Inspecteert uitsluitend `docker-compose.yml`, `Dockerfile`, `.env.example`, `MIGRATION.md` en release highlights (geen ruwe applicatie-sourcecode).
-  - **Regex Prioritering:** Filtert release notes primair op signaalwoorden: `BREAKING`, `DEPRECATED`, `DATABASE`, `MIGRATION`, `ENV_VAR`, `SCHEMA`.
-* Genereert op basis hiervan een compact machine-recept (JSON) voor Ansible én een begrijpelijke samenvatting voor de klant.
+* To prevent token explosions and context-window overflows when processing massive upstream changelogs, RISA employs a **pre-filtering pipeline**:
+  - **Targeted File Inspection:** Inspects exclusively `docker-compose.yml`, `Dockerfile`, `.env.example`, `MIGRATION.md`, and release highlights (no raw application source code).
+  - **Regex Prioritization:** Filters release notes primarily on signal keywords: `BREAKING`, `DEPRECATED`, `DATABASE`, `MIGRATION`, `ENV_VAR`, `SCHEMA`.
+* Based on this, generates a compact machine recipe (JSON) for Ansible as well as an understandable summary for the customer.
 
-### 4.2. Het Database-Migratie Rollback Dilemma (Atomaire State)
-* Onder **High-Safety** zijn Database Dump + Config State een onlosmakelijke atomaire eenheid.
-* Mislukt de health check in productie? FUMS voert **altijd** zowel de image-tag revert als een harde database-restore uit. Geen enkele oude container start ooit op een gemuteerde database.
+### 4.2. The Database Migration Rollback Dilemma (Atomic State)
+* Under **High-Safety**, Database Dump + Config State constitute an indivisible atomic unit.
+* If the health check fails in production, FUMS **always** executes both the image-tag revert and a hard database restore. No previous-version container ever starts against a mutated database schema.
 
-### 4.3. Bulk Media vs. State Scheiding (De 500 GB Valkuil)
-* FUMS scheidt **Applicatiestatus & Database** (binnen seconden geback-upt) strikt van **Bulk Media Mounts** (foto's/video's).
-* Waar beschikbaar gebruikt Proxmox ZFS/Btrfs CoW (Copy-on-Write) snapshots voor nagenoeg instantane snapshots.
+### 4.3. Bulk Media vs. State Separation (The 500 GB Pitfall)
+* FUMS strictly separates **Application State & Database** (backed up within seconds) from **Bulk Media Mounts** (photos/videos).
+* Where available, Proxmox ZFS/Btrfs CoW (Copy-on-Write) snapshots provide near-instantaneous snapshots.
 
 ### 4.4. Security, Concurrency & Pre-flights
-* **Disk Space Pre-flight:** Minimaal **2.5 x** image + DB omvang vereist vóór start van de pull.
-* **Maintenance Lockout:** `/run/njord_updating.lock` voorkomt parallelle triggers of herstarts.
-* **Strict Identity:** Alleen geautoriseerde Signal-nummers of Matrix MXID's worden geaccepteerd (geen interactie door derden in groepsgesprekken).
-* **Admin Escalatie:** Elke rollback in productie resulteert direct in een P1-alarm naar Henk.
+* **Disk Space Pre-flight:** Minimum **2.5x** image + DB size required prior to starting the pull.
+* **Maintenance Lockout:** `/run/njord_updating.lock` prevents parallel triggers or restarts.
+* **Strict Identity:** Only authorized Signal numbers or Matrix MXIDs are accepted (preventing third-party interaction in group channels).
+* **Admin Escalation:** Every rollback in production immediately raises a P1 alert to Henk.
 
 ---
 
-## 5. Klant Keuzemenu (Voorbeeld)
+## 5. Customer Decision Menu (Example)
 
 ```text
-📦 [NjordDeploy Update Advies]
+📦 [NjordDeploy Update Advisory]
 Component: Nextcloud v29.0.5 -> v30.0.0 (Major Release)
-🧪 Gatekeeper Status: GECERTIFICEERD (100% geslaagd in Proxmox sandbox)
-AI Risico-Analyse: HOOG (Grote interface-vernieuwing & database-migratie)
+🧪 Gatekeeper Status: CERTIFIED (100% passed in Proxmox sandbox)
+AI Risk Analysis: HIGH (Major interface redesign & database migration)
 
-Kies uw vervolgstap:
-[ 1 ] Direct naar productie uitrollen
-[ 2 ] Productie-uitrol plannen voor komende nacht om 02:00
-[ 3 ] Specifieke datum & tijd voor productie: [ JJJJ-MM-DD UU:MM ]
-[ 4 ] Start Trainings-Sandbox (14 dagen toegang voor medewerkers & UAT)
-[ 5 ] Uitstellen (herinner mij over 14 dagen)
+Select your next step:
+[ 1 ] Deploy to production immediately
+[ 2 ] Schedule production rollout for tonight at 02:00
+[ 3 ] Specify custom date & time for production: [ YYYY-MM-DD HH:MM ]
+[ 4 ] Launch Training Sandbox (14 days access for staff training & UAT)
+[ 5 ] Postpone (remind me in 14 days)
 
-Kies veiligheidsniveau voor productie:
-(A) High-Safety (Aanbevolen): Atomaire DB-dump + Snapshot + Auto-rollback
-(B) Fast Rolling: Directe container herstart
+Select safety profile for production:
+(A) High-Safety (Recommended): Atomic DB dump + Snapshot + Auto-rollback
+(B) Fast Rolling: Direct container restart
 
-Reageer: "UPDATE 4" (voor training) of "UPDATE 2 A" (voor nachtelijke uitrol)
-Of beheer via: https://hub.njorddeploy.com/approve?token=...
+Reply: "UPDATE 4" (for training) or "UPDATE 2 A" (for overnight rollout)
+Or manage via: https://hub.njorddeploy.com/approve?token=...
 ```
 
 ---
 
-## 6. Pragmatische Implementatiefasering & Validatiestatus
+## 6. Pragmatic Implementation Phasing & Validation Status
 
-| Fase | Focus | Operationeel Doel | Status |
+| Phase | Focus | Operational Objective | Status |
 | :--- | :--- | :--- | :--- |
-| **Stap 1** | **RISA Token Filtering + Ansible Pre-flights** | Directe bescherming in productie: 2.5x disk space check, lockfile, atomaire DB-dump, harde rollback en notificaties via Signal/Matrix. | **Voltooid (✅)** |
-| **Stap 2** | **De Proeftuin Modus A (Gatekeeper)** | Automatische synthetische Proxmox Gatekeeper voor major updates. Voorkomt dat slechte upstream releases ooit bij klanten terechtkomen. | **Voltooid (✅)** |
-| **Stap 3** | **De Proeftuin Modus B (Klant Sandbox & UAT)** | Klantsandboxes met schone dummy-seeding, Mailpit-isolatie, nightly sleep en subdomein-routering. | **Voltooid (✅)** |
+| **Step 1** | **RISA Token Filtering + Ansible Pre-flights** | Immediate production protection: 2.5x disk space check, lockfile, atomic DB dump, hard rollback, and notifications via Signal/Matrix. | **Completed (✅)** |
+| **Step 2** | **The Proeftuin Mode A (Gatekeeper)** | Automated synthetic Proxmox Gatekeeper for major updates. Prevents flawed upstream releases from ever reaching customers. | **Completed (✅)** |
+| **Step 3** | **The Proeftuin Mode B (Customer Sandbox & UAT)** | Customer sandboxes with clean dummy seeding, Mailpit isolation, nightly sleep, and subdomain routing. | **Completed (✅)** |
 
 ---
 
-## 7. Operationele Testsuite & Security Model
+## 7. Operational Test Suite & Security Model
 
-Voor continue kwaliteitsborging en compliancy beschikt FUMS over een geautomatiseerde testsuite:
+For continuous quality assurance and compliance, FUMS features an automated test suite:
 
-1. **Security & Threat Model (`tests/fums/test_fums_security.py`)**:
-   - **SSRF & URL Injection Defense**: Blokkeert onveilige schema's (`file://`, `gopher://`, `ftp://`) en CRLF-aanvallen op Signal API en Matrix homeserver endpoints.
-   - **Command Injection Prevention**: Garandeert veilige parameterisatie van Ansible variabelen via JSON dictionaries in plaats van shell-concatenatie.
-   - **AVG / GDPR Privacy Verificatie**: Valideert dat Modus B strikt dummy seeds hanteert en geen persoonsgegevens lekt.
-   - **Mailpit Traps**: Valideert dat uitgaande SMTP-verbindingen binnen trainingsomgevingen afgevangen worden op poort 8025.
+1. **Security & Threat Model ([`tests/fums/test_fums_security.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/tests/fums/test_fums_security.py))**:
+   - **SSRF & URL Injection Defense**: Blocks unsafe schemes (`file://`, `gopher://`, `ftp://`) and CRLF injection attacks against Signal API and Matrix homeserver endpoints.
+   - **Command Injection Prevention**: Guarantees secure parameterization of Ansible variables via JSON dictionaries instead of raw shell concatenation.
+   - **GDPR / AVG Privacy Verification**: Validates that Mode B strictly enforces dummy seeds and leaks no personal data.
+   - **Mailpit Traps**: Validates that outgoing SMTP connections in training environments are intercepted on port 8025.
 
-2. **Operationele End-to-End Orchestratie (`tests/fums/test_fums_operational_e2e.py`)**:
-   - **Keten 1 (Routine Patch)**: Groene risicoclassificatie -> directe uitrol zonder verstoring.
-   - **Keten 2 (Major Update met Gatekeeper)**: Rode classificatie -> Modus A Proxmox Gatekeeper certificering -> vrijgave aan klant.
-   - **Keten 3 (Quarantaine & AI Diagnose)**: Falende migratie -> onmiddellijke quarantaine -> AI-analyse -> P1 alarm (geen klantblootstelling).
-   - **Keten 4 (Klant Training & UAT)**: Aanvraag Modus B -> quotumbewaking (maximaal 3) -> nightly sleep -> UAT Sign-off -> automatische opruiming.
-   - **Keten 5 (Production Failure & Atomic Rollback)**: Falende health check in productie -> atomaire DB dump restore + revert image tag -> P1 alarm naar beheerder.
+2. **Operational End-to-End Orchestration ([`tests/fums/test_fums_operational_e2e.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/tests/fums/test_fums_operational_e2e.py))**:
+   - **Pipeline 1 (Routine Patch)**: Green risk classification -> immediate rollout without disruption.
+   - **Pipeline 2 (Major Update with Gatekeeper)**: Red classification -> Mode A Proxmox Gatekeeper certification -> release to customer.
+   - **Pipeline 3 (Quarantine & AI Diagnosis)**: Failing migration -> immediate quarantine -> AI root-cause analysis -> P1 alert (no customer exposure).
+   - **Pipeline 4 (Customer Training & UAT)**: Request Mode B -> quota enforcement (max 3) -> nightly sleep -> UAT Sign-off -> automated cleanup.
+   - **Pipeline 5 (Production Failure & Atomic Rollback)**: Failing health check in production -> atomic DB dump restore + image tag revert -> P1 alert to administrator.
 
-3. **Geautomatiseerde CLI Runner (`scripts/fums_test_runner.py`)**:
-   - Kan zelfstandig of in CI / CD uitgevoerd worden:
+3. **Automated CLI Runner ([`scripts/fums_test_runner.py`](file:///home/hvhoek/PycharmProjects/njord-deploy/scripts/fums_test_runner.py))**:
+   - Can be run standalone or in CI/CD:
      ```bash
-     python3 scripts/fums_test_runner.py          # Voer alle 38 FUMS tests uit
-     python3 scripts/fums_test_runner.py --suite security  # Alleen de security suite
-     python3 scripts/fums_test_runner.py --suite e2e       # Alleen de E2E ketens
+     python3 scripts/fums_test_runner.py          # Run all 38 FUMS tests
+     python3 scripts/fums_test_runner.py --suite security  # Run only the security suite
+     python3 scripts/fums_test_runner.py --suite e2e       # Run only the E2E pipelines
      ```

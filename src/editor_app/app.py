@@ -568,7 +568,11 @@ def create_app(test_config=None):
                 jsonify(
                     {
                         "status": "error",
-                        "message": str(ve),
+                        "message": (
+                            "Sync aborted to prevent data loss: local-only "
+                            "component(s) detected. Upload them first or use "
+                            "force=True to overwrite."
+                        ),
                         "local_only_warning": True,
                     }
                 ),

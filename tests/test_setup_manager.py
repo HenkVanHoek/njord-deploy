@@ -63,6 +63,7 @@ class TestSetupManager(unittest.TestCase):
         mock_templates.mkdir(exist_ok=True)
         docs_template = mock_templates / "njorddeploy-docs"
         docs_template.mkdir(exist_ok=True)
+        (docs_template / "src-docs" / "docs").mkdir(parents=True, exist_ok=True)
 
         self.mock_reader.templates_path = str(mock_templates)
 
@@ -88,9 +89,71 @@ class TestSetupManager(unittest.TestCase):
             self.assertTrue((target_docs_dir / "utilities.md").exists())
             self.assertTrue((target_docs_dir / "docs").exists())
 
+            # Run a second time to verify dst_docs_dir overwrite
+            success2, _ = self.setup_manager.prepare_deployment_package(
+                selected_components=["njorddeploy-docs"],
+                user_variables={"VAR": "val2"},
+                managed_devices=[],
+            )
+            self.assertTrue(success2)
+
         finally:
             # Clean up the mock templates directory
             if mock_templates.exists():
                 import shutil
 
+                shutil.rmtree(mock_templates)
+
+    def test_verify_component_setup_failure(self):
+        """Test component verification when not found."""
+        self.mock_reader.get_component_details.return_value = None
+        self.assertFalse(self.setup_manager.verify_component_setup("unknown"))
+
+    def test_initialize_environment_exception(self):
+        """Test initialize_environment catching exceptions."""
+        from unittest.mock import patch
+
+        with patch.object(Path, "mkdir", side_effect=PermissionError("denied")):
+            self.assertFalse(self.setup_manager.initialize_environment())
+
+    def test_prepare_deployment_package_overwrite_and_errors(self):
+        """Test overwriting existing destination dir and error handling."""
+        mock_templates = Path("./tmp_templates_test2")
+        mock_templates.mkdir(exist_ok=True)
+        comp_dir = mock_templates / "app"
+        comp_dir.mkdir(exist_ok=True)
+        self.mock_reader.templates_path = str(mock_templates)
+
+        try:
+            # First run creates app
+            ok1, _ = self.setup_manager.prepare_deployment_package(
+                ["app"], {"A": "1"}, []
+            )
+            self.assertTrue(ok1)
+
+            # Second run overwrites existing app dir
+            ok2, _ = self.setup_manager.prepare_deployment_package(
+                ["app"], {"A": "2"}, []
+            )
+            self.assertTrue(ok2)
+
+            # Component template directory does not exist
+            ok3, _ = self.setup_manager.prepare_deployment_package(
+                ["missing_comp"], {}, []
+            )
+            self.assertTrue(ok3)
+
+            # Exception during prepare
+            from unittest.mock import patch
+
+            with patch("builtins.open", side_effect=IOError("Disk locked")):
+                ok_err, errs = self.setup_manager.prepare_deployment_package(
+                    ["app"], {}, []
+                )
+                self.assertFalse(ok_err)
+                self.assertTrue(len(errs) > 0)
+        finally:
+            import shutil
+
+            if mock_templates.exists():
                 shutil.rmtree(mock_templates)

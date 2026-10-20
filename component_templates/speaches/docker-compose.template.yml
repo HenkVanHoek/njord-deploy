@@ -1,0 +1,23 @@
+# status: "tested"
+# last_tested_version: "24.04"
+# platform_notes: "Tested on Proxmox LXC: docker (24.04, 2026-10-20), podman (24.04, 2026-10-20); Proxmox VM: docker (24.04, 2026-10-20), podman (24.04, 2026-10-20)."
+# breaking_changes: "None"
+services:
+  speaches:
+    container_name: njorddeploy-speaches
+    image: "{{ image_name | default('ghcr.io/speaches-ai/speaches') }}:{{ component_version | default('latest-cpu') }}"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/speaches/cache:/home/ubuntu/.cache/huggingface/hub"
+    ports:
+      - "{{ SPEACHES_PORT | default('8008') }}:8000"
+    environment:
+      - "WHISPER__COMPUTE_TYPE={{ SPEACHES_COMPUTE_TYPE | default('default') }}"
+      - 'PRELOAD_MODELS={{ SPEACHES_PRELOAD_MODELS | default("[\"Systran/faster-whisper-medium\"]") }}'
+      - "API_KEY={{ SPEACHES_API_KEY | default('') }}"
+    networks:
+      - njorddeploy_net
+    restart: unless-stopped
+
+networks:
+  njorddeploy_net:
+    external: true

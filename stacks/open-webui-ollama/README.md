@@ -17,6 +17,7 @@
 | [`ollama`](../../component_templates/ollama/README.md) | AI & LLM Services | Ollama is an open-source, lightweight, and extensible framework for running Large Language Models (LLMs) locally, suc... | Ollama LLM Engine |
 | [`open-webui`](../../component_templates/open-webui/README.md) | AI & LLM Services | Open WebUI is an extensible, feature-rich, and user-friendly web interface for AI models and LLMs, supporting Ollama ... | [Open WebUI](https://openwebui.com/) |
 | [`litellm`](../../component_templates/litellm/README.md) | AI & LLM Services | LiteLLM is an AI gateway and LLM proxy that unifies access to 100+ Large Language Models (OpenAI, Gemini, Anthropic, ... | [LiteLLM AI Gateway](https://github.com/BerriAI/litellm) |
+| [`speaches`](../../component_templates/speaches/README.md) | AI & LLM Services | Speaches is an open-source, OpenAI-compatible Speech-to-Text (faster-whisper) and Text-to-Speech (Kokoro/Piper) serve... | [Speaches Speech-to-Text & Audio](https://github.com/speaches-ai/speaches) |
 
 ---
 
@@ -28,6 +29,7 @@ flowchart TD
         ollama["Ollama LLM Engine"]
         open-webui["Open WebUI"]
         litellm["LiteLLM AI Gateway"]
+        speaches["Speaches Speech-to-Text & Audio"]
     end
 ```
 

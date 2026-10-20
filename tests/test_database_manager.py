@@ -81,3 +81,93 @@ def test_server_management(temp_db):
     deleted = temp_db.delete_server(server1["id"], user["id"])
     assert deleted is True
     assert temp_db.count_servers_for_user(user["id"]) == 0
+
+
+def test_user_api_key_and_counts(temp_db):
+    assert temp_db.get_user_by_api_key("") is None
+    assert temp_db.get_user_by_api_key(None) is None
+    assert temp_db.count_total_users() == 0
+
+    user = temp_db.create_user("charlie", "hash123", email="charlie@test.com")
+    assert temp_db.count_total_users() == 1
+
+    temp_db.update_user_api_key(user["id"], "new_api_key_456")
+    updated_user = temp_db.get_user_by_api_key("new_api_key_456")
+    assert updated_user is not None
+    assert updated_user["id"] == user["id"]
+
+    temp_db.update_user_plan(user["id"], "pro", stripe_customer_id="cus_charlie")
+    user_by_stripe = temp_db.get_user_by_stripe_customer_id("cus_charlie")
+    assert user_by_stripe is not None
+    assert user_by_stripe["id"] == user["id"]
+
+
+def test_server_scoping_and_list(temp_db):
+    alice = temp_db.create_user("alice_scope", "hash1")
+    bob = temp_db.create_user("bob_scope", "hash2")
+
+    server_alice = temp_db.add_server(alice["id"], "Alice Server")
+    server_bob = temp_db.add_server(bob["id"], "Bob Server")
+
+    # Scoped retrieval: Alice cannot see Bob's server
+    assert temp_db.get_server_by_id(server_bob["id"], user_id=alice["id"]) is None
+    assert temp_db.get_server_by_id(server_alice["id"], user_id=alice["id"]) is not None
+
+    # Global retrieval without user_id
+    server_fetch = temp_db.get_server_by_id(server_alice["id"])
+    assert server_fetch is not None
+    assert server_fetch["name"] == "Alice Server"
+
+    # List servers for user
+    alice_servers = temp_db.list_servers_for_user(alice["id"])
+    assert len(alice_servers) == 1
+    first_srv, *_ = alice_servers
+    assert first_srv["id"] == server_alice["id"]
+
+
+def test_deployment_lifecycle(temp_db):
+    user = temp_db.create_user("deploy_user", "hash")
+    server = temp_db.add_server(user["id"], "Target Host")
+
+    dep_id = temp_db.create_deployment(
+        user["id"], "adguard-home", server_id=server["id"]
+    )
+    assert dep_id is not None
+
+    temp_db.update_deployment_status(dep_id, "success", logs="Deployment succeeded")
+
+    deployments = temp_db.list_deployments_for_user(user["id"])
+    assert len(deployments) == 1
+    dep, *_ = deployments
+    assert dep["id"] == dep_id
+    assert dep["status"] == "success"
+    assert dep["logs"] == "Deployment succeeded"
+    assert dep["server_name"] == "Target Host"
+
+
+def test_transaction_rollback_on_error(temp_db):
+    with pytest.raises(RuntimeError):
+        with temp_db.get_connection() as conn:
+            conn.execute(
+                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                ("rollback_user", "hash"),
+            )
+            raise RuntimeError("Forced transaction failure")
+
+    assert temp_db.get_user_by_username("rollback_user") is None
+
+
+def test_database_manager_singleton(tmp_path):
+    db_file = tmp_path / "singleton_test.db"
+    instance1 = DatabaseManager.get_instance(db_file)
+    instance2 = DatabaseManager.get_instance()
+    assert instance1 is instance2
+
+
+def test_database_manager_default_path(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "managers.database_manager.get_app_data_dir", lambda: tmp_path / "default_dir"
+    )
+    db = DatabaseManager()
+    assert db.db_path == tmp_path / "default_dir" / "njord_saas.db"
+    assert db.db_path.exists()

@@ -268,6 +268,41 @@
         fi
       changed_when: false
 
+    # --- PRIVATE REGISTRY AUTHENTICATION (GitHub GHCR / Forgejo) ---
+    - name: Ensure private registry host is resolvable in /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ registry_ip }} {{ registry_server }}"
+        state: present
+      when:
+        - registry_server is defined and registry_server | length > 0
+        - registry_ip is defined and registry_ip | length > 0
+      become: true
+
+    - name: Authenticate to private container registry (Docker)
+      ansible.builtin.shell: |
+        echo "{{ registry_password }}" | docker login {{ registry_server }} -u {{ registry_username }} --password-stdin
+      when:
+        - container_engine == 'docker'
+        - registry_server is defined and registry_server | length > 0
+        - registry_username is defined and registry_username | length > 0
+        - registry_password is defined and registry_password | length > 0
+      no_log: true
+      changed_when: false
+
+    - name: Authenticate to private container registry (Podman)
+      ansible.builtin.shell: |
+        echo "{{ registry_password }}" | podman login {{ registry_server }} -u {{ registry_username }} --password-stdin
+      environment: "{{ {'XDG_RUNTIME_DIR': '/run/user/' ~ (ansible_effective_user_id | default(ansible_user_uid | default('1000')))} if not (podman_rootful | default(false) | bool) else {} }}"
+      become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
+      when:
+        - container_engine == 'podman'
+        - registry_server is defined and registry_server | length > 0
+        - registry_username is defined and registry_username | length > 0
+        - registry_password is defined and registry_password | length > 0
+      no_log: true
+      changed_when: false
+
     - name: Pull latest service images (Docker)
       ansible.builtin.command:
         cmd: "docker compose pull --ignore-buildable"

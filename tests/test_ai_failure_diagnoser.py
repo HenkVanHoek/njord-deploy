@@ -1,6 +1,8 @@
 """Tests for AIFailureDiagnoser module."""
 
 import json
+import os
+from pathlib import Path
 from unittest.mock import patch
 
 from utils.ai_failure_diagnoser import AIFailureDiagnoser, apply_suggested_template
@@ -257,3 +259,78 @@ def test_domain_failure_hints_source_build_and_podman_timing():
         engine="PODMAN",
     )
     assert "PODMAN HEAVY STACK COLD-START NOTE" in hints_podman
+
+
+def test_ai_failure_diagnoser_provider_fallbacks_and_hints(tmp_path):
+    """Test provider resolution order, is_configured, hints, and template
+    patch failures."""
+    # 1. Fallback order for AI providers
+    with patch.dict(os.environ, {"OPENAI_API_KEY": "sk-test"}, clear=True):
+        d_openai = AIFailureDiagnoser()
+        assert d_openai.provider == "openai"
+
+    with patch.dict(os.environ, {"HOSTYOURAI_API_KEY": "hy-test"}, clear=True):
+        d_hy = AIFailureDiagnoser()
+        assert d_hy.provider == "hostyourai"
+
+    with patch.dict(os.environ, {"GEMINI_API_KEY": "gemini-test"}, clear=True):
+        d_gem = AIFailureDiagnoser()
+        assert d_gem.provider == "gemini"
+
+    with patch.dict(os.environ, {}, clear=True):
+        d_ollama = AIFailureDiagnoser()
+        assert d_ollama.provider == "ollama"
+        assert d_ollama.is_configured() is True
+
+    # 2. is_configured with explicit engine api_key and unconfigured
+    d_explicit = AIFailureDiagnoser(provider="custom", api_key="secret-key")
+    assert d_explicit.is_configured() is True
+    d_unconf = AIFailureDiagnoser(provider="custom_unconf", api_key=None)
+    assert d_unconf.is_configured() is False
+
+    # 2b. diagnose_batch_failures with empty records
+    assert d_explicit.diagnose_batch_failures([])["total_analyzed"] == 0
+
+    # 3. Additional domain failure hints
+    hints_net_host = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="network_mode: host with exit code: 125",
+        engine="podman",
+    )
+    assert "PODMAN NETWORK_MODE HOST CONFLICT" in hints_net_host
+
+    hints_podman_tb = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="podman-compose Traceback (most recent call last): RuntimeError",
+        engine="podman",
+    )
+    assert "PODMAN ENGINE NOTE" in hints_podman_tb
+
+    hints_traefik_8080 = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="traefik api.insecure on port 8080: address already in use"
+    )
+    assert "TRAEFIK PORT 8080 CONFLICT" in hints_traefik_8080
+
+    hints_sock = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="failed mounting /var/run/docker.sock",
+        engine="podman",
+    )
+    assert "DOCKER SOCKET REQUIREMENT" in hints_sock
+
+    hints_root = AIFailureDiagnoser._get_domain_failure_hints(
+        error_msg="usermod: uid operation not permitted",
+        engine="podman",
+    )
+    assert "PERMISSIONS & ROOTFUL PODMAN NOTE" in hints_root
+
+    # 4. apply_suggested_template non-existent and write failure
+    assert (
+        apply_suggested_template("nonexistent-app", "content", project_root=tmp_path)
+        is False
+    )
+
+    valid_comp_dir = tmp_path / "component_templates" / "valid-app"
+    valid_comp_dir.mkdir(parents=True)
+    with patch.object(Path, "write_text", side_effect=IOError("write denied")):
+        assert (
+            apply_suggested_template("valid-app", "content", project_root=tmp_path)
+            is False
+        )

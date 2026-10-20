@@ -5,6 +5,7 @@ Autonomous orchestration, real-time health supervision, fail-fast early abort,
 automated root-cause diagnosis, self-healing repairs, and structured reporting
 for Proxmox package integration tests.
 """
+
 import argparse
 import json
 import logging
@@ -368,16 +369,23 @@ class ProxmoxAutopilot:
         )
 
         exit_code = run_proxmox_package_tests(args)
+        pkgs_summary = (
+            f" ({', '.join(self.requested_packages)})"
+            if self.requested_packages
+            else ""
+        )
         if exit_code == 0:
             logger.info("🎉 Autopilot test suite completed with 100% SUCCESS.")
-            send_signal_message("🎉 [NjordDeploy Autopilot] Test suite 100% SUCCESS!")
+            send_signal_message(
+                f"🎉 [NjordDeploy Autopilot] Test suite 100% SUCCESS!{pkgs_summary}"
+            )
         else:
             logger.warning(
                 f"⚠️ Autopilot test suite completed with failures (Exit: {exit_code})."
             )
             send_signal_message(
                 f"⚠️ [NjordDeploy Autopilot] Test suite finished with failures "
-                f"(Exit: {exit_code})."
+                f"(Exit: {exit_code}){pkgs_summary}."
             )
         return exit_code
 

@@ -187,6 +187,192 @@ class TestNjordCliRunner(unittest.TestCase):
         code = main(["--example-config"])
         self.assertEqual(code, 0)
 
+    def test_deploy_branches_and_failures(self):
+        """
+        Verify deploy with devices list, streaming logs, prep failure,
+        and deploy failure.
+        """
+        self.mock_comp_mgr.get_all_components.return_value = [
+            {"id": "uptime-kuma", "name": "Uptime Kuma"},
+        ]
+
+        # 1. Preparation failure
+        self.mock_setup_mgr.prepare_deployment_package.return_value = (
+            False,
+            ["Config template missing"],
+        )
+        res_fail = self.runner.deploy(
+            {"target": {"ip": "1.2.3.4"}, "components": ["uptime-kuma"]}
+        )
+        self.assertFalse(res_fail)
+
+        # 2. Deployment status != completed, with devices list and log_callback
+        self.mock_setup_mgr.prepare_deployment_package.return_value = (True, [])
+
+        def mock_start_fail(task_id, tasks, *args, **kwargs):
+            tasks[task_id]["status"] = "failed"
+            tasks[task_id]["logs"].append("Deployment crashed.")
+
+        self.mock_dep_mgr.start_deployment.side_effect = mock_start_fail
+        logged_lines = []
+
+        config = {
+            "devices": [{"ip": "192.168.1.10", "username": "admin"}],
+            "components": ["uptime-kuma"],
+            "components_to_clean": ["app1"],
+            "components_to_restart": ["app2"],
+            "engine": "docker",
+        }
+        res_failed_deploy = self.runner.deploy(
+            config,
+            stream_logs=True,
+            log_callback=lambda line: logged_lines.append(line),
+        )
+        self.assertFalse(res_failed_deploy)
+        self.assertTrue(len(logged_lines) > 0)
+
+    @patch("cli.runner.SSHManager")
+    @patch("cli.runner.BackupManager")
+    def test_ssh_connection_failures_and_listings(self, mock_bk_cls, mock_ssh_cls):
+        """
+        Verify SSH failure handling across inspect, backup, restore,
+        list, and scan.
+        """
+        mock_ssh = MagicMock()
+        mock_ssh.connect.return_value = (False, "Connection timed out")
+        mock_ssh_cls.return_value = mock_ssh
+
+        # 1. SSH connect failure on inspect
+        inspect_res = self.runner.inspect_stack("1.2.3.4")
+        self.assertEqual(inspect_res["status"], "error")
+
+        # 2. SSH connect failure on backup
+        backup_res = self.runner.backup("1.2.3.4")
+        self.assertEqual(backup_res["status"], "error")
+
+        # 3. SSH connect failure on restore
+        restore_res = self.runner.restore("1.2.3.4", "backup.tar.gz")
+        self.assertEqual(restore_res["status"], "error")
+
+        # 4. SSH connect failure on list_backups
+        list_res = self.runner.list_backups("1.2.3.4")
+        self.assertEqual(list_res, [])
+
+        # 5. SSH connect failure on scan_stacks
+        scan_res = self.runner.scan_stacks("1.2.3.4")
+        self.assertEqual(scan_res, [])
+
+        # 6. Connected successfully for list_backups and scan_stacks
+        mock_ssh.connect.return_value = (True, "Connected")
+        mock_bk = MagicMock()
+        mock_bk.list_backups.return_value = [{"filename": "bk1.tar.gz"}]
+        mock_bk.discover_compose_files.return_value = [
+            {"directory": "/opt/njorddeploy"}
+        ]
+        mock_bk_cls.return_value = mock_bk
+
+        self.assertEqual(
+            self.runner.list_backups("1.2.3.4"), [{"filename": "bk1.tar.gz"}]
+        )
+        self.assertEqual(
+            self.runner.scan_stacks("1.2.3.4"),
+            [{"directory": "/opt/njorddeploy"}],
+        )
+
+    @patch("cli.runner.NjordCliRunner")
+    def test_main_cli_router_modes(self, mock_runner_cls):
+        """Verify main router handles all CLI actions and missing parameter checks."""
+        import json
+        import tempfile
+        from pathlib import Path
+
+        mock_runner = MagicMock()
+        mock_runner_cls.return_value = mock_runner
+
+        # 1. No CLI action specified
+        self.assertEqual(main([]), 1)
+
+        # 2. --deploy without --ip
+        self.assertEqual(main(["--deploy"]), 1)
+
+        # 3. --deploy with valid json file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            conf_file = Path(tmpdir) / "deploy_spec.json"
+            conf_file.write_text(
+                json.dumps(
+                    {"target": {"ip": "10.0.0.1"}, "components": ["uptime-kuma"]}
+                ),
+                encoding="utf-8",
+            )
+            mock_runner.deploy.return_value = True
+            self.assertEqual(main(["--deploy", str(conf_file)]), 0)
+
+        # 4. --deploy with CLI flags
+        mock_runner.deploy.return_value = False
+        self.assertEqual(
+            main(
+                [
+                    "--deploy",
+                    "--ip",
+                    "10.0.0.2",
+                    "--components",
+                    "homarr,portainer",
+                    "--engine",
+                    "podman",
+                ]
+            ),
+            1,
+        )
+
+        # 5. --inspect without ip, then with ip
+        self.assertEqual(main(["--inspect"]), 1)
+        mock_runner.inspect_stack.return_value = {"status": "success"}
+        self.assertEqual(main(["--inspect", "--ip", "10.0.0.3"]), 0)
+
+        # 6. --backup without ip, then with ip
+        self.assertEqual(main(["--backup"]), 1)
+        mock_runner.backup.return_value = {"status": "success"}
+        self.assertEqual(
+            main(
+                [
+                    "--backup",
+                    "--ip",
+                    "10.0.0.3",
+                    "--components",
+                    "app1",
+                    "--pause-containers",
+                ]
+            ),
+            0,
+        )
+
+        # 7. --restore without ip, then with ip
+        self.assertEqual(main(["--restore", "bk.tar.gz"]), 1)
+        mock_runner.restore.return_value = {"status": "success"}
+        self.assertEqual(
+            main(
+                [
+                    "--restore",
+                    "bk.tar.gz",
+                    "--ip",
+                    "10.0.0.3",
+                    "--components",
+                    "app1",
+                ]
+            ),
+            0,
+        )
+
+        # 8. --list-backups without ip, then with ip
+        self.assertEqual(main(["--list-backups"]), 1)
+        mock_runner.list_backups.return_value = []
+        self.assertEqual(main(["--list-backups", "--ip", "10.0.0.3"]), 0)
+
+        # 9. --scan-stacks without ip, then with ip
+        self.assertEqual(main(["--scan-stacks"]), 1)
+        mock_runner.scan_stacks.return_value = []
+        self.assertEqual(main(["--scan-stacks", "--ip", "10.0.0.3"]), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

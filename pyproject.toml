@@ -57,7 +57,8 @@ exclude = ["*egg-info*"]
 
 [project.optional-dependencies]
 test = [
-    "pytest",
+    "pytest>=9.0.3",
+    "pytest-cov",
 ]
 dev = [
     "bump-my-version",
@@ -111,3 +112,34 @@ ignore_missing_imports = true
 
 [tool.bandit]
 exclude_dirs = ["tests"]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = [
+    "*/__pycache__/*",
+    "tests/*",
+    "scripts/*",
+    "ansible/*",
+    ".venv/*",
+    "src/management_tools/*",
+    "*.bak",
+    "src/setup.py",
+    "test_scanner.py",
+    "context_generator.py",
+    "run_*.py",
+    "njorddeploy_installer.py",
+    "src/utils/manual_test_*.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

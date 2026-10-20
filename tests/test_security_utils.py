@@ -1,6 +1,7 @@
 # tests/test_security_utils.py
 
 import unittest
+import urllib.parse
 
 from utils.security_utils import (
     build_safe_target_url,
@@ -218,3 +219,64 @@ class TestSecurityUtils(unittest.TestCase):
         self.assertEqual(get_safe_redirect_target(None), "/")
         self.assertEqual(get_safe_redirect_target("//evil.com"), "/")
         self.assertEqual(get_safe_redirect_target("/\\evil.com"), "/")
+
+    def test_security_utils_additional_edge_cases(self):
+        """Test urlsplit exceptions, construction errors, and env masking."""
+        import os
+        from unittest.mock import patch
+
+        # Malformed URL exception in validate_and_sanitize_url
+        with patch("urllib.parse.urlsplit", side_effect=ValueError("bad")):
+            valid, _, err = validate_and_sanitize_url("http://example.com")
+            self.assertFalse(valid)
+            self.assertIn("Malformed URL", err)
+
+        # is_safe_redirect_url scheme/netloc rejection (line 101)
+        mock_scheme = urllib.parse.SplitResult("http", "evil.com", "/test", "", "")
+        with patch("urllib.parse.urlsplit", return_value=mock_scheme):
+            self.assertFalse(is_safe_redirect_url("/test"))
+
+        # is_safe_redirect_url exception
+        with patch("urllib.parse.urlsplit", side_effect=Exception("err")):
+            self.assertFalse(is_safe_redirect_url("/valid"))
+
+        # get_safe_redirect_target exception on second call (lines 128-129)
+        split_exc_sequence = [
+            urllib.parse.SplitResult("", "", "/valid", "", ""),
+            Exception("err"),
+        ]
+        with patch("urllib.parse.urlsplit", side_effect=split_exc_sequence):
+            self.assertEqual(
+                get_safe_redirect_target("/valid", default_target="/fallback"),
+                "/fallback",
+            )
+
+        # get_safe_redirect_target empty path fallback (line 130)
+        split_empty_sequence = [
+            urllib.parse.SplitResult("", "", "/valid", "", ""),
+            urllib.parse.SplitResult("", "", "", "", ""),
+        ]
+        with patch("urllib.parse.urlsplit", side_effect=split_empty_sequence):
+            self.assertEqual(
+                get_safe_redirect_target("/valid", default_target="/fallback"),
+                "/fallback",
+            )
+
+        # build_safe_target_url exception
+        real_unsplit = urllib.parse.urlunsplit
+
+        def _mock_unsplit(parts):
+            if len(parts) == 5 and parts[2] == "/test":
+                raise Exception("err")
+            return real_unsplit(parts)
+
+        with patch("urllib.parse.urlunsplit", side_effect=_mock_unsplit):
+            ok, _, err = build_safe_target_url("http://localhost:8080", "/test")
+            self.assertFalse(ok)
+            self.assertIn("Failed to construct", err)
+
+        # redact_credentials empty and env var masking
+        self.assertEqual(mask_passwords(""), "")
+        with patch.dict(os.environ, {"PROXMOX_PASSWORD": "supersecretpassword"}):
+            masked = mask_passwords("Pass: supersecretpassword")
+            self.assertNotIn("supersecretpassword", masked)

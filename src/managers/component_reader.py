@@ -14,10 +14,22 @@ class ComponentReader:
     Handles all read operations for component metadata and variables.
     """
 
-    def __init__(self, metadata_path: Path, templates_path: Path):
+    def __init__(
+        self,
+        metadata_path: Path,
+        templates_path: Path,
+        private_templates_path: Optional[Path] = None,
+        private_metadata_path: Optional[Path] = None,
+    ):
         self.metadata_file = Path(metadata_path)
         self.templates_path = Path(templates_path)
-        self._cached_metadata: Dict[str, Any] = self._load_json(self.metadata_file)
+        self.private_templates_path = (
+            Path(private_templates_path) if private_templates_path else None
+        )
+        self.private_metadata_file = (
+            Path(private_metadata_path) if private_metadata_path else None
+        )
+        self._cached_metadata: Dict[str, Any] = self.get_all_metadata()
 
     def _load_json(self, file_path: Path) -> Dict[str, Any]:
         """Centralized JSON loader to ensure consistent error handling."""
@@ -34,13 +46,32 @@ class ComponentReader:
     def get_all_metadata(self) -> Dict[str, Any]:
         """Loads and returns the fresh metadata file dictionary."""
         self._cached_metadata = self._load_json(self.metadata_file)
+        if self.private_metadata_file and self.private_metadata_file.exists():
+            if not self._cached_metadata:
+                self._cached_metadata = {"_njorddeploy": {}, "components": {}}
+            private_data = self._load_json(self.private_metadata_file)
+            if isinstance(private_data, dict):
+                priv_comps = private_data.get("components", {})
+                if isinstance(priv_comps, dict):
+                    comps = self._cached_metadata.setdefault("components", {})
+                    for comp_id, comp_meta in priv_comps.items():
+                        if isinstance(comp_meta, dict):
+                            comp_meta["private"] = True
+                            comp_meta["is_private"] = True
+                            comps[comp_id] = comp_meta
+                priv_pkgs = private_data.get("packages", {})
+                if isinstance(priv_pkgs, dict):
+                    pkgs = self._cached_metadata.setdefault("packages", {})
+                    for pkg_id, pkg_meta in priv_pkgs.items():
+                        if isinstance(pkg_meta, dict):
+                            pkg_meta["private"] = True
+                            pkg_meta["is_private"] = True
+                            pkgs[pkg_id] = pkg_meta
         return self._cached_metadata
 
     def get_template_status(self, component_id: str) -> str:
         """Reads the status of a component from its template header."""
-        template_file = (
-            self.templates_path / component_id / "docker-compose.template.yml"
-        )
+        template_file = self.get_template_path(component_id)
         if not template_file.exists():
             return "untested"
         # noinspection PyBroadException
@@ -81,6 +112,15 @@ class ComponentReader:
 
     def get_component_variables_raw(self, component_id: str) -> Dict[str, Any]:
         """Reads the full variables.json dictionary under template-config."""
+        if self.private_templates_path:
+            priv_var = (
+                self.private_templates_path
+                / component_id
+                / "template-config"
+                / "variables.json"
+            )
+            if priv_var.exists():
+                return self._load_json(priv_var)
         var_path = (
             self.templates_path / component_id / "template-config" / "variables.json"
         )
@@ -95,6 +135,14 @@ class ComponentReader:
 
     def get_template_path(self, component_id: str) -> Path:
         """Returns the path to the docker-compose template file."""
+        if self.private_templates_path:
+            priv_tpl = (
+                self.private_templates_path
+                / component_id
+                / "docker-compose.template.yml"
+            )
+            if priv_tpl.exists():
+                return priv_tpl
         return self.templates_path / component_id / "docker-compose.template.yml"
 
     def get_template_content(self, component_id: str) -> str:
@@ -114,7 +162,13 @@ class ComponentReader:
 
     def get_component_configs(self, component_id: str) -> Dict[str, str]:
         """Returns all config files in template-config (except variables.json)."""
-        config_dir = self.templates_path / component_id / "template-config"
+        config_dir = None
+        if self.private_templates_path:
+            priv_dir = self.private_templates_path / component_id / "template-config"
+            if priv_dir.exists() and priv_dir.is_dir():
+                config_dir = priv_dir
+        if config_dir is None:
+            config_dir = self.templates_path / component_id / "template-config"
         configs = {}
         if config_dir.exists() and config_dir.is_dir():
             for file_path in sorted(config_dir.iterdir()):

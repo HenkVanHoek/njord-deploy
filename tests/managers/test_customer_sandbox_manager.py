@@ -118,3 +118,86 @@ def test_nightly_sleep_cycle():
         day_res = mgr.run_nightly_sleep_cycle(current_hour=9)
         assert day_res["woken"] == 1
         assert day_res["slept"] == 0
+
+
+def test_customer_sandbox_edge_cases():
+    """Test exceptions in clone, destroy, non-existent sandbox, and expired purge."""
+    from datetime import datetime, timedelta
+    from unittest.mock import patch
+
+    import pytest
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        db_file = Path(tmpdir) / "test_sandboxes_edges.db"
+        mock_pve = MagicMock()
+
+        mgr = CustomerSandboxManager(
+            proxmox_client=mock_pve,
+            db_path=db_file,
+        )
+
+        # 1. Non-existent sandbox operations
+        assert mgr.destroy_sandbox(9999) is False
+        sign_err = mgr.sign_off_uat(9999)
+        assert sign_err["success"] is False
+        assert "not found" in sign_err["error"]
+
+        # 2. Provisioning exception
+        mock_pve.clone_lxc.side_effect = Exception("Storage full on PVE")
+        req_err = mgr.request_sandbox("ClientErr", "app", "1.0")
+        assert req_err["success"] is False
+        assert "Storage full on PVE" in req_err["error"]
+
+        # 3. Connection rollback
+        with pytest.raises(RuntimeError):
+            with mgr._get_connection() as conn:
+                conn.execute(
+                    "INSERT INTO sandboxes (client_id, component_id, version, "
+                    "vmid, status, created_at, expires_at) "
+                    "VALUES ('fail', 'app', '1.0', 999, 'active', 'now', 'now');"
+                )
+                raise RuntimeError("Abort transaction")
+
+        # 4. Destroy with PVE exception
+        mock_pve.clone_lxc.side_effect = None
+        mock_pve.get.return_value = {"data": [{"name": "eth0", "inet": "10.0.0.1/24"}]}
+        mock_pve.destroy_lxc.side_effect = Exception("PVE destroy error")
+        created = mgr.request_sandbox("ClientDest", "app", "1.0")
+        assert mgr.destroy_sandbox(created["sandbox_id"]) is True
+
+        # 5. Nightly cycle with PVE exceptions
+        mock_pve.stop_lxc.side_effect = None
+        mock_pve.start_lxc.side_effect = None
+        c2 = mgr.request_sandbox("ClientNightErr", "app", "1.0")
+        assert c2["success"] is True
+
+        mock_pve.stop_lxc.side_effect = Exception("Stop failed")
+        mock_pve.start_lxc.side_effect = Exception("Start failed")
+        res_night = mgr.run_nightly_sleep_cycle(22)
+        assert res_night["slept"] == 1
+        res_day = mgr.run_nightly_sleep_cycle(10)
+        assert res_day["woken"] == 1
+
+        # 6. Purge expired sandboxes
+        with mgr._get_connection() as conn:
+            expired_time = (datetime.now() - timedelta(days=20)).isoformat()
+            conn.execute(
+                "UPDATE sandboxes SET expires_at = ? WHERE id = ?;",
+                (expired_time, c2["sandbox_id"]),
+            )
+        assert mgr.purge_expired_sandboxes() >= 1
+
+        # 7. _wait_for_lxc_ip without proxmox_client and default db_path
+        with patch(
+            "src.managers.customer_sandbox_manager.get_app_data_dir",
+            return_value=Path(tmpdir),
+        ):
+            mgr_no_pve = CustomerSandboxManager(proxmox_client=None)
+            assert mgr_no_pve._wait_for_lxc_ip(101) == "127.0.0.1"
+
+        # 8. _wait_for_lxc_ip exception handling inside while loop
+        mock_pve.get.side_effect = Exception("PVE Network Timeout")
+        times = [100.0, 101.0, 110.0]
+        with patch("time.time", side_effect=times):
+            with patch("time.sleep", return_value=None):
+                assert mgr._wait_for_lxc_ip(101, timeout_seconds=5) is None

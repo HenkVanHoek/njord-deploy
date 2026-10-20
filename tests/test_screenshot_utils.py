@@ -74,3 +74,74 @@ def test_capture_service_screenshot_success(tmp_path: Path):
     # PNG signature check: \x89PNG\r\n\x1a\n
     header = dest.read_bytes()[:8]
     assert header == b"\x89PNG\r\n\x1a\n"
+
+
+def test_capture_service_screenshot_mocked_flow(tmp_path: Path):
+    """Verifies complete screenshot workflow using mocked Playwright objects."""
+    from unittest.mock import MagicMock
+
+    dest = tmp_path / "mocked.png"
+
+    mock_playwright_ctx = MagicMock()
+    mock_playwright_instance = MagicMock()
+    mock_playwright_ctx.__enter__.return_value = mock_playwright_instance
+
+    mock_browser = MagicMock()
+    mock_context = MagicMock()
+    mock_page = MagicMock()
+
+    mock_playwright_instance.chromium.launch.return_value = mock_browser
+    mock_browser.new_context.return_value = mock_context
+    mock_context.new_page.return_value = mock_page
+
+    def fake_screenshot(path, **kwargs):
+        Path(path).write_bytes(b"\x89PNG\r\n\x1a\nfakeimagecontent")
+
+    mock_page.screenshot.side_effect = fake_screenshot
+
+    with patch(
+        "playwright.sync_api.sync_playwright",
+        return_value=mock_playwright_ctx,
+    ):
+        result = capture_service_screenshot("http://192.168.1.100:8080/dashboard", dest)
+
+    assert result == dest
+    assert dest.exists()
+
+
+def test_capture_service_screenshot_not_generated(tmp_path: Path):
+    """Verifies None is returned when screenshot file is not generated."""
+    from unittest.mock import MagicMock
+
+    dest = tmp_path / "not_created.png"
+    mock_playwright_ctx = MagicMock()
+    mock_playwright_instance = MagicMock()
+    mock_playwright_ctx.__enter__.return_value = mock_playwright_instance
+    mock_browser = MagicMock()
+    mock_playwright_instance.chromium.launch.return_value = mock_browser
+
+    with patch(
+        "playwright.sync_api.sync_playwright",
+        return_value=mock_playwright_ctx,
+    ):
+        result = capture_service_screenshot("http://example.com:8080", dest)
+    assert result is None
+
+
+def test_capture_service_screenshot_urlparse_exception(tmp_path: Path):
+    """Verifies urlparse exception is caught gracefully."""
+    from unittest.mock import MagicMock
+
+    dest = tmp_path / "parse_err.png"
+    mock_playwright_ctx = MagicMock()
+    mock_playwright_instance = MagicMock()
+    mock_playwright_ctx.__enter__.return_value = mock_playwright_instance
+    mock_browser = MagicMock()
+    mock_playwright_instance.chromium.launch.return_value = mock_browser
+
+    with patch("playwright.sync_api.sync_playwright", return_value=mock_playwright_ctx):
+        with patch(
+            "utils.screenshot_utils.urlparse", side_effect=ValueError("Bad URL")
+        ):
+            result = capture_service_screenshot("http://invalid", dest)
+    assert result is None

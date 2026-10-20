@@ -11,6 +11,7 @@ from jinja2 import Template
 
 from managers.component_reader import ComponentReader
 from managers.component_writer import ComponentWriter
+from utils.resource_utils import resource_path
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +19,43 @@ logger = logging.getLogger(__name__)
 class ComponentManager:
     """Manages component metadata and template files."""
 
-    def __init__(self, templates_path: str, metadata_file_path: str):
+    def __init__(
+        self,
+        templates_path: str,
+        metadata_file_path: str,
+        private_templates_path: Optional[str] = None,
+        private_metadata_path: Optional[str] = None,
+    ):
         self.templates_path = Path(templates_path)
         self.metadata_file = Path(metadata_file_path)
 
+        # Auto-detect default private components overlay if present in project root
+        if private_templates_path is None:
+            default_priv = resource_path("private_components")
+            if default_priv.exists():
+                private_templates_path = str(default_priv)
+                default_priv_meta = default_priv / "components_metadata.json"
+                if default_priv_meta.exists():
+                    private_metadata_path = str(default_priv_meta)
+
+        self.private_templates_path = (
+            Path(private_templates_path) if private_templates_path else None
+        )
+        self.private_metadata_path = (
+            Path(private_metadata_path) if private_metadata_path else None
+        )
+
         # Initialize Query & Command side DAL
         self.reader = ComponentReader(
-            metadata_path=self.metadata_file, templates_path=self.templates_path
+            metadata_path=self.metadata_file,
+            templates_path=self.templates_path,
+            private_templates_path=self.private_templates_path,
+            private_metadata_path=self.private_metadata_path,
         )
         self.writer = ComponentWriter(
-            metadata_path=self.metadata_file, templates_path=self.templates_path
+            metadata_path=self.metadata_file,
+            templates_path=self.templates_path,
+            private_templates_path=self.private_templates_path,
         )
 
         self._components_data: Dict[str, Any] = self._load_metadata()
@@ -62,8 +90,35 @@ class ComponentManager:
         return variables
 
     def _save_metadata(self):
-        """Saves the current components data back to the JSON file."""
-        self.writer.save_metadata(self._components_data)
+        """Saves current components data, safely excluding private overlays."""
+        clean_data = self._components_data.copy()
+        comps = clean_data.get("components", {})
+        if isinstance(comps, dict):
+            clean_data["components"] = {
+                k: v
+                for k, v in comps.items()
+                if not (
+                    isinstance(v, dict) and (v.get("private") or v.get("is_private"))
+                )
+            }
+        self.writer.save_metadata(clean_data)
+
+        if self.private_metadata_path and self.private_metadata_path.exists():
+            priv_comps = {
+                k: v
+                for k, v in comps.items()
+                if isinstance(v, dict) and (v.get("private") or v.get("is_private"))
+            }
+            if priv_comps:
+                # noinspection PyBroadException
+                try:
+                    with open(self.private_metadata_path, "r", encoding="utf-8") as f:
+                        priv_data = json.load(f)
+                except Exception:
+                    priv_data = {"_njorddeploy": {}, "components": {}}
+                priv_data.setdefault("components", {}).update(priv_comps)
+                with open(self.private_metadata_path, "w", encoding="utf-8") as f:
+                    json.dump(priv_data, f, indent=4)
 
     def create_package(self, pkg_id: str, name: str):
         """Adds a new package definition to the metadata."""
@@ -703,12 +758,23 @@ class ComponentManager:
             config_templates = component_data.get("config_templates")
             if isinstance(config_templates, dict):
                 for template_name, raw_location in config_templates.items():
-                    template_file = (
-                        self.templates_path
-                        / component_id
-                        / "template-config"
-                        / template_name
-                    )
+                    template_file = None
+                    if self.private_templates_path:
+                        priv_file = (
+                            self.private_templates_path
+                            / component_id
+                            / "template-config"
+                            / template_name
+                        )
+                        if priv_file.exists():
+                            template_file = priv_file
+                    if template_file is None:
+                        template_file = (
+                            self.templates_path
+                            / component_id
+                            / "template-config"
+                            / template_name
+                        )
                     if template_file.exists():
                         try:
                             with open(template_file, "r", encoding="utf-8") as tf:

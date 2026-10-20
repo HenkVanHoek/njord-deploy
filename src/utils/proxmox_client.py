@@ -40,7 +40,7 @@ class ProxmoxClient:
         # Robustly handle if token_id already includes username + !
         clean_token_id = self.token_id
         if "!" in clean_token_id:
-            clean_token_id = clean_token_id.split("!", 1)[1]
+            _, clean_token_id = clean_token_id.split("!", 1)
         token_str = f"PVEAPIToken={self.user}!{clean_token_id}={self.token_secret}"
         return {"Authorization": token_str, "Accept": "application/json"}
 

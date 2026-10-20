@@ -123,6 +123,51 @@ class TestTranslationManager(unittest.TestCase):
         res_edit = e_client.get("/")
         self.assertEqual(res_edit.status_code, 200)
 
+    def test_cookie_and_error_handling(self):
+        """Verifies cookie detection, format errors, and corrupt translation
+        handling."""
+        import tempfile
+
+        from src.utils.i18n import get_translation_manager
+
+        # get_translation_manager
+        self.assertIsNotNone(get_translation_manager())
+
+        # Cookie detection
+        app = Flask(__name__)
+        app.secret_key = "test"
+        with app.test_request_context("/", headers={"Cookie": "njord_lang=nl"}):
+            self.assertEqual(self.mgr.get_locale(), "nl")
+
+        # Formatting error fallback
+        self.mgr.translations["en"]["broken"] = "Broken {missing}"
+        res = self.mgr.gettext("broken", lang="en", extra="val")
+        self.assertEqual(res, "Broken {missing}")
+
+        # Non-existent locales directory
+        from pathlib import Path
+
+        mgr_nonexist = TranslationManager(locales_dir=Path("/nonexistent/locales/dir"))
+        self.assertEqual(mgr_nonexist.translations, {})
+
+        # Corrupt translation file
+        with tempfile.TemporaryDirectory() as tmpdir:
+            loc_dir = Path(tmpdir)
+            (loc_dir / "nl.json").write_text("{ invalid json")
+            mgr_corrupt = TranslationManager(locales_dir=loc_dir)
+            self.assertEqual(mgr_corrupt.translations, {})
+
+        # Exception in get_locale when outside request context
+        self.assertEqual(self.mgr.get_locale(), "en")
+
+        # Exception caught inside get_locale request context
+        from unittest.mock import MagicMock, patch
+
+        mock_req = MagicMock()
+        mock_req.cookies.get.side_effect = RuntimeError("Explosion")
+        with patch("src.utils.i18n.request", mock_req):
+            self.assertEqual(self.mgr.get_locale(), "en")
+
 
 if __name__ == "__main__":
     unittest.main()

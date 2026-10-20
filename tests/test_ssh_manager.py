@@ -1,11 +1,12 @@
 # tests/test_ssh_manager.py
 # noinspection DuplicatedCode
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
-from src.managers.ssh_manager import SSHManager
+from src.managers.ssh_manager import SSHManager, TrustOnFirstUsePolicy
 
 
 class TestSSHManagerKeyManagement(unittest.TestCase):
@@ -825,6 +826,79 @@ class TestSetupSSHKeyPublicKeyFormat(unittest.TestCase):
         )
         self.assertIn("ssh-ed25519", public_key_used)
         self.assertIn("AAAAC3NzaC1lZDI1NTE5AAAAITESTKEYBASE64", public_key_used)
+
+    def test_trust_on_first_use_policy(self):
+        """Verify that TrustOnFirstUsePolicy adds host key to client keys."""
+        policy = TrustOnFirstUsePolicy()
+        mock_client = MagicMock()
+        mock_key = MagicMock()
+        mock_key.get_name.return_value = "ssh-ed25519"
+
+        policy.missing_host_key(mock_client, "192.168.1.50", mock_key)
+        mock_client.get_host_keys().add.assert_called_once_with(
+            "192.168.1.50", "ssh-ed25519", mock_key
+        )
+
+    @patch("src.managers.ssh_manager.user_data_dir")
+    @patch("src.managers.ssh_manager.SSHClient")
+    def test_connect_with_allow_auto_add(self, mock_client_cls, mock_user_data_dir):
+        """Verify connect sets TrustOnFirstUsePolicy when allow_auto_add is True."""
+        mock_user_data_dir.return_value = self.temp_dir
+        mock_client = mock_client_cls.return_value
+        ssh_mgr = SSHManager("192.168.1.100", "pi", "password", allow_auto_add=True)
+        with patch.object(ssh_mgr, "_get_or_create_key", return_value=None):
+            connected, msg = ssh_mgr.connect()
+            self.assertTrue(connected)
+            mock_client.set_missing_host_key_policy.assert_called_once()
+            call_args_tuple, *_ = mock_client.set_missing_host_key_policy.call_args
+            policy, *_ = call_args_tuple
+            self.assertIsInstance(policy, TrustOnFirstUsePolicy)
+
+    def test_execute_command_fatal_error(self):
+        """Verify execute_command catches fatal exceptions."""
+        ssh_mgr = SSHManager("192.168.1.100", "pi", "password")
+        mock_client = MagicMock()
+        mock_client.get_transport.side_effect = RuntimeError("Transport dead")
+        ssh_mgr.client = mock_client
+
+        logs = []
+        code, out = ssh_mgr.execute_command("uptime", log_callback=logs.append)
+        self.assertEqual(code, -1)
+        self.assertEqual(out, "")
+        self.assertTrue(any("FATAL STREAMING ERROR" in line for line in logs))
+
+    def test_disconnect_alias(self):
+        """Verify disconnect calls close."""
+        ssh_mgr = SSHManager("192.168.1.100", "pi", "password")
+        mock_client = MagicMock()
+        ssh_mgr.client = mock_client
+        ssh_mgr.disconnect()
+        self.assertIsNone(ssh_mgr.client)
+        mock_client.close.assert_called_once()
+
+    def test_env_var_key_paths_and_getters(self):
+        """Verify custom SSH key path and data dir environment variables."""
+        custom_key = Path(self.temp_dir) / "custom_id"
+        custom_dir = Path(self.temp_dir) / "custom_dir"
+
+        with patch.dict(os.environ, {"NJORD_SSH_KEY_PATH": str(custom_key)}):
+            mgr_key = SSHManager("192.168.1.100", "pi", "password")
+            self.assertEqual(mgr_key.key_file, custom_key.resolve())
+
+        with patch.dict(os.environ, {"NJORD_DATA_DIR": str(custom_dir)}, clear=True):
+            mgr_dir = SSHManager("192.168.1.100", "pi", "password")
+            self.assertEqual(
+                mgr_dir.key_file,
+                (custom_dir / "id_ed25519_njorddeploy").resolve(),
+            )
+
+        mgr = SSHManager("192.168.1.100", "pi", "password")
+        mock_key = MagicMock()
+        mock_key.get_name.return_value = "ssh-ed25519"
+        mock_key.get_base64.return_value = "ABC123KEY"
+        with patch.object(mgr, "_get_or_create_key", return_value=mock_key):
+            self.assertEqual(mgr.get_ssh_key(), mock_key)
+            self.assertEqual(mgr.get_public_key_string(), "ssh-ed25519 ABC123KEY")
 
 
 if __name__ == "__main__":

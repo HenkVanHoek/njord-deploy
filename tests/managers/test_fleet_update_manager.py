@@ -178,3 +178,54 @@ def test_handle_client_response_production_immediate_fast():
     )
     assert res["action"] == "production_update_immediate"
     assert res["safety_level"] == "fast_rolling"
+
+
+def test_fleet_update_manager_additional_coverage():
+    mgr = FleetUpdateManager()
+    analysis = {"component_id": "nextcloud", "new_version": "30.0.0"}
+
+    # Keuze 5: Snooze 14 days
+    res_snooze = mgr.handle_client_response(
+        analysis, "SNOOZE please", client_id="ClientY"
+    )
+    assert res_snooze["action"] == "postponed"
+    assert res_snooze["snooze_days"] == 14
+
+    # Unrecognized option
+    res_unrec = mgr.handle_client_response(
+        analysis, "random gibberish", client_id="ClientY"
+    )
+    assert res_unrec["action"] == "unrecognized_option"
+
+    # Execution success
+    succ = mgr.handle_execution_result("nextcloud", "10.0.0.1", success=True)
+    assert succ["status"] == "success"
+
+    # Gatekeeper not required (Green / Orange)
+    green_analysis = {
+        "component_id": "caddy",
+        "risk_evaluation": {"requires_gatekeeper": False},
+    }
+    gk_res = mgr.verify_gatekeeper(green_analysis)
+    assert gk_res == green_analysis
+
+    # Matrix and invalid notification channels
+    mock_notifier = MagicMock()
+    mock_notifier.send_matrix.return_value = True
+    mgr_notif = FleetUpdateManager(notifier=mock_notifier)
+    assert (
+        mgr_notif.notify_client_proposal(analysis, "@user:matrix.org", channel="matrix")
+        is True
+    )
+    assert (
+        mgr_notif.notify_client_proposal(analysis, "invalid", channel="email") is False
+    )
+
+    # analyze_release with compose_diff containing MIGRATION
+    rel = mgr.analyze_release(
+        component_id="immich",
+        old_version="1.0",
+        new_version="1.1",
+        compose_diff="DATABASE migration in postgres",
+    )
+    assert rel["risk_evaluation"]["has_db_migration"] is True

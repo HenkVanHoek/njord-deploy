@@ -92,3 +92,18 @@ def test_provisioning_commands_podman():
     user_cmds = engine.get_provisioning_commands("debian")
     assert any("loginctl enable-linger debian" in c for c in user_cmds)
     assert any("usermod --add-subuids" in c for c in user_cmds)
+
+
+def test_container_engine_additional_coverage():
+    """Verify fallback for unsupported engine name, ps format_str, and to_dict."""
+    invalid_engine = ContainerEngine("unknown_engine_type")
+    assert invalid_engine.engine == DEFAULT_ENGINE
+
+    engine = ContainerEngine("docker")
+    ps_formatted = engine.get_ps_cmd(format_str="{{.Names}}")
+    assert ps_formatted == "docker ps --format {{.Names}}"
+
+    d = engine.to_dict()
+    assert d["engine"] == "docker"
+    assert d["cli"] == "docker"
+    assert d["is_docker"] is True

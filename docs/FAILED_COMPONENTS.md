@@ -25,3 +25,5 @@ This document tracks components that require physical hardware devices or specia
 
 *   **`njorddeploy-service-maintenance`**: Removed. Replaced by the built-in system managers in NjordDeploy.
 *   **`voicebox`**: Removed. Unmaintained upstream Docker image with excessive resource footprint; alternative voice/AI workflows are handled via Ollama, Open WebUI, and Piper.
+*   **`papermark`** (and `papermark-s3`, `papermark-standalone`): Removed / Rejected.
+    *   **Reason**: Cloud-tethered architecture ("Open-Washing"). While nominally licensed under AGPLv3, the upstream project publishes no official Docker images. The official Next.js codebase contains hardcoded routing logic in `middleware.ts` that mandates Vercel Edge Runtime and serverless Upstash Redis Cloud (`/pipeline`). Access via LAN/IP addresses causes immediate unhandled runtime exceptions (`ERR_INVALID_URL`) without external SaaS subscriptions, violating NjordDeploy's sovereign self-hosting mandate.

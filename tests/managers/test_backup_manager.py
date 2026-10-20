@@ -316,3 +316,234 @@ services:
         first_d, second_d, *_ = discovered
         self.assertEqual(first_d["directory"], "/opt/njorddeploy")
         self.assertEqual(second_d["directory"], "/home/pi/docker")
+
+    def test_resolve_project_dir_edge_cases(self):
+        """Verify fallback when ssh_manager lacks execute_command or raises."""
+        # 1. No execute_command
+        res = self.manager.resolve_project_dir(object(), "/custom/dir")
+        self.assertEqual(res, "/custom/dir")
+
+        # 2. execute_command raises Exception
+        mock_ssh = MagicMock()
+        mock_ssh.execute_command.side_effect = RuntimeError("SSH error")
+        res2 = self.manager.resolve_project_dir(mock_ssh, "/fallback/dir")
+        self.assertEqual(res2, "/fallback/dir")
+
+    def test_discover_compose_files_edge_cases(self):
+        """Verify discover_compose_files error paths, empty lines and sorting."""
+        # 1. No execute_command
+        self.assertEqual(self.manager.discover_compose_files(object()), [])
+
+        # 2. execute_command raises
+        mock_ssh = MagicMock()
+        mock_ssh.execute_command.side_effect = RuntimeError("SSH fail")
+        self.assertEqual(self.manager.discover_compose_files(mock_ssh), [])
+
+        # 3. Output with blank line and custom path (not /docker or /opt/njorddeploy)
+        mock_ssh.execute_command.side_effect = None
+        mock_ssh.execute_command.return_value = (
+            0,
+            "/srv/media/docker-compose.yml\n\n/opt/njorddeploy/compose.yml\n",
+        )
+        res = self.manager.discover_compose_files(mock_ssh)
+        self.assertEqual(len(res), 2)
+        first_r, second_r, *_ = res
+        self.assertEqual(first_r["directory"], "/opt/njorddeploy")
+        self.assertEqual(second_r["directory"], "/srv/media")
+
+    def test_parse_compose_volumes_edge_cases(self):
+        """Verify parse_compose_volumes with non-dict services or invalid entries."""
+        # services is a list, not dict
+        yaml_bad_services = "services:\n  - item1\n  - item2\n"
+        self.assertEqual(self.manager.parse_compose_volumes(yaml_bad_services), {})
+
+        # service_data is not dict, or volumes is not a list
+        yaml_mixed = """
+services:
+  app1: not_a_dict
+  app2:
+    volumes: not_a_list
+  app3:
+    volumes:
+      - /host/path:/container/path
+"""
+        res = self.manager.parse_compose_volumes(yaml_mixed)
+        self.assertIn("app3", res)
+        self.assertNotIn("app1", res)
+        self.assertNotIn("app2", res)
+
+    def test_inspect_target_without_compose_end_marker(self):
+        """Verify inspect_target when ___COMPOSE_END___ marker is missing."""
+        compose_content = "services:\n  web:\n    volumes:\n      - /data:/data\n"
+        output = f"/opt/njorddeploy\n___COMPOSE_FOUND___\n{compose_content}"
+
+        def mock_exec(cmd, *args, **kwargs):
+            if "expanded" in cmd:
+                return 0, "/opt/njorddeploy\n"
+            if "___COMPOSE_FOUND___" in cmd:
+                return 0, output
+            if "du -s" in cmd:
+                return 0, "1024\t/data\n"
+            return 0, ""
+
+        self.mock_ssh.execute_command.side_effect = mock_exec
+        result = self.manager.inspect_target(self.mock_ssh)
+        self.assertEqual(result["status"], "success")
+        self.assertEqual(len(result["components"]), 1)
+
+    def test_create_backup_failures(self):
+        """
+        Verify create_backup handling for inspection failure, no components,
+        and tar archiving error.
+        """
+        # 1. Inspection failure
+        with unittest.mock.patch.object(
+            self.manager,
+            "inspect_target",
+            return_value={"status": "error", "message": "Failed"},
+        ):
+            res = self.manager.create_backup(self.mock_ssh)
+            self.assertEqual(res["status"], "error")
+            self.assertEqual(res["message"], "Failed")
+
+        # 2. Selected components not in target
+        with unittest.mock.patch.object(
+            self.manager,
+            "inspect_target",
+            return_value={"status": "success", "components": [{"id": "svc1"}]},
+        ):
+            res = self.manager.create_backup(
+                self.mock_ssh, selected_components=["unmatched_service"]
+            )
+            self.assertEqual(res["status"], "error")
+            self.assertEqual(res["message"], "No components selected.")
+
+        # 3. Tar archiving fails
+        with unittest.mock.patch.object(
+            self.manager,
+            "inspect_target",
+            return_value={
+                "status": "success",
+                "components": [
+                    {
+                        "id": "svc1",
+                        "volumes": [{"host_path": "/data", "type": "bind"}],
+                    }
+                ],
+            },
+        ):
+
+            def mock_exec_tar(cmd, *args, **kwargs):
+                if "tar -czf" in cmd:
+                    return 1, "tar: error exit"
+                return 0, ""
+
+            self.mock_ssh.execute_command.side_effect = mock_exec_tar
+            res = self.manager.create_backup(self.mock_ssh)
+            self.assertEqual(res["status"], "error")
+            self.assertEqual(res["message"], "Failed to create archive tarball.")
+
+        # 4. Hash output with only 1 line
+        with unittest.mock.patch.object(
+            self.manager,
+            "inspect_target",
+            return_value={"status": "success", "components": []},
+        ):
+
+            def mock_exec_hash(cmd, *args, **kwargs):
+                if "sha256sum" in cmd:
+                    return 0, "only_sha256_hash_here\n"
+                return 0, ""
+
+            self.mock_ssh.execute_command.side_effect = mock_exec_hash
+            res = self.manager.create_backup(self.mock_ssh)
+            self.assertEqual(res["status"], "success")
+            self.assertEqual(res["sha256"], "only_sha256_hash_here")
+
+    def test_list_backups_edge_cases(self):
+        """Verify list_backups with error exit code or invalid stdout lines."""
+        # 1. Non-zero exit code
+        self.mock_ssh.execute_command.return_value = (1, "error")
+        self.assertEqual(self.manager.list_backups(self.mock_ssh), [])
+
+        # 2. Lines without pipe or blank
+        self.mock_ssh.execute_command.return_value = (
+            0,
+            (
+                "\nno_pipe_line\n"
+                "/opt/njorddeploy/backups/njorddeploy_backup_1.tar.gz|1024|1600000000\n"
+            ),
+        )
+        res = self.manager.list_backups(self.mock_ssh)
+        self.assertEqual(len(res), 1)
+        first_bk, *_ = res
+        self.assertEqual(first_bk["size_bytes"], 1024)
+
+    def test_restore_backup_failures(self):
+        """
+        Verify restore_backup with invalid manifest and tar extraction error.
+        """
+
+        # 1. Invalid manifest json (caught gracefully) and successful tar
+        def mock_exec_restore(cmd, *args, **kwargs):
+            if "tar -tzf" in cmd or "VALID" in cmd:
+                return 0, "VALID\n"
+            if "manifest.json" in cmd:
+                return 0, "not valid json {{"
+            if "tar -xzf" in cmd:
+                return 0, ""
+            return 0, ""
+
+        self.mock_ssh.execute_command.side_effect = mock_exec_restore
+        res = self.manager.restore_backup(
+            self.mock_ssh, "njorddeploy_backup_2026.tar.gz"
+        )
+        self.assertEqual(res["status"], "success")
+
+        # 2. Tar extraction fails
+        def mock_exec_fail(cmd, *args, **kwargs):
+            if "tar -tzf" in cmd or "VALID" in cmd:
+                return 0, "VALID\n"
+            if "tar -xzf" in cmd and "-C /" in cmd:
+                return 1, "extract error"
+            return 0, ""
+
+        self.mock_ssh.execute_command.side_effect = mock_exec_fail
+        res2 = self.manager.restore_backup(
+            self.mock_ssh, "njorddeploy_backup_2026.tar.gz"
+        )
+        self.assertEqual(res2["status"], "error")
+        self.assertEqual(res2["message"], "Tar extraction failed.")
+
+    def test_download_backup_sftp_edge_cases(self, tmp_path=None):
+        """Verify download_backup_sftp with disconnected client and sftp error."""
+        import tempfile
+        from pathlib import Path
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dest_dir = Path(tmpdir)
+            # 1. No ssh client
+            mock_ssh_no_client = MagicMock()
+            mock_ssh_no_client.client = None
+            mock_ssh_no_client.execute_command.return_value = (
+                0,
+                "/opt/njorddeploy\n",
+            )
+            ok, msg, fpath = self.manager.download_backup_sftp(
+                mock_ssh_no_client, "backup.tar.gz", dest_dir
+            )
+            self.assertFalse(ok)
+            self.assertIn("not connected", msg)
+
+            # 2. SFTP get raises Exception
+            mock_ssh_err = MagicMock()
+            mock_ssh_err.execute_command.return_value = (0, "/opt/njorddeploy\n")
+            mock_sftp = MagicMock()
+            mock_sftp.get.side_effect = OSError("SFTP read error")
+            mock_ssh_err.client.open_sftp.return_value = mock_sftp
+
+            ok2, msg2, fpath2 = self.manager.download_backup_sftp(
+                mock_ssh_err, "backup.tar.gz", dest_dir
+            )
+            self.assertFalse(ok2)
+            self.assertIn("SFTP read error", msg2)

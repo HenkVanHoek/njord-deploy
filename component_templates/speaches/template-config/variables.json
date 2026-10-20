@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8008",
+            "description": "The host port to expose the Speaches STT/TTS API.",
+            "id": "SPEACHES_PORT",
+            "label": "Speaches Port",
+            "type": "port"
+        },
+        {
+            "default": "default",
+            "description": "Whisper compute type (e.g. default, int8, float16, int8_float16).",
+            "id": "SPEACHES_COMPUTE_TYPE",
+            "label": "Whisper Compute Type",
+            "type": "string"
+        },
+        {
+            "default": "[\"Systran/faster-whisper-medium\"]",
+            "description": "JSON array of Whisper or TTS models to preload into memory on startup.",
+            "id": "SPEACHES_PRELOAD_MODELS",
+            "label": "Preload Models",
+            "type": "string"
+        }
+    ]
+}

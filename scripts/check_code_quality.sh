@@ -111,16 +111,39 @@ EOF
     fi
 fi
 
-# --- 3. Final Report ---
+# --- 3. Per-Module Pytest Coverage Quality Gate (≥ 100.0%) ---
+echo ""
+MIN_COV="${NJORD_MIN_COVERAGE:-100.0}"
+echo "[3/3] Running Pytest Coverage & Per-Module Gap Analyzer (≥ ${MIN_COV}%)..."
+
+COVERAGE_FAILED=0
+COV_JSON="/tmp/njord_coverage.json"
+
+if [ -x "${PYTHON_BIN}/pytest" ]; then
+    echo "Running pytest test suite with coverage JSON export..."
+    "${PYTHON_BIN}/pytest" --cov=src --cov-report="json:${COV_JSON}" --cov-report=term-missing || COVERAGE_FAILED=1
+    echo "Analyzing per-module coverage gaps against ${MIN_COV}% threshold..."
+    if [ -x "${PYTHON_BIN}/python" ]; then
+        "${PYTHON_BIN}/python" scripts/analyze_coverage_gaps.py --json-file="${COV_JSON}" --min-coverage="${MIN_COV}" || COVERAGE_FAILED=1
+    else
+        python3 scripts/analyze_coverage_gaps.py --json-file="${COV_JSON}" --min-coverage="${MIN_COV}" || COVERAGE_FAILED=1
+    fi
+else
+    echo "ERROR: pytest not found in virtual environment!"
+    COVERAGE_FAILED=1
+fi
+
+# --- 4. Final Report ---
 echo ""
 echo "=========================================="
 echo "Quality Check Summary"
 echo "=========================================="
 
-if [ "$PYTHON_FAILED" = "1" ] || [ "$JS_FAILED" = "1" ]; then
+if [ "$PYTHON_FAILED" = "1" ] || [ "$JS_FAILED" = "1" ] || [ "$COVERAGE_FAILED" = "1" ]; then
     echo "❌ CODE QUALITY CHECKS FAILED!"
     [ "$PYTHON_FAILED" = "1" ] && echo "  - Python check failures detected."
     [ "$JS_FAILED" = "1" ] && echo "  - JavaScript lint failures detected."
+    [ "$COVERAGE_FAILED" = "1" ] && echo "  - Coverage gate failures detected (modules < ${MIN_COV}%)."
     exit 1
 else
     echo "✨ ALL CHECKS PASSED SUCCESSFULLY!"

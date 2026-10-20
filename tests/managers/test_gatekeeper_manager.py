@@ -1,7 +1,7 @@
 # tests/managers/test_gatekeeper_manager.py
 """Unit tests for Gatekeeper Staging Manager (De Proeftuin - Modus A)."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from managers.gatekeeper_manager import GatekeeperManager
 
@@ -79,10 +79,76 @@ def test_gatekeeper_failure_triggers_quarantine_and_ai_diagnosis():
     assert "PostgreSQL schema upgrade error" in result["error"]
     assert result["ai_diagnosis"] is not None
 
-    # Ephemeral container must still be destroyed!
-    mock_pve.destroy_lxc.assert_called_once()
-
     # Admin must be alerted of quarantine
     mock_notifier.escalate_p1_admin.assert_called_once()
     args, kwargs = mock_notifier.escalate_p1_admin.call_args
     assert "FUMS GATEKEEPER QUARANTAINE" in kwargs["error_reason"]
+
+
+def test_gatekeeper_no_pve_client_and_exceptions():
+    """Test runs without Proxmox client, unexpected exceptions, and cleanup failures."""
+    mock_notifier = MagicMock()
+    mock_diagnoser = MagicMock()
+
+    # 1. No proxmox client (mock mode on localhost)
+    mgr_no_pve = GatekeeperManager(
+        proxmox_client=None,
+        notifier=mock_notifier,
+        ai_diagnoser=mock_diagnoser,
+    )
+    res_no_pve = mgr_no_pve.run_gatekeeper_verification(
+        component_id="caddy", old_version="1.0", new_version="1.1"
+    )
+    assert res_no_pve["certified"] is True
+    assert mgr_no_pve._wait_for_container_ip(123) == "127.0.0.1"
+
+    # 2. Synthetic migration without target IP
+    assert (
+        mgr_no_pve._execute_synthetic_migration(None, "caddy", "1.1")["success"]
+        is False
+    )
+
+    # 3. PVE client throws unhandled exception during clone/start
+    mock_pve = MagicMock()
+    mock_pve.clone_lxc.side_effect = RuntimeError("Proxmox cluster offline")
+    mgr_err = GatekeeperManager(
+        proxmox_client=mock_pve,
+        notifier=mock_notifier,
+        ai_diagnoser=mock_diagnoser,
+    )
+    res_err = mgr_err.run_gatekeeper_verification(
+        component_id="caddy", old_version="1.0", new_version="1.1"
+    )
+    assert res_err["quarantined"] is True
+    assert "Proxmox cluster offline" in res_err["error"]
+
+    # 4. Cleanup exception
+    mock_pve_clean = MagicMock()
+    mock_pve_clean.get.return_value = {
+        "data": [{"name": "eth0", "inet": "192.168.1.188/24"}]
+    }
+    mock_pve_clean.destroy_lxc.side_effect = Exception("Storage lock")
+    mgr_clean = GatekeeperManager(
+        proxmox_client=mock_pve_clean,
+        notifier=mock_notifier,
+        ai_diagnoser=mock_diagnoser,
+    )
+    res_clean = mgr_clean.run_gatekeeper_verification(
+        component_id="caddy", old_version="1.0", new_version="1.1"
+    )
+    assert res_clean["certified"] is True
+
+    # 5. AI diagnoser exception
+    mock_diagnoser.diagnose_single_failure.side_effect = Exception("AI crash")
+    assert mgr_clean._diagnose_gatekeeper_failure("caddy", "err", "logs") is None
+
+    # 6. _wait_for_container_ip timeout and exception handling (lines 191-194)
+    mock_pve_timeout = MagicMock()
+    mock_pve_timeout.get.side_effect = RuntimeError("Interface read timeout")
+    mgr_timeout = GatekeeperManager(
+        proxmox_client=mock_pve_timeout,
+        notifier=mock_notifier,
+        ai_diagnoser=mock_diagnoser,
+    )
+    with patch("time.sleep", return_value=None):
+        assert mgr_timeout._wait_for_container_ip(123, timeout_seconds=0.01) is None

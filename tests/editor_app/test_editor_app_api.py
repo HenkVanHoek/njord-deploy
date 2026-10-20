@@ -493,7 +493,7 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertIn("Ollama connection timed out", data_text)
 
     def test_static_css_and_tokens_routes(self):
-        """Tests that shared njorddeploy-style.css and tokens.css are served properly."""
+        """Tests that shared njorddeploy-style.css and tokens.css are served."""
         resp_style = self.client.get("/static/css/njorddeploy-style.css")
         self.assertEqual(resp_style.status_code, 200)
         self.assertIn(b"NjordDeploy", resp_style.data)
@@ -502,3 +502,16 @@ class TestEditorAppAPI(unittest.TestCase):
         self.assertEqual(resp_tokens.status_code, 200)
         self.assertIn(b"--njord-primary", resp_tokens.data)
 
+    @patch("managers.sync_manager.SyncManager.sync_all")
+    def test_sync_all_value_error_does_not_leak_exception(self, mock_sync_all):
+        """Tests /api/sync/all does not expose raw ValueError details (CWE-209)."""
+        mock_sync_all.side_effect = ValueError(
+            "Internal detail: /secret/local/path/comp"
+        )
+        response = self.client.post("/api/sync/all", json={"preserve_local": False})
+        self.assertEqual(response.status_code, 400)
+        res_data = json.loads(response.data.decode("utf-8"))
+        self.assertEqual(res_data["status"], "error")
+        self.assertTrue(res_data["local_only_warning"])
+        self.assertNotIn("/secret/local/path/comp", res_data["message"])
+        self.assertIn("Sync aborted to prevent data loss", res_data["message"])

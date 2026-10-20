@@ -27,6 +27,7 @@ import logging
 import os
 import subprocess  # nosec B404
 import sys
+import time
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -41,9 +42,7 @@ CONFIG_METADATA_PATH = PROJECT_ROOT / "config" / "components_metadata.json"
 TEMPLATES_PATH = PROJECT_ROOT / "component_templates"
 RESULTS_JSON_PATH = PROJECT_ROOT / "tests" / "proxmox_results.json"
 
-SIGNAL_API_URL = os.environ.get(
-    "SIGNAL_API_URL", "http://192.168.178.118:8090/v2/send"
-)
+SIGNAL_API_URL = os.environ.get("SIGNAL_API_URL", "http://192.168.178.118:8090/v2/send")
 SIGNAL_SENDER = os.environ.get("SIGNAL_SENDER", "+31651107603")
 SIGNAL_RECIPIENT = os.environ.get("SIGNAL_RECIPIENT", "+31651107603")
 
@@ -174,9 +173,7 @@ def get_candidates(
         staging = comp_meta.get("staging") or {}
         stat = staging.get("status")
         target_ver = (
-            staging.get("candidate_version")
-            or staging.get("version")
-            or ""
+            staging.get("candidate_version") or staging.get("version") or ""
         ).strip()
         if target_ver and stat in (
             "candidate",
@@ -243,9 +240,7 @@ def run_proeftuin_test(
             try:
                 with open(RESULTS_JSON_PATH, "r", encoding="utf-8") as rf:
                     res_data = json.load(rf)
-                comp_records = [
-                    r for r in res_data if r.get("component_id") == comp_id
-                ]
+                comp_records = [r for r in res_data if r.get("component_id") == comp_id]
                 if comp_records:
                     first_record = next(iter(reversed(comp_records)), {})
                     is_http_ok = first_record.get("http_ok")
@@ -259,6 +254,18 @@ def run_proeftuin_test(
 
         if not success and not error_details:
             tail_lines = proc.stderr.strip().splitlines()[-4:]
+            if not tail_lines:
+                # proxmox_test_runner logs via stdout
+                stdout_lines = proc.stdout.strip().splitlines()
+                err_lines = [
+                    line.strip()
+                    for line in stdout_lines
+                    if any(
+                        k in line
+                        for k in ("ERROR", "CRITICAL", "Exception", "Traceback")
+                    )
+                ]
+                tail_lines = err_lines[-4:] if err_lines else stdout_lines[-4:]
             if tail_lines:
                 error_details = " | ".join(tail_lines)
             else:
@@ -271,9 +278,7 @@ def run_proeftuin_test(
         return False, f"Subprocess invocation failure: {exc}"
 
 
-def mark_candidate_needs_review(
-    comp_id: str, version: str, error_details: str
-) -> None:
+def mark_candidate_needs_review(comp_id: str, version: str, error_details: str) -> None:
     """Updates candidate status to needs_review when test fails."""
     metadata = load_metadata()
     comp_meta = metadata.get("components", {}).get(comp_id, {})
@@ -403,9 +408,14 @@ def sync_and_publish_all(passed_comps: List[Tuple[str, str]]) -> bool:
     logger.info("Committing and pushing changes in main njord-deploy repository...")
     # noinspection PyBroadException
     try:
-        # 3a. Pre-push automated quality gate: ensure autopilot tests pass before pushing
+        # 3a. Pre-push automated quality gate: ensure tests pass before pushing
         pytest_gate = subprocess.run(
-            [sys.executable, "-m", "pytest", "tests/test_component_lifecycle_autopilot.py"],
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests/test_component_lifecycle_autopilot.py",
+            ],
             cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
@@ -413,7 +423,7 @@ def sync_and_publish_all(passed_comps: List[Tuple[str, str]]) -> bool:
         )
         if pytest_gate.returncode != 0:
             logger.error(
-                "Pre-push verification failed! Aborting git push to prevent broken CI on GitHub: %s",
+                "Pre-push verification failed! Aborting git push: %s",
                 pytest_gate.stdout or pytest_gate.stderr,
             )
             return False
@@ -446,9 +456,7 @@ def sync_and_publish_all(passed_comps: List[Tuple[str, str]]) -> bool:
     return True
 
 
-def dispatch_escalation_alert(
-    comp_id: str, version: str, error_details: str
-) -> None:
+def dispatch_escalation_alert(comp_id: str, version: str, error_details: str) -> None:
     """Dispatches a high-priority Signal alert for failing candidates."""
     msg = (
         f"🚨 **[NjordDeploy Autopilot] Toestemming & Actie vereist!**\n\n"
@@ -490,12 +498,12 @@ def dispatch_success_report(
 
 
 def ensure_clock_synchronized() -> None:
-    """Checks whether the system clock has drifted (e.g. after host sleep) and resyncs."""
+    """Checks whether the system clock has drifted and resyncs."""
     import socket
     import struct
 
     ntp_servers = [
-        "192.168.178.1",    # Local router (< 2ms)
+        "192.168.178.1",  # Local router (< 2ms)
         "192.168.178.118",  # Mail/Pi
         "time.cloudflare.com",
         "pool.ntp.org",
@@ -516,17 +524,17 @@ def ensure_clock_synchronized() -> None:
             est_server_time = val + (rtt / 2.0)
             drift = abs(t_recv - est_server_time)
             break
-        except Exception:
+        except Exception:  # nosec B112
             continue
 
     if drift is not None and drift >= 3.0:
         logger.warning(
-            "Klokafwijking van %.1fs gedetecteerd (mogelijk na ontwaken uit slaapstand). "
+            "Klokafwijking van %.1fs gedetecteerd (mogelijk na slaapstand). "
             "Klok wordt gesynchroniseerd...",
             drift,
         )
         try:
-            subprocess.run(
+            subprocess.run(  # nosec B603 B607
                 ["sudo", "-n", "systemctl", "restart", "systemd-timesyncd"],
                 check=False,
                 timeout=5,
@@ -602,9 +610,7 @@ def main() -> int:
     # Step 2: Collect Staging Candidates
     metadata = load_metadata()
     filter_list = (
-        [c.strip() for c in args.components.split(",")]
-        if args.components
-        else None
+        [c.strip() for c in args.components.split(",")] if args.components else None
     )
     candidates = get_candidates(metadata, filter_ids=filter_list)
 
@@ -620,9 +626,7 @@ def main() -> int:
         logger.info(" • %s (v%s)%s", cid, ver, sec_label)
 
     if args.check_only:
-        logger.info(
-            "Check-only modus actief. Er worden geen Proxmox-tests uitgevoerd."
-        )
+        logger.info("Check-only modus actief. Er worden geen Proxmox-tests uitgevoerd.")
         return 0
 
     # Step 3: Run Integration Tests in De Proeftuin
@@ -662,8 +666,9 @@ def main() -> int:
             sync_and_publish_all(passed)
             try:
                 from scripts.watch_components_lifecycle import sync_to_sysopswatch
+
                 sync_to_sysopswatch()
-            except Exception:
+            except Exception:  # nosec B110
                 pass
 
         if not args.no_signal:

@@ -59,3 +59,42 @@ def test_generator_creates_valid_compose_with_traefik(tmp_path):
     assert labels["traefik.enable"] == "true"
     assert "app.local" in labels["traefik.http.routers.web-svc.rule"]
     assert labels["traefik.http.services.web-svc.loadbalancer.server.port"] == "8080"
+
+
+def test_generator_skips_missing_component_and_handles_write_error(tmp_path):
+    """Test skipping when component metadata/template missing and IOError handling."""
+    mock_reader = MagicMock()
+    mock_reader.get_component_details.return_value = None
+    mock_reader.get_template_path.return_value = tmp_path / "nonexistent.yml"
+
+    generator = ArtifactGenerator(reader=mock_reader)
+    output_dir = tmp_path / "output"
+
+    # Component missing: should skip and write empty services compose
+    success = generator.create_artifacts(
+        out_path=output_dir, components=["missing-app"], user_variables={}
+    )
+    assert success is True
+
+    # Component without traefik support
+    mock_reader.get_component_details.return_value = {
+        "has_traefik_support": False,
+        "docker_service_name": "simple-svc",
+    }
+    tmpl = tmp_path / "simple.yml"
+    tmpl.write_text("services:\n  simple-svc:\n    image: redis\n")
+    mock_reader.get_template_path.return_value = tmpl
+
+    success_no_traefik = generator.create_artifacts(
+        out_path=output_dir, components=["simple-app"], user_variables={}
+    )
+    assert success_no_traefik is True
+
+    # IOError on write
+    from unittest.mock import patch
+
+    with patch("builtins.open", side_effect=IOError("Disk write failed")):
+        err_res = generator.create_artifacts(
+            out_path=output_dir, components=["simple-app"], user_variables={}
+        )
+        assert err_res is False

@@ -27,7 +27,10 @@ def test_get_candidates_filtering_and_sorting():
             "mealie": {
                 "group": "Lifestyle & Automation",
                 "pinned": False,
-                "staging": {"status": "awaiting_approval", "candidate_version": "3.30.0"},
+                "staging": {
+                    "status": "awaiting_approval",
+                    "candidate_version": "3.30.0",
+                },
             },
             "pi-hole": {
                 "group": "dns_blocker",
@@ -86,16 +89,12 @@ def test_mark_candidate_needs_review(mock_sync, mock_save, mock_load):
     """Verifies that failing candidate is marked as needs_review in staging."""
     fake_meta = {
         "components": {
-            "immich": {
-                "staging": {"status": "candidate", "version": "1.118.0"}
-            }
+            "immich": {"staging": {"status": "candidate", "version": "1.118.0"}}
         }
     }
     mock_load.return_value = fake_meta
 
-    mark_candidate_needs_review(
-        "immich", "1.118.0", "Container failed health check"
-    )
+    mark_candidate_needs_review("immich", "1.118.0", "Container failed health check")
 
     saved_meta = mock_save.call_args[0][0]
     staging = saved_meta["components"]["immich"]["staging"]
@@ -213,15 +212,11 @@ def test_main_no_candidates(mock_load, mock_scan):
 @patch("scripts.component_lifecycle_autopilot.promote_verified_candidate")
 @patch("scripts.component_lifecycle_autopilot.sync_and_publish_all")
 @patch("scripts.component_lifecycle_autopilot.dispatch_success_report")
-def test_main_happy_flow(
-    mock_report, mock_sync, mock_promote, mock_test, mock_load
-):
+def test_main_happy_flow(mock_report, mock_sync, mock_promote, mock_test, mock_load):
     """Verifies happy flow where all candidates pass, promote and publish."""
     mock_load.return_value = {
         "components": {
-            "gotify": {
-                "staging": {"status": "candidate", "version": "3.1.2"}
-            }
+            "gotify": {"staging": {"status": "candidate", "version": "3.1.2"}}
         }
     }
     mock_test.return_value = (True, "")
@@ -250,22 +245,20 @@ def test_promote_verified_candidate_calls_watcher(mock_promote_candidate):
     from scripts.component_lifecycle_autopilot import promote_verified_candidate
 
     promote_verified_candidate("vaultwarden", "1.37.4")
-    mock_promote_candidate.assert_called_once_with("vaultwarden", target_version="1.37.4")
+    mock_promote_candidate.assert_called_once_with(
+        "vaultwarden", target_version="1.37.4"
+    )
 
 
 @patch("scripts.component_lifecycle_autopilot.load_metadata")
 @patch("scripts.component_lifecycle_autopilot.run_proeftuin_test")
 @patch("scripts.component_lifecycle_autopilot.mark_candidate_needs_review")
 @patch("scripts.component_lifecycle_autopilot.dispatch_escalation_alert")
-def test_main_exception_flow(
-    mock_alert, mock_mark, mock_test, mock_load
-):
+def test_main_exception_flow(mock_alert, mock_mark, mock_test, mock_load):
     """Verifies exception flow where candidate fails, alerts, and stops."""
     mock_load.return_value = {
         "components": {
-            "immich": {
-                "staging": {"status": "candidate", "version": "1.118.0"}
-            }
+            "immich": {"staging": {"status": "candidate", "version": "1.118.0"}}
         }
     }
     mock_test.return_value = (False, "Database migration failure")

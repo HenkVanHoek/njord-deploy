@@ -2,6 +2,7 @@
 import logging
 import os
 import shutil
+import socket
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -172,6 +173,45 @@ class DeploymentManager:
                     "-o ServerAliveInterval=15 -o ServerAliveCountMax=4 "
                     "-o ConnectTimeout=30"
                 )
+
+                # Private Container Registry credentials (GHCR / Forgejo)
+                reg_server = (
+                    global_vars.get("REGISTRY_SERVER")
+                    or device.get("registry_server")
+                    or os.environ.get("NJORD_REGISTRY_SERVER", "")
+                )
+                reg_user = (
+                    global_vars.get("REGISTRY_USERNAME")
+                    or device.get("registry_username")
+                    or os.environ.get("NJORD_REGISTRY_USERNAME", "")
+                )
+                reg_pass = (
+                    global_vars.get("REGISTRY_PASSWORD")
+                    or device.get("registry_password")
+                    or os.environ.get("NJORD_REGISTRY_PASSWORD", "")
+                )
+                if reg_server and reg_user and reg_pass:
+                    extravars["registry_server"] = str(reg_server).strip()
+                    extravars["registry_username"] = str(reg_user).strip()
+                    extravars["registry_password"] = str(reg_pass).strip()
+                    reg_ip = (
+                        global_vars.get("REGISTRY_IP")
+                        or device.get("registry_ip")
+                        or os.environ.get("NJORD_REGISTRY_IP", "")
+                    )
+                    if not reg_ip:
+                        # noinspection PyBroadException
+                        try:
+                            resolved = socket.gethostbyname(str(reg_server).strip())
+                            if resolved and not resolved.startswith("127."):
+                                reg_ip = resolved
+                        except Exception:  # nosec B110
+                            pass
+                    if reg_ip:
+                        extravars["registry_ip"] = str(reg_ip).strip()
+                    self.tasks[task_id]["logs"].append(
+                        f"INFO: Private registry auth configured for: {reg_server}"
+                    )
 
                 # Log deployment manifest and docker-compose.yml contents
                 out_path_obj = Path(output_path)

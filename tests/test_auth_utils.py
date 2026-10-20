@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import MagicMock
 
 # noinspection PyUnresolvedReferences
@@ -12,6 +13,7 @@ from src.utils.auth_utils import (
     get_or_create_secret_key,
     hash_password,
     is_admin_configured,
+    is_api_request,
     is_auth_enabled,
     load_auth_config,
     save_auth_config,
@@ -236,3 +238,211 @@ def test_extract_api_key_from_request():
     req3.headers = {}
     req3.args = {"api_key": "key_from_query"}
     assert extract_api_key_from_request(req3) == "key_from_query"
+
+    # None when no key
+    req4 = MagicMock()
+    req4.headers = {}
+    req4.args = {}
+    assert extract_api_key_from_request(req4) is None
+
+
+def test_auth_validation_boundaries():
+    """Tests extreme length and formatting boundary conditions for usernames
+    and passwords.
+    """
+    ok, err = validate_username("a" * 33)
+    assert ok is False
+    assert "must not exceed 32 characters" in str(err)
+
+    ok, err = validate_username("invalid user with spaces!")
+    assert ok is False
+    assert "alphanumeric" in str(err)
+
+    ok, err = validate_password_strength("a" * 257)
+    assert ok is False
+    assert "must not exceed 256 characters" in str(err)
+
+
+def test_auth_enabled_and_admin_configured_variations(monkeypatch, tmp_path):
+    """Tests diverse environment flags for auth enabled and admin configuration."""
+    monkeypatch.setenv("NJORD_DATA_DIR", str(tmp_path))
+
+    # NJORD_AUTH_ENABLED variants
+    monkeypatch.setenv("NJORD_AUTH_ENABLED", "enabled")
+    assert is_auth_enabled() is True
+
+    monkeypatch.setenv("NJORD_AUTH_ENABLED", "disabled")
+    assert is_auth_enabled() is False
+
+    monkeypatch.delenv("NJORD_AUTH_ENABLED", raising=False)
+    monkeypatch.setenv("NJORD_SERVER_MODE", "true")
+    assert is_auth_enabled() is True
+
+    monkeypatch.delenv("NJORD_SERVER_MODE", raising=False)
+    # NJORD_ADMIN_HASH
+    monkeypatch.setenv("NJORD_ADMIN_USER", "env_admin")
+    monkeypatch.setenv("NJORD_ADMIN_HASH", hash_password("AdminPass123"))
+    assert is_admin_configured() is True
+    assert verify_credentials("env_admin", "AdminPass123") is True
+    assert verify_credentials("env_admin", "WrongPass") is False
+
+
+def test_verify_credentials_with_database_user(tmp_path, monkeypatch):
+    """Tests that verify_credentials checks multi-tenant DatabaseManager users."""
+    from managers.database_manager import DatabaseManager
+
+    db_file = tmp_path / "auth_db_test.db"
+    db = DatabaseManager(db_file)
+    monkeypatch.setattr(DatabaseManager, "get_instance", lambda: db)
+    monkeypatch.setenv("NJORD_DATA_DIR", str(tmp_path))
+
+    user_pass = "DbSecretPassword123"
+    db.create_user(
+        "tenant_user",
+        hash_password(user_pass),
+        api_key="njord_sec_tenant_valid_key",
+    )
+
+    assert verify_credentials("tenant_user", user_pass) is True
+    assert verify_credentials("tenant_user", "wrong_pass") is False
+    assert verify_api_key("njord_sec_tenant_valid_key") is True
+    assert verify_api_key("njord_sec_invalid_key") is False
+
+
+def test_corrupt_auth_config_and_secret_key(tmp_path, monkeypatch):
+    """Tests handling of corrupt auth.json and unreadable .secret_key file."""
+    monkeypatch.setenv("NJORD_DATA_DIR", str(tmp_path))
+    monkeypatch.delenv("NJORD_SECRET_KEY", raising=False)
+    monkeypatch.delenv("FLASK_SECRET_KEY", raising=False)
+
+    auth_file = tmp_path / "auth.json"
+    auth_file.write_text("NOT A VALID JSON", encoding="utf-8")
+    assert load_auth_config() is None
+
+    # Secret key generation
+    secret = get_or_create_secret_key()
+    assert secret is not None
+    assert len(secret) >= 32
+    # Second read retrieves existing
+    assert get_or_create_secret_key() == secret
+
+
+def test_login_required_decorator(monkeypatch):
+    """Tests login_required decorator across API, browser, and authenticated states."""
+    from flask import Flask
+
+    from utils.auth_utils import login_required
+
+    app = Flask(__name__)
+    app.config["SECRET_KEY"] = "test-secret"
+
+    @app.route("/login")
+    def login_page():
+        return "Login Page", 200
+
+    @app.route("/api/protected", methods=["GET"])
+    @login_required
+    def api_protected():
+        return {"status": "ok"}, 200
+
+    @app.route("/protected-page", methods=["GET"])
+    @login_required
+    def page_protected():
+        return "Protected Content", 200
+
+    client = app.test_client()
+
+    # 1. Auth disabled
+    monkeypatch.setattr("utils.auth_utils.is_auth_enabled", lambda: False)
+    res = client.get("/api/protected")
+    assert res.status_code == 200
+
+    # 2. Auth enabled - unauthenticated API request -> 401 JSON
+    monkeypatch.setattr("utils.auth_utils.is_auth_enabled", lambda: True)
+    monkeypatch.setattr("utils.auth_utils.verify_api_key", lambda k: False)
+    res_api = client.get("/api/protected")
+    assert res_api.status_code == 401
+    assert "Unauthorized" in res_api.get_json()["error"]
+
+    # 3. Auth enabled - unauthenticated browser request -> 302 redirect
+    res_page = client.get("/protected-page")
+    assert res_page.status_code == 302
+    assert "/login" in res_page.headers["Location"]
+
+    # 4. Auth enabled - valid API Key -> 200 OK
+    monkeypatch.setattr("utils.auth_utils.verify_api_key", lambda k: k == "valid_key")
+    res_key = client.get("/api/protected", headers={"X-Njord-API-Key": "valid_key"})
+    assert res_key.status_code == 200
+
+    # 5. Auth enabled - valid session -> 200 OK
+    with client.session_transaction() as sess:
+        sess["logged_in"] = True
+        sess["user"] = "admin"
+    res_sess = client.get("/protected-page")
+    assert res_sess.status_code == 200
+
+    # 6. JSON header / request detection in login_required (unauthenticated)
+    with client.session_transaction() as sess:
+        sess.clear()
+    res_json_accept = client.get(
+        "/protected-page", headers={"Accept": "application/json"}
+    )
+    assert res_json_accept.status_code == 401
+
+
+def test_auth_utils_edge_cases_and_exceptions(tmp_path, monkeypatch):
+    """Test exception branches, secret key IO errors, and db failures."""
+    from unittest.mock import patch
+
+    # 1. verify_password exception
+    with patch(
+        "src.utils.auth_utils.check_password_hash",
+        side_effect=Exception("hash err"),
+    ):
+        assert verify_password("pwd", "pbkdf2:sha256:1000$bad") is False
+
+    # 2. get_or_create_secret_key IO errors
+    monkeypatch.delenv("NJORD_SECRET_KEY", raising=False)
+    monkeypatch.delenv("FLASK_SECRET_KEY", raising=False)
+    monkeypatch.setenv("NJORD_DATA_DIR", str(tmp_path))
+    dummy_key_file = tmp_path / ".secret_key"
+    dummy_key_file.touch()
+
+    with patch.object(Path, "read_text", side_effect=IOError("read fail")):
+        with patch.object(Path, "write_text", side_effect=IOError("write fail")):
+            k = get_or_create_secret_key()
+            assert len(k) == 64
+
+    # 3. verify_credentials empty and env plaintext password
+    assert verify_credentials("", "pass") is False
+    assert verify_credentials("admin", "") is False
+
+    monkeypatch.setenv("NJORD_ADMIN_USER", "envadmin")
+    monkeypatch.setenv("NJORD_ADMIN_PASSWORD", "plainsecret")
+    assert verify_credentials("envadmin", "plainsecret") is True
+
+    # 4. verify_credentials and verify_api_key DB exceptions
+    monkeypatch.delenv("NJORD_ADMIN_USER", raising=False)
+    monkeypatch.delenv("NJORD_ADMIN_PASSWORD", raising=False)
+    with patch("src.utils.auth_utils.load_auth_config", return_value=None):
+        with patch(
+            "managers.database_manager.DatabaseManager.get_instance",
+            side_effect=Exception("db dead"),
+        ):
+            assert verify_credentials("user", "pass") is False
+            assert verify_api_key("token123") is False
+
+    # 5. verify_api_key empty inputs
+    assert verify_api_key("") is False
+    assert verify_api_key("   ") is False
+    assert verify_api_key(None) is False
+
+    # 6. is_api_request with is_json=True on non-standard route
+    from flask import Flask
+
+    test_flask_app = Flask("test_auth_req")
+    with test_flask_app.test_request_context(
+        "/custom-non-api-route",
+        json={"data": 123},
+    ):
+        assert is_api_request() is True

@@ -238,18 +238,17 @@ def check_status() -> int:
             current_group = group
             print(f"\n📂 {group}:")
 
-        val = env_vars.get(key, "")
-        masked = mask_secret(key, val)
+        is_configured = bool(env_vars.get(key, ""))
 
-        if required and not val:
+        if required and not is_configured:
             status = "❌ ONTBREEKT (Vereist)"
             missing_required += 1
-        elif val:
+        elif is_configured:
             status = "✅ INGESTELD"
         else:
             status = "⚪ Optioneel"
 
-        print(f"  • {key:22} : {status:22} ({masked})")
+        print(f"  • {key:22} : {status}")
 
     # Extra keys
     known_keys = {item[0] for item in CONFIG_SCHEMA}
@@ -257,8 +256,8 @@ def check_status() -> int:
     if custom_keys:
         print("\n📂 Overige variabelen:")
         for k in sorted(custom_keys):
-            masked = mask_secret(k, env_vars[k])
-            print(f"  • {k:22} : ✅ INGESTELD            ({masked})")
+            custom_status = "✅ INGESTELD" if bool(env_vars.get(k)) else "⚪ Leeg"
+            print(f"  • {k:22} : {custom_status}")
 
     print("\n" + "=" * 72)
     if missing_required == 0:
@@ -339,7 +338,6 @@ def get_secrets_data() -> dict:
                 "description": desc,
                 "group": group,
                 "file": ".env",
-                "value": val,
                 "masked": mask_secret(key, val),
                 "is_set": bool(val),
                 "required": required,
@@ -355,7 +353,6 @@ def get_secrets_data() -> dict:
                     "description": f"Aangepaste omgevingsvariabele {k}",
                     "group": "Overige & Maatwerk Variabelen",
                     "file": ".env",
-                    "value": val,
                     "masked": mask_secret(k, val),
                     "is_set": bool(val),
                     "required": False,
@@ -410,8 +407,7 @@ def set_variable(kv_pair: str) -> int:
     val = val.strip().strip("'\"")
 
     res = set_variables({key: val})
-    masked = mask_secret(key, val)
-    print(f"[+] Variabele '{key}' succesvol ingesteld op: {masked}")
+    print(f"[+] Variabele '{key}' succesvol ingesteld (permissies: 0600).")
     return 0 if res["success"] else 1
 
 
@@ -427,7 +423,7 @@ def main() -> int:
     parser.add_argument(
         "--json",
         action="store_true",
-        help="Dump gestructureerde JSON van alle secrets voor SysOps Cockpit.",
+        help="Toon JSON-statusoverzicht (zonder geheime waarden) voor SysOps Cockpit.",
     )
     parser.add_argument(
         "--set",
@@ -449,8 +445,15 @@ def main() -> int:
     if args.check:
         return check_status()
     elif args.json:
-        data = get_secrets_data()
-        print(json.dumps(data, indent=2))
+        env_vars = load_env_dict(ENV_FILE)
+        summary = {
+            "project": "njord-deploy",
+            "title": "NjordDeploy Core Engine",
+            "type": "dotenv",
+            "project_root": str(PROJECT_ROOT),
+            "configured_keys": sorted(k for k, v in env_vars.items() if v),
+        }
+        print(json.dumps(summary, indent=2))
         return 0
     elif args.set:
         return set_variable(args.set)

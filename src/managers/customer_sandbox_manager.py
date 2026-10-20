@@ -124,7 +124,9 @@ class CustomerSandboxManager:
             return {"success": False, "error": msg, "quota_exceeded": True}
 
         # Determine next available VMID
-        allocated_vmids = {s["vmid"] for s in active}
+        with self._get_connection() as conn:
+            cursor = conn.execute("SELECT vmid FROM sandboxes;")
+            allocated_vmids = {vmid_val for (vmid_val, *_) in cursor.fetchall()}
         vmid = SANDBOX_VMID_START
         while vmid in allocated_vmids:
             vmid += 1
@@ -207,7 +209,8 @@ class CustomerSandboxManager:
                 for iface in interfaces:
                     if iface.get("name") == "eth0" and iface.get("inet"):
                         inet = iface.get("inet", "")
-                        ip_clean = inet.split("/")[0].strip()
+                        ip_clean, *_ = inet.split("/")
+                        ip_clean = ip_clean.strip()
                         if ip_clean and not ip_clean.startswith("127."):
                             return ip_clean
             except Exception as e:

@@ -219,14 +219,12 @@ def verify_credentials(username: str, password: str) -> bool:
 
     # 2. Check auth.json
     config = load_auth_config()
-    if not config:
-        return False
-
-    stored_user = str(config.get("username", "")).strip().lower()
-    stored_hash = str(config.get("password_hash", ""))
-
-    if stored_user == clean_user and stored_hash:
-        return verify_password(password, stored_hash)
+    if config:
+        stored_user = str(config.get("username", "")).strip().lower()
+        stored_hash = str(config.get("password_hash", ""))
+        if stored_user == clean_user and stored_hash:
+            if verify_password(password, stored_hash):
+                return True
 
     # 3. Check Multi-Tenant Database
     try:

@@ -1,6 +1,13 @@
 {
     "variables": [
         {
+            "default": "sk-njorddeploy-litellm-master-key",
+            "description": "Master key for LiteLLM proxy authentication and administrative operations.",
+            "id": "LITELLM_MASTER_KEY",
+            "label": "LiteLLM Master Key",
+            "type": "password"
+        },
+        {
             "default": "4000",
             "description": "The external port for accessing the LiteLLM AI Gateway web interface.",
             "id": "LITELLM_WEB_PORT",

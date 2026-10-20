@@ -73,6 +73,20 @@ def test_emergency_wol_and_signal_failover():
             "e8:9c:25:29:f0:0c", broadcast_ip="255.255.255.255"
         )
         mock_signal.assert_called_once()
-        sent_msg, sent_rec = mock_signal.call_args[0]
+        call_args_tuple, *_ = mock_signal.call_args
+        sent_msg, sent_rec = call_args_tuple
         assert "+31651107603" == sent_rec
         assert "NjordDeploy Nood-Failover" in sent_msg
+
+
+def test_send_wake_on_lan_socket_and_parse_errors():
+    """Verifies that socket transmission error and hex errors return False."""
+    with patch("socket.socket") as mock_sock_cls:
+        mock_sock = MagicMock()
+        mock_sock.sendto.side_effect = OSError("Network unreachable")
+        mock_sock_cls.return_value.__enter__.return_value = mock_sock
+
+        assert send_wake_on_lan("e8:9c:25:29:f0:0c") is False
+
+    with patch("utils.wake_on_lan.re.sub", return_value="zzzzzzzzzzzz"):
+        assert send_wake_on_lan("e8:9c:25:29:f0:0c") is False

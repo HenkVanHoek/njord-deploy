@@ -27,13 +27,22 @@ def test_load_untestable_components(tmp_path):
 *   **Status**: Fixed (2026-07-20)
 *   **Fix**: Already repaired.
 
+### `service-e`
+*   **Reason**: Active service right before another section.
+
 ## Other Section
 ### `service-d`
 *   **Reason**: In other section.
 """
     doc_file.write_text(sample_content, encoding="utf-8")
 
+    from utils.failed_components import get_failed_components_path
+
+    default_p = get_failed_components_path()
+    assert default_p.name == "FAILED_COMPONENTS.md"
+
     untestable = load_untestable_components(doc_path=doc_file)
+    assert "service-e" in untestable
     assert "service-a" in untestable
     assert "service-b" in untestable
     assert "service-c" not in untestable  # Marked as Fixed
@@ -88,3 +97,34 @@ def test_add_or_update_untestable_component(tmp_path):
     assert "new-service" in untestable
     assert untestable["new-service"]["reason"] == "Requires /dev/net/tun"
     assert is_component_untestable("new-service", doc_path=doc_file) is True
+
+
+def test_failed_components_missing_file_and_fields(tmp_path):
+    missing_file = tmp_path / "does_not_exist.md"
+    assert load_untestable_components(doc_path=missing_file) == {}
+    assert remove_untestable_component("any", doc_path=missing_file) is False
+
+    # Test constraint & description fields
+    doc_file = tmp_path / "custom.md"
+    doc_file.write_text(
+        "## Hardware and Specialized Requirements\n\n"
+        "### `custom-srv`\n"
+        "*   **Constraint**: Needs GPU\n"
+        "*   **Description**: Custom description text\n",
+        encoding="utf-8",
+    )
+    comps = load_untestable_components(doc_path=doc_file)
+    assert "custom-srv" in comps
+    assert comps["custom-srv"]["reason"] == "Needs GPU"
+    assert comps["custom-srv"]["action"] == "Custom description text"
+
+    # Test add when header not present in existing file
+    doc_no_header = tmp_path / "no_header.md"
+    doc_no_header.write_text("# Title\n\nSome introductory content\n")
+    add_or_update_untestable_component(
+        "app-no-header",
+        reason="Needs BT",
+        doc_path=doc_no_header,
+    )
+    comps_nh = load_untestable_components(doc_path=doc_no_header)
+    assert "app-no-header" in comps_nh

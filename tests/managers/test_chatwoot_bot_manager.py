@@ -1,9 +1,11 @@
 # tests/managers/test_chatwoot_bot_manager.py
 
+import os
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from src.managers.chatwoot_bot_manager import ChatwootBotManager
+from managers.chatwoot_bot_manager import ChatwootBotManager
 
 
 class TestChatwootBotManager(unittest.TestCase):
@@ -228,6 +230,189 @@ class TestChatwootBotManager(unittest.TestCase):
         call_contents = [call[1]["content"] for call in mock_send.call_args_list]
         self.assertTrue(any("Please hold on a moment" in c for c in call_contents))
         self.assertTrue(any("Here is your answer!" in c for c in call_contents))
+
+    def test_webhook_event_filtering_and_formats(self):
+        """Verifies payload validation, signature verification, and event filtering."""
+        # 1. Disabled manager
+        disabled_mgr = ChatwootBotManager(
+            base_url="https://chat.njorddeploy.com",
+            bot_token="token",
+            enabled=False,
+        )
+        ok_dis, msg_dis = disabled_mgr.handle_webhook_event({})
+        self.assertTrue(ok_dis)
+        self.assertIn("disabled", msg_dis)
+
+        # 2. Unsupported format (e.g. integer or list)
+        ok_fmt, msg_fmt = self.manager.handle_webhook_event(12345)
+        self.assertFalse(ok_fmt)
+        self.assertIn("Unsupported", msg_fmt)
+
+        # 3. String payload with invalid signature
+        ok_sig, msg_sig = self.manager.handle_webhook_event(
+            '{"event": "message_created"}',
+            signature_header="invalid_sig",
+        )
+        self.assertFalse(ok_sig)
+        self.assertIn("Invalid webhook signature", msg_sig)
+
+        # 4. String payload with valid signature but malformed JSON
+        import hmac
+
+        bad_json = b"not-a-json{"
+        sig = hmac.new(b"test_secret", bad_json, "sha256").hexdigest()
+        ok_json, msg_json = self.manager.handle_webhook_event(
+            bad_json, signature_header=sig
+        )
+        self.assertFalse(ok_json)
+        self.assertIn("Malformed JSON", msg_json)
+
+        # 5. Ignored event type
+        ok_evt, _ = self.manager.handle_webhook_event(
+            {"event": "conversation_status_changed"}
+        )
+        self.assertTrue(ok_evt)
+
+        # 6. Ignored non-incoming message
+        ok_out, _ = self.manager.handle_webhook_event(
+            {"event": "message_created", "message_type": "outgoing"}
+        )
+        self.assertTrue(ok_out)
+
+        # 7. Ignored private note
+        ok_priv, _ = self.manager.handle_webhook_event(
+            {
+                "event": "message_created",
+                "message_type": "incoming",
+                "private": True,
+            }
+        )
+        self.assertTrue(ok_priv)
+
+        # 8. Asynchronous processing (sync=False) launches thread
+        with patch("threading.Thread") as mock_thread:
+            ok_async, msg_async = self.manager.handle_webhook_event(
+                {
+                    "event": "message_created",
+                    "message_type": "incoming",
+                    "private": False,
+                },
+                sync=False,
+            )
+            self.assertTrue(ok_async)
+            self.assertIn("queued", msg_async)
+            mock_thread.assert_called_once()
+
+    def test_process_incoming_message_guard_clauses(self):
+        """Tests edge cases and sanitization in _process_incoming_message."""
+        # 1. Empty content -> no-op
+        self.manager._process_incoming_message({"content": "   "})
+
+        # 2. Missing or non-dict conversation
+        self.manager._process_incoming_message(
+            {"content": "Hello", "conversation": None}
+        )
+
+        # 3. Missing conversation ID or account ID
+        self.manager._process_incoming_message(
+            {"content": "Hello", "conversation": {"id": None}, "account": None}
+        )
+
+        # 4. Content truncation over 1000 characters
+        long_content = "X" * 1500
+        payload_long = {
+            "content": long_content,
+            "conversation": {"id": 12},
+            "account": {"id": 1},
+        }
+        with patch.object(self.manager, "send_message") as mock_send:
+            self.manager._process_incoming_message(payload_long)
+            mock_send.assert_called_once()
+
+    def test_detect_language_from_sender_custom_attributes(self):
+        """Verifies language detection from sender custom_attributes."""
+        payload_nl = {
+            "sender": {"custom_attributes": {"language": "nl-NL"}},
+        }
+        self.assertEqual(self.manager.detect_language(payload_nl, "Kort bericht"), "nl")
+
+        payload_en = {
+            "sender": {"custom_attributes": {"language": "en-US"}},
+        }
+        self.assertEqual(self.manager.detect_language(payload_en, "Short note"), "en")
+
+    def test_api_call_exceptions_and_failures(self):
+        """Tests failure handling in send_message and toggle status methods."""
+        # 1. send_message API HTTP error code
+        mock_resp_500 = MagicMock(status_code=500, text="Internal error")
+        with patch("requests.post", return_value=mock_resp_500):
+            res_fail = self.manager.send_message(
+                account_id=1, conversation_id=10, content="test"
+            )
+            self.assertFalse(res_fail)
+
+        # 2. send_message Exception
+        with patch("requests.post", side_effect=Exception("Network drop")):
+            res_exc = self.manager.send_message(
+                account_id=1, conversation_id=10, content="test"
+            )
+            self.assertFalse(res_exc)
+
+        # 3. toggle_conversation_status Exception
+        with patch("requests.post", side_effect=Exception("Network drop")):
+            res_toggle_exc = self.manager.toggle_conversation_status(
+                account_id=1, conversation_id=10, status="resolved"
+            )
+            self.assertFalse(res_toggle_exc)
+
+        # 4. toggle_typing_status Exception
+        with patch("requests.post", side_effect=Exception("Network drop")):
+            res_typing_exc = self.manager.toggle_typing_status(
+                account_id=1, conversation_id=10, typing_status="off"
+            )
+            self.assertFalse(res_typing_exc)
+
+    def test_chatwoot_bot_manager_edge_cases(self):
+        """Test default enabled, knowledge IO errors, signature without secret,
+        and AI error fallbacks."""
+        # 1. enabled=None uses CHATWOOT_AI_ENABLED env var (line 109)
+        with patch.dict(os.environ, {"CHATWOOT_AI_ENABLED": "false"}):
+            m1 = ChatwootBotManager()
+            self.assertFalse(m1.enabled)
+
+        # 2. Knowledge context file read errors (lines 140-141, 148-149)
+        m2 = ChatwootBotManager()
+        with patch.object(Path, "read_text", side_effect=IOError("Corrupt text")):
+            ctx = m2.get_knowledge_context()
+            self.assertIn("NjordDeploy", ctx)
+
+        # 3. is_escalation_request with empty string (line 157)
+        self.assertFalse(m2.is_escalation_request(""))
+
+        # 4. verify_signature without webhook secret (line 259)
+        m2.webhook_secret = ""
+        self.assertTrue(m2.verify_signature(b"{}", None))
+
+        # 5. AI engine without generate attribute (lines 406, 409)
+        mock_send = MagicMock()
+        payload = {
+            "content": "Hello",
+            "conversation": {"id": 10},
+            "account": {"id": 1},
+        }
+        with patch.object(self.manager, "send_message", mock_send):
+            self.manager._explicit_ai_engine = object()
+            self.manager._process_incoming_message(payload)
+            self.assertTrue(mock_send.called)
+
+        # 6. AI engine throws exception (lines 410-412)
+        mock_send2 = MagicMock()
+        mock_broken_engine = MagicMock()
+        mock_broken_engine.generate.side_effect = RuntimeError("AI server crashed")
+        self.manager._explicit_ai_engine = mock_broken_engine
+        with patch.object(self.manager, "send_message", mock_send2):
+            self.manager._process_incoming_message(payload)
+            self.assertTrue(mock_send2.called)
 
 
 if __name__ == "__main__":

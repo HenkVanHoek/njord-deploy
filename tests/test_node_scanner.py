@@ -253,3 +253,176 @@ class TestNodeScannerGetSystemSnapshot:
         snapshot, err = scanner.get_system_snapshot("192.168.1.5")
         assert snapshot is None
         assert "sshpass is not installed" in err
+
+    @patch("subprocess.run")
+    @patch("node_scanner.is_port_open", return_value=True)
+    def test_snapshot_handles_unexpected_exception(
+        self, _mock_port_open, mock_subprocess, scanner
+    ):
+        """Test handling of an unexpected Exception during SSH execution."""
+        mock_subprocess.side_effect = RuntimeError("Broken pipe")
+        snapshot, err = scanner.get_system_snapshot("192.168.1.5")
+        assert snapshot is None
+        assert "An unexpected SSH error occurred" in err
+
+    @patch("subprocess.run")
+    @patch("node_scanner.is_port_open", return_value=True)
+    def test_snapshot_handles_parsing_exception(
+        self, _mock_port_open, mock_subprocess, scanner
+    ):
+        """Test handling of an unexpected Exception during snapshot parsing."""
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "Malformed stdout"
+        mock_subprocess.return_value = mock_result
+        with patch.object(
+            scanner, "_parse_section", side_effect=Exception("Parse crash")
+        ):
+            snapshot, err = scanner.get_system_snapshot("192.168.1.5")
+            assert snapshot is None
+            assert "An unexpected SSH error occurred" in err
+
+
+class TestTailscaleAndScanEdgeCases:
+    """Tests tailscale status checks and network scan error conditions."""
+
+    def test_is_supported_sbc_empty(self):
+        """Test empty MAC address checks."""
+        assert is_supported_sbc("") is False
+        assert is_supported_sbc(None) is False
+
+    @patch("shutil.which", return_value="/usr/bin/tailscale")
+    @patch("subprocess.run")
+    def test_tailscale_non_running_or_error_status(self, mock_run, _mock_which):
+        """Test non-running states and non-zero exit codes."""
+        # 1. Non-zero return code
+        mock_run.return_value = MagicMock(returncode=1)
+        st_err = get_tailscale_status()
+        assert st_err["active"] is False
+        assert "not running" in st_err["reason"]
+
+        # 2. BackendState != Running
+        import json
+
+        mock_run.return_value = MagicMock(
+            returncode=0,
+            stdout=json.dumps({"BackendState": "Stopped"}),
+        )
+        st_stopped = get_tailscale_status()
+        assert st_stopped["active"] is False
+        assert "Stopped" in st_stopped["reason"]
+
+        # 3. Running with peers (offline vs online)
+        peer_data = {
+            "BackendState": "Running",
+            "Peer": {
+                "p1": {"Online": False},
+                "p2": {"Online": True, "TailscaleIPs": []},
+                "p3": {
+                    "Online": True,
+                    "TailscaleIPs": ["100.64.0.5"],
+                    "DNSName": "my-pi.tailnet.ts.net.",
+                    "OS": "linux",
+                },
+            },
+            "Self": {"HostName": "local-host", "TailscaleIPs": ["100.64.0.1"]},
+        }
+        mock_run.return_value = MagicMock(returncode=0, stdout=json.dumps(peer_data))
+        st_online = get_tailscale_status()
+        assert st_online["active"] is True
+        assert len(st_online["peers"]) == 1
+        peer, *_ = st_online["peers"]
+        assert peer["ip"] == "100.64.0.5"
+        assert peer["hostname"] == "my-pi"
+
+        # 4. TimeoutExpired
+        mock_run.side_effect = subprocess.TimeoutExpired(cmd="tailscale", timeout=10)
+        st_timeout = get_tailscale_status()
+        assert st_timeout["active"] is False
+        assert st_timeout.get("timed_out") is True
+
+        # 5. Generic exception
+        mock_run.side_effect = RuntimeError("System crash")
+        st_exc = get_tailscale_status()
+        assert st_exc["active"] is False
+        assert "Error checking Tailscale" in st_exc["reason"]
+
+    def test_scan_subnet_failure_and_nmap_errors(self, scanner):
+        """Test scan error conditions for auto-detect and nmap exceptions."""
+        import nmap
+
+        # 1. Could not auto-detect subnet
+        with patch.object(scanner, "detect_subnet", return_value=None):
+            hosts, msgs, err, info = scanner.scan(subnet=None)
+            assert hosts == []
+            assert "Could not auto-detect subnet" in err
+            assert info["success"] is False
+
+        # 2. PortScannerError
+        with (
+            patch("shutil.which", return_value="/usr/bin/nmap"),
+            patch(
+                "nmap.PortScanner.scan",
+                side_effect=nmap.PortScannerError("Nmap scan aborted"),
+            ),
+        ):
+            hosts, msgs, err, info = scanner.scan(subnet="192.168.1.0/24")
+            assert hosts == []
+            assert "Nmap scan aborted" in err
+
+        # 3. Generic Exception during scan
+        with (
+            patch("shutil.which", return_value="/usr/bin/nmap"),
+            patch(
+                "nmap.PortScanner.scan",
+                side_effect=Exception("Unexpected nmap crash"),
+            ),
+        ):
+            hosts, msgs, err, info = scanner.scan(subnet="192.168.1.0/24")
+            assert hosts == []
+            assert "Unexpected nmap crash" in err
+
+    def test_node_scanner_additional_coverage(self, scanner):
+        """Test sbc loader errors, ip resolution, subnet autodetect,
+        and parsing edges."""
+        from node_scanner import NodeScanner, _load_sbc_mac_prefixes
+
+        # 1. SBC MAC prefix loader error
+        with patch("builtins.open", side_effect=FileNotFoundError):
+            assert _load_sbc_mac_prefixes() == set()
+
+        # 2. get_primary_ip OSError fallback
+        with patch("socket.socket") as mock_sock:
+            mock_sock.return_value.connect.side_effect = OSError("Network down")
+            assert NodeScanner.get_primary_ip() == "127.0.0.1"
+
+        # 3. detect_subnet returns None on localhost or unmatched interface
+        with patch.object(NodeScanner, "get_primary_ip", return_value="127.0.0.1"):
+            assert NodeScanner.detect_subnet() is None
+
+        with patch.object(NodeScanner, "get_primary_ip", return_value="10.99.99.99"):
+            with patch("psutil.net_if_addrs", return_value={}):
+                assert NodeScanner.detect_subnet() is None
+
+        # 4. scan() subnet auto-detection success
+        with patch.object(scanner, "detect_subnet", return_value="192.168.1.0/24"):
+            with patch("shutil.which", return_value="/usr/bin/nmap"):
+                with patch("nmap.PortScanner") as mock_ps_cls:
+                    mock_ps = MagicMock()
+                    mock_ps.scan.return_value = {"scan": {}}
+                    mock_ps_cls.return_value = mock_ps
+                    hosts, msgs, err, info = scanner.scan(subnet=None)
+                    assert info["success"] is True
+                    assert info["method_used"] == "auto_detect"
+
+        # 5. _parse_docker_ps malformed line
+        assert NodeScanner._parse_docker_ps("name_without_hash") == []
+
+        # 6. _parse_ss_output error, non-listen, and malformed port
+        assert NodeScanner._parse_ss_output("command error occurred") == []
+        bad_ss = (
+            "State Recv-Q Send-Q Local Address:Port\n"
+            "ESTAB 0 0 10.0.0.1:80\n"
+            'LISTEN 0 0 10.0.0.1:badport users:(("proc"))\n'
+        )
+        assert NodeScanner._parse_ss_output(bad_ss) == []

@@ -12,7 +12,9 @@ Core Interaction Principles
 - CMMI Niveau 5 (Optimizing) & Autonoom Handelen:
     1. Defect Prevention: Elimineer de oorzaak bij de bron (pre-push gates, schema-checks) zodat foutklassen nooit meer terugkeren.
     2. Zo autonoom mogelijke voorstellen en herstelacties formuleren en uitvoeren waar realistisch, zonder te wachten op handmatige sturing bij duidelijke breuken.
-    3. Deterministische closed-loop verificatie: Altijd eerst lokaal bewijzen via tests/linters voordat code wordt gecommit of gepusht.
+    3. Deterministische closed-loop verificatie: Altijd eerst lokaal bewijzen via de volledige testsuite/linters (`./scripts/check_code_quality.sh`, `.venv/bin/pytest`) voordat code wordt gecommit of gepusht.
+    4. Closed-Loop GitHub QC Mandate: Direct na elke `git push` ALTIJD `~/.gemini/config/skills/github-qc/scripts/fetch_github_qc.py --wait --fail-on-alert` uitvoeren. Indien een CI workflow of CodeQL/Dependabot check faalt: direct autonoom de foutlogs ophalen, de oorzaak repareren, lokaal testen, committen & pushen en wachten tot de GitHub Actions run 100% groen (`✅`) is voordat verder wordt gegaan of de beurt wordt afgerond.
+
 - Trust My Gut Feeling and Favor Simplicity (KISS): When I express hesitation or a "stomach ache," treat it as a critical signal to re-evaluate, potentially from first principles. My architectural insights are a primary driver. Default to the simplest possible architecture (Keep It Simple, Stupid) that meets the requirements; avoid over-engineering.
 
 

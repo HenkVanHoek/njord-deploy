@@ -1758,6 +1758,97 @@ def wait_for_proxmox_task(
     raise TimeoutError("Proxmox task timed out.")
 
 
+def build_signal_report_message(
+    results_summary: List[Dict[str, Any]],
+    matrix: List[Tuple[str, str]],
+    passed_count: int,
+    skipped_count: int,
+    failed_count: int,
+) -> str:
+    """Builds a structured, human-readable notification message for Proxmox tests."""
+    if not results_summary:
+        overall_status = "❌ INCOMPLETE / NO TESTS EXECUTED"
+    elif failed_count == 0:
+        overall_status = "✅ ALL SUCCESSFUL"
+    else:
+        overall_status = "❌ FAILED"
+
+    envs_desc = ", ".join(f"{m.upper()}+{e.upper()}" for m, e in matrix)
+    tested_components: List[str] = []
+    for r in results_summary:
+        cid = r.get("component_id")
+        if cid and cid not in tested_components:
+            tested_components.append(cid)
+
+    if len(tested_components) == 1:
+        first_comp, *_ = tested_components
+        header = f"🚢 NjordDeploy Proxmox Test Report: {first_comp}"
+        comp_line = f"Component: {first_comp}\n"
+    elif 1 < len(tested_components) <= 8:
+        header = (
+            f"🚢 NjordDeploy Proxmox Test Report ({len(tested_components)} components)"
+        )
+        comp_line = f"Components: {', '.join(tested_components)}\n"
+    elif len(tested_components) > 8:
+        header = (
+            f"🚢 NjordDeploy Proxmox Test Report ({len(tested_components)} components)"
+        )
+        subset = tested_components[:6]
+        comp_line = (
+            f"Components: {len(tested_components)} items ({', '.join(subset)}, ...)\n"
+        )
+    else:
+        header = "🚢 NjordDeploy Proxmox Test Report"
+        comp_line = ""
+
+    signal_msg = (
+        f"{header}\n"
+        f"{comp_line}"
+        f"Environments: {envs_desc}\n"
+        f"Status: {overall_status}\n"
+        f"Total tested: {len(results_summary)}\n"
+        f"Passed: {passed_count}\n"
+        f"Skipped: {skipped_count}\n"
+        f"Failed: {failed_count}"
+    )
+
+    if passed_count > 0 and len(tested_components) > 1 and passed_count <= 8:
+        passed_list = [
+            f"{r['component_id']}"
+            + (
+                f" ({r.get('mode', 'LXC')}/{r.get('engine', 'DOCKER')})"
+                if len(matrix) > 1
+                else ""
+            )
+            for r in results_summary
+            if r.get("status") == "success"
+        ]
+        signal_msg += f"\nPassed: {', '.join(passed_list)}"
+
+    if skipped_count > 0 and skipped_count <= 8:
+        skipped_list = [
+            f"{r['component_id']}"
+            + (
+                f" ({r.get('mode', 'LXC')}/{r.get('engine', 'DOCKER')})"
+                if len(matrix) > 1
+                else ""
+            )
+            for r in results_summary
+            if r.get("status") == "skipped"
+        ]
+        signal_msg += f"\nSkipped: {', '.join(skipped_list)}"
+
+    if failed_count > 0:
+        failed_list = [
+            f"{r['component_id']} ({r.get('mode', 'LXC')}/{r.get('engine', 'DOCKER')})"
+            for r in results_summary
+            if r.get("status") not in ("success", "skipped")
+        ]
+        signal_msg += f"\nFailed: {', '.join(failed_list)}"
+
+    return signal_msg
+
+
 def send_signal_message(message: str) -> None:
     """Sends a Signal message using the configured Signal API in the environment."""
     signal_api = os.getenv("SIGNAL_API")
@@ -2493,14 +2584,14 @@ def run_environment_tests(
                     detected_version = health.get("detected_version")
                     comp_raw = comp_mgr.get_component_details(comp_id) or {}
                     staging_data = dict(comp_raw.get("staging") or {})
-                    candidate_ver = (
-                        staging_data.get("candidate_version")
-                        or staging_data.get("version")
-                    )
+                    candidate_ver = staging_data.get(
+                        "candidate_version"
+                    ) or staging_data.get("version")
 
-                    # If this test was run for an upstream candidate version from staging,
-                    # the verified candidate version takes precedence over internal base image labels
-                    # (e.g. Nginx/Alpine labels in mpepping/cyberchef or OS labels in drawio).
+                    # If this test was run for an upstream candidate version
+                    # from staging, the verified candidate version takes precedence
+                    # over internal base image labels (e.g. Nginx/Alpine labels in
+                    # mpepping/cyberchef or OS labels in drawio).
                     if candidate_ver and str(candidate_ver).strip():
                         version_to_record = str(candidate_ver).strip()
                     elif (
@@ -2551,7 +2642,7 @@ def run_environment_tests(
                             )
 
                             sync_to_sysopswatch()
-                        except Exception:
+                        except Exception:  # nosec B110
                             pass
                     except Exception as meta_ex:
                         logger.warning(
@@ -2915,31 +3006,13 @@ def run_proxmox_tests(cli_args) -> int:
     logger.info(f"Saved human-readable markdown report to: {report_path}")
 
     # Send Signal Notification
-    if not results_summary:
-        overall_status = "❌ INCOMPLETE / NO TESTS EXECUTED"
-    elif failed_count == 0:
-        overall_status = "✅ ALL SUCCESSFUL"
-    else:
-        overall_status = "❌ FAILED"
-
-    envs_desc = ", ".join(f"{m.upper()}+{e.upper()}" for m, e in matrix)
-    signal_msg = (
-        f"🚢 NjordDeploy Proxmox Test Report\n"
-        f"Environments: {envs_desc}\n"
-        f"Status: {overall_status}\n"
-        f"Total tested: {len(results_summary)}\n"
-        f"Passed: {passed_count}\n"
-        f"Skipped: {skipped_count}\n"
-        f"Failed: {failed_count}"
+    signal_msg = build_signal_report_message(
+        results_summary=results_summary,
+        matrix=matrix,
+        passed_count=passed_count,
+        skipped_count=skipped_count,
+        failed_count=failed_count,
     )
-    if failed_count > 0:
-        failed_list = [
-            f"{r['component_id']} ({r.get('mode', 'LXC')}/{r.get('engine', 'DOCKER')})"
-            for r in results_summary
-            if r["status"] not in ("success", "skipped")
-        ]
-        signal_msg += f"\nFailed: {', '.join(failed_list)}"
-
     send_signal_message(signal_msg)
 
     # Perform AI batch diagnosis if enabled and failures occurred

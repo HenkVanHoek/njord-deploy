@@ -61,3 +61,14 @@ def test_heartbeat_processing(agent_setup):
     assert updated_server["status"] == "online"
     assert updated_server["ip"] == "85.10.20.30"
     assert "Ubuntu 24.04" in updated_server["os_info"]
+
+
+def test_heartbeat_invalid_token(agent_setup):
+    _, agent_mgr, _ = agent_setup
+    success, msg = agent_mgr.process_heartbeat(
+        agent_token="nonexistent_token",
+        telemetry={},
+        client_ip="1.2.3.4",
+    )
+    assert success is False
+    assert "Invalid or unrecognized Agent token" in msg
