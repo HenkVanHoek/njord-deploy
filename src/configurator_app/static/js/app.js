@@ -310,6 +310,38 @@
 
         const savedSubnet = lastSubnetInput || '';
 
+        // CMMI-5: Support Direct Deep Linking to Curated Packages/Stacks
+        let deepLinkBanner = '';
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetPkg = urlParams.get('package') || urlParams.get('pkg') || urlParams.get('stack') || urlParams.get('preset');
+            if (targetPkg === 'loes-ai-studio') {
+                deepLinkBanner = `
+                    <div class="alert alert-primary border-primary d-flex align-items-center mb-4 text-start shadow-sm mx-auto" style="max-width: 500px;" role="alert">
+                        <div class="p-2 bg-primary bg-opacity-10 rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="fa-solid fa-brain text-primary fs-4"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <span class="badge bg-primary text-white mb-1"><i class="fa-solid fa-wand-magic-sparkles me-1"></i>1-Click Turnkey Stack</span>
+                            <h6 class="alert-heading mb-0 fw-bold">Loes.ai Sovereign AI Studio</h6>
+                            <p class="small text-muted mb-0">Open WebUI, LiteLLM en Speaches spraakherkenning worden direct klaargezet voor installatie.</p>
+                        </div>
+                    </div>`;
+            } else if (targetPkg) {
+                deepLinkBanner = `
+                    <div class="alert alert-primary border-primary d-flex align-items-center mb-4 text-start shadow-sm mx-auto" style="max-width: 500px;" role="alert">
+                        <i class="fa-solid fa-layer-group text-primary fs-3 me-3"></i>
+                        <div class="flex-grow-1">
+                            <span class="badge bg-primary text-white mb-1">1-Click Turnkey Stack</span>
+                            <h6 class="alert-heading mb-0 fw-bold">${escapeHTML(targetPkg)}</h6>
+                            <p class="small text-muted mb-0">Stack automatisch voorgeselecteerd via directe link.</p>
+                        </div>
+                    </div>`;
+            }
+        } catch (e) {
+            console.warn('URL deep link parse warning in Step 1:', e);
+        }
+
         wizardBody.innerHTML = `
             <div class="text-center">
                 <div class="mb-4 logo-container">
@@ -325,6 +357,8 @@
                 </div>
                 <h2 class="h4">Network Discovery</h2>
                 <p class="text-muted small">We need to find supported single-board computers (Raspberry Pi, Orange Pi, ODROID, Radxa, or Pine64) on your network to begin.</p>
+
+                ${deepLinkBanner}
 
                 <div class="card card-body bg-light text-start mx-auto mb-4" style="max-width: 500px;">
                     <div class="form-check mb-2">
@@ -1336,6 +1370,31 @@
             };
 
             updatePackageCheckboxes(); // Run once to set initial state
+
+            // CMMI-5: Support Direct Deep Linking to Curated Packages/Stacks (e.g. ?package=loes-ai-studio)
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const targetPkg = urlParams.get('package') || urlParams.get('pkg') || urlParams.get('stack') || urlParams.get('preset');
+                if (targetPkg) {
+                    const targetCard = /** @type {HTMLElement} */ (document.querySelector(`.package-card[data-package-id="${targetPkg}"]`));
+                    if (targetCard) {
+                        const pkgCheckbox = /** @type {HTMLInputElement} */ (document.getElementById(`pkg-${targetPkg}`));
+                        if (pkgCheckbox && !pkgCheckbox.checked) {
+                            targetCard.click();
+                        }
+                        const pkgTabBtn = /** @type {HTMLElement} */ (document.getElementById('v-pills-packages-tab'));
+                        if (pkgTabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                            const tab = new bootstrap.Tab(pkgTabBtn);
+                            tab.show();
+                        }
+                        setTimeout(() => {
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 250);
+                    }
+                }
+            } catch (e) {
+                console.warn('Package deep link error in Step 2:', e);
+            }
 
             // Real-time Marketplace Component Search Logic
             const searchInput = /** @type {HTMLInputElement} */ (document.getElementById('component-search-input'));
@@ -3350,6 +3409,19 @@
         };
 
         if (scanBtn) scanBtn.addEventListener('click', performScan);
+
+        // CMMI-5: Auto-select direct target IP if provided in URL (e.g. ?ip=192.168.178.55)
+        try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetIp = urlParams.get('target') || urlParams.get('ip') || urlParams.get('host');
+            if (targetIp && directRadio && directIpInput) {
+                (/** @type {HTMLInputElement} */ (directRadio)).checked = true;
+                directIpInput.value = targetIp;
+                updateInputs();
+            }
+        } catch (e) {
+            console.warn('URL param parse warning in setupStep1:', e);
+        }
     };
 
     // Modern helper to toggle top horizontal progress bar and small logo visibility

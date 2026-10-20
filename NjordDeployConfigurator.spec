@@ -53,6 +53,8 @@ a = Analysis(
         ('component_templates', 'component_templates'),
         ('ansible', 'ansible'),
         ('docs', 'docs'),
+        ('src/locales', 'src/locales'),
+        ('src/locales', 'locales'),
         ('README.md', '.'),
     ] + stripe_datas,
     hiddenimports=[

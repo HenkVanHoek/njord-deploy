@@ -52,6 +52,8 @@ a = Analysis(
         ('src/configurator_app/static/css', 'src/configurator_app/static/css'),
         ('config', 'config'),
         ('component_templates', 'component_templates'),
+        ('src/locales', 'src/locales'),
+        ('src/locales', 'locales'),
         ('README.md', '.'),
     ] + stripe_datas,
     hiddenimports=[

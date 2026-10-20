@@ -7,6 +7,7 @@ formatting conforming to the KISS architectural principle.
 
 import json
 import logging
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -22,9 +23,23 @@ class TranslationManager:
     """Manages loading, caching, and querying translation dictionaries."""
 
     def __init__(self, locales_dir: Optional[Path] = None) -> None:
-        self.locales_dir = locales_dir or (
-            Path(__file__).resolve().parent.parent / "locales"
-        )
+        if locales_dir:
+            self.locales_dir = locales_dir
+        else:
+            cand1 = Path(__file__).resolve().parent.parent / "locales"
+            meipass = getattr(sys, "_MEIPASS", None)
+            cand2 = Path(meipass) / "src" / "locales" if meipass else None
+            cand3 = Path(meipass) / "locales" if meipass else None
+
+            if cand1.exists():
+                self.locales_dir = cand1
+            elif cand2 and cand2.exists():
+                self.locales_dir = cand2
+            elif cand3 and cand3.exists():
+                self.locales_dir = cand3
+            else:
+                self.locales_dir = cand1
+
         self.translations: Dict[str, Dict[str, str]] = {}
         self.load_translations()
 

@@ -168,6 +168,47 @@ class TestTranslationManager(unittest.TestCase):
         with patch("src.utils.i18n.request", mock_req):
             self.assertEqual(self.mgr.get_locale(), "en")
 
+    def test_pyinstaller_meipass_discovery(self):
+        """Verify PyInstaller sys._MEIPASS bundle discovery."""
+        import sys
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            loc1 = tmp_path / "src" / "locales"
+            loc1.mkdir(parents=True)
+            (loc1 / "en.json").write_text('{"test_key": "from_src_locales"}')
+
+            with patch.object(sys, "_MEIPASS", str(tmp_path), create=True):
+                # Fake Path(__file__) non-existent parent.parent / locales
+                with patch("src.utils.i18n.Path.exists") as mock_exists:
+                    # Make cand1 not exist, cand2 exist
+                    def side_effect(*args, **kwargs):
+                        return bool(args and "src/locales" in str(args[0]))
+
+                    mock_exists.side_effect = side_effect
+                    mgr = TranslationManager()
+                    self.assertIn("src", str(mgr.locales_dir))
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp_path = Path(tmpdir)
+            loc2 = tmp_path / "locales"
+            loc2.mkdir(parents=True)
+            (loc2 / "en.json").write_text('{"test_key": "from_locales"}')
+
+            with patch.object(sys, "_MEIPASS", str(tmp_path), create=True):
+                with patch("src.utils.i18n.Path.exists") as mock_exists:
+
+                    def side_effect2(*args, **kwargs):
+                        s = str(args[0]) if args else ""
+                        return s.endswith("/locales") and "src" not in s
+
+                    mock_exists.side_effect = side_effect2
+                    mgr = TranslationManager()
+                    self.assertIn("locales", str(mgr.locales_dir))
+
 
 if __name__ == "__main__":
     unittest.main()
