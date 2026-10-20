@@ -13,7 +13,24 @@ services:
     environment:
       - "OLLAMA_BASE_URL={{ OLLAMA_BASE_URL | default('http://ollama:11434') }}"
       - "WEBUI_SECRET_KEY={{ WEBUI_SECRET_KEY | default('njorddeploy_secret_key_openwebui_2026') }}"
-      - "OPENAI_API_KEY={{ OPENAI_API_KEY | default('') }}"
+{% if OPENAI_API_BASE_URL %}
+      - "OPENAI_API_BASE_URL={{ OPENAI_API_BASE_URL }}"
+{% elif LITELLM_WEB_PORT or HOSTYOURAI_API_KEY %}
+      - "OPENAI_API_BASE_URL=http://litellm:4000/v1"
+{% endif %}
+{% if OPENAI_API_KEY %}
+      - "OPENAI_API_KEY={{ OPENAI_API_KEY }}"
+{% elif LITELLM_MASTER_KEY %}
+      - "OPENAI_API_KEY={{ LITELLM_MASTER_KEY | default('sk-njorddeploy-litellm-master-key') }}"
+{% endif %}
+{% if AUDIO_STT_ENGINE %}
+      - "AUDIO_STT_ENGINE={{ AUDIO_STT_ENGINE }}"
+{% elif SPEACHES_PORT %}
+      - "AUDIO_STT_ENGINE=openai"
+      - "AUDIO_STT_OPENAI_API_BASE_URL=http://speaches:8000/v1"
+      - "AUDIO_STT_OPENAI_API_KEY=speaches"
+      - "AUDIO_STT_MODEL={{ SPEACHES_MODEL | default('Systran/faster-whisper-small') }}"
+{% endif %}
     networks:
       - njorddeploy_net
     restart: unless-stopped

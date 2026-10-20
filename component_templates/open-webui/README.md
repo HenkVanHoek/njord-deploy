@@ -45,7 +45,13 @@ services:
     environment:
       - "OLLAMA_BASE_URL=http://ollama:11434"
       - "WEBUI_SECRET_KEY=njorddeploy_secret_key_openwebui_2026"
-      - "OPENAI_API_KEY="
+
+      - "OPENAI_API_BASE_URL=openai_api_base_url"
+
+      - "OPENAI_API_KEY=openai_api_key"
+
+      - "AUDIO_STT_ENGINE=audio_stt_engine"
+
     networks:
       - njorddeploy_net
     restart: unless-stopped

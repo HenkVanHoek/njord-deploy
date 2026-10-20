@@ -271,5 +271,197 @@
         },
         "report_file": "PROXMOX_PACKAGE_TESTS_open-webui-ollama_vm_podman_20261020_150445.md",
         "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 19:02:07",
+        "package_id": "loes-ai-studio",
+        "package_name": "Loes.ai Sovereign AI Studio",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "docker",
+        "vmid": 107,
+        "ip": "192.168.178.199",
+        "deployment": "success",
+        "components": {
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.199:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_loes-ai-studio_lxc_docker_20261020_190207.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 19:14:15",
+        "package_id": "loes-ai-studio",
+        "package_name": "Loes.ai Sovereign AI Studio",
+        "status": "success",
+        "mode": "lxc",
+        "engine": "podman",
+        "vmid": 107,
+        "ip": "192.168.178.80",
+        "deployment": "success",
+        "components": {
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.80:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.80:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.80:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_loes-ai-studio_lxc_podman_20261020_191415.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 19:19:15",
+        "package_id": "loes-ai-studio",
+        "package_name": "Loes.ai Sovereign AI Studio",
+        "status": "success",
+        "mode": "vm",
+        "engine": "docker",
+        "vmid": 107,
+        "ip": "192.168.178.151",
+        "deployment": "success",
+        "components": {
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.151:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.151:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.151:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_loes-ai-studio_vm_docker_20261020_191915.md",
+        "error_message": ""
+    },
+    {
+        "timestamp": "2026-10-20 19:26:17",
+        "package_id": "loes-ai-studio",
+        "package_name": "Loes.ai Sovereign AI Studio",
+        "status": "success",
+        "mode": "vm",
+        "engine": "podman",
+        "vmid": 107,
+        "ip": "192.168.178.135",
+        "deployment": "success",
+        "components": {
+            "open-webui": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.135:3000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "litellm": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.135:4000",
+                "first_run_auth_type": "wizard",
+                "first_run_token": null
+            },
+            "speaches": {
+                "running": true,
+                "http_ok": true,
+                "logs_error": false,
+                "error_message": "",
+                "detected_version": null,
+                "screenshot_path": null,
+                "http_url": "http://192.168.178.135:8008",
+                "first_run_auth_type": "none",
+                "first_run_token": null
+            }
+        },
+        "report_file": "PROXMOX_PACKAGE_TESTS_loes-ai-studio_vm_podman_20261020_192617.md",
+        "error_message": ""
     }
 ]

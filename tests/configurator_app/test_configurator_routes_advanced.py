@@ -10,7 +10,7 @@ Component selection validation, and Backup API lifecycle endpoints.
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, mock_open, patch
 
 from configurator_app.app import create_app
 
@@ -51,43 +51,34 @@ class ConfiguratorAdvancedRoutesTestCase(unittest.TestCase):
         self.assertEqual(res_invalid.status_code, 400)
 
         # 2. Raw mode
-        with tempfile.NamedTemporaryFile("w+", delete=False) as tf:
-            tf.write("FOO=bar\n")
-            temp_env = Path(tf.name)
-
-        try:
-            with patch("pathlib.Path.open", create=True) as mock_open:
-                mock_file = MagicMock()
-                mock_open.return_value.__enter__.return_value = mock_file
-                res_raw = self.client.post(
-                    "/api/settings",
-                    json={"mode": "raw", "raw_content": "FOO=baz\nNEW_KEY=123\n"},
-                )
-                self.assertEqual(res_raw.status_code, 200)
-
-            # 3. Form mode invalid settings
-            res_bad_form = self.client.post(
+        with patch("builtins.open", mock_open()):
+            res_raw = self.client.post(
                 "/api/settings",
-                json={"mode": "form", "settings": "not-a-dict"},
+                json={"mode": "raw", "raw_content": "FOO=baz\nNEW_KEY=123\n"},
             )
-            self.assertEqual(res_bad_form.status_code, 400)
+            self.assertEqual(res_raw.status_code, 200)
 
-            # 4. Form mode valid
-            with patch("pathlib.Path.open", create=True) as mock_open:
-                mock_file = MagicMock()
-                mock_file.read.return_value = "FOO=old\n# Comment\nBAR=keep\n"
-                mock_open.return_value.__enter__.return_value = mock_file
-                res_form = self.client.post(
-                    "/api/settings",
-                    json={
-                        "mode": "form",
-                        "settings": {"FOO": "new_val", "ADDED": "extra"},
-                    },
-                )
-                self.assertEqual(res_form.status_code, 200)
-        finally:
-            if temp_env.exists():
-                temp_env.unlink()
+        # 3. Form mode invalid settings
+        res_bad_form = self.client.post(
+            "/api/settings",
+            json={"mode": "form", "settings": "not-a-dict"},
+        )
+        self.assertEqual(res_bad_form.status_code, 400)
+
+        # 4. Form mode valid
+        form_data = "FOO=old\n# Comment\nBAR=keep\n"
+        with (
+            patch.object(Path, "exists", return_value=True),
+            patch("builtins.open", mock_open(read_data=form_data)),
+        ):
+            res_form = self.client.post(
+                "/api/settings",
+                json={
+                    "mode": "form",
+                    "settings": {"FOO": "new_val", "ADDED": "extra"},
+                },
+            )
+            self.assertEqual(res_form.status_code, 200)
 
     def test_scan_pis_tailscale_discovery(self):
         """Verifies /scan-pis with discovery_method='tailscale'."""

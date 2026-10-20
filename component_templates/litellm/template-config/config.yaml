@@ -46,6 +46,19 @@ model_list:
       api_base: os.environ/HOSTYOURAI_API_BASE
       api_key: os.environ/HOSTYOURAI_API_KEY
 
+  # Loes.ai / HostYourAI - Sovereign European Models
+  - model_name: loes
+    litellm_params:
+      model: openai/meta-llama/Meta-Llama-3.1-8B-Instruct
+      api_base: os.environ/HOSTYOURAI_API_BASE
+      api_key: os.environ/HOSTYOURAI_API_KEY
+
+  - model_name: loes-ai/*
+    litellm_params:
+      model: openai/*
+      api_base: os.environ/HOSTYOURAI_API_BASE
+      api_key: os.environ/HOSTYOURAI_API_KEY
+
   # Example: HostYourAI - Dynamic Wildcard Routing (hostyourai/<model_name>)
   - model_name: hostyourai/*
     litellm_params:

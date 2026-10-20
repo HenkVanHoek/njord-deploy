@@ -1,7 +1,7 @@
 # Proxmox Automated Package Testing Report
 
-**Run Timestamp:** 2026-10-20 15:13:32
-**Total Packages Tested:** 5 | **Passed:** 5 | **Failed:** 0
+**Run Timestamp:** 2026-10-20 19:35:40
+**Total Packages Tested:** 9 | **Passed:** 9 | **Failed:** 0
 
 ## Packages Summary Table
 
@@ -12,6 +12,10 @@
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | LXC    | PODMAN | 107   | 192.168.178.199 | success    | **✅ PASS** |
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | VM     | DOCKER | 107   | 192.168.178.199 | success    | **✅ PASS** |
 | `open-webui-ollama` | Open WebUI & Ollama AI Studio | VM     | PODMAN | 107   | 192.168.178.199 | success    | **✅ PASS** |
+| `loes-ai-studio`    | Loes.ai Sovereign AI Studio   | LXC    | DOCKER | 107   | 192.168.178.199 | success    | **✅ PASS** |
+| `loes-ai-studio`    | Loes.ai Sovereign AI Studio   | LXC    | PODMAN | 107   | 192.168.178.80  | success    | **✅ PASS** |
+| `loes-ai-studio`    | Loes.ai Sovereign AI Studio   | VM     | DOCKER | 107   | 192.168.178.151 | success    | **✅ PASS** |
+| `loes-ai-studio`    | Loes.ai Sovereign AI Studio   | VM     | PODMAN | 107   | 192.168.178.135 | success    | **✅ PASS** |
 
 ## Detailed Components Verification Status
 
@@ -157,6 +161,110 @@
 | Component ID | Auth Type | Extracted Setup Key / Token | Status    |
 |:-------------|:----------|:----------------------------|:----------|
 | `ollama`     | `none`    | —                           | ℹ️ NONE   |
+| `open-webui` | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `litellm`    | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `speaches`   | `none`    | —                           | ℹ️ NONE   |
+
+
+---
+
+### Package: `loes-ai-studio` (Loes.ai Sovereign AI Studio)
+- **Target:** LXC | **Engine:** DOCKER
+- **VMID:** 107
+- **IP:** 192.168.178.199
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
+
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+|:-------------|:------------------|:-------------|:----------------------------|:--------|:-------|
+| `open-webui` | Running           | OK           | None                        | unknown | ✅ OK   |
+| `litellm`    | Running           | OK           | None                        | unknown | ✅ OK   |
+| `speaches`   | Running           | OK           | None                        | unknown | ✅ OK   |
+
+#### 🔑 First-Run Credentials & Onboarding Verification:
+
+| Component ID | Auth Type | Extracted Setup Key / Token | Status    |
+|:-------------|:----------|:----------------------------|:----------|
+| `open-webui` | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `litellm`    | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `speaches`   | `none`    | —                           | ℹ️ NONE   |
+
+
+---
+
+### Package: `loes-ai-studio` (Loes.ai Sovereign AI Studio)
+- **Target:** LXC | **Engine:** PODMAN
+- **VMID:** 107
+- **IP:** 192.168.178.80
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
+
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+|:-------------|:------------------|:-------------|:----------------------------|:--------|:-------|
+| `open-webui` | Running           | OK           | None                        | unknown | ✅ OK   |
+| `litellm`    | Running           | OK           | None                        | unknown | ✅ OK   |
+| `speaches`   | Running           | OK           | None                        | unknown | ✅ OK   |
+
+#### 🔑 First-Run Credentials & Onboarding Verification:
+
+| Component ID | Auth Type | Extracted Setup Key / Token | Status    |
+|:-------------|:----------|:----------------------------|:----------|
+| `open-webui` | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `litellm`    | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `speaches`   | `none`    | —                           | ℹ️ NONE   |
+
+
+---
+
+### Package: `loes-ai-studio` (Loes.ai Sovereign AI Studio)
+- **Target:** VM | **Engine:** DOCKER
+- **VMID:** 107
+- **IP:** 192.168.178.151
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
+
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+|:-------------|:------------------|:-------------|:----------------------------|:--------|:-------|
+| `open-webui` | Running           | OK           | None                        | unknown | ✅ OK   |
+| `litellm`    | Running           | OK           | None                        | unknown | ✅ OK   |
+| `speaches`   | Running           | OK           | None                        | unknown | ✅ OK   |
+
+#### 🔑 First-Run Credentials & Onboarding Verification:
+
+| Component ID | Auth Type | Extracted Setup Key / Token | Status    |
+|:-------------|:----------|:----------------------------|:----------|
+| `open-webui` | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `litellm`    | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
+| `speaches`   | `none`    | —                           | ℹ️ NONE   |
+
+
+---
+
+### Package: `loes-ai-studio` (Loes.ai Sovereign AI Studio)
+- **Target:** VM | **Engine:** PODMAN
+- **VMID:** 107
+- **IP:** 192.168.178.135
+- **Deployment:** success
+- **Overall Status:** ✅ PASS
+
+#### Component Health Status:
+
+| Component ID | Container Running | HTTP UI Port | Log Error (Traceback/Fatal) | Version | Status |
+|:-------------|:------------------|:-------------|:----------------------------|:--------|:-------|
+| `open-webui` | Running           | OK           | None                        | unknown | ✅ OK   |
+| `litellm`    | Running           | OK           | None                        | unknown | ✅ OK   |
+| `speaches`   | Running           | OK           | None                        | unknown | ✅ OK   |
+
+#### 🔑 First-Run Credentials & Onboarding Verification:
+
+| Component ID | Auth Type | Extracted Setup Key / Token | Status    |
+|:-------------|:----------|:----------------------------|:----------|
 | `open-webui` | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
 | `litellm`    | `wizard`  | *Onboarding Wizard*         | ℹ️ WIZARD |
 | `speaches`   | `none`    | —                           | ℹ️ NONE   |
