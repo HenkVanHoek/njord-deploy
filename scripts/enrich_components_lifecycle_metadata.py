@@ -23,6 +23,7 @@ import json
 import re
 import shutil
 import sys
+import urllib.parse
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -96,24 +97,25 @@ def detect_github_repo(comp_id: str, comp_data: Dict[str, Any]) -> Optional[str]
     # Check project_url or doc_url
     for url_key in ["project_url", "doc_url"]:
         val = comp_data.get(url_key)
-        if isinstance(val, str) and "github.com/" in val:
-            match = re.search(r"github\.com/([^/]+/[^/#\?]+)", val)
-            if match:
-                repo = match.group(1).rstrip(".git")
-                # Exclude /wiki or /releases from repo slug
-                repo_parts = repo.split("/")
-                return f"{repo_parts[0]}/{repo_parts[1]}"
+        if isinstance(val, str) and val.strip():
+            parsed = urllib.parse.urlparse(val)
+            if parsed.netloc in ("github.com", "www.github.com"):
+                path_parts = [p for p in parsed.path.strip("/").split("/") if p]
+                if len(path_parts) >= 2:
+                    owner, repo = path_parts[0], path_parts[1].rstrip(".git")
+                    return f"{owner}/{repo}"
 
     # Check first_run_info doc_url
     first_run = comp_data.get("first_run_info", {})
     if isinstance(first_run, dict):
         doc_url = first_run.get("doc_url")
-        if isinstance(doc_url, str) and "github.com/" in doc_url:
-            match = re.search(r"github\.com/([^/]+/[^/#\?]+)", doc_url)
-            if match:
-                repo = match.group(1).rstrip(".git")
-                repo_parts = repo.split("/")
-                return f"{repo_parts[0]}/{repo_parts[1]}"
+        if isinstance(doc_url, str) and doc_url.strip():
+            parsed = urllib.parse.urlparse(doc_url)
+            if parsed.netloc in ("github.com", "www.github.com"):
+                path_parts = [p for p in parsed.path.strip("/").split("/") if p]
+                if len(path_parts) >= 2:
+                    owner, repo = path_parts[0], path_parts[1].rstrip(".git")
+                    return f"{owner}/{repo}"
 
     # Check image_name
     img = comp_data.get("image_name", "")
@@ -128,7 +130,7 @@ def detect_github_repo(comp_id: str, comp_data: Dict[str, Any]) -> Optional[str]
             ):
                 # Docker Hub standard owner/image
                 return f"{parts[0]}/{parts[1]}"
-            elif len(parts) >= 3 and "ghcr.io" in parts[0]:
+            elif len(parts) >= 3 and parts[0] == "ghcr.io":
                 return f"{parts[1]}/{parts[2]}"
 
     return None
@@ -138,12 +140,12 @@ def detect_registry_type(image_name: Optional[str]) -> str:
     """Determines registry type (dockerhub, ghcr, quay, etc.)."""
     if not image_name:
         return "dockerhub"
-    img_lower = image_name.lower()
+    img_lower = image_name.lower().strip()
     if img_lower.startswith("ghcr.io/"):
         return "ghcr"
     if img_lower.startswith("quay.io/"):
         return "quay"
-    if img_lower.startswith("gcr.io/") or "pkg.dev" in img_lower:
+    if img_lower.startswith("gcr.io/") or img_lower.startswith("pkg.dev/"):
         return "gcr"
     return "dockerhub"
 

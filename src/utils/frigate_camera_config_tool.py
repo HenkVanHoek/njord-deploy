@@ -5,11 +5,27 @@ import sys
 
 import yaml
 
-# noinspection PyPackageRequirements
-from onvif import ONVIFCamera, ONVIFError
+try:
+    # noinspection PyPackageRequirements
+    from onvif import ONVIFCamera, ONVIFError
+    # noinspection PyPackageRequirements
+    from zeep.exceptions import Fault
+except ImportError:  # pragma: no cover
+    class ONVIFCamera:  # type: ignore
+        """Fallback mock when onvif-zeep is not installed."""
 
-# noinspection PyPackageRequirements
-from zeep.exceptions import Fault
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("onvif-zeep is not installed.")
+
+    class ONVIFError(Exception):  # type: ignore
+        """Fallback exception when onvif-zeep is not installed."""
+
+        pass
+
+    class Fault(Exception):  # type: ignore
+        """Fallback exception when zeep is not installed."""
+
+        pass
 
 from node_scanner import NodeScanner
 
