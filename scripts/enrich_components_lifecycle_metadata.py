@@ -140,12 +140,13 @@ def detect_registry_type(image_name: Optional[str]) -> str:
     """Determines registry type (dockerhub, ghcr, quay, etc.)."""
     if not image_name:
         return "dockerhub"
-    img_lower = image_name.lower().strip()
-    if img_lower.startswith("ghcr.io/"):
+    parts = image_name.lower().strip().split("/")
+    domain = parts[0] if len(parts) > 1 else ""
+    if domain == "ghcr.io":
         return "ghcr"
-    if img_lower.startswith("quay.io/"):
+    if domain == "quay.io":
         return "quay"
-    if img_lower.startswith("gcr.io/") or img_lower.startswith("pkg.dev/"):
+    if domain == "gcr.io" or domain.endswith(".pkg.dev"):
         return "gcr"
     return "dockerhub"
 

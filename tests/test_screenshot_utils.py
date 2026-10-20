@@ -99,9 +99,12 @@ def test_capture_service_screenshot_mocked_flow(tmp_path: Path):
 
     mock_page.screenshot.side_effect = fake_screenshot
 
-    with patch(
-        "playwright.sync_api.sync_playwright",
-        return_value=mock_playwright_ctx,
+    mock_sync_api = MagicMock()
+    mock_sync_api.sync_playwright = MagicMock(return_value=mock_playwright_ctx)
+
+    with patch.dict(
+        sys.modules,
+        {"playwright": MagicMock(), "playwright.sync_api": mock_sync_api},
     ):
         result = capture_service_screenshot("http://192.168.1.100:8080/dashboard", dest)
 
@@ -120,9 +123,12 @@ def test_capture_service_screenshot_not_generated(tmp_path: Path):
     mock_browser = MagicMock()
     mock_playwright_instance.chromium.launch.return_value = mock_browser
 
-    with patch(
-        "playwright.sync_api.sync_playwright",
-        return_value=mock_playwright_ctx,
+    mock_sync_api = MagicMock()
+    mock_sync_api.sync_playwright = MagicMock(return_value=mock_playwright_ctx)
+
+    with patch.dict(
+        sys.modules,
+        {"playwright": MagicMock(), "playwright.sync_api": mock_sync_api},
     ):
         result = capture_service_screenshot("http://example.com:8080", dest)
     assert result is None
@@ -139,7 +145,13 @@ def test_capture_service_screenshot_urlparse_exception(tmp_path: Path):
     mock_browser = MagicMock()
     mock_playwright_instance.chromium.launch.return_value = mock_browser
 
-    with patch("playwright.sync_api.sync_playwright", return_value=mock_playwright_ctx):
+    mock_sync_api = MagicMock()
+    mock_sync_api.sync_playwright = MagicMock(return_value=mock_playwright_ctx)
+
+    with patch.dict(
+        sys.modules,
+        {"playwright": MagicMock(), "playwright.sync_api": mock_sync_api},
+    ):
         with patch(
             "utils.screenshot_utils.urlparse", side_effect=ValueError("Bad URL")
         ):
