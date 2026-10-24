@@ -230,6 +230,7 @@ class ConfiguratorExtendedRoutesTestCase(unittest.TestCase):
                 res_dl = self.client.get(f"/api/backup/download/{valid_fname}")
                 self.assertEqual(res_dl.status_code, 200)
                 self.assertEqual(res_dl.data, b"dummy_tar_gz_content")
+                res_dl.close()
 
     def test_proxmox_routes(self):
         """Verifies Proxmox VE orchestration routes."""
