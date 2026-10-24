@@ -16,19 +16,19 @@ flowchart TD
     B --> C{"Nieuwe versies gevonden?"}
     C -- "Nee" --> D["Einde (Wachtkamer schoon)"]
     C -- "Ja" --> E["Plaats in Wachtkamer (staging: candidate)"]
-    
+
     E --> F["Stap 2: Sorteer Kandidaten (Security Eerst)"]
     F --> G["Stap 3: Testen in 'De Proeftuin' (Proxmox LXC 107 via template 912)"]
-    
+
     G --> H{"Integratietest & HTTP Probe Geslaagd?"}
-    
+
     H -- "JA (Groen)" --> I["Promoveer Template Header & Metadata (tested)"]
     I --> J["Sync & Push: njord-deploy-components (GitHub)"]
     J --> K["Sync & Push: njord-deploy-site (258 SEO Pagina's)"]
     K --> L["Deploy Live VPS: njorddeploy.com (rsync NVMe)"]
     L --> M["Git Commit & Push: njord-deploy (main)"]
     M --> N["📱 Signal Rapport: '✅ X componenten live uitgerold'"]
-    
+
     H -- "NEE (Rood)" --> O["Blokkeer Promotie! Status: needs_review in Wachtkamer"]
     O --> P["Bewaar container logs & HTTP foutdiagnose"]
     P --> Q["🚨 Signal Alarm naar Henk (+31651107603):<br>'Toestemming/begeleiding vereist voor component XYZ'"]
@@ -49,9 +49,9 @@ flowchart TD
 3. **Beveiligde Multi-Repo Synchronisatie:**
    - Synchroniseert atomair met `njord-deploy-components` (inclusief README.md generatie per component).
    - Bouwt automatisch de 258 statische SEO landingspagina's (EN & NL) en de `sitemap.xml` opnieuw in `njord-deploy-site`.
-   - Werkt de live productie VPS (`37.120.176.26`) en lokale standby server (`192.168.178.118`) via `rsync` bij.
+   - Werkt de live productie VPS (`<vps-ip>`) en lokale standby server (`<standby-server-ip>`) via `rsync` bij.
 4. **Signal REST API Integratie:**
-   - Verzendt statusberichten via de lokale Signal CLI REST API op `http://192.168.178.118:8090/v2/send`.
+   - Verzendt statusberichten via de lokale Signal CLI REST API op `http://<signal-server-ip>:8090/v2/send`.
    - Zonder externe cloud-tussenkomst of telemetrie.
 
 ---

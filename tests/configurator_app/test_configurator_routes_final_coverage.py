@@ -1516,13 +1516,15 @@ def test_configurator_app_coverage_boost(configurator_final_env, tmp_path, monke
 
     # 17. Register duplicate email
     from managers.database_manager import DatabaseManager
+
     target_db = DatabaseManager.get_instance()
-    with patch.object(
-        target_db, "get_user_by_username", return_value=None
-    ), patch.object(
-        target_db,
-        "get_user_by_email",
-        return_value={"id": 1, "email": "taken@example.com"},
+    with (
+        patch.object(target_db, "get_user_by_username", return_value=None),
+        patch.object(
+            target_db,
+            "get_user_by_email",
+            return_value={"id": 1, "email": "taken@example.com"},
+        ),
     ):
         res_reg_dup_email = client.post(
             "/register",
@@ -1812,7 +1814,8 @@ def test_configurator_app_coverage_boost(configurator_final_env, tmp_path, monke
     assert res_dup_reg.status_code == 409
     assert "Email address already registered" in res_dup_reg.get_json()["error"]
 
-    # 28. Proxmox create-vm SSH fail, provisioning fail, and crash (2166, 2169, 2190, 2216-2218)
+    # 28. Proxmox create-vm SSH fail, provisioning fail, and crash
+    # (2166, 2169, 2190, 2216-2218)
     mock_pve_vm_ssh = MagicMock()
     mock_pve_vm_ssh.get_next_vmid.return_value = 215
     mock_pve_vm_ssh.get_vm_list.return_value = []
@@ -1923,7 +1926,8 @@ def test_configurator_app_coverage_boost(configurator_final_env, tmp_path, monke
         res_targs_err = client.post("/api/proxmox/list-targets")
         assert res_targs_err.status_code == 500
 
-    # 30. Proxmox get-target-ip and start-target branches (2325, 2328, 2338, 2381, 2384, 2398-2399, 2417-2419)
+    # 30. Proxmox get-target-ip and start-target branches
+    # (2325, 2328, 2338, 2381, 2384, 2398-2399, 2417-2419)
     mock_pve_tip = MagicMock()
     mock_pve_tip.get.return_value = {
         "data": [
@@ -1997,7 +2001,8 @@ def test_configurator_app_coverage_boost(configurator_final_env, tmp_path, monke
         )
         assert res_start_err.status_code == 500
 
-    # 31. Software groups display_name collision (2555) & get-required-variables fallback (2587)
+    # 31. Software groups display_name collision (2555)
+    # & get-required-variables fallback (2587)
     fake_meta_col = {
         "group_rules": {
             "g1": {"name": "SharedName"},

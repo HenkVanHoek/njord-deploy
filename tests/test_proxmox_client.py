@@ -44,6 +44,25 @@ class TestProxmoxClient(unittest.TestCase):
             timeout=15,
         )
 
+    @patch("requests.get")
+    def test_get_version(self, mock_get):
+        """Verify retrieving Proxmox VE server version."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "data": {"version": "8.2.4", "release": "8.2"}
+        }
+        mock_get.return_value = mock_response
+
+        res = self.client.get_version()
+        self.assertEqual(res["data"]["version"], "8.2.4")
+        mock_get.assert_called_once_with(
+            "https://192.168.178.51:8006/api2/json/version",
+            headers=self.client.headers,
+            params=None,
+            verify=False,
+            timeout=15,
+        )
+
     @patch("requests.post")
     def test_clone_vm(self, mock_post):
         """Verify calling the clone endpoint with correct parameters."""

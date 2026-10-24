@@ -45,7 +45,7 @@ services:
     environment:
       - "WHISPER__COMPUTE_TYPE=default"
       - 'PRELOAD_MODELS=["Systran/faster-whisper-small"]'
-      - "API_KEY="
+      - "API_KEY=speaches"
     networks:
       - njorddeploy_net
     restart: unless-stopped

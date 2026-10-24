@@ -8,9 +8,11 @@ import yaml
 try:
     # noinspection PyPackageRequirements
     from onvif import ONVIFCamera, ONVIFError
+
     # noinspection PyPackageRequirements
     from zeep.exceptions import Fault
 except ImportError:  # pragma: no cover
+
     class ONVIFCamera:  # type: ignore
         """Fallback mock when onvif-zeep is not installed."""
 
@@ -20,12 +22,9 @@ except ImportError:  # pragma: no cover
     class ONVIFError(Exception):  # type: ignore
         """Fallback exception when onvif-zeep is not installed."""
 
-        pass
-
     class Fault(Exception):  # type: ignore
         """Fallback exception when zeep is not installed."""
 
-        pass
 
 from node_scanner import NodeScanner
 

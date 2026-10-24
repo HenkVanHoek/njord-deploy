@@ -27,7 +27,7 @@
   - **CPU Profile:** Medium
   - **Storage:** Persistent
 > **Platform Verification Notes:**
-> Tested on Proxmox LXC: docker (1.30.2, 2026-10-20), podman (1.30.0, 2026-09-14); Proxmox VM: docker (1.30.0, 2026-09-14), podman (1.30.0, 2026-09-14).
+> Tested on Proxmox LXC: docker (1.30.4, 2026-10-22), podman (1.30.0, 2026-09-14); Proxmox VM: docker (1.30.0, 2026-09-14), podman (1.30.0, 2026-09-14).
 ---
 
 ## 🚀 Quick Start (Standalone Docker Compose)

@@ -57,6 +57,10 @@ class ProxmoxClient:
         response.raise_for_status()
         return response.json()
 
+    def get_version(self) -> dict:
+        """Retrieves Proxmox VE server version information."""
+        return self.get("version")
+
     def post(self, endpoint: str, data: Optional[Dict[str, Any]] = None) -> dict:
         """Executes a POST request to the Proxmox API."""
         url = f"{self.api_url}/{endpoint.lstrip('/')}"

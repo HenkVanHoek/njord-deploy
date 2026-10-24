@@ -7,6 +7,17 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 ## [Unreleased]
 
 ### Added
+- **Proxmox VE Connection Manager & First-Run Onboarding (v1.0.1)**:
+  - Added interactive Connection Manager modal in the Configurator Web-UI for instant Proxmox hypervisor configuration, live API handshake test (`/api2/json/version`), and secure `.env` persistence without server restart.
+  - Implemented graceful fallback on `/api/proxmox/list-templates` (HTTP 200 with `configured: false`) eliminating cryptical 500 error popups on clean installations.
+  - Exposed local NjordDeploy Ed25519 SSH Public Key in the Connection Manager with 1-click clipboard copy for seamless Proxmox hypervisor / LXC integration (`ssh-copy-id`).
+  - Added `.env.example` template bundled in all release archives (`release.yml`).
+  - Added comprehensive End-to-End First-Run Onboarding simulation test (`tests/configurator_app/test_first_run_onboarding_journey.py`).
+
+### Fixed
+- **Proxmox QEMU Cloud-Init SSH Key Encoding**:
+  - Hardened Cloud-Init SSH public key injection in `create_proxmox_vm` using strict URL percent-encoding (`urllib.parse.quote(pubkey.strip(), safe="")`) to prevent base64 delimiter corruption in authorized_keys.
+
 - **Component Lifecycle Autopilot (`scripts/component_lifecycle_autopilot.py`)**:
   - Autonomous end-to-end component update orchestrator combining upstream release detection, Proxmox VE LXC integration verification in "De Proeftuin", automatic promotion, multi-repo synchronization (`njord-deploy-components`, `njord-deploy-site`), and live VPS deployment (`njorddeploy.com`).
   - **Human-in-the-Loop on Exception (HITL)** architecture: Happy flow (passing tests) automatically promotes templates, regenerates 258 SEO landing pages, pushes to GitHub, deploys via rsync to Netcup NVMe edge server, and sends a concise Signal success report. Exception flow (failing tests or breaking changes) halts promotion, parks candidates in Wachtkamer with status `needs_review`, records diagnostic logs, and dispatches a high-priority Signal escalation alert to Henk (+31651107603) requesting manual guidance.

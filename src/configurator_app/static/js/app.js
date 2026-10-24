@@ -2956,16 +2956,82 @@
                 }
             });
 
-        const loadVmTemplates = async () => {
+        const updateProxmoxUnconfiguredAlerts = (isConfigured) => {
+            const alerts = document.querySelectorAll('.proxmox-unconfigured-alert');
+            alerts.forEach(el => {
+                if (isConfigured) {
+                    el.classList.add('d-none');
+                } else {
+                    el.classList.remove('d-none');
+                }
+            });
+        };
+
+        const updateProxmoxNavBadge = async () => {
+            const badge = document.getElementById('nav-proxmox-status-badge');
+            if (!badge) return;
+            try {
+                const res = await fetchAPI('/api/config/proxmox/status');
+                if (res && res.configured) {
+                    badge.className = 'badge rounded-pill bg-success ms-1';
+                    badge.textContent = 'Connected';
+                    updateProxmoxUnconfiguredAlerts(true);
+                } else {
+                    badge.className = 'badge rounded-pill bg-warning text-dark ms-1';
+                    badge.textContent = 'Not Configured';
+                    updateProxmoxUnconfiguredAlerts(false);
+                }
+            } catch (e) {
+                badge.className = 'badge rounded-pill bg-secondary ms-1';
+                badge.textContent = 'Unknown';
+            }
+        };
+
+        const openProxmoxModal = async () => {
+            const modalEl = document.getElementById('proxmoxConfigModal');
+            if (!modalEl) return;
+            const feedbackEl = document.getElementById('cfg_proxmox_feedback');
+            if (feedbackEl) {
+                feedbackEl.className = 'd-none alert py-2 px-3 small mb-0';
+                feedbackEl.textContent = '';
+            }
+            try {
+                const res = await fetchAPI('/api/config/proxmox/status');
+                if (res) {
+                    const hostInput = /** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_host'));
+                    const nodeInput = /** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_node'));
+                    const userInput = /** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_user'));
+                    const tokIdInput = /** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_token_id'));
+                    const sshKeyArea = /** @type {HTMLTextAreaElement} */ (document.getElementById('cfg_proxmox_ssh_key'));
+                    if (hostInput && res.host) hostInput.value = res.host;
+                    if (nodeInput && res.node) nodeInput.value = res.node;
+                    if (userInput && res.user) userInput.value = res.user;
+                    if (tokIdInput && res.token_id) tokIdInput.value = res.token_id;
+                    if (sshKeyArea && res.public_key) sshKeyArea.value = res.public_key;
+                }
+            } catch (err) {
+                console.error('Error fetching proxmox config status:', err);
+            }
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        };
+
+        const loadVmTemplates = async (forceReload = false) => {
             const templateSelect = document.getElementById('vm_template_select');
             if (!templateSelect) return;
-            if (templateSelect.options.length > 1) return;
+            if (!forceReload && templateSelect.options.length > 1) return;
             templateSelect.innerHTML = '<option value="">-- Loading templates... --</option>';
             try {
                 const res = await fetchAPI('/api/proxmox/list-templates', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'}
                 });
+                if (res.configured === false) {
+                    templateSelect.innerHTML = '<option value="">-- Proxmox not configured (Click to set up) --</option>';
+                    updateProxmoxUnconfiguredAlerts(false);
+                    return;
+                }
+                updateProxmoxUnconfiguredAlerts(true);
                 templateSelect.innerHTML = '<option value="">-- Select Template --</option>';
                 if (res.templates && res.templates.length > 0) {
                     res.templates.forEach(t => {
@@ -2991,7 +3057,163 @@
                     templateManualEl.value = templateSelectEl.value;
                 }
             });
+            templateSelectEl.addEventListener('click', () => {
+                if (templateSelectEl.value === '' && templateSelectEl.options.length === 1 && templateSelectEl.options[0].text.includes('Proxmox not configured')) {
+                    openProxmoxModal();
+                }
+            });
         }
+
+        const navProxmoxBtn = document.getElementById('nav-proxmox-btn');
+        if (navProxmoxBtn) {
+            navProxmoxBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openProxmoxModal();
+            });
+        }
+
+        document.querySelectorAll('.open-proxmox-settings-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                openProxmoxModal();
+            });
+        });
+
+        const btnTestProxmox = document.getElementById('btn_test_proxmox_conn');
+        if (btnTestProxmox) {
+            btnTestProxmox.addEventListener('click', async () => {
+                const feedbackEl = document.getElementById('cfg_proxmox_feedback');
+                const hostVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_host')))?.value.trim();
+                const nodeVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_node')))?.value.trim();
+                const userVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_user')))?.value.trim();
+                const tokIdVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_token_id')))?.value.trim();
+                const tokSecVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_token_secret')))?.value.trim();
+                const verifySsl = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_verify_ssl')))?.checked || false;
+
+                setButtonState(btnTestProxmox, true, {loadingText: 'Testing...'});
+                if (feedbackEl) {
+                    feedbackEl.className = 'alert alert-info py-2 px-3 small mb-0';
+                    feedbackEl.textContent = 'Connecting to Proxmox VE API...';
+                    feedbackEl.classList.remove('d-none');
+                }
+
+                try {
+                    const testRes = await fetchAPI('/api/config/proxmox/test', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            host: hostVal,
+                            node: nodeVal,
+                            user: userVal,
+                            token_id: tokIdVal,
+                            token_secret: tokSecVal,
+                            verify_ssl: verifySsl
+                        })
+                    });
+
+                    if (feedbackEl) {
+                        if (testRes.success) {
+                            feedbackEl.className = 'alert alert-success py-2 px-3 small mb-0';
+                            feedbackEl.innerHTML = `<i class="fa-solid fa-check-circle me-1"></i> ${testRes.message || 'Connection successful!'}`;
+                        } else {
+                            feedbackEl.className = 'alert alert-danger py-2 px-3 small mb-0';
+                            feedbackEl.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> ${testRes.error || 'Connection failed'}`;
+                        }
+                    }
+                } catch (err) {
+                    if (feedbackEl) {
+                        feedbackEl.className = 'alert alert-danger py-2 px-3 small mb-0';
+                        feedbackEl.innerHTML = `<i class="fa-solid fa-circle-exclamation me-1"></i> ${err.message || 'Request failed'}`;
+                    }
+                } finally {
+                    setButtonState(btnTestProxmox, false, {text: '<i class="fa-solid fa-plug me-1"></i> Test Connection'});
+                }
+            });
+        }
+
+        const btnSaveProxmox = document.getElementById('btn_save_proxmox_conn');
+        if (btnSaveProxmox) {
+            btnSaveProxmox.addEventListener('click', async () => {
+                const feedbackEl = document.getElementById('cfg_proxmox_feedback');
+                const hostVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_host')))?.value.trim();
+                const nodeVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_node')))?.value.trim();
+                const userVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_user')))?.value.trim();
+                const tokIdVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_token_id')))?.value.trim();
+                const tokSecVal = (/** @type {HTMLInputElement} */ (document.getElementById('cfg_proxmox_token_secret')))?.value.trim();
+
+                if (!hostVal || !tokIdVal) {
+                    if (feedbackEl) {
+                        feedbackEl.className = 'alert alert-danger py-2 px-3 small mb-0';
+                        feedbackEl.textContent = 'Host URL and Token ID are required.';
+                        feedbackEl.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                setButtonState(btnSaveProxmox, true, {loadingText: 'Saving...'});
+                try {
+                    const saveRes = await fetchAPI('/api/config/proxmox/save', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            host: hostVal,
+                            node: nodeVal,
+                            user: userVal,
+                            token_id: tokIdVal,
+                            token_secret: tokSecVal
+                        })
+                    });
+
+                    if (saveRes.success) {
+                        if (feedbackEl) {
+                            feedbackEl.className = 'alert alert-success py-2 px-3 small mb-0';
+                            feedbackEl.textContent = 'Settings saved successfully! Reloading templates...';
+                        }
+                        updateProxmoxNavBadge();
+                        setTimeout(() => {
+                            const modalEl = document.getElementById('proxmoxConfigModal');
+                            if (modalEl) {
+                                const modal = bootstrap.Modal.getInstance(modalEl);
+                                if (modal) modal.hide();
+                            }
+                            loadVmTemplates(true);
+                        }, 800);
+                    } else {
+                        if (feedbackEl) {
+                            feedbackEl.className = 'alert alert-danger py-2 px-3 small mb-0';
+                            feedbackEl.textContent = saveRes.error || 'Failed to save settings.';
+                        }
+                    }
+                } catch (err) {
+                    if (feedbackEl) {
+                        feedbackEl.className = 'alert alert-danger py-2 px-3 small mb-0';
+                        feedbackEl.textContent = err.message || 'Failed to save settings.';
+                    }
+                } finally {
+                    setButtonState(btnSaveProxmox, false, {text: '<i class="fa-solid fa-floppy-disk me-1"></i> Save & Apply'});
+                }
+            });
+        }
+
+        const btnCopySsh = document.getElementById('btn_copy_ssh_key');
+        if (btnCopySsh) {
+            btnCopySsh.addEventListener('click', () => {
+                const sshKeyArea = /** @type {HTMLTextAreaElement} */ (document.getElementById('cfg_proxmox_ssh_key'));
+                if (sshKeyArea && sshKeyArea.value) {
+                    navigator.clipboard.writeText(sshKeyArea.value).then(() => {
+                        const originalHtml = btnCopySsh.innerHTML;
+                        btnCopySsh.innerHTML = '<i class="fa-solid fa-check text-success me-1"></i> Copied!';
+                        setTimeout(() => {
+                            btnCopySsh.innerHTML = originalHtml;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Clipboard copy failed:', err);
+                    });
+                }
+            });
+        }
+
+        updateProxmoxNavBadge();
 
         const methodHelpMap = {
             auto: {

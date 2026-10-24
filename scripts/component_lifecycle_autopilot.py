@@ -162,7 +162,7 @@ def get_candidates(
         from scripts.watch_components_lifecycle import is_security_component
     except ImportError:
 
-        def is_security_component(cid: str, cdata: Dict[str, Any]) -> bool:
+        def is_security_component(comp_id: str, comp_data: Dict[str, Any]) -> bool:
             return False
 
     for comp_id, comp_meta in components.items():
@@ -242,7 +242,9 @@ def run_proeftuin_test(
                     res_data = json.load(rf)
                 comp_records = [r for r in res_data if r.get("component_id") == comp_id]
                 if comp_records:
-                    first_record = next(iter(reversed(comp_records)), {})
+                    first_record: Dict[str, Any] = next(
+                        iter(reversed(comp_records)), {}
+                    )
                     is_http_ok = first_record.get("http_ok")
                     is_success = first_record.get("status") == "success"
                     if not is_http_ok or not is_success:
@@ -297,7 +299,9 @@ def promote_verified_candidate(comp_id: str, version: str) -> None:
         try:
             from scripts.watch_components_lifecycle import promote_candidate
         except ImportError:
-            from watch_components_lifecycle import promote_candidate
+            from watch_components_lifecycle import (  # type: ignore[no-redef]
+                promote_candidate,
+            )
 
         promote_candidate(comp_id, target_version=version)
         logger.info("Promoted candidate '%s' (v%s) to operational.", comp_id, version)

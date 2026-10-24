@@ -387,7 +387,7 @@ def test_schema_parity_detects_missing_column(tmp_path: Path):
     }
 
     with pytest.raises(AssertionError) as exc_info:
-        verify_schema_parity(conn, drift_schema)
+        verify_schema_parity(conn, drift_schema)  # type: ignore[arg-type]
     assert "Missing columns: {'password_hash'}" in str(exc_info.value)
     conn.close()
 
@@ -420,7 +420,7 @@ def test_schema_parity_detects_type_mismatch(tmp_path: Path):
     }
 
     with pytest.raises(AssertionError) as exc_info:
-        verify_schema_parity(conn, drift_schema)
+        verify_schema_parity(conn, drift_schema)  # type: ignore[arg-type]
     assert "Type mismatch on 'users.username'" in str(exc_info.value)
     conn.close()
 
@@ -469,7 +469,7 @@ def test_schema_parity_detects_foreign_key_drift(tmp_path: Path):
     }
 
     with pytest.raises(AssertionError) as exc_info:
-        verify_schema_parity(conn, drift_schema)
+        verify_schema_parity(conn, drift_schema)  # type: ignore[arg-type]
     assert "Missing or mismatched Foreign Key on 'servers'" in str(exc_info.value)
     conn.close()
 

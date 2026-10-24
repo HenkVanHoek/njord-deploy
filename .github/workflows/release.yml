@@ -59,6 +59,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifact
+          cp .env.example artifact/.env.example
           if [ "${{ matrix.os-name }}" = "Windows" ]; then
             cp dist/NjordDeployConfigurator.exe artifact/NjordDeployConfigurator.exe
             cp dist/NjordDeployEditor.exe artifact/NjordDeployEditor.exe

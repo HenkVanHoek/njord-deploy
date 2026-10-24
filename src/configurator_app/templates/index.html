@@ -225,6 +225,7 @@
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-start-tour-btn" title="Start Interactive Quick Tour"><i class="fa-solid fa-compass me-1"></i> {{ _('nav_quick_tour') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-quick-start-btn" title="View Quick Start Guide"><i class="fa-solid fa-graduation-cap me-1"></i> {{ _('nav_quick_start') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="#" id="nav-backup-btn" data-bs-toggle="modal" data-bs-target="#backupRestoreModal"><i class="fa-solid fa-box-archive me-1"></i> {{ _('nav_backups') }}</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" id="nav-proxmox-btn" title="Proxmox VE Connection Manager"><i class="fa-solid fa-server me-1"></i> Proxmox <span class="badge rounded-pill bg-secondary ms-1" id="nav-proxmox-status-badge">...</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="/settings"><i class="fa-solid fa-gear me-1"></i> {{ _('nav_settings') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="/help"><i class="fa-solid fa-circle-question me-1"></i> {{ _('nav_help') }}</a></li>
                 <li class="nav-item"><a class="nav-link" href="/api/docs" target="_blank"><i class="fa-solid fa-code me-1"></i> {{ _('nav_api_docs') }}</a></li>
@@ -382,6 +383,13 @@
                             </label>
                             <div class="form-text mt-0 mb-2">{{ _('wizard_method_proxmox_lxc_desc') }}</div>
                             <div class="mt-2 d-none" id="proxmox_lxc_input_container">
+                                <div class="alert alert-warning py-2 px-3 small d-none proxmox-unconfigured-alert mb-2">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <span>Proxmox VE is not connected yet.</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 fw-bold text-decoration-none open-proxmox-settings-btn">
+                                        <i class="fa-solid fa-gear me-1"></i>Configure Connection
+                                    </button>
+                                </div>
                                 <div class="row g-2">
                                     <div class="col-sm-12">
                                         <label for="lxc_hostname" class="form-label small mb-1">Container Name (Hostname)</label>
@@ -413,6 +421,13 @@
                             </label>
                             <div class="form-text mt-0 mb-2">{{ _('wizard_method_proxmox_vm_desc') }}</div>
                             <div class="mt-2 d-none" id="proxmox_vm_input_container">
+                                <div class="alert alert-warning py-2 px-3 small d-none proxmox-unconfigured-alert mb-2">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <span>Proxmox VE is not connected yet.</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 fw-bold text-decoration-none open-proxmox-settings-btn">
+                                        <i class="fa-solid fa-gear me-1"></i>Configure Connection
+                                    </button>
+                                </div>
                                 <div class="row g-2">
                                     <div class="col-sm-6">
                                         <label for="vm_hostname" class="form-label small mb-1">VM Name (Hostname)</label>
@@ -453,6 +468,13 @@
                             </label>
                             <div class="form-text mt-0 mb-2">{{ _('wizard_method_proxmox_existing_desc') }}</div>
                             <div class="mt-2 d-none" id="proxmox_existing_container">
+                                <div class="alert alert-warning py-2 px-3 small d-none proxmox-unconfigured-alert mb-2">
+                                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                                    <span>Proxmox VE is not connected yet.</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 ms-1 fw-bold text-decoration-none open-proxmox-settings-btn">
+                                        <i class="fa-solid fa-gear me-1"></i>Configure Connection
+                                    </button>
+                                </div>
                                 <div class="mb-2">
                                     <button type="button" class="btn btn-sm btn-outline-secondary" id="refresh-proxmox-targets-btn">
                                         <i class="fa-solid fa-sync me-1"></i> Load/Refresh Targets
@@ -728,6 +750,91 @@
                 <button type="button" class="btn btn-primary px-4" id="onboard-save-btn">
                     <i class="fa-solid fa-check me-1"></i> {{ _('onboard_btn_apply') }}
                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Proxmox Connection Manager Modal -->
+<div class="modal fade" id="proxmoxConfigModal" tabindex="-1" aria-labelledby="proxmoxConfigModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content shadow-lg border-0" style="background-color: var(--glass-bg, #ffffff); backdrop-filter: blur(16px); border: 1px solid var(--glass-border, #e2e8f0);">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold text-primary" id="proxmoxConfigModalLabel">
+                    <i class="fa-solid fa-server me-2"></i> Proxmox VE Connection Manager
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-muted mb-3">
+                    Connect NjordDeploy to your Proxmox VE hypervisor for automated VM/LXC provisioning, cloud-init orchestration, and template discovery.
+                </p>
+
+                <div class="mb-3">
+                    <label for="cfg_proxmox_host" class="form-label small fw-bold">Proxmox Host URL</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text"><i class="fa-solid fa-globe"></i></span>
+                        <input type="text" class="form-control" id="cfg_proxmox_host" placeholder="https://192.168.1.100:8006">
+                    </div>
+                    <div class="form-text small">Full REST API URL to your Proxmox server or cluster node (port 8006).</div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="cfg_proxmox_node" class="form-label small fw-bold">Target Node Name</label>
+                        <input type="text" class="form-control form-control-sm" id="cfg_proxmox_node" value="pve" placeholder="pve">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="cfg_proxmox_user" class="form-label small fw-bold">API User / Realm</label>
+                        <input type="text" class="form-control form-control-sm" id="cfg_proxmox_user" value="root@pam" placeholder="root@pam">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cfg_proxmox_token_id" class="form-label small fw-bold">API Token ID</label>
+                    <input type="text" class="form-control form-control-sm" id="cfg_proxmox_token_id" placeholder="root@pam!njorddeploy">
+                    <div class="form-text small">Token name created under Proxmox VE -> Permissions -> API Tokens.</div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="cfg_proxmox_token_secret" class="form-label small fw-bold">API Token Secret (UUID)</label>
+                    <input type="password" class="form-control form-control-sm" id="cfg_proxmox_token_secret" placeholder="••••••••••••••••••••••••••••••••">
+                    <div class="form-text small" id="cfg_token_secret_hint">Leave empty to keep existing configured secret token.</div>
+                </div>
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="cfg_proxmox_verify_ssl">
+                    <label class="form-check-label small" for="cfg_proxmox_verify_ssl">Verify SSL Certificates (uncheck for self-signed Proxmox certificates)</label>
+                </div>
+
+                <!-- SSH Public Key Section -->
+                <div class="p-3 bg-light rounded border mb-3" style="background-color: rgba(0,0,0,0.03);">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label small fw-bold mb-0">
+                            <i class="fa-solid fa-key me-1 text-primary"></i> NjordDeploy SSH Public Key (Ed25519)
+                        </label>
+                        <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2 small" id="btn_copy_ssh_key">
+                            <i class="fa-regular fa-copy me-1"></i> Copy Key
+                        </button>
+                    </div>
+                    <p class="text-muted small mb-2" style="font-size: 0.78rem;">
+                        This key is injected into newly cloned VMs via Cloud-Init. For LXC Docker installations, add it to your Proxmox host via: <code>ssh-copy-id root@&lt;proxmox-ip&gt;</code>
+                    </p>
+                    <textarea class="form-control font-monospace small" id="cfg_proxmox_ssh_key" rows="2" readonly style="font-size: 0.75rem;"></textarea>
+                </div>
+
+                <div id="cfg_proxmox_feedback" class="d-none alert py-2 px-3 small mb-0"></div>
+            </div>
+            <div class="modal-footer border-top d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" id="btn_test_proxmox_conn">
+                    <i class="fa-solid fa-plug me-1"></i> Test Connection
+                </button>
+                <div>
+                    <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" id="btn_save_proxmox_conn">
+                        <i class="fa-solid fa-floppy-disk me-1"></i> Save &amp; Apply
+                    </button>
+                </div>
             </div>
         </div>
     </div>

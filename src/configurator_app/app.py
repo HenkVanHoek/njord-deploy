@@ -1866,6 +1866,239 @@ def create_app(test_config=None):
                 500,
             )
 
+    @flask_app.route("/api/config/proxmox/status", methods=["GET"])
+    def get_proxmox_config_status():
+        """Returns Proxmox configuration status and public SSH key without secrets."""
+        from managers.ssh_manager import SSHManager
+
+        host = os.getenv("PROXMOX_HOST", "")
+        node = os.getenv("PROXMOX_NODE", "pve")
+        user = os.getenv("PROXMOX_USER", "root@pam")
+        token_id = os.getenv("PROXMOX_TOKEN_ID", "")
+        token_secret = os.getenv("PROXMOX_TOKEN_SECRET", "")
+
+        is_configured = bool(host and token_id and token_secret)
+        check_live = request.args.get("check", "false").lower() == "true"
+        connection_healthy = False
+
+        if is_configured and check_live:
+            try:
+                from utils.proxmox_client import ProxmoxClient
+
+                client = ProxmoxClient(
+                    host, user, token_id, token_secret, verify_ssl=False
+                )
+                client.get("version")
+                connection_healthy = True
+            except Exception as e:
+                logging.warning(f"Proxmox live check failed: {e}")
+                connection_healthy = False
+        elif is_configured:
+            connection_healthy = True
+
+        public_key = ""
+        try:
+            dummy_manager = SSHManager(
+                hostname="localhost", username="root", password=""
+            )  # nosec B106
+            public_key = dummy_manager.get_public_key_string()
+        except Exception as ssh_err:
+            logging.warning(f"Could not retrieve local public key: {ssh_err}")
+
+        return (
+            jsonify(
+                {
+                    "configured": is_configured,
+                    "host": host,
+                    "node": node,
+                    "user": user,
+                    "token_id": token_id,
+                    "has_token_secret": bool(token_secret),
+                    "connection_healthy": connection_healthy,
+                    "public_key": public_key,
+                }
+            ),
+            200,
+        )
+
+    @flask_app.route("/api/config/proxmox/test", methods=["POST"])
+    def test_proxmox_connection():
+        """Performs a live handshake with Proxmox VE API to test credentials."""
+        from utils.proxmox_client import ProxmoxClient
+
+        data = request.get_json() or {}
+        raw_host = data.get("host")
+        host = (
+            str(raw_host).strip()
+            if raw_host is not None
+            else os.getenv("PROXMOX_HOST", "").strip()
+        )
+
+        raw_user = data.get("user")
+        user = (
+            str(raw_user).strip()
+            if raw_user is not None
+            else os.getenv("PROXMOX_USER", "root@pam").strip()
+        )
+
+        raw_tok_id = data.get("token_id")
+        token_id = (
+            str(raw_tok_id).strip()
+            if raw_tok_id is not None
+            else os.getenv("PROXMOX_TOKEN_ID", "").strip()
+        )
+
+        raw_tok_sec = data.get("token_secret")
+        token_secret = (
+            str(raw_tok_sec).strip()
+            if raw_tok_sec is not None
+            else os.getenv("PROXMOX_TOKEN_SECRET", "").strip()
+        )
+
+        raw_node = data.get("node")
+        node = (
+            str(raw_node).strip()
+            if raw_node is not None
+            else os.getenv("PROXMOX_NODE", "pve").strip()
+        )
+        verify_ssl = bool(data.get("verify_ssl", False))
+
+        if not host or not token_id or not token_secret:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": ("Host URL, Token ID en Token Secret zijn verplicht."),
+                    }
+                ),
+                400,
+            )
+
+        try:
+            client = ProxmoxClient(
+                host=host,
+                user=user,
+                token_id=token_id,
+                token_secret=token_secret,
+                verify_ssl=verify_ssl,
+            )
+            res = client.get_version()
+            version_info = res.get("data", {}) if isinstance(res, dict) else {}
+            pve_version = (
+                version_info.get("version", "onbekend")
+                if isinstance(version_info, dict)
+                else "onbekend"
+            )
+            return (
+                jsonify(
+                    {
+                        "success": True,
+                        "pve_version": pve_version,
+                        "message": (
+                            f"Verbinding met Proxmox node '{node}' "
+                            f"geslaagd (PVE v{pve_version})."
+                        ),
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            logging.error(f"Proxmox test connection failed: {e}")
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": f"Verbinding mislukt: {e}",
+                    }
+                ),
+                200,
+            )
+
+    @flask_app.route("/api/config/proxmox/save", methods=["POST"])
+    def save_proxmox_configuration():
+        """Persists Proxmox credentials to .env and updates process environment."""
+        data = request.get_json() or {}
+        host = str(data.get("host", "")).strip()
+        user = str(data.get("user", "root@pam")).strip()
+        token_id = str(data.get("token_id", "")).strip()
+        token_secret = str(data.get("token_secret", "")).strip()
+        node = str(data.get("node", "pve")).strip()
+
+        if not host or not token_id:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Proxmox Host URL en Token ID zijn verplicht.",
+                    }
+                ),
+                400,
+            )
+
+        env_updates = {
+            "PROXMOX_HOST": host,
+            "PROXMOX_USER": user,
+            "PROXMOX_TOKEN_ID": token_id,
+            "PROXMOX_NODE": node,
+        }
+        if token_secret:
+            env_updates["PROXMOX_TOKEN_SECRET"] = token_secret
+
+        env_path = Path(__file__).resolve().parent.parent.parent / ".env"
+        try:
+            current_content = ""
+            if env_path.exists():
+                with open(env_path, "r", encoding="utf-8") as f:
+                    current_content = f.read()
+
+            lines = current_content.splitlines()
+            updated_keys = set()
+            new_lines = []
+
+            for line in lines:
+                stripped = line.strip()
+                if stripped and not stripped.startswith("#") and "=" in stripped:
+                    key, _ = stripped.split("=", 1)
+                    key = key.strip()
+                    if key in env_updates:
+                        val_str = str(env_updates[key])
+                        new_lines.append(f'{key}="{val_str}"')
+                        updated_keys.add(key)
+                        os.environ[key] = val_str
+                        continue
+                new_lines.append(line)
+
+            for key, val in env_updates.items():
+                if key not in updated_keys:
+                    val_str = str(val)
+                    new_lines.append(f'{key}="{val_str}"')
+                    os.environ[key] = val_str
+
+            new_content = "\n".join(new_lines) + "\n"
+            with open(env_path, "w", encoding="utf-8") as f:
+                f.write(new_content)
+
+            return (
+                jsonify(
+                    {
+                        "success": True,
+                        "message": "Proxmox instellingen succesvol opgeslagen.",
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            logging.error(f"Failed to save Proxmox config: {e}", exc_info=True)
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "error": "Opslaan van Proxmox configuratie mislukt.",
+                    }
+                ),
+                500,
+            )
+
     @flask_app.route("/api/proxmox/list-templates", methods=["POST"])
     def list_proxmox_templates():
         from utils.proxmox_client import ProxmoxClient
@@ -1880,13 +2113,20 @@ def create_app(test_config=None):
             return (
                 jsonify(
                     {
+                        "success": False,
+                        "configured": False,
+                        "templates": [],
                         "error": (
                             "Proxmox API token credentials "
                             "are not configured in your .env file."
-                        )
+                        ),
+                        "message": (
+                            "Proxmox is nog niet geconfigureerd. Voeg je Proxmox "
+                            "URL en API-token toe in de Instellingen."
+                        ),
                     }
                 ),
-                500,
+                200,
             )
 
         try:
@@ -2097,7 +2337,7 @@ def create_app(test_config=None):
                 "memory": memory,
                 "ciuser": username,
                 "cipassword": password,
-                "sshkeys": urllib.parse.quote(pubkey),
+                "sshkeys": urllib.parse.quote(pubkey.strip(), safe=""),
                 "ipconfig0": "ip=dhcp",
                 "agent": "enabled=1",
                 "cpu": "host",

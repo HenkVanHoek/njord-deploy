@@ -95,11 +95,14 @@ def ensure_clock_synchronized() -> None:
 def send_signal_alert(message: str) -> bool:
     """Dispatches a notification via Signal REST API."""
     import urllib.request
-    payload = json.dumps({
-        "message": message,
-        "number": SIGNAL_SENDER,
-        "recipients": [SIGNAL_RECIPIENT],
-    }).encode("utf-8")
+
+    payload = json.dumps(
+        {
+            "message": message,
+            "number": SIGNAL_SENDER,
+            "recipients": [SIGNAL_RECIPIENT],
+        }
+    ).encode("utf-8")
     req = urllib.request.Request(
         SIGNAL_API_URL,
         data=payload,
@@ -156,7 +159,9 @@ def sync_site_and_components(commit_msg: Optional[str] = None) -> bool:
 
 def deploy_static_site_to_vps() -> bool:
     """Rsyncs static site files from njord-deploy-site to live VPS and standby."""
-    site_static = PROJECT_ROOT.parent / "njord-deploy-site" / "src" / "site_app" / "static"
+    site_static = (
+        PROJECT_ROOT.parent / "njord-deploy-site" / "src" / "site_app" / "static"
+    )
     if not site_static.exists():
         logger.error("Site static directory niet gevonden: %s", site_static)
         return False
@@ -190,7 +195,10 @@ def deploy_static_site_to_vps() -> bool:
             check=False,
         )
         if ping_res.returncode == 0:
-            logger.info("Synchroniseren van standby mirror op lokale server (%s)...", STANDBY_HOST)
+            logger.info(
+                "Synchroniseren van standby mirror op lokale server (%s)...",
+                STANDBY_HOST,
+            )
             standby_cmd = [
                 "rsync",
                 "-avz",
@@ -218,6 +226,7 @@ def sync_to_sysops_cockpit() -> None:
     """Copies metadata to Sysops Cockpit on LXC 135."""
     try:
         from scripts.watch_components_lifecycle import sync_to_sysopswatch
+
         sync_to_sysopswatch()
     except Exception:
         pass
@@ -247,10 +256,12 @@ def main() -> int:
     # 1. Klokborging
     ensure_clock_synchronized()
 
-    # 2. Synchroniseer externe repositories (njord-deploy-components & njord-deploy-site)
+    # 2. Synchroniseer externe repos (components & site)
     sync_ok = sync_site_and_components(args.message)
     if not sync_ok:
-        logger.warning("Waarschuwing: Synchronisatiescript meldde een fout, maar proces gaat door...")
+        logger.warning(
+            "Waarschuwing: Synchronisatiescript meldde een fout; proces gaat door..."
+        )
 
     # 3. Deploy statische site naar live VPS edge & standby mirror
     vps_ok = deploy_static_site_to_vps()
@@ -265,7 +276,7 @@ def main() -> int:
             "• **Status:** Live & Operationeel\n"
             "• **Website:** https://njorddeploy.com\n"
             "• **Edges:** Netcup VPS (`37.120.176.26`) & Standby Mirror (`.118`)\n"
-            "• **Componenten & Stacks:** Alle 258 SEO-pagina's (NL & EN) en sitemaps zijn actueel.\n"
+            "• **Componenten & Stacks:** Alle 258 SEO-pagina's (NL & EN) actueel.\n"
             "• **Cockpit Wachtkamer:** Gesynchroniseerd."
         )
         send_signal_alert(msg)

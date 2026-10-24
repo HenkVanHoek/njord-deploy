@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "1.30.2"
-# platform_notes: "Tested on Proxmox LXC: docker (1.30.2, 2026-10-20), podman (1.30.0, 2026-09-14); Proxmox VM: docker (1.30.0, 2026-09-14), podman (1.30.0, 2026-09-14)."
+# last_tested_version: "1.30.4"
+# platform_notes: "Tested on Proxmox LXC: docker (1.30.4, 2026-10-22), podman (1.30.0, 2026-09-14); Proxmox VM: docker (1.30.0, 2026-09-14), podman (1.30.0, 2026-09-14)."
 # breaking_changes: none
 services:
   freshrss:

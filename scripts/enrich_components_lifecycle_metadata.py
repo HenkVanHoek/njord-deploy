@@ -20,7 +20,6 @@ Usage:
 
 import argparse
 import json
-import re
 import shutil
 import sys
 import urllib.parse
@@ -90,7 +89,7 @@ KNOWN_UPSTREAM_REPOS = {
 
 
 def detect_github_repo(comp_id: str, comp_data: Dict[str, Any]) -> Optional[str]:
-    """Detects GitHub repository slug (owner/repo) using known mappings or heuristics."""
+    """Detects GitHub repository slug using known mappings or heuristics."""
     if comp_id in KNOWN_UPSTREAM_REPOS:
         return KNOWN_UPSTREAM_REPOS[comp_id]
 
@@ -208,14 +207,16 @@ def build_lifecycle_metadata(comp_id: str, comp_data: Dict[str, Any]) -> Dict[st
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Enrich component metadata with release_track, upstream, and staging blocks."
+        description=(
+            "Enrich component metadata with release_track, upstream, and staging."
+        )
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "--preview",
         action="store_true",
         default=True,
-        help="Generate preview file (components_metadata_lifecycle_preview.json) without touching production.",
+        help="Generate preview file without touching production.",
     )
     group.add_argument(
         "--dry-run",
@@ -225,7 +226,7 @@ def main():
     group.add_argument(
         "--apply",
         action="store_true",
-        help="Apply changes directly to production config/components_metadata.json with backup.",
+        help="Apply changes directly to production metadata with backup.",
     )
     args = parser.parse_args()
 

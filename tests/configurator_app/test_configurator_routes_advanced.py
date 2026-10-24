@@ -189,7 +189,8 @@ class ConfiguratorAdvancedRoutesTestCase(unittest.TestCase):
         # 1. Missing credentials
         with patch.dict("os.environ", {"PROXMOX_TOKEN_ID": ""}):
             res_list_no_token = self.client.post("/api/proxmox/list-templates", json={})
-            self.assertEqual(res_list_no_token.status_code, 500)
+            self.assertEqual(res_list_no_token.status_code, 200)
+            self.assertFalse(res_list_no_token.get_json().get("configured"))
 
             res_vm_no_token = self.client.post(
                 "/api/proxmox/create-vm", json={"template_vmid": 900}
@@ -512,3 +513,102 @@ class ConfiguratorAdvancedRoutesTestCase(unittest.TestCase):
                 json={**payload, "backup_filename": "backup.tar.gz"},
             )
             self.assertEqual(res_restore.status_code, 200)
+
+    def test_proxmox_config_endpoints(self):
+        """Verifies Proxmox status, test, and save endpoints."""
+        # 1. Status: unconfigured
+        with patch.dict(
+            "os.environ",
+            {
+                "PROXMOX_HOST": "",
+                "PROXMOX_TOKEN_ID": "",
+                "PROXMOX_TOKEN_SECRET": "",
+            },
+        ):
+            res_status = self.client.get("/api/config/proxmox/status")
+            self.assertEqual(res_status.status_code, 200)
+            data_status = res_status.get_json()
+            self.assertFalse(data_status["configured"])
+            self.assertFalse(data_status["has_token_secret"])
+
+        # 2. Status: configured with live check
+        with (
+            patch.dict(
+                "os.environ",
+                {
+                    "PROXMOX_HOST": "https://192.168.1.100:8006",
+                    "PROXMOX_TOKEN_ID": "token",
+                    "PROXMOX_TOKEN_SECRET": "secret",
+                },
+            ),
+            patch("utils.proxmox_client.ProxmoxClient") as mock_pve_class,
+        ):
+            mock_client = mock_pve_class.return_value
+            mock_client.get.return_value = {"data": {"version": "8.2.4"}}
+            res_live = self.client.get("/api/config/proxmox/status?check=true")
+            self.assertEqual(res_live.status_code, 200)
+            self.assertTrue(res_live.get_json()["configured"])
+            self.assertTrue(res_live.get_json()["connection_healthy"])
+
+        # 3. Test: missing credentials
+        res_test_bad = self.client.post(
+            "/api/config/proxmox/test",
+            json={"host": "", "token_id": "", "token_secret": ""},
+        )
+        self.assertEqual(res_test_bad.status_code, 400)
+
+        # 4. Test: success
+        with patch("utils.proxmox_client.ProxmoxClient") as mock_pve_class:
+            mock_client = mock_pve_class.return_value
+            mock_client.get_version.return_value = {
+                "data": {"version": "8.2.4", "release": "8.2"}
+            }
+            res_test_ok = self.client.post(
+                "/api/config/proxmox/test",
+                json={
+                    "host": "https://192.168.1.100:8006",
+                    "user": "root@pam",
+                    "token_id": "root@pam!token",
+                    "token_secret": "secret",
+                    "node": "pve",
+                },
+            )
+            self.assertEqual(res_test_ok.status_code, 200)
+            self.assertTrue(res_test_ok.get_json()["success"])
+            self.assertEqual(res_test_ok.get_json()["pve_version"], "8.2.4")
+
+        # 5. Test: connection exception
+        with patch("utils.proxmox_client.ProxmoxClient") as mock_pve_class:
+            mock_client = mock_pve_class.return_value
+            mock_client.get_version.side_effect = RuntimeError("Connection timeout")
+            res_test_fail = self.client.post(
+                "/api/config/proxmox/test",
+                json={
+                    "host": "https://192.168.1.100:8006",
+                    "token_id": "tok",
+                    "token_secret": "sec",
+                },
+            )
+            self.assertEqual(res_test_fail.status_code, 200)
+            self.assertFalse(res_test_fail.get_json()["success"])
+
+        # 6. Save: missing required fields
+        res_save_bad = self.client.post(
+            "/api/config/proxmox/save",
+            json={"host": "", "token_id": ""},
+        )
+        self.assertEqual(res_save_bad.status_code, 400)
+
+        # 7. Save: success with mock open
+        with patch("builtins.open", unittest.mock.mock_open(read_data="FOO=bar\n")):
+            res_save_ok = self.client.post(
+                "/api/config/proxmox/save",
+                json={
+                    "host": "https://192.168.1.100:8006",
+                    "token_id": "root@pam!tok",
+                    "token_secret": "new_secret",
+                    "node": "pve",
+                },
+            )
+            self.assertEqual(res_save_ok.status_code, 200)
+            self.assertTrue(res_save_ok.get_json()["success"])

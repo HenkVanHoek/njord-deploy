@@ -45,9 +45,7 @@ CATALOG_METADATA_PATH = (
 TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "component_templates"
 
 # Signal API settings (aligned with audit_supply_chain.py and .env)
-SIGNAL_API_URL = os.environ.get(
-    "SIGNAL_API_URL", "http://192.168.178.118:8090/v2/send"
-)
+SIGNAL_API_URL = os.environ.get("SIGNAL_API_URL", "http://192.168.178.118:8090/v2/send")
 SIGNAL_SENDER = os.environ.get("SIGNAL_SENDER", "+31651107603")
 SIGNAL_RECIPIENT = os.environ.get("SIGNAL_RECIPIENT", "+31651107603")
 
@@ -248,13 +246,17 @@ def parse_latest_release(xml_content: str) -> Optional[Dict[str, Any]]:
             if is_prerelease_or_invalid(tag):
                 continue
 
-            # Filter out non-release commits (e.g. Weblate translations or ignore-downstream)
+            # Filter out non-release commits (e.g. Weblate or ignore-downstream)
             content_el = entry.find("atom:content", ATOM_NS)
-            content_text = content_el.text if content_el is not None and content_el.text else ""
+            content_text = (
+                content_el.text if content_el is not None and content_el.text else ""
+            )
             if "ignore-downstream" in content_text.lower():
                 continue
             author_el = entry.find("atom:author/atom:name", ATOM_NS)
-            author_name = author_el.text if author_el is not None and author_el.text else ""
+            author_name = (
+                author_el.text if author_el is not None and author_el.text else ""
+            )
             if (
                 author_name.lower() == "weblate"
                 or "weblate" in title.lower()
@@ -539,7 +541,9 @@ def promote_candidate(comp_id: str, target_version: Optional[str] = None) -> Non
 
     comp = comps[comp_id]
     staging = comp.get("staging", {})
-    candidate = target_version or staging.get("candidate_version") or staging.get("version")
+    candidate = (
+        target_version or staging.get("candidate_version") or staging.get("version")
+    )
 
     if not candidate:
         print(
