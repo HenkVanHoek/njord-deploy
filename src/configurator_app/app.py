@@ -3403,7 +3403,7 @@ def create_app(test_config=None):
                             should_show = True
 
                     if should_show:
-                        rel_name = str(relative_path)
+                        rel_name = relative_path.as_posix()
                         try:
                             with open(resolved_file, "r", encoding="utf-8") as f:
                                 files_dict[rel_name] = f.read()
