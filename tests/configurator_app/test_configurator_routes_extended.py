@@ -60,7 +60,10 @@ class ConfiguratorExtendedRoutesTestCase(unittest.TestCase):
 
     def test_system_status_routes(self):
         """Verifies nmap, tailscale, and first-run status checks."""
-        with patch("subprocess.run") as mock_sub:
+        with (
+            patch("shutil.which", return_value="/usr/bin/nmap"),
+            patch("subprocess.run") as mock_sub,
+        ):
             mock_sub.return_value = MagicMock(returncode=0)
             res_nmap = self.client.get("/nmap-status")
             self.assertEqual(res_nmap.status_code, 200)

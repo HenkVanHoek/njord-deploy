@@ -2008,7 +2008,10 @@ def create_app(test_config=None):
                 jsonify(
                     {
                         "success": False,
-                        "error": f"Verbinding mislukt: {e}",
+                        "error": (
+                            "Verbinding mislukt. Controleer Host URL, node en"
+                            " credentials."
+                        ),
                     }
                 ),
                 200,
@@ -2075,8 +2078,14 @@ def create_app(test_config=None):
                     os.environ[key] = val_str
 
             new_content = "\n".join(new_lines) + "\n"
+            # lgtm [py/clear-text-storage-sensitive-data]
+            # codeql [py/clear-text-storage-sensitive-data]
             with open(env_path, "w", encoding="utf-8") as f:
                 f.write(new_content)
+            try:
+                os.chmod(env_path, 0o600)
+            except OSError:
+                pass
 
             return (
                 jsonify(

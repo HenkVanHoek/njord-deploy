@@ -361,6 +361,7 @@ class TestTailscaleAndScanEdgeCases:
         # 2. PortScannerError
         with (
             patch("shutil.which", return_value="/usr/bin/nmap"),
+            patch.object(nmap.PortScanner, "__init__", return_value=None),
             patch(
                 "nmap.PortScanner.scan",
                 side_effect=nmap.PortScannerError("Nmap scan aborted"),
@@ -373,6 +374,7 @@ class TestTailscaleAndScanEdgeCases:
         # 3. Generic Exception during scan
         with (
             patch("shutil.which", return_value="/usr/bin/nmap"),
+            patch.object(nmap.PortScanner, "__init__", return_value=None),
             patch(
                 "nmap.PortScanner.scan",
                 side_effect=Exception("Unexpected nmap crash"),

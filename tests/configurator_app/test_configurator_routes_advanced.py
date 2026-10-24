@@ -612,3 +612,44 @@ class ConfiguratorAdvancedRoutesTestCase(unittest.TestCase):
             )
             self.assertEqual(res_save_ok.status_code, 200)
             self.assertTrue(res_save_ok.get_json()["success"])
+
+        # 8. Status with SSH manager exception
+        with patch(
+            "managers.ssh_manager.SSHManager.get_public_key_string",
+            side_effect=RuntimeError("No key"),
+        ):
+            res_ssh_err = self.client.get("/api/config/proxmox/status")
+            self.assertEqual(res_ssh_err.status_code, 200)
+            self.assertEqual(res_ssh_err.get_json()["public_key"], "")
+
+        # 9. Save: updating existing key in .env and chmod OSError fallback
+        with (
+            patch(
+                "builtins.open",
+                unittest.mock.mock_open(read_data="PROXMOX_HOST=old_host\n# comment\n"),
+            ),
+            patch("os.chmod", side_effect=OSError("chmod failed")),
+        ):
+            res_save_update = self.client.post(
+                "/api/config/proxmox/save",
+                json={
+                    "host": "https://192.168.1.100:8006",
+                    "token_id": "root@pam!tok",
+                    "token_secret": "new_secret",
+                    "node": "pve",
+                },
+            )
+            self.assertEqual(res_save_update.status_code, 200)
+            self.assertTrue(res_save_update.get_json()["success"])
+
+        # 10. Save: file write error returns 500
+        with patch("builtins.open", side_effect=OSError("Disk write error")):
+            res_save_fail = self.client.post(
+                "/api/config/proxmox/save",
+                json={
+                    "host": "https://192.168.1.100:8006",
+                    "token_id": "root@pam!tok",
+                },
+            )
+            self.assertEqual(res_save_fail.status_code, 500)
+            self.assertFalse(res_save_fail.get_json()["success"])
