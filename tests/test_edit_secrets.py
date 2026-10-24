@@ -31,7 +31,8 @@ def test_load_and_save_env(tmp_path: Path) -> None:
     save_env_file(test_env, initial_vars)
 
     assert test_env.exists()
-    assert oct(os.stat(test_env).st_mode & 0o777) == "0o600"
+    if os.name != "nt":
+        assert oct(os.stat(test_env).st_mode & 0o777) == "0o600"
 
     loaded = load_env_dict(test_env)
     assert loaded["PROXMOX_HOST"] == "https://192.168.178.51:8006"
