@@ -69,12 +69,16 @@ logging.basicConfig(
 
 def safe_join(base_dir: Path, user_path: str) -> Path:
     """Safely join base dir and user path to prevent path traversal."""
+    raw_str = str(user_path).strip()
     # 1. Strictly validate characters to prevent traversal strings like dot-dot
-    if not re.match(r"^[a-zA-Z0-9_-]+$", user_path):
+    if not re.match(r"^[a-zA-Z0-9_-]+$", raw_str):
+        raise ValueError(f"Invalid path component: {user_path}")
+    clean_name = secure_filename(os.path.basename(raw_str))
+    if not clean_name or clean_name != raw_str:
         raise ValueError(f"Invalid path component: {user_path}")
     # 2. Resolve to absolute path
     resolved_base = base_dir.resolve()
-    resolved_target = (resolved_base / user_path).resolve()
+    resolved_target = (resolved_base / clean_name).resolve()
     # 3. Double-check path starts with base_dir
     if not resolved_target.is_relative_to(resolved_base):
         raise ValueError(f"Path traversal detected: {user_path}")
