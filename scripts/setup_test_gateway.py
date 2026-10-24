@@ -121,7 +121,7 @@ def ensure_gateway_container(
         "swap": 256,
         "rootfs": "local-lvm:30",
         "net0": net_config,
-        "nameserver": "1.1.1.1 8.8.8.8",
+        "nameserver": "9.9.9.9 149.112.112.112",
         "features": "nesting=1",
         "unprivileged": 1,
         "onboot": 1,
@@ -168,7 +168,8 @@ def configure_registry_service(vm_pass: str) -> bool:
         "systemctl stop dnsmasq 2>/dev/null || true; "
         "systemctl disable dnsmasq 2>/dev/null || true; "
         "chattr -i /etc/resolv.conf 2>/dev/null || true; "
-        "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > /etc/resolv.conf; "
+        "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' "
+        "> /etc/resolv.conf; "
         "chattr +i /etc/resolv.conf 2>/dev/null || true; "
         "apt-get update -y && "
         "DEBIAN_FRONTEND=noninteractive apt-get install -y docker-registry curl"

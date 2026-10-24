@@ -139,6 +139,10 @@ Een compacte Bootstrap modal met velden voor:
 * API Token ID (`gebruiker@pam!tokenid`)
 * API Token Secret (gemaskeerd password veld)
 * Switch: *Negeer self-signed SSL waarschuwingen*
+* **Sovereign DNS Configuration:**
+  * Auto-detect Proxmox Node DNS (`GET /api2/json/nodes/{node}/dns`)
+  * Soevereine Europese Fallback: **`9.9.9.9` & `149.112.112.112` (Quad9 Zürich, Zwitserland - vrij van US CLOUD Act)**
+  * Optioneel invulveld voor lokale Pi-hole / AdGuard Home DNS
 * Knoppen: `[ Test Verbinding ]` en `[ Opslaan & Toepassen ]`
 
 ---

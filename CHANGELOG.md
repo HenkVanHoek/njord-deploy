@@ -6,6 +6,21 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-10-24
+
+### Changed & Security Hardening
+- **Sovereign European DNS Architecture (Elimination of US CLOUD Act Dependencies)**:
+  - Replaced all legacy US anycast resolvers (`1.1.1.1` Cloudflare, `8.8.8.8` Google) across the entire NjordDeploy ecosystem with Quad9 Anycast (`9.9.9.9` & `149.112.112.112`), headquartered in Zürich, Switzerland and governed under strict Swiss Federal and GDPR data privacy laws.
+  - Hardened Proxmox VE Cloud-Init VM provisioning in `src/configurator_app/app.py`: auto-detects hypervisor host DNS resolvers with automatic European sovereign fallback (`9.9.9.9 149.112.112.112`).
+  - Updated all networking scripts, test runners, template maintenance routines, Ansible playbooks, and service component defaults (`technitium-dns`, `wg-easy`, `headscale`) to Quad9 sovereign DNS.
+  - Replaced subnet scanning route-probing socket target in `src/node_scanner.py` with `9.9.9.9`.
+
+### Fixed
+- **Cross-Platform Windows Release Pipeline Stability**:
+  - Corrected POSIX file mode assertions in `tests/test_edit_secrets.py` on Windows NTFS.
+  - Explicitly closed streaming download response handles in `tests/test_configurator_routes_extended.py` to prevent Windows WinError 32 file-locking on temporary directory cleanup.
+  - Enforced Posix path formatting (`relative_path.as_posix()`) in `/get-generated-files` route to eliminate backslash parsing errors on Windows platforms.
+
 ### Added
 - **Proxmox VE Connection Manager & First-Run Onboarding (v1.0.1)**:
   - Added interactive Connection Manager modal in the Configurator Web-UI for instant Proxmox hypervisor configuration, live API handshake test (`/api2/json/version`), and secure `.env` persistence without server restart.

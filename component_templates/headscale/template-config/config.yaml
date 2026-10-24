@@ -27,8 +27,8 @@ dns:
   base_domain: example.com
   nameservers:
     global:
-      - 1.1.1.1
-      - 8.8.8.8
+      - 9.9.9.9
+      - 149.112.112.112
 
 log:
   level: info

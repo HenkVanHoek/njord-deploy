@@ -50,7 +50,7 @@ services:
       - "PASSWORD_HASH=$2b$12$U5DIA2y39QuBN0Cv4iZNxu9bb7NROm.gs2Kq.KbIi4uOzjJ3ST5u2"
       - "PORT=51821"
       - "WG_PORT=51820"
-      - "WG_DEFAULT_DNS=1.1.1.1"
+      - "WG_DEFAULT_DNS=9.9.9.9"
     volumes:
       - "./data/wg-easy/wireguard:/etc/wireguard"
       - "/lib/modules:/lib/modules:ro"
@@ -79,7 +79,7 @@ docker compose up -d
 | `WG_EASY_PORT` | `51820` | Public UDP port on which WireGuard VPN traffic will be received. |
 | `WG_HOST` | `vpn.example.com` | Public domain name or external IP address that WireGuard clients will use to connect. |
 | `WG_PASSWORD_HASH` | `$2b$12$U5DIA2y39QuBN0Cv4iZNxu9bb7NROm.gs2Kq.KbIi4uOzjJ3ST5u2` | Bcrypt password hash used to log in to the WireGuard Easy web management interface (default: change_me). |
-| `WG_DEFAULT_DNS` | `1.1.1.1` | DNS server provided to connecting WireGuard clients. |
+| `WG_DEFAULT_DNS` | `9.9.9.9` | DNS server provided to connecting WireGuard clients (Quad9 sovereign DNS). |
 
 ---
 

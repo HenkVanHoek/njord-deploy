@@ -184,7 +184,8 @@ class NodeScanner:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0)
         try:
-            s.connect(("8.8.8.8", 1))
+            # Connect to Quad9 sovereign DNS to determine local route
+            s.connect(("9.9.9.9", 1))
             ip_address = s.getsockname()[0]
         except OSError:
             return "127.0.0.1"

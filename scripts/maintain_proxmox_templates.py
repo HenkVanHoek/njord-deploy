@@ -268,8 +268,8 @@ def sanitize_instance(ssh: SSHManager, sudo_pfx: str = "") -> None:
         "rm -f /var/lib/dbus/machine-id 2>/dev/null || true; "
         "apt-get clean 2>/dev/null || true; "
         "chattr -i /etc/resolv.conf 2>/dev/null || true; "
-        "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > /etc/resolv.conf "
-        "2>/dev/null || true; "
+        "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' "
+        "> /etc/resolv.conf 2>/dev/null || true; "
         "rm -rf /tmp/* /var/tmp/* /var/log/*.log /var/log/journal/* "
         "/var/cache/apt/archives/* /root/.bash_history "
         "/home/*/.bash_history 2>/dev/null || true"
@@ -444,8 +444,8 @@ def build_vm_template(
             "systemd-resolved.socket 2>/dev/null || true; "
             f"{sudo_pfx}chattr -i /etc/resolv.conf 2>/dev/null || true; "
             f"{sudo_pfx}rm -f /etc/resolv.conf; "
-            f"{sudo_pfx}sh -c \"printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > "
-            '/etc/resolv.conf"; '
+            f"{sudo_pfx}sh -c \"printf 'nameserver 9.9.9.9\\n"
+            "nameserver 149.112.112.112\\n' > /etc/resolv.conf\"; "
             f"{sudo_pfx}chattr +i /etc/resolv.conf 2>/dev/null || true",
             lambda msg: None,
         )
@@ -639,7 +639,7 @@ def build_lxc_template(
             "2>/dev/null || true; "
             "chattr -i /etc/resolv.conf 2>/dev/null || true; "
             "rm -f /etc/resolv.conf; "
-            "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > "
+            "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' > "
             "/etc/resolv.conf; "
             "chattr +i /etc/resolv.conf 2>/dev/null || true",
             lambda msg: None,

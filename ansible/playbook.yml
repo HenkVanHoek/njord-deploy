@@ -364,7 +364,7 @@
           systemctl mask systemd-resolved systemd-resolved.socket 2>/dev/null || true
           chattr -i /etc/resolv.conf 2>/dev/null || true
           rm -f /etc/resolv.conf
-          printf "nameserver 1.1.1.1\nnameserver 8.8.8.8\n" > /etc/resolv.conf
+          printf "nameserver 9.9.9.9\nnameserver 149.112.112.112\n" > /etc/resolv.conf
           chattr +i /etc/resolv.conf 2>/dev/null || true
           fuser -k 53/udp 53/tcp 2>/dev/null || true
           for pid in $(ss -lpun 'sport = :53' 2>/dev/null | grep -oP 'pid=\K[0-9]+' ; ss -lptn 'sport = :53' 2>/dev/null | grep -oP 'pid=\K[0-9]+'); do

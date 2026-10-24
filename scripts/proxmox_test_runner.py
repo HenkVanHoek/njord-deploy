@@ -1398,7 +1398,7 @@ def provision_shared_test_instance(
                 "2>/dev/null || true; "
                 "chattr -i /etc/resolv.conf 2>/dev/null || true; "
                 "rm -f /etc/resolv.conf; "
-                "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > "
+                "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' > "
                 "/etc/resolv.conf; "
                 "chattr +i /etc/resolv.conf 2>/dev/null || true; "
                 "fuser -k 53/udp 53/tcp 2>/dev/null || true; "
@@ -1417,11 +1417,11 @@ def provision_shared_test_instance(
         # Ensure robust DNS and Docker daemon resolver
         dns_fix = (
             "chattr -i /etc/resolv.conf 2>/dev/null || true; "
-            "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > "
+            "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' > "
             "/etc/resolv.conf 2>/dev/null || true; "
             "chattr +i /etc/resolv.conf 2>/dev/null || true; "
             "mkdir -p /etc/docker 2>/dev/null || true; "
-            'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"]\\n}\\n\' > '
+            'printf \'{\\n  "dns": ["9.9.9.9", "149.112.112.112"]\\n}\\n\' > '
             "/etc/docker/daemon.json 2>/dev/null || true; "
             "systemctl restart docker 2>/dev/null || true; "
             "mkdir -p /tmp/.ansible && chmod 1777 /tmp/.ansible"
@@ -1511,7 +1511,9 @@ def provision_shared_test_instance(
                 "cipassword": vm_pass,
                 "sshkeys": urllib.parse.quote(ssh_public_key),
                 "ipconfig0": vm_ipconfig,
-                "nameserver": os.getenv("PROXMOX_NAMESERVER", "1.1.1.1 8.8.8.8"),
+                "nameserver": os.getenv(
+                    "PROXMOX_NAMESERVER", "9.9.9.9 149.112.112.112"
+                ),
                 "net0": vm_net,
                 "cores": allocated_cores,
                 "memory": allocated_ram,
@@ -1574,7 +1576,8 @@ def provision_shared_test_instance(
         # Wait for cloud-init and apt background daily upgrades to clear locks
         wait_script = (
             "rm -f /etc/resolv.conf; "
-            "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' > /etc/resolv.conf; "
+            "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' "
+            "> /etc/resolv.conf; "
             "if command -v cloud-init >/dev/null 2>&1; then "
             "cloud-init status --wait || true; fi; "
             "systemctl stop apt-daily.service apt-daily-upgrade.service "
@@ -1654,8 +1657,8 @@ def provision_shared_test_instance(
                 "systemd-resolved.socket 2>/dev/null || true; "
                 f"{sudo_pfx}chattr -i /etc/resolv.conf 2>/dev/null || true; "
                 f"{sudo_pfx}rm -f /etc/resolv.conf; "
-                f"{sudo_pfx}sh -c \"printf 'nameserver 1.1.1.1\\n"
-                "nameserver 8.8.8.8\\n' > /etc/resolv.conf\"; "
+                f"{sudo_pfx}sh -c \"printf 'nameserver 9.9.9.9\\n"
+                "nameserver 149.112.112.112\\n' > /etc/resolv.conf\"; "
                 f"{sudo_pfx}chattr +i /etc/resolv.conf 2>/dev/null || true; "
                 f"{sudo_pfx}fuser -k 53/udp 53/tcp 2>/dev/null || true; "
                 f"{sudo_pfx}sh -c \"for pid in $(ss -lpun 'sport = :53' "
@@ -1673,12 +1676,13 @@ def provision_shared_test_instance(
         if engine == "docker":
             vm_dns_fix = (
                 f"{sudo_pfx}chattr -i /etc/resolv.conf 2>/dev/null || true; "
-                f"{sudo_pfx}sh -c \"printf 'nameserver 1.1.1.1\\n"
-                "nameserver 8.8.8.8\\n' > /etc/resolv.conf\" 2>/dev/null || true; "
+                f"{sudo_pfx}sh -c \"printf 'nameserver 9.9.9.9\\n"
+                "nameserver 149.112.112.112\\n' > "
+                '/etc/resolv.conf" 2>/dev/null || true; '
                 f"{sudo_pfx}chattr +i /etc/resolv.conf 2>/dev/null || true; "
                 f"{sudo_pfx}mkdir -p /etc/docker 2>/dev/null || true; "
                 "mkdir -p /tmp/njord_dock && "
-                'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"]\\n}\\n\' > '
+                'printf \'{\\n  "dns": ["9.9.9.9", "149.112.112.112"]\\n}\\n\' > '
                 "/tmp/njord_dock/daemon.json && "
                 f"{sudo_pfx}cp /tmp/njord_dock/daemon.json /etc/docker/daemon.json "
                 "2>/dev/null || true; "
@@ -1690,8 +1694,9 @@ def provision_shared_test_instance(
         else:
             vm_dns_fix = (
                 f"{sudo_pfx}chattr -i /etc/resolv.conf 2>/dev/null || true; "
-                f"{sudo_pfx}sh -c \"printf 'nameserver 1.1.1.1\\n"
-                "nameserver 8.8.8.8\\n' > /etc/resolv.conf\" 2>/dev/null || true; "
+                f"{sudo_pfx}sh -c \"printf 'nameserver 9.9.9.9\\n"
+                "nameserver 149.112.112.112\\n' > "
+                '/etc/resolv.conf" 2>/dev/null || true; '
                 f"{sudo_pfx}chattr +i /etc/resolv.conf 2>/dev/null || true; "
                 f"{sudo_pfx}systemctl enable --now podman.socket 2>/dev/null || true; "
                 f"{sudo_pfx}systemctl restart podman.socket 2>/dev/null || true; "

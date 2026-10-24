@@ -32,8 +32,8 @@
             "id": "WG_DEFAULT_DNS",
             "label": "Default Client DNS",
             "type": "text",
-            "default": "1.1.1.1",
-            "description": "DNS server provided to connecting WireGuard clients."
+            "default": "9.9.9.9",
+            "description": "DNS server provided to connecting WireGuard clients (default: Quad9 sovereign DNS)."
         }
     ]
 }

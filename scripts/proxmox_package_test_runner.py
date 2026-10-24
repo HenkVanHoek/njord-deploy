@@ -1359,7 +1359,7 @@ def execute_target_cleanup(
         "/tmp/.ansible/* 2>/dev/null || true; "
         "journalctl --vacuum-time=1m 2>/dev/null || true; "
         "mkdir -p /etc/docker 2>/dev/null || true; "
-        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
+        'printf \'{\\n  "dns": ["9.9.9.9", "149.112.112.112"],\\n'
         '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
         '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
         "> /etc/docker/daemon.json 2>/dev/null || true; "
@@ -1813,7 +1813,7 @@ def run_package_environment_tests(
                             "sshkeys": urllib.parse.quote(ssh_public_key),
                             "ipconfig0": vm_ipconfig,
                             "nameserver": os.getenv(
-                                "PROXMOX_NAMESERVER", "1.1.1.1 8.8.8.8"
+                                "PROXMOX_NAMESERVER", "9.9.9.9 149.112.112.112"
                             ),
                             "agent": "enabled=1",
                             "net0": vm_net,
@@ -1897,14 +1897,14 @@ def run_package_environment_tests(
                         "systemctl disable systemd-resolved 2>/dev/null || true\n"
                         "chattr -i /etc/resolv.conf 2>/dev/null || true\n"
                         "rm -f /etc/resolv.conf\n"
-                        "printf 'nameserver 1.1.1.1\\nnameserver 8.8.8.8\\n' "
+                        "printf 'nameserver 9.9.9.9\\nnameserver 149.112.112.112\\n' "
                         "> /etc/resolv.conf\n"
                         "chattr +i /etc/resolv.conf 2>/dev/null || true\n"
                         "pkill -9 -f apt-get 2>/dev/null || true\n"
                         "if command -v cloud-init >/dev/null 2>&1; then "
                         "cloud-init status --wait || true; fi\n"
                         "mkdir -p /etc/docker 2>/dev/null || true\n"
-                        'printf \'{\\n  "dns": ["1.1.1.1", "8.8.8.8"],\\n'
+                        'printf \'{\\n  "dns": ["9.9.9.9", "149.112.112.112"],\\n'
                         '  "registry-mirrors": ["http://10.99.0.2:5000"],\\n'
                         '  "insecure-registries": ["10.99.0.2:5000"]\\n}\\n\' '
                         "> /etc/docker/daemon.json 2>/dev/null || true\n"

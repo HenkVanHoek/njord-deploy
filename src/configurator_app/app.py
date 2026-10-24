@@ -2341,6 +2341,32 @@ def create_app(test_config=None):
             import urllib.parse
 
             logging.info(f"Configuring Cloud-Init for VMID {vmid}...")
+
+            # Auto-detect Proxmox node DNS with sovereign Quad9 fallback
+            custom_dns = os.getenv("PROXMOX_NAMESERVER", "").strip()
+            if custom_dns:
+                nameserver_str = custom_dns
+            else:
+                detected_dns = []
+                try:
+                    dns_res = client.get(f"nodes/{node}/dns")
+                    dns_data = dns_res.get("data", {})
+                    for key in ["dns1", "dns2", "dns3"]:
+                        val = dns_data.get(key)
+                        if val and str(val).strip():
+                            detected_dns.append(str(val).strip())
+                except Exception as dns_err:
+                    logging.warning(
+                        f"Could not auto-detect Proxmox node DNS: {dns_err}"
+                    )
+
+                # Sovereign Anycast Fallback: Quad9 (Zürich - no US CLOUD Act)
+                sovereign_fallbacks = ["9.9.9.9", "149.112.112.112"]
+                for fb in sovereign_fallbacks:
+                    if fb not in detected_dns:
+                        detected_dns.append(fb)
+                nameserver_str = " ".join(detected_dns)
+
             config_data = {
                 "cores": cores,
                 "memory": memory,
@@ -2348,6 +2374,7 @@ def create_app(test_config=None):
                 "cipassword": password,
                 "sshkeys": urllib.parse.quote(pubkey.strip(), safe=""),
                 "ipconfig0": "ip=dhcp",
+                "nameserver": nameserver_str,
                 "agent": "enabled=1",
                 "cpu": "host",
             }

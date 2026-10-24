@@ -7,6 +7,6 @@ print(f"Hostname method: {hostname} -> {local_ip}")
 
 # Improved method
 with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-    s.connect(("8.8.8.8", 80))
+    s.connect(("9.9.9.9", 80))
     better_ip = s.getsockname()[0]
 print(f"Socket method: {better_ip}")

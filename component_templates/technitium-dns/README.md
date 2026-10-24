@@ -53,7 +53,7 @@ services:
       - "DNS_SERVER_LOG_FOLDER_PATH=/var/log/technitium/dns"
       - "DNS_SERVER_ENABLE_BLOCKING=true"
       - "DNS_SERVER_BLOCK_LIST_URLS=https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts"
-      - "DNS_SERVER_FORWARDERS=1.1.1.1, 8.8.8.8"
+      - "DNS_SERVER_FORWARDERS=9.9.9.9, 149.112.112.112"
       - "DNS_SERVER_FORWARDER_PROTOCOL=Https"
       - "DNS_SERVER_RECURSION=AllowOnlyForPrivateNetworks"
       - "DNS_SERVER_RECURSION_NETWORK_ACL=172.16.0.0/12, 192.168.0.0/16, 10.0.0.0/8"
@@ -93,7 +93,7 @@ docker compose up -d
 | `DNS_ADMIN_PASSWORD` | `AdminPassword123!` | The password for the DNS web console admin user. This is set on first run. |
 | `DNS_ENABLE_BLOCKING` | `true` | Set to 'true' to enable blocking of domain names using Blocked Zone and Block List Zone features. |
 | `DNS_BLOCK_LIST_URLS` | `https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts` | A comma-separated list of URLs for block lists (e.g., hosts files) to be used for ad and malware blocking. |
-| `DNS_FORWARDERS` | `1.1.1.1, 8.8.8.8` | A comma-separated list of IP addresses for upstream DNS forwarders (e.g., Cloudflare, Google DNS). |
+| `DNS_FORWARDERS` | `9.9.9.9, 149.112.112.112` | A comma-separated list of IP addresses for upstream DNS forwarders (e.g., Quad9 sovereign DNS). |
 | `DNS_FORWARDER_PROTOCOL` | `Https` | The protocol to use for upstream DNS forwarders. Options: Udp, Tcp, Tls, Https, HttpsJson. |
 | `DNS_RECURSION_MODE` | `AllowOnlyForPrivateNetworks` | Defines who can use the DNS server for recursive queries. Options: Allow, Deny, AllowOnlyForPrivateNetworks, UseSpecifiedNetworkACL. |
 | `DNS_RECURSION_ACL` | `172.16.0.0/12, 192.168.0.0/16, 10.0.0.0/8` | Comma-separated list of IP addresses or network addresses (CIDR) to allow/deny recursion. Only valid for 'UseSpecifiedNetworkACL' recursion mode. Prefix with '!' to deny. |
