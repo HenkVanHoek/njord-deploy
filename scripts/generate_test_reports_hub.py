@@ -329,10 +329,10 @@ def generate_master_hub_report(
         "(LXC Docker, LXC Podman, VM Docker, VM Podman), see:"
     )
     lines.append(
-        "- [Proxmox All-Components Master Matrix (492 runs)](../PROXMOX_TESTS.md)"
+        "- [Proxmox All-Components Master Matrix (492 runs)](?doc=PROXMOX_TESTS.md)"
     )
     lines.append(
-        "- [Proxmox Package Multi-Environment Runs](../PROXMOX_PACKAGE_TESTS.md)"
+        "- [Proxmox Package Multi-Environment Runs](?doc=PROXMOX_PACKAGE_TESTS.md)"
     )
     lines.append("")
     lines.append("---")
