@@ -148,6 +148,56 @@ PRERELEASE_PATTERN = re.compile(
 )
 IGNORED_TAGS = {"stable", "latest", "master", "main", "nightly", "edge"}
 
+PRERELEASE_CONTENT_PATTERNS = [
+    r"to receive further pre[-_ ]?release updates",
+    r"\bthis is a pre[-_ ]?release\b",
+    r"\bpre[-_ ]?release build\b",
+    r"\bpre[-_ ]?release version\b",
+    r"branch to <strong>develop</strong>",
+    r"\bbeta release\b",
+    r"\balpha release\b",
+    r"\brelease candidate\b",
+]
+
+
+def is_prerelease_content(content_text: str) -> bool:
+    """Checks whether release notes/content indicate a pre-release or develop build."""
+    if not content_text:
+        return False
+    lower = content_text.lower()
+    return any(re.search(pat, lower) for pat in PRERELEASE_CONTENT_PATTERNS)
+
+
+def check_github_is_prerelease(github_repo: Optional[str], tag: str) -> Optional[bool]:
+    """Queries GitHub API to verify if a release tag is officially a pre-release.
+
+    Returns True if pre-release, False if stable GA release, or None if
+    network/rate-limited.
+    """
+    if not github_repo or not tag:
+        return None
+    tags_to_try = [tag] if tag.startswith("v") else [f"v{tag}", tag]
+    for t in tags_to_try:
+        url = f"https://api.github.com/repos/{github_repo}/releases/tags/{t}"
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "NjordDeploy-LifecycleWatcher/1.0",
+                "Accept": "application/vnd.github.v3+json",
+            },
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                return bool(data.get("prerelease", False))
+        except urllib.error.HTTPError as err:
+            if err.code == 404:
+                continue
+            return None
+        except Exception:
+            return None
+    return None
+
 
 def is_prerelease_or_invalid(tag: str) -> bool:
     """Checks whether a tag is a pre-release, alpha, beta, rc, or non-version string."""
@@ -217,7 +267,9 @@ def fetch_atom_feed(
         return None, None, None
 
 
-def parse_latest_release(xml_content: str) -> Optional[Dict[str, Any]]:
+def parse_latest_release(
+    xml_content: str, github_repo: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
     """Parses Atom XML and extracts the latest STABLE GA release entry."""
     try:
         root = ET.fromstring(xml_content)
@@ -253,6 +305,8 @@ def parse_latest_release(xml_content: str) -> Optional[Dict[str, Any]]:
             )
             if "ignore-downstream" in content_text.lower():
                 continue
+            if is_prerelease_content(content_text):
+                continue
             author_el = entry.find("atom:author/atom:name", ATOM_NS)
             author_name = (
                 author_el.text if author_el is not None and author_el.text else ""
@@ -267,6 +321,12 @@ def parse_latest_release(xml_content: str) -> Optional[Dict[str, Any]]:
             clean_ver = clean_tag_version(tag)
             if not clean_ver or is_prerelease_or_invalid(clean_ver):
                 continue
+
+            # Authoritative check via GitHub API if available
+            if github_repo:
+                is_pre = check_github_is_prerelease(github_repo, tag)
+                if is_pre is True:
+                    continue
 
             return {
                 "raw_tag": tag,
@@ -337,7 +397,9 @@ def run_lifecycle_check(send_signal: bool = False) -> None:
                     upstream["github_repo"] = new_repo
                     upstream["rss_feed"] = final_url
 
-        latest = parse_latest_release(xml_content)
+        latest = parse_latest_release(
+            xml_content, github_repo=upstream.get("github_repo")
+        )
         if not latest:
             continue
 
@@ -373,12 +435,20 @@ def run_lifecycle_check(send_signal: bool = False) -> None:
         # Self-heal: purge pre-releases or non-progressive ghost candidates
         curr_cand = staging.get("candidate_version")
         if curr_cand:
-            if is_prerelease_or_invalid(curr_cand) or not is_newer_version(
-                current_clean, curr_cand
-            ):
+            is_cand_pre = is_prerelease_or_invalid(curr_cand)
+            if not is_cand_pre and upstream.get("github_repo"):
+                gh_pre = check_github_is_prerelease(upstream["github_repo"], curr_cand)
+                if gh_pre is True:
+                    is_cand_pre = True
+            if is_cand_pre or not is_newer_version(current_clean, curr_cand):
+                print(
+                    f"🧹 [{comp_id}] Purging invalid/pre-release candidate "
+                    f"'{curr_cand}' from wachtkamer."
+                )
                 staging["candidate_version"] = None
                 staging["status"] = "idle"
                 staging["entered_staging_at"] = None
+                staging["last_test_error"] = None
 
         # Check if component is pinned or version was explicitly ignored
         if comp.get("pinned", False):
@@ -476,7 +546,13 @@ def show_wachtkamer() -> None:
         staging = comp.get("staging", {})
         cand_ver = staging.get("candidate_version")
         status = staging.get("status")
-        if cand_ver and status in ("awaiting_approval", "testing"):
+        if cand_ver and status in (
+            "awaiting_approval",
+            "testing",
+            "needs_review",
+            "in_staging",
+            "candidate",
+        ):
             track_info = comp.get("release_track", {}).get("track", "standard")
             curr_ver = comp.get("last_tested_version") or comp.get(
                 "component_version", "unknown"
@@ -615,6 +691,7 @@ def reject_candidate(comp_id: str) -> None:
     staging["status"] = "idle"
     staging["test_result"] = f"Rejected candidate {rejected_ver}"
     staging["entered_staging_at"] = None
+    staging["last_test_error"] = None
 
     # Memory against Groundhog Day loop
     if rejected_ver:

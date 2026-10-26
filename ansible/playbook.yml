@@ -308,6 +308,10 @@
         cmd: "docker compose pull --ignore-buildable"
         chdir: "{{ project_config_dir }}"
       when: container_engine == 'docker'
+      register: docker_pull_result
+      until: docker_pull_result.rc == 0
+      retries: 3
+      delay: 5
       changed_when: "true"
 
     - name: Pull latest service images (Podman)
@@ -317,6 +321,10 @@
       environment: "{{ {'XDG_RUNTIME_DIR': '/run/user/' ~ (ansible_effective_user_id | default(ansible_user_uid | default('1000')))} if not (podman_rootful | default(false) | bool) else {} }}"
       become: "{{ (container_engine == 'podman' and (podman_rootful | default(false))) | bool }}"
       when: container_engine == 'podman'
+      register: podman_pull_result
+      until: podman_pull_result.rc == 0
+      retries: 3
+      delay: 5
       changed_when: "true"
 
     - name: Ensure container volume mount host directories exist
