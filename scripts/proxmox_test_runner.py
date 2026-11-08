@@ -67,6 +67,21 @@ TEST_PORT_OVERRIDES = {
     "DNS_TCP_PORT": "5353",
 }
 
+# Production servers that must never be targeted by test runner (Safety Interlock)
+PROTECTED_PRODUCTION_IPS = {
+    "192.168.178.50",  # Nextcloud & OnlyOffice (VM 150)
+    "192.168.178.51",  # Proxmox VE Hypervisor Host
+    "192.168.178.55",  # Loes.ai Studio (LXC 102)
+    "192.168.178.61",  # Development Workstation (dev-i9)
+    "192.168.178.70",  # Sysops Cockpit / NjordWatch (LXC 135)
+    "192.168.178.71",  # AdGuard Failover DNS (LXC 138)
+    "192.168.178.76",  # SysOps Runner (LXC 137)
+    "192.168.178.118",  # Sovereign Stack / Mail Node
+    "192.168.178.160",  # NedFact Productie (VM 160)
+    "192.168.178.170",  # Forgejo Git Server (LXC 106)
+    "192.168.178.185",  # Raspberry Pi 4 Backupserver
+}
+
 
 def _save_incremental_test_result(test_record: Dict[str, Any]) -> None:
     """Appends or updates a single test result directly in
@@ -1344,6 +1359,14 @@ def provision_shared_test_instance(
             shared_lxc_ip = wait_for_lxc_ip(proxmox_client, node, shared_lxc_vmid)
         if shared_lxc_ip is None:
             raise RuntimeError("shared_lxc_ip is None in LXC mode")
+
+        # CMMI 5 Safety Guard: Block any connection to known production nodes
+        if shared_lxc_ip in PROTECTED_PRODUCTION_IPS:
+            raise RuntimeError(
+                f"🚨 SAFETY INTERLOCK TRIPPED: Container IP {shared_lxc_ip} collides "
+                "with protected production server! Aborting test immediately."
+            )
+
         logger.info(f"Shared LXC container online at {shared_lxc_ip}.")
         time.sleep(3)
 
@@ -1437,10 +1460,12 @@ def provision_shared_test_instance(
             lambda msg: None,
         )
         lxc_ssh.execute_command(dns_fix, lambda msg: None)
-        # Overwrite /root/.ssh/authorized_keys cleanly with runner key
+        # Append runner key safely to /root/.ssh/authorized_keys
         lxc_ssh.execute_command(
-            f'mkdir -p /root/.ssh && echo "{ssh_public_key}" > '
-            "/root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys",
+            "mkdir -p /root/.ssh && "
+            f'(grep -qF "{ssh_public_key}" /root/.ssh/authorized_keys 2>/dev/null || '
+            f'echo "{ssh_public_key}" >> /root/.ssh/authorized_keys) && '
+            "chmod 600 /root/.ssh/authorized_keys",
             lambda msg: None,
         )
         if vm_user and vm_user != "root":
@@ -1547,6 +1572,14 @@ def provision_shared_test_instance(
             )
         if not shared_vm_ip:
             raise TimeoutError("Unable to retrieve shared VM IP address.")
+
+        # CMMI 5 Safety Guard: Block any connection to known production nodes
+        if shared_vm_ip in PROTECTED_PRODUCTION_IPS:
+            raise RuntimeError(
+                f"🚨 SAFETY INTERLOCK TRIPPED: VM IP {shared_vm_ip} collides "
+                "with protected production server! Aborting test immediately."
+            )
+
         logger.info(f"Shared VM {shared_vm_vmid} online at {shared_vm_ip}.")
         time.sleep(3)
 
@@ -1706,11 +1739,12 @@ def provision_shared_test_instance(
                 f"{sudo_pfx}chmod 1777 /tmp/.ansible"
             )
         vm_ssh.execute_command(vm_dns_fix, lambda msg: None)
-        # Overwrite /root/.ssh/authorized_keys cleanly with runner key
+        # Append runner key safely to /root/.ssh/authorized_keys
         vm_ssh.execute_command(
             f"{sudo_pfx}mkdir -p /root/.ssh && "
+            f'(grep -qF "{ssh_public_key}" /root/.ssh/authorized_keys 2>/dev/null || '
             f'echo "{ssh_public_key}" | '
-            f"{sudo_pfx}tee /root/.ssh/authorized_keys >/dev/null && "
+            f"{sudo_pfx}tee -a /root/.ssh/authorized_keys >/dev/null) && "
             f"{sudo_pfx}chmod 600 /root/.ssh/authorized_keys",
             lambda msg: None,
         )

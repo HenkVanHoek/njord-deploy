@@ -220,6 +220,8 @@ def run_proeftuin_test(
         str(template_id),
         "--node",
         node,
+        "--ip",
+        "192.168.178.199",
     ]
 
     # noinspection PyBroadException
