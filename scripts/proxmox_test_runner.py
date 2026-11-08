@@ -2035,7 +2035,11 @@ def run_environment_tests(
             "insufficient host memory headroom."
         )
         return env_results
-    test_ip = os.getenv("PROXMOX_TEST_IP")
+    test_ip = (
+        getattr(cli_args, "ip", None)
+        if (cli_args and hasattr(cli_args, "ip"))
+        else None
+    ) or os.getenv("PROXMOX_TEST_IP")
     bridge = os.getenv("PROXMOX_BRIDGE")
     if not bridge:
         bridge = "vmbr1" if (test_ip and "10.99." in test_ip) else "vmbr0"
@@ -3396,6 +3400,11 @@ if __name__ == "__main__":
         help=(
             "Container engine: 'docker', 'podman', or 'both'/'all' " "(default: docker)"
         ),
+    )
+    parser.add_argument(
+        "--ip",
+        type=str,
+        help="Target IP address for the test VM/LXC container (e.g. 192.168.178.199).",
     )
     parser.add_argument(
         "--untested-ui",

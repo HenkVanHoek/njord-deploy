@@ -10,6 +10,7 @@ This document is automatically generated from the project metadata. It lists the
 | LiteLLM AI Gateway | LiteLLM is an AI gateway and LLM proxy that unifies access to 100+ Large Language Models (OpenAI, Gemini, Anthropic, Ollama, Azure, Bedrock, HostYourAI) behind a single OpenAI-compatible API format. | [Link](https://github.com/BerriAI/litellm) |
 | Ollama LLM Engine | Ollama is an open-source, lightweight, and extensible framework for running Large Language Models (LLMs) locally, such as Llama 3, Qwen, Mistral, and DeepSeek. | N/A |
 | Open WebUI | Open WebUI is an extensible, feature-rich, and user-friendly web interface for AI models and LLMs, supporting Ollama and OpenAI-compatible APIs with chat, voice, and RAG capabilities. | [Link](https://openwebui.com/) |
+| Speaches Speech-to-Text & Audio | Speaches is an open-source, OpenAI-compatible Speech-to-Text (faster-whisper) and Text-to-Speech (Kokoro/Piper) server supporting GPU acceleration. | [Link](https://github.com/speaches-ai/speaches) |
 
 ## DNS Blocker
 
@@ -172,7 +173,7 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Audiobookshelf | A self-hosted audiobook and podcast server for organizing, streaming, and tracking playback progress across your personal audio media library. | [Link](https://www.audiobookshelf.org/) |
-| Immich | Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: "0:0"`) to prevent common permission issues with mounted volumes. | N/A |
+| Immich | Immich is a high-performance self-hosted photo and video management solution. It consists of multiple services (server, microservices, machine learning, proxy) and requires a PostgreSQL database and Redis for operation. It is recommended to follow a 3-2-1 backup plan for your precious photos and videos. The Immich services are configured to run as root (`user: '0:0'`) to prevent common permission issues with mounted volumes. | N/A |
 | Immich Kiosk | Immich Kiosk is an ambient digital photo frame and slideshow client designed for smart TVs, tablets, and wall displays powered by your Immich server. | [Link](https://github.com/damongolding/immich-kiosk) |
 | Kavita | Kavita is a fast, feature rich, cross platform reading server. Built with a focus for being a full solution for all your reading needs. Setup your own server and share your reading collection with your friends and family! The container runs as root (user: 0:0) to ensure proper file permissions for mounted volumes. | N/A |
 | Navidrome Music Server | Navidrome is an open source web-based music collection server and streamer. It gives you freedom to listen to your music collection from any browser or mobile device. It's like your personal Spotify! The container runs as root (user: 0:0) to ensure proper file permissions for mounted volumes. | N/A |
@@ -243,6 +244,12 @@ This document is automatically generated from the project metadata. It lists the
 | Dashdot | Modern server dashboard for displaying CPU, RAM, storage, and network statistics. | [Link](https://getdashdot.com/) |
 | Dynacat | A modern, real-time homelab dashboard and Glance fork featuring WebSockets, dynamic widgets, live feed aggregators, and minimal resource usage. | [Link](https://github.com/Panonim/dynacat) |
 | Glance Dashboard | Extremely fast, self-contained dashboard written in Go for server feeds, weather, bookmarks, and services. | [Link](https://github.com/glanceapp/glance) |
+
+## Security
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| ClamAV Antivirus Daemon | Open-source antivirus engine and daemon for real-time malware and attachment scanning over TCP socket. | [Link](https://github.com/Cisco-Talos/clamav) |
 
 ## System & Tools
 
