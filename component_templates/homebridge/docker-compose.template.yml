@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "2026-09-02"
-# platform_notes: "Tested on Proxmox LXC: docker (2026-09-02, 2026-09-14), podman (2026-09-02, 2026-09-14); Proxmox VM: docker (2026-09-02, 2026-09-14), podman (2026-09-02, 2026-09-14)."
+# last_tested_version: "2.5.0"
+# platform_notes: "Tested on Proxmox LXC: docker (2.5.0, 2026-11-02), podman (2026-09-02, 2026-09-14); Proxmox VM: docker (2026-09-02, 2026-09-14), podman (2026-09-02, 2026-09-14)."
 # breaking_changes: none
 services:
   homebridge:
