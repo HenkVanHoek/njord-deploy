@@ -14,11 +14,13 @@ from typing import Any, Dict, List, Optional, Tuple
 import requests  # type: ignore
 from dotenv import load_dotenv
 
-# Ensure we can import from the 'src' root directory
+# Ensure we can import from the 'src' and project root directory
 project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
 from managers.ssh_manager import SSHManager  # noqa: E402
+from scripts.common import send_signal_notification  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
 
 logging.basicConfig(
@@ -885,34 +887,6 @@ def run_macos_vm_test(
                 logger.error(
                     f"[MACOS VM] Error cleaning up VMID {new_vmid}: {cleanup_err}"
                 )
-
-
-def send_signal_notification(report_content: str) -> None:
-    """Sends a summary notification via Signal API if configured in .env."""
-    signal_url = os.getenv("SIGNAL_API_URL")
-    signal_sender = os.getenv("SIGNAL_SENDER")
-    signal_recipient = os.getenv("SIGNAL_RECIPIENT")
-
-    if not signal_url or not signal_sender or not signal_recipient:
-        return
-
-    # noinspection PyBroadException
-    try:
-        msg_header = "🚀 NjordDeploy Multi-OS Release Installer Report:\n\n"
-        payload = {
-            "message": f"{msg_header}{report_content}",
-            "number": signal_sender,
-            "recipients": [signal_recipient],
-        }
-        res = requests.post(f"{signal_url}/v2/send", json=payload, timeout=10)
-        if res.status_code in (200, 201):
-            logger.info("Signal notification sent successfully.")
-        else:
-            logger.warning(
-                f"Signal notification returned status code: {res.status_code}"
-            )
-    except Exception as ex:
-        logger.warning(f"Failed to send Signal notification: {ex}")
 
 
 def save_test_report(

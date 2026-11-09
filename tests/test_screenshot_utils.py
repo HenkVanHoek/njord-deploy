@@ -157,3 +157,22 @@ def test_capture_service_screenshot_urlparse_exception(tmp_path: Path):
         ):
             result = capture_service_screenshot("http://invalid", dest)
     assert result is None
+
+
+def test_capture_service_screenshot_general_exception(tmp_path: Path):
+    """Verifies general browser exception is caught gracefully at outer try block."""
+    from unittest.mock import MagicMock
+
+    dest = tmp_path / "error.png"
+    mock_playwright_ctx = MagicMock()
+    mock_playwright_ctx.__enter__.side_effect = RuntimeError("Playwright failed")
+
+    mock_sync_api = MagicMock()
+    mock_sync_api.sync_playwright = MagicMock(return_value=mock_playwright_ctx)
+
+    with patch.dict(
+        sys.modules,
+        {"playwright": MagicMock(), "playwright.sync_api": mock_sync_api},
+    ):
+        result = capture_service_screenshot("http://example.com:8080", dest)
+    assert result is None

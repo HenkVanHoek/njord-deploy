@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8121",
+            "description": "Karakeep web interface port.",
+            "id": "KARAKEEP_WEB_PORT",
+            "label": "Karakeep Port",
+            "type": "port"
+        },
+        {
+            "default": "ChangeMeNextAuthSecretKeyKarakeep32CharsLong!",
+            "description": "Random secret key used by NextAuth to sign and encrypt session tokens.",
+            "id": "KARAKEEP_NEXTAUTH_SECRET",
+            "label": "NextAuth Secret",
+            "type": "password"
+        },
+        {
+            "default": "ChangeMeMeiliSearchMasterKeyKarakeep2026!",
+            "description": "Master API key used to secure the Meilisearch search engine instance.",
+            "id": "KARAKEEP_MEILI_MASTER_KEY",
+            "label": "Meilisearch Master Key",
+            "type": "password"
+        }
+    ]
+}

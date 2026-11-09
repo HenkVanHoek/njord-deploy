@@ -1,0 +1,18 @@
+{
+    "variables": [
+        {
+            "default": "8120",
+            "description": "DockFlare web dashboard port.",
+            "id": "DOCKFLARE_WEB_PORT",
+            "label": "DockFlare Web Port",
+            "type": "port"
+        },
+        {
+            "default": "dockflare-secret-token-change-me-32chars!",
+            "description": "Internal secret token used by DockFlare to authenticate internal API communications.",
+            "id": "DOCKFLARE_BOOTSTRAP_SECRET",
+            "label": "Bootstrap Secret",
+            "type": "password"
+        }
+    ]
+}

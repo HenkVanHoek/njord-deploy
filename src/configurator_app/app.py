@@ -959,7 +959,7 @@ def create_app(test_config=None):
         from utils.resource_utils import resource_path
 
         docs = {}
-        for doc_name, filename in [
+        for doc_name, doc_rel_path in [
             ("Beginner's Quick Start", "docs/GETTING_STARTED_FOR_BEGINNERS.md"),
             ("Configurator Feature Tour", "docs/CONFIGURATOR_FEATURE_GUIDE.md"),
             ("Editor Feature Tour", "docs/EDITOR_FEATURE_GUIDE.md"),
@@ -969,7 +969,7 @@ def create_app(test_config=None):
             ("Contributing Guide", "CONTRIBUTING.md"),
             ("Helper Utilities", "UTILITIES.md"),
         ]:
-            path = resource_path(filename)
+            path = resource_path(doc_rel_path)
             content = "Documentation file not found."
             if path.exists():
                 try:
@@ -1641,16 +1641,16 @@ def create_app(test_config=None):
                     aplinfo_res = client.get(f"nodes/{node}/aplinfo")
                     apl_data = aplinfo_res.get("data", [])
                     deb_apls = [
-                        item
-                        for item in apl_data
-                        if "debian" in item.get("package", "").lower()
-                        and "standard" in item.get("package", "").lower()
+                        apl_entry
+                        for apl_entry in apl_data
+                        if "debian" in apl_entry.get("package", "").lower()
+                        and "standard" in apl_entry.get("package", "").lower()
                     ]
                     if not deb_apls:
                         deb_apls = [
-                            item
-                            for item in apl_data
-                            if "ubuntu" in item.get("package", "").lower()
+                            apl_entry
+                            for apl_entry in apl_data
+                            if "ubuntu" in apl_entry.get("package", "").lower()
                         ]
                     if deb_apls:
                         deb_apls.sort(key=lambda x: x.get("template", ""), reverse=True)
@@ -3134,7 +3134,9 @@ def create_app(test_config=None):
             "Validation:PortConflict:UNEXPECTED_DOCKER_CONFLICT",
         ]
 
-        blocking_errors = [err for err in all_errors if err["type"] in blocking_types]
+        blocking_errors = [
+            conf_err for conf_err in all_errors if conf_err["type"] in blocking_types
+        ]
 
         if blocking_errors:
             logging.error(
@@ -3155,11 +3157,11 @@ def create_app(test_config=None):
         task_id = uuid.uuid4().hex
 
         non_blocking_errors = [
-            err for err in all_errors if err["type"] not in blocking_types
+            nb_err for nb_err in all_errors if nb_err["type"] not in blocking_types
         ]
         logs_start = [
-            f"WARNING/INFO: {err['summary']}. See task status for details."
-            for err in non_blocking_errors
+            f"WARNING/INFO: {nb_err['summary']}. See task status for details."
+            for nb_err in non_blocking_errors
         ]
 
         flask_app.deployment_tasks[task_id] = {
@@ -3352,9 +3354,9 @@ def create_app(test_config=None):
 
             # Filter out the sudo password prompt from logs if present
             clean_lines = [
-                line
-                for line in full_log.split("\n")
-                if "[sudo] password for" not in line
+                raw_line
+                for raw_line in full_log.split("\n")
+                if "[sudo] password for" not in raw_line
             ]
             full_log = "\n".join(clean_lines).strip()
 

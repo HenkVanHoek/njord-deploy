@@ -1,0 +1,25 @@
+{
+    "variables": [
+        {
+            "default": "8122",
+            "description": "Rybbit web analytics dashboard port.",
+            "id": "RYBBIT_WEB_PORT",
+            "label": "Rybbit Web Port",
+            "type": "port"
+        },
+        {
+            "default": "ChangeMeAuthSecretKeyRybbit32CharsLong2026!",
+            "description": "Secret key (32+ characters) used for securing authentication tokens.",
+            "id": "RYBBIT_AUTH_SECRET",
+            "label": "Better Auth Secret",
+            "type": "password"
+        },
+        {
+            "default": "ChangeMeDatabasePasswordRybbit2026!",
+            "description": "Password used for internal Postgres, Redis, and ClickHouse databases.",
+            "id": "RYBBIT_DB_PASSWORD",
+            "label": "Database Password",
+            "type": "password"
+        }
+    ]
+}

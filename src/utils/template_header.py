@@ -93,7 +93,9 @@ def merge_platform_notes(
     plat_strs = []
     for plat in ordered_plats:
         eng_dict = platforms[plat]
-        ordered_engs = [e for e in ["docker", "podman"] if e in eng_dict]
+        ordered_engs = [
+            known_eng for known_eng in ["docker", "podman"] if known_eng in eng_dict
+        ]
         for e in sorted(eng_dict.keys()):
             if e not in ordered_engs:
                 ordered_engs.append(e)

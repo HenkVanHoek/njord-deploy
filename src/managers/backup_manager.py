@@ -115,7 +115,7 @@ class BackupManager:
             "/srv",
             "/etc/docker",
         ]
-        dirs_str = " ".join(f'"{d}"' for d in search_dirs)
+        dirs_str = " ".join(f'"{s_dir}"' for s_dir in search_dirs)
         cmd = (
             f"for root in {dirs_str}; do "
             f'  exp=$(eval echo "$root" 2>/dev/null); '
@@ -363,7 +363,7 @@ class BackupManager:
         log_callback: Optional[Callable[[str], None]] = None,
     ) -> Dict[str, Any]:
         """Creates a timestamped compressed backup tarball of NjordDeploy services."""
-        log = log_callback or (lambda msg: None)
+        log = log_callback or (lambda _msg: None)
         active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_filename = f"njorddeploy_backup_{timestamp}.tar.gz"
@@ -591,7 +591,7 @@ class BackupManager:
         log_callback: Optional[Callable[[str], None]] = None,
     ) -> Dict[str, Any]:
         """Restores services and volumes from a NjordDeploy backup tarball."""
-        log = log_callback or (lambda msg: None)
+        log = log_callback or (lambda _msg: None)
         active_dir = self.resolve_project_dir(ssh_manager, project_config_dir)
 
         # Sanitize filename

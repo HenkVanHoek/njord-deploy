@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import requests
 from flask import (
@@ -43,6 +43,25 @@ from utils.resource_utils import get_components_paths
 from utils.security_utils import get_safe_redirect_target
 
 logging.basicConfig(level=logging.INFO)
+
+
+def save_api_key_to_env(
+    key: Optional[str] = None,
+    provider: str = "gemini",
+    base_url: Optional[str] = None,
+    model: Optional[str] = None,
+    project_root: Optional[Any] = None,
+) -> None:
+    """Saves API key, base URL, and/or model to the local .env file."""
+    from utils.ai_provider_manager import save_api_key_to_env_file
+
+    save_api_key_to_env_file(
+        key=key,
+        provider=provider,
+        base_url=base_url,
+        model=model,
+        project_root=project_root,
+    )
 
 
 def create_app(test_config=None):
@@ -140,23 +159,6 @@ def create_app(test_config=None):
 
     meta_file = str(meta_file_path)
     temp_path = str(templates_path_obj)
-
-    def save_api_key_to_env(
-        key: Optional[str] = None,
-        provider: str = "gemini",
-        base_url: Optional[str] = None,
-        model: Optional[str] = None,
-    ):
-        """Saves API key, base URL, and/or model to the local .env file."""
-        from utils.ai_provider_manager import save_api_key_to_env_file
-
-        save_api_key_to_env_file(
-            key=key,
-            provider=provider,
-            base_url=base_url,
-            model=model,
-            project_root=project_root,
-        )
 
     # Initialize the unified ComponentManager
     component_manager = ComponentManager(
@@ -1350,6 +1352,7 @@ def create_app(test_config=None):
                                         base_url if isinstance(base_url, str) else None
                                     ),
                                     model=model if isinstance(model, str) else None,
+                                    project_root=project_root,
                                 )
                                 k_saved = True
                             except Exception as ex_k:
@@ -1421,6 +1424,7 @@ def create_app(test_config=None):
                         provider=provider,
                         base_url=base_url if isinstance(base_url, str) else None,
                         model=model if isinstance(model, str) else None,
+                        project_root=project_root,
                     )
                     key_saved = True
                 except Exception as e:

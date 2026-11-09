@@ -339,18 +339,20 @@ class AIGenerator:
 
                 # Filter to only fixable structure/variable/syntax warnings
                 fixable_warnings = [
-                    w for w in warnings if "was not found on Docker Hub" not in w
+                    sec_w
+                    for sec_w in warnings
+                    if "was not found on Docker Hub" not in sec_w
                 ]
 
                 # If no fixable warnings, or we reached max correction attempts
                 if not fixable_warnings or attempt >= max_attempts:
                     data["security_warnings"] = warnings
                     data["critical_violations"] = [
-                        w
-                        for w in warnings
-                        if w.startswith("CRITICAL:")
-                        or "sensitive host system path" in w
-                        or "Docker socket" in w
+                        sec_w
+                        for sec_w in warnings
+                        if sec_w.startswith("CRITICAL:")
+                        or "sensitive host system path" in sec_w
+                        or "Docker socket" in sec_w
                     ]
                     data["is_safe"] = len(data["critical_violations"]) == 0
                     if existing_component_ids:

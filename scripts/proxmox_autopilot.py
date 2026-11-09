@@ -19,12 +19,14 @@ from typing import Any, Dict, List, Optional
 import requests  # type: ignore
 from dotenv import load_dotenv
 
-# Ensure we can import from the 'src' root directory
+# Ensure we can import from the 'src' and project root directory
 project_root = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
 from managers.component_manager import ComponentManager  # noqa: E402
 from managers.ssh_manager import SSHManager  # noqa: E402
+from scripts.common import send_signal_message  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402 # type: ignore
 
 logging.basicConfig(
@@ -51,32 +53,6 @@ class DiagnosticReport:
     recommended_action: str = ""
     auto_heal_attempted: bool = False
     heal_success: bool = False
-
-
-def send_signal_message(message: str) -> bool:
-    """Sends a notification via Signal REST API if configured in .env."""
-    signal_api = os.getenv("SIGNAL_API")
-    signal_sender = os.getenv("SIGNAL_SENDER")
-    signal_recipient = os.getenv("SIGNAL_RECIPIENT")
-
-    if not (signal_api and signal_sender and signal_recipient):
-        logger.debug("Signal notification skipped: credentials not set.")
-        return False
-
-    try:
-        payload = {
-            "message": message,
-            "number": signal_sender,
-            "recipients": [signal_recipient],
-        }
-        res = requests.post(signal_api, json=payload, timeout=15)
-        if res.status_code in (200, 201):
-            logger.info("Signal notification sent successfully.")
-            return True
-        logger.warning(f"Failed to send Signal message. Status: {res.status_code}")
-    except Exception as exc:
-        logger.error(f"Error sending Signal message: {exc}")
-    return False
 
 
 class ProxmoxAutopilot:

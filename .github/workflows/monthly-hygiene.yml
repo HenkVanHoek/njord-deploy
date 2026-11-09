@@ -1,0 +1,43 @@
+name: Monthly Code Quality & PyCharm Hygiene
+
+on:
+  schedule:
+    - cron: '0 3 1 * *'  # 1e van de maand om 03:00 UTC
+  workflow_dispatch:      # Handmatige trigger mogelijk
+
+permissions:
+  contents: read
+
+jobs:
+  hygiene:
+    name: Flake8 & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: pyproject.toml
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends nmap sshpass
+
+      - name: Install Python Dependencies & Linters
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev,test]
+
+      - name: Run Flake8 PEP 8 Check
+        run: |
+          flake8 src/ run_configurator.py run_editor.py --max-line-length=88
+
+      - name: Run Pytest Suite
+        run: |
+          pytest -q

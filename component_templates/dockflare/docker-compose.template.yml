@@ -1,0 +1,56 @@
+# status: "untested"
+# last_tested_version: "none"
+# platform_notes: "None"
+# breaking_changes: "None"
+services:
+  dockflare:
+    image: "{{ image_name }}:{{ component_version }}"
+    container_name: njorddeploy-dockflare
+    restart: unless-stopped
+    ports:
+      - "{{ DOCKFLARE_WEB_PORT }}:5000"
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/dockflare/data:/app/data"
+    environment:
+      - REDIS_URL=redis://dockflare-redis:6379/0
+      - REDIS_DB_INDEX=0
+      - DOCKER_HOST=tcp://dockflare-socket-proxy:2375
+      - INTERNAL_BOOTSTRAP_SECRET={{ DOCKFLARE_BOOTSTRAP_SECRET }}
+    depends_on:
+      - dockflare-socket-proxy
+      - dockflare-redis
+    networks:
+      - njorddeploy_net
+
+  dockflare-socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.4.1
+    container_name: njorddeploy-dockflare-socket-proxy
+    restart: unless-stopped
+    environment:
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - CONTAINERS=1
+      - EVENTS=1
+      - NETWORKS=1
+      - IMAGES=1
+      - POST=1
+      - PING=1
+      - INFO=1
+      - EXEC=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - njorddeploy_net
+
+  dockflare-redis:
+    image: redis:7-alpine
+    container_name: njorddeploy-dockflare-redis
+    restart: unless-stopped
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    volumes:
+      - "{{ CONFIG_BASE_PATH }}/dockflare/redis:/data"
+    networks:
+      - njorddeploy_net
+
+networks:
+  njorddeploy_net:
+    external: true

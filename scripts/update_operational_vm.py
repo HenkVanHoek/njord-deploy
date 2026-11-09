@@ -19,12 +19,10 @@ Safety Features:
 """
 
 import argparse
-import json
 import logging
 import os
 import sys
 import time
-import urllib.request
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -37,6 +35,7 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "src"))
 
 from managers.ssh_manager import SSHManager  # noqa: E402
+from scripts.common import send_signal_notification  # noqa: E402
 from utils.proxmox_client import ProxmoxClient  # noqa: E402
 
 logging.basicConfig(
@@ -113,36 +112,6 @@ def verify_http_endpoint(
                 return False, None
         time.sleep(3)
     return False, None
-
-
-def send_signal_notification(message: str) -> bool:
-    """Send Signal notification if configured in .env."""
-    load_dotenv(project_root / ".env")
-    signal_url = os.getenv("SIGNAL_API_URL")
-    signal_sender = os.getenv("SIGNAL_SENDER")
-    signal_recipient = os.getenv("SIGNAL_RECIPIENT")
-
-    if not signal_url or not signal_sender or not signal_recipient:
-        logger.debug("Signal notification skipped: credentials not set.")
-        return False
-
-    payload = {
-        "message": message,
-        "number": signal_sender,
-        "recipients": [signal_recipient],
-    }
-    # noinspection PyBroadException
-    try:
-        req = urllib.request.Request(
-            f"{signal_url.rstrip('/')}/v2/send",
-            data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310
-            return resp.status in (200, 201)
-    except Exception as e:
-        logger.debug(f"Signal notification failed: {e}")
-        return False
 
 
 def save_obsidian_log(

@@ -112,6 +112,7 @@ architecture details, default ports, volume specifications, and quick start guid
 | Component | Description | Upstream | Dedicated README |
 |---|---|---|---|
 | `caddy` | Caddy is a powerful, enterprise-ready, open source web server with automatic HTTPS written in Go. | [Caddy](https://github.com/caddyserver/caddy) | [View README](component_templates/caddy/README.md) |
+| `dockflare` | Automate Cloudflare Tunnels and Zero Trust access policies using Docker labels with an intuitive web UI das... | [DockFlare](https://github.com/ChrispyBacon-dev/DockFlare) | [View README](component_templates/dockflare/README.md) |
 | `nginx-proxy-manager` | An easy-to-use, Docker-based interface for managing Nginx proxy hosts with free SSL certificate support. | [Nginx Proxy Manager](https://nginxproxymanager.com/) | [View README](component_templates/nginx-proxy-manager/README.md) |
 | `traefik` | A modern, cloud-native reverse proxy and load balancer that automatically discovers services. | [Traefik](https://traefik.io/traefik/) | [View README](component_templates/traefik/README.md) |
 
@@ -161,6 +162,7 @@ architecture details, default ports, volume specifications, and quick start guid
 | `microbin` | Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service. | [Microbin](https://microbin.eu/) | [View README](component_templates/microbin/README.md) |
 | `ntfy` | ntfy (pronounced 'notify') is a simple HTTP-based pub-sub notification service. With ntfy, you can send not... | ntfy | [View README](component_templates/ntfy/README.md) |
 | `plausible` | Plausible is a lightweight, open-source and privacy-friendly Google Analytics alternative without cookies a... | [Plausible Analytics](https://plausible.io/) | [View README](component_templates/plausible/README.md) |
+| `rybbit` | Open-source, cookie-free, and privacy-friendly web analytics platform designed as an intuitive alternative ... | [Rybbit](https://github.com/rybbit-io/rybbit) | [View README](component_templates/rybbit/README.md) |
 | `searxng` | Privacy-respecting metasearch engine. | SearXNG | [View README](component_templates/searxng/README.md) |
 | `shlink` | Self-hosted URL shortener with REST API, rich statistics and QR code generation. | Shlink | [View README](component_templates/shlink/README.md) |
 | `speedtest-tracker` | Self-hosted internet speedtest tracker that runs speedtests periodically and visualizes latency and bandwidth. | Speedtest Tracker | [View README](component_templates/speedtest-tracker/README.md) |
@@ -276,6 +278,14 @@ architecture details, default ports, volume specifications, and quick start guid
 |---|---|---|---|
 | `clamav` | Open-source antivirus engine and daemon for real-time malware and attachment scanning over TCP socket. | [ClamAV Antivirus Daemon](https://github.com/Cisco-Talos/clamav) | [View README](component_templates/clamav/README.md) |
 
+### News & Bookmarks
+
+| Component | Description | Upstream | Dedicated README |
+|---|---|---|---|
+| `karakeep` | Self-hostable bookmark-everything app (links, notes, and images) with AI-based automatic tagging and full-t... | [Karakeep](https://github.com/karakeep-app/karakeep) | [View README](component_templates/karakeep/README.md) |
+| `linkding` | Minimal, fast, and privacy-focused bookmark manager designed for speed. | [linkding](https://github.com/sissbruecker/linkding) | [View README](component_templates/linkding/README.md) |
+| `miniflux` | Minimalist, fast, and opinionated RSS feed reader written in Go. | [Miniflux](https://miniflux.app/) | [View README](component_templates/miniflux/README.md) |
+
 ### System & Tools
 
 | Component | Description | Upstream | Dedicated README |
@@ -303,13 +313,6 @@ architecture details, default ports, volume specifications, and quick start guid
 | `metube` | Web GUI for yt-dlp with playlist support and audio/video download format selection. | [MeTube](https://github.com/alexta69/metube) | [View README](component_templates/metube/README.md) |
 | `transmission` | Fast, lightweight, and reliable BitTorrent client with a clean web interface. | [Transmission](https://transmissionbt.com/) | [View README](component_templates/transmission/README.md) |
 | `unpackerr` | Automatically extracts downloaded archives for Radarr, Sonarr, Lidarr, and torrent downloads. | [Unpackerr](https://unpackerr.zip/) | [View README](component_templates/unpackerr/README.md) |
-
-### News & Bookmarks
-
-| Component | Description | Upstream | Dedicated README |
-|---|---|---|---|
-| `linkding` | Minimal, fast, and privacy-focused bookmark manager designed for speed. | [linkding](https://github.com/sissbruecker/linkding) | [View README](component_templates/linkding/README.md) |
-| `miniflux` | Minimalist, fast, and opinionated RSS feed reader written in Go. | [Miniflux](https://miniflux.app/) | [View README](component_templates/miniflux/README.md) |
 
 ### Network
 

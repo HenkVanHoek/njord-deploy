@@ -5,7 +5,7 @@ import sys
 
 import yaml
 
-try:
+try:  # pragma: no cover
     # noinspection PyPackageRequirements
     from onvif import ONVIFCamera, ONVIFError
 
@@ -89,7 +89,9 @@ async def discover_onvif_cameras():
             tasks.append(check_ip_port(target_ip, 8899))
 
     scan_results = await asyncio.gather(*tasks)
-    potential_ips = sorted(list(set([ip for ip in scan_results if ip is not None])))
+    potential_ips = sorted(
+        list(set([found_ip for found_ip in scan_results if found_ip is not None]))
+    )
 
     if not potential_ips:
         print("No devices found with open HTTP/ONVIF ports.")

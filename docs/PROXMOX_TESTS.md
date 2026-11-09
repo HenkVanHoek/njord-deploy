@@ -1,6 +1,6 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-11-08 08:03:14
+**Run Timestamp:** 2026-11-09 07:19:59
 **Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 497 | **Passed:** 491 | **Skipped:** 5 | **Failed:** 1
 
 ## Results Table
@@ -79,7 +79,7 @@
 | 2026-09-14 10:01:01 | `docmost`             | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:14:27 | `docmost`             | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:31:53 | `docmost`             | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
-| 2026-11-05 07:21:48 | `dozzle`              | `LXC`  | `DOCKER` | 107   | 192.168.178.182 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-11-09 07:17:01 | `dozzle`              | `LXC`  | `DOCKER` | 107   | 192.168.178.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:01:43 | `dozzle`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:15:16 | `dozzle`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 12:32:56 | `dozzle`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
@@ -308,7 +308,7 @@
 | 2026-09-14 10:29:51 | `ollama`              | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 11:53:03 | `ollama`              | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
 | 2026-09-14 13:13:27 | `ollama`              | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | N/A  | **✅ PASS**     |
-| 2026-11-05 14:31:01 | `open-webui`          | `LXC`  | `DOCKER` | 107   | 192.168.178.188 | success    | Running    | OK   | **✅ PASS**     |
+| 2026-11-09 07:18:16 | `open-webui`          | `LXC`  | `DOCKER` | 107   | 192.168.178.199 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:31:04 | `open-webui`          | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:54:14 | `open-webui`          | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:14:47 | `open-webui`          | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
