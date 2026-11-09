@@ -54,8 +54,8 @@ def test_send_signal_notification():
             "SIGNAL_RECIPIENT": "+31611111111",
         },
     ):
-        with patch("urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.return_value.__enter__.return_value.status = 200
+        with patch("requests.post") as mock_post:
+            mock_post.return_value.status_code = 201
             res = send_signal_notification("Test update alert")
             assert res is True
 
