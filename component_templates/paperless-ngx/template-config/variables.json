@@ -8,6 +8,20 @@
             "type": "port"
         },
         {
+            "default": "http://localhost:8000",
+            "description": "The public URL used to access Paperless-ngx (e.g., https://paperless.example.com).",
+            "id": "PAPERLESS_URL",
+            "label": "Paperless-ngx Public URL",
+            "type": "text"
+        },
+        {
+            "default": "*",
+            "description": "Comma-separated list of allowed hostnames or IP addresses for Django ALLOWED_HOSTS (use '*' to allow all hosts, or specify your domain/IP).",
+            "id": "PAPERLESS_ALLOWED_HOSTS",
+            "label": "Paperless-ngx Allowed Hosts",
+            "type": "text"
+        },
+        {
             "default": "paperless",
             "description": "The name of the PostgreSQL database used by Paperless-ngx.",
             "id": "PAPERLESS_DBNAME",

@@ -1,6 +1,6 @@
 # status: "tested"
-# last_tested_version: "3.4.2"
-# platform_notes: "Tested on Proxmox LXC: docker (3.4.2, 2026-11-05), podman (7.4.11, 2026-09-14); Proxmox VM: docker (3.1.3, 2026-09-14), podman (7.4.11, 2026-09-14)."
+# last_tested_version: "3.5.1"
+# platform_notes: "Tested on Proxmox LXC: docker (3.5.1, 2026-11-18), podman (7.4.11, 2026-09-14); Proxmox VM: docker (3.1.3, 2026-09-14), podman (7.4.11, 2026-09-14)."
 # breaking_changes: none
 services:
   paperless-ngx:
@@ -15,7 +15,8 @@ services:
       - "PAPERLESS_DBUSER={{ PAPERLESS_DBUSER }}"
       - "PAPERLESS_DBPASS={{ PAPERLESS_DBPASS }}"
       - "PAPERLESS_SECRET_KEY={{ PAPERLESS_SECRET_KEY }}"
-      - "PAPERLESS_URL=http://localhost:8000"
+      - "PAPERLESS_URL={{ PAPERLESS_URL | default('http://localhost:8000', true) }}"
+      - "PAPERLESS_ALLOWED_HOSTS={{ PAPERLESS_ALLOWED_HOSTS | default('*', true) }}"
       - "USERMAP_UID={{ USERMAP_UID }}"
       - "USERMAP_GID={{ USERMAP_GID }}"
       - "TZ={{ TZ }}"
