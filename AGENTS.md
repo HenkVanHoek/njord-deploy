@@ -33,6 +33,7 @@ CRITICAL CODE QUALITY DIRECTIVES (Python & JavaScript)
 - All generated code must be "Air Traffic Control" grade.
 - Python: Must be PEP 8 Compliant with a Maximum Line Length of 88 Characters and pass all flake8 and mypy checks.
 - JavaScript: Must be in external .js files (no inline logic) and must be Linter-Clean.
+- Strict CSP & Zero-Inline Frontend Mandate: NEVER generate inline event handlers (`onclick=`, `onchange=`, `onsubmit=`, `oninput=`, `onerror=`, `onload=`), `javascript:` URLs, `eval()`/`new Function()`, or `'unsafe-inline'`/`'unsafe-eval'` in CSP headers. Always bind UI interactions via `data-*` attributes + delegated `addEventListener` handlers in external `.js` files, add per-request CSP `nonce` to any unavoidable template `<script>`/`<style>` blocks, and pin external CDN assets with SRI (`integrity` + `crossorigin="anonymous"`) or vendor them locally.
 
 - REVISED: Python: Directive on Precise List Element Access (CRITICAL)
     To circumvent a recurring generator fault, the following hierarchy of access methods is mandatory. The core principle is to default to structurally robust patterns.
