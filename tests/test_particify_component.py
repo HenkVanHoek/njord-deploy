@@ -144,3 +144,28 @@ def test_particify_render_and_network_isolation() -> None:
     assert "njorddeploy_net" in networks
     assert "particify_internal" in networks
     assert networks["particify_internal"]["external"] is False
+
+
+def test_particify_dutch_i18n_bundles_valid() -> None:
+    """All five Dutch (nl) i18n bundles are valid, non-empty UTF-8 JSON."""
+    import json
+
+    i18n_root = TEMPLATES_DIR / "particify" / "i18n" / "nl"
+    expected_samples = {
+        "nl.json": ("header", "login", "Inloggen"),
+        "admin/nl.json": ("admin-area", "title", "Beheer"),
+        "creator/nl.json": ("room-page", "create-content-group", "Vragenreeks maken"),
+        "participant/nl.json": (
+            "content",
+            "thanks-for-participation",
+            "Bedankt voor je deelname!",
+        ),
+        "extensions/nl.json": ("x-room-password", "password", "Ruimtewachtwoord"),
+    }
+
+    for rel_path, (section, key, expected_value) in expected_samples.items():
+        bundle_path = i18n_root / rel_path
+        assert bundle_path.exists(), f"Missing Dutch i18n bundle: {rel_path}"
+        data = json.loads(bundle_path.read_text(encoding="utf-8"))
+        assert isinstance(data, dict) and data
+        assert data[section][key] == expected_value

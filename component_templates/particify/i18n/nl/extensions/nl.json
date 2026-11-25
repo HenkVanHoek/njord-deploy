@@ -1,0 +1,162 @@
+{
+  "x-import": {
+    "import": "Importeren",
+    "import-from": "Importeren uit {{ from }}",
+    "export-token": "Token",
+    "export-token-placeholder": "Je ontvangt het token van {{ from }}",
+    "send-token": "Bevestigen",
+    "abort": "Annuleren",
+    "started": "Importeren is gestart.",
+    "success": "Je ruimtes zijn geïmporteerd.",
+    "failed": "Er is iets misgegaan.",
+    "wrong-token": "Dit token is ongeldig.",
+    "description": "Je kunt je ruimtes (“Sessies”) importeren uit {{ from}}. Vragen van de volgende typen worden ondersteund: “Enkel-/Meerkeuze”, “Likert”, “Ja/Nee”, “Tekst”, “Dia” en “Flashcard”.",
+    "start-import": "Importeren starten",
+    "or": "of",
+    "login": "Inloggen",
+    "login-required": "Je moet ingelogd zijn om ruimtes te kunnen importeren."
+  },
+  "x-attachments": {
+    "a11y-delete": "Verwijdert dit bestand.",
+    "a11y-download": "Download het bestand naar je apparaat.",
+    "a11y-size": "De bestandsgrootte is: ",
+    "a11y-description": "Beschrijving van het bestand",
+    "more": "Meer opties",
+    "delete": "Verwijderen",
+    "upload-file": "Bestand uploaden",
+    "no-files-yet": "Er zijn nog geen bestanden.",
+    "lock": "Vergrendelen",
+    "unlock": "Ontgrendelen",
+    "select-file": "Bestand kiezen",
+    "no-file": "Kies een bestand.",
+    "enter-description": "Voer hier een beschrijving in",
+    "description": "Beschrijving",
+    "abort": "Annuleren",
+    "save": "Opslaan",
+    "added": "Je bestand is geüpload.",
+    "deleted": "Het bestand is verwijderd.",
+    "locked": "Het bestand is vergrendeld.",
+    "unlocked": "Het bestand is ontgrendeld.",
+    "quota-exceeded": "Je hebt niet genoeg vrije opslagruimte.",
+    "allow-images": "Afbeeldingen toestaan",
+    "allow-images-info": "Deelnemers kunnen afbeeldingen toevoegen aan een bericht."
+  },
+  "x-room-password": {
+    "protect-room": "Ruimte beveiligen met wachtwoord",
+    "protect-room-info": "Deelnemers moeten een wachtwoord invoeren om de ruimte te betreden.",
+    "password": "Ruimtewachtwoord",
+    "confirm": "Ruimte openen",
+    "cancel": "Annuleren",
+    "invalid-password": "Onjuist wachtwoord. Controleer je invoer.",
+    "change-password": "Wachtwoord wijzigen",
+    "changed-successfully": "Het wachtwoord is ingesteld.",
+    "removed-successfully": "Het wachtwoord is verwijderd."
+  },
+  "dialog": {
+    "a11y-archive-comments": "Archiveert de berichten naar een archief met de naam {{archive}}.",
+    "a11y-archive-name-input": "Voer hier de titel van het archief in.",
+    "really-delete-attachment": "Weet je zeker dat je dit bestand wilt verwijderen?",
+    "archive-name": "Naam van het archief",
+    "archive-comments-hint": "Alle huidige berichten worden gearchiveerd. Je vindt je gearchiveerde berichten terug in de instellingen.",
+    "archive": "Archiveren",
+    "comments-archived": "De berichten zijn gearchiveerd.",
+    "canceled": "De actie is geannuleerd.",
+    "really-delete-archive": "Weet je zeker dat je het volgende archief definitief wilt verwijderen?",
+    "really-update-end-date": "Weet je zeker dat je de einddatum voor dit pakket wilt wijzigen naar de volgende datum?",
+    "change": "Wijzigen"
+  },
+  "x-comment-list": {
+    "archive": "Archiveren"
+  },
+  "x-archive": {
+    "archive": "Gearchiveerde berichten",
+    "open": "Archief openen",
+    "delete": "Archief verwijderen",
+    "export": "Archief exporteren",
+    "deleted": "Het archief is verwijderd.",
+    "no-archives": "Je hebt nog geen Q&A-berichten gearchiveerd."
+  },
+  "x-remote": {
+    "a11y-present-in-new-tab": "Open de presentatiemodus in een nieuw tabblad.",
+    "present-in-new-tab": "Presenteren in nieuw tabblad",
+    "present-content": "Vraag presenteren",
+    "stop-present-content": "Stoppen met presenteren",
+    "hide-results": "Resultaten verbergen",
+    "show-results": "Resultaten tonen",
+    "hide-correct": "Juiste antwoorden verbergen",
+    "show-correct": "Juiste antwoorden tonen"
+  },
+  "x-subscriptions": {
+    "discovered-premium-feature": "Je hebt een premiumfunctie ontdekt",
+    "upgrade-to-premium": "Met een premiumaccount haal je nog meer uit Particify.",
+    "premium-beta-info": "Je gebruikt onze premiumversie gratis tijdens de bètafase.",
+    "feedback": "Feedback",
+    "learn-more": "Meer informatie",
+    "close": "Sluiten"
+  },
+  "x-premium-admin": {
+    "premium": "Premium",
+    "tiers": "Pakketten",
+    "subscriptions": "Abonnementen",
+    "features": "Functies",
+    "start": "Start",
+    "end": "Einde",
+    "new-tier": "Nieuw pakket",
+    "create-tier": "Pakket aanmaken",
+    "login-id": "E-mail",
+    "search-user": "Zoeken",
+    "name": "Naam",
+    "description": "Beschrijving",
+    "add-feature": "Functie aanmaken",
+    "tier": "Pakket",
+    "state": "Status",
+    "key": "Sleutel",
+    "value": "Waarde",
+    "new-feature": "Nieuwe functie",
+    "no-user-found": "Er is geen account gevonden met dit e-mailadres.",
+    "settings-changed": "Instellingen zijn gewijzigd."
+  },
+  "x-quota": {
+    "storage-space": "Opslagruimte",
+    "description": "Met Particify Premium heb je {{ limit }} opslagruimte voor het uploaden van bestanden.",
+    "used": "gebruikt",
+    "free": "vrij"
+  },
+  "x-settings": {
+    "role": "Rol",
+    "editor": "Redacteur",
+    "moderator": "Moderator"
+  },
+  "x-series-results-export": {
+    "export-results": "Resultaten exporteren",
+    "choose-format": "Formaat kiezen"
+  },
+  "x-lms": {
+    "courses": "Cursussen",
+    "new-course-rooms": "Nieuwe cursusruimtes",
+    "connect-with-course": "Koppelen met cursus"
+  },
+  "x-admin": {
+    "all-tenants": "Alle organisaties"
+  },
+  "x-external-instance": {
+    "hint": "Voor jouw organisatie {{organization}} draait een aparte Particify-instantie met mogelijk extra functies:"
+  },
+  "x-embedded-view": {
+    "start-quiz": "Quiz starten",
+    "publish-content": "Onderdeel publiceren",
+    "select-room": "Selecteer ruimte",
+    "select-content-group": "Selecteer vragenreeks",
+    "no-content-groups": "Geen vragenreeksen beschikbaar. Je kunt quizzen, enquêtes en meer aanmaken in het ruimteoverzicht.",
+    "open-room-in-browser": "Ruimte openen in browser"
+  },
+  "x-overlay": {
+    "open-in-overlay": "Openen met Particify Overlay",
+    "open-in-overlay-description": "Gebruik Particify naadloos samen met andere applicaties.",
+    "overlay-description": "Particify Overlay biedt naadloze integratie in je workflow met andere applicaties. Als je de app al hebt geïnstalleerd, kun je de ruimte openen met Particify Overlay.",
+    "download-overlay-hint": "Als je de app nog niet hebt geïnstalleerd, kun je deze hier downloaden.",
+    "open-room-in-app": "Ruimte openen met Particify Overlay",
+    "further-information": "Meer informatie",
+    "or": "of"
+  }
+}
