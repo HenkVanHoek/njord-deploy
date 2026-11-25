@@ -87,6 +87,7 @@ This document is automatically generated from the project metadata. It lists the
 | Service | Description | Project Homepage / Repository |
 |---|---|---|
 | Caddy | Caddy is a powerful, enterprise-ready, open source web server with automatic HTTPS written in Go. | [Link](https://github.com/caddyserver/caddy) |
+| DockFlare | Automate Cloudflare Tunnels and Zero Trust access policies using Docker labels with an intuitive web UI dashboard. | [Link](https://github.com/ChrispyBacon-dev/DockFlare) |
 | Nginx Proxy Manager | An easy-to-use, Docker-based interface for managing Nginx proxy hosts with free SSL certificate support. | [Link](https://nginxproxymanager.com/) |
 | Traefik | A modern, cloud-native reverse proxy and load balancer that automatically discovers services. | [Link](https://traefik.io/traefik/) |
 
@@ -136,6 +137,7 @@ This document is automatically generated from the project metadata. It lists the
 | Microbin | Ultra-lightweight, configurable, feature-rich, self-hosted pastebin service. | [Link](https://microbin.eu/) |
 | ntfy | ntfy (pronounced 'notify') is a simple HTTP-based pub-sub notification service. With ntfy, you can send notifications to your phone or desktop via scripts from any computer, without having to sign up or pay any fees. It runs as root (0:0) to manage file permissions on mounted volumes. | N/A |
 | Plausible Analytics | Plausible is a lightweight, open-source and privacy-friendly Google Analytics alternative without cookies and fully compliant with GDPR, CCPA and PECR. | [Link](https://plausible.io/) |
+| Rybbit | Open-source, cookie-free, and privacy-friendly web analytics platform designed as an intuitive alternative to Google Analytics. | [Link](https://github.com/rybbit-io/rybbit) |
 | SearXNG | Privacy-respecting metasearch engine. | N/A |
 | Shlink | Self-hosted URL shortener with REST API, rich statistics and QR code generation. | N/A |
 | Speedtest Tracker | Self-hosted internet speedtest tracker that runs speedtests periodically and visualizes latency and bandwidth. | N/A |
@@ -161,6 +163,7 @@ This document is automatically generated from the project metadata. It lists the
 | n8n | Fair-code platform to build and deploy AI agents and workflows. Combine a visual canvas with custom code, run it self-hosted, and connect to 1500+ integrations. | [Link](https://n8n.io/) |
 | Nextcloud | A comprehensive self-hosted productivity and collaboration suite offering secure file storage, online document editing, calendar, and contacts synchronization. | [Link](https://nextcloud.com/) |
 | Paperless-ngx | A document management system that transforms your physical documents into a searchable online archive so you can keep, well, less paper. It automatically imports, tags, and archives your scanned documents. | N/A |
+| Particify | Open-source audience response system (ARSnova) and privacy-friendly Mentimeter / Slido alternative for live polls, Q&A, quizzes, and interactive presentations. | [Link](https://particify.de) |
 | SilverBullet | Extensible, open-source personal knowledge management system written in clean TypeScript. | [Link](https://silverbullet.md/) |
 | Stirling PDF | A powerful, open-source PDF editing platform for editing, signing, redacting, converting, and automating PDFs. | [Link](https://stirlingpdf.com/) |
 | Trilium Next | Hierarchical note taking application with focus on building large personal knowledge bases. | N/A |
@@ -251,6 +254,14 @@ This document is automatically generated from the project metadata. It lists the
 |---|---|---|
 | ClamAV Antivirus Daemon | Open-source antivirus engine and daemon for real-time malware and attachment scanning over TCP socket. | [Link](https://github.com/Cisco-Talos/clamav) |
 
+## News & Bookmarks
+
+| Service | Description | Project Homepage / Repository |
+|---|---|---|
+| Karakeep | Self-hostable bookmark-everything app (links, notes, and images) with AI-based automatic tagging and full-text search. | [Link](https://github.com/karakeep-app/karakeep) |
+| linkding | Minimal, fast, and privacy-focused bookmark manager designed for speed. | [Link](https://github.com/sissbruecker/linkding) |
+| Miniflux | Minimalist, fast, and opinionated RSS feed reader written in Go. | [Link](https://miniflux.app/) |
+
 ## System & Tools
 
 | Service | Description | Project Homepage / Repository |
@@ -278,13 +289,6 @@ This document is automatically generated from the project metadata. It lists the
 | MeTube | Web GUI for yt-dlp with playlist support and audio/video download format selection. | [Link](https://github.com/alexta69/metube) |
 | Transmission | Fast, lightweight, and reliable BitTorrent client with a clean web interface. | [Link](https://transmissionbt.com/) |
 | Unpackerr | Automatically extracts downloaded archives for Radarr, Sonarr, Lidarr, and torrent downloads. | [Link](https://unpackerr.zip/) |
-
-## News & Bookmarks
-
-| Service | Description | Project Homepage / Repository |
-|---|---|---|
-| linkding | Minimal, fast, and privacy-focused bookmark manager designed for speed. | [Link](https://github.com/sissbruecker/linkding) |
-| Miniflux | Minimalist, fast, and opinionated RSS feed reader written in Go. | [Link](https://miniflux.app/) |
 
 ## Network
 

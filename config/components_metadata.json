@@ -5692,6 +5692,89 @@
                 "rss_feed": "https://github.com/paperless-ngx/paperless-ngx/releases.atom"
             }
         },
+        "particify": {
+            "component_version": "3.14.20261123",
+            "conflicts_with": [],
+            "default_version": "3.14.20261123",
+            "depends_on": [],
+            "description": "Open-source audience response system (ARSnova) and privacy-friendly Mentimeter / Slido alternative for live polls, Q&A, quizzes, and interactive presentations.",
+            "docker_service_name": "particify",
+            "first_run_info": {
+                "auth_type": "wizard",
+                "default_username": null,
+                "doc_url": "https://particify.de/en/manual/",
+                "log_token_regex": null,
+                "onboarding_guide": "Open the Particify web UI to create a room as a guest or register an account. Configure optional SMTP settings to enable email-based account verification.",
+                "token_label": null
+            },
+            "group": "Productivity",
+            "has_configuration": true,
+            "has_traefik_support": true,
+            "has_ui": true,
+            "image_name": "particify/arsnova-server-core",
+            "last_tested": "2026-11-25T08:31:53.380370+00:00",
+            "last_tested_version": "3.14.20261123",
+            "last_updated": "2026-11-25T08:31:53.380379+00:00",
+            "name": "Particify",
+            "package_id": null,
+            "podman_mode": "rootful",
+            "project_url": "https://particify.de",
+            "protocol": "http",
+            "release_track": {
+                "lts_identifier": null,
+                "otap_role": "production",
+                "track": "standard"
+            },
+            "requires_root": false,
+            "resource_profile": {
+                "cpu": "high",
+                "ram": "high",
+                "recommended_cores": 4,
+                "recommended_ram_mb": 4096,
+                "recommended_storage_gb": 10,
+                "storage_type": "persistent"
+            },
+            "staging": {
+                "candidate_version": null,
+                "entered_staging_at": null,
+                "grace_days": 14,
+                "status": "idle",
+                "test_result": "Passed Proxmox LXC DOCKER test (3.14.20261123)"
+            },
+            "supported_matrix": {
+                "engines": [
+                    "docker",
+                    "podman"
+                ],
+                "modes": [
+                    "lxc",
+                    "vm"
+                ],
+                "notes": "AMD64 (x86_64) only. Upstream Particify images do not publish ARM64 manifests. Recommended minimum 4 vCPU and 4-8 GB RAM."
+            },
+            "tags": [
+                "polling",
+                "mentimeter",
+                "slido",
+                "audience-response",
+                "quiz",
+                "qa",
+                "presentation",
+                "education",
+                "arsnova"
+            ],
+            "test_status": "tested",
+            "traefik_internal_port": 80,
+            "ui_port_variable": "PARTICIFY_WEB_PORT",
+            "upstream": {
+                "deprecation_note": null,
+                "github_repo": "particify/arsnova-server",
+                "is_deprecated": false,
+                "latest_upstream_version": "3.14.20261123",
+                "registry_type": "dockerhub",
+                "rss_feed": "https://github.com/particify/arsnova-server/releases.atom"
+            }
+        },
         "pgadmin4": {
             "category": "Database Management",
             "conflicts_with": [],

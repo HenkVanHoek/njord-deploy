@@ -15569,5 +15569,25 @@
         "first_run_auth_type": "wizard",
         "first_run_token": null,
         "first_run_token_missing": false
+    },
+    {
+        "timestamp": "2026-11-25 09:31:14",
+        "component_id": "particify",
+        "mode": "LXC",
+        "engine": "DOCKER",
+        "status": "success",
+        "vmid": 107,
+        "ip": "192.168.178.156",
+        "deployment": "success",
+        "running": true,
+        "http_ok": true,
+        "http_url": "http://192.168.178.156:8123",
+        "port": null,
+        "report_file": "PROXMOX_TESTS_particify_20261125_093029.md",
+        "error_logs": false,
+        "error_message": "",
+        "first_run_auth_type": "wizard",
+        "first_run_token": null,
+        "first_run_token_missing": false
     }
 ]

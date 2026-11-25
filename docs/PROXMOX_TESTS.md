@@ -1,7 +1,7 @@
 # Proxmox Automated Component Testing Report - All Components Master Matrix
 
-**Run Timestamp:** 2026-11-09 07:19:59
-**Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 497 | **Passed:** 491 | **Skipped:** 5 | **Failed:** 1
+**Run Timestamp:** 2026-11-25 09:31:57
+**Execution Profile:** `MATRIX (4 envs)` | **Total Tested:** 498 | **Passed:** 492 | **Skipped:** 5 | **Failed:** 1
 
 ## Results Table
 
@@ -324,6 +324,7 @@
 | 2026-09-14 10:33:29 | `paperless-ngx`       | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:56:47 | `paperless-ngx`       | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 13:17:46 | `paperless-ngx`       | `VM`   | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
+| 2026-11-25 09:31:14 | `particify`           | `LXC`  | `DOCKER` | 107   | 192.168.178.156 | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 09:27:35 | `pgadmin4`            | `LXC`  | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 10:35:23 | `pgadmin4`            | `LXC`  | `PODMAN` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
 | 2026-09-14 11:58:15 | `pgadmin4`            | `VM`   | `DOCKER` | 104   | 10.99.0.199     | success    | Running    | OK   | **✅ PASS**     |
@@ -3370,6 +3371,7 @@
 | `paperless-ngx`       | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `paperless-ngx`       | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `paperless-ngx`       | `VM`   | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
+| `particify`           | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `pgadmin4`            | `LXC`  | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `pgadmin4`            | `LXC`  | `PODMAN` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |
 | `pgadmin4`            | `VM`   | `DOCKER` | `wizard`        | *Onboarding Wizard*          | ℹ️ WIZARD        |

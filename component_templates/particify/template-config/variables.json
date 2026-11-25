@@ -1,0 +1,140 @@
+{
+    "variables": [
+        {
+            "default": "8123",
+            "description": "External host port for accessing the Particify audience response web interface.",
+            "id": "PARTICIFY_WEB_PORT",
+            "label": "Particify Web Port",
+            "required": "always",
+            "type": "port"
+        },
+        {
+            "default": "localhost",
+            "description": "Public hostname or domain for Particify (used for Nginx routing and JWT server ID, e.g. particify.example.com).",
+            "id": "PARTICIFY_HOSTNAME",
+            "label": "Particify Hostname / Domain",
+            "required": "always",
+            "type": "text"
+        },
+        {
+            "default": "http://localhost:8123",
+            "description": "Public base URL of Particify including scheme (e.g. https://particify.example.com), used for activation and invitation links.",
+            "id": "PARTICIFY_ROOT_URL",
+            "label": "Particify Public Root URL",
+            "required": "always",
+            "type": "text"
+        },
+        {
+            "default": "true",
+            "description": "Enable anonymous guest access (true recommended with 'participant' role so audiences can vote without login).",
+            "id": "PARTICIFY_GUEST_ENABLED",
+            "label": "Allow Guest Access",
+            "options": [
+                "true",
+                "false"
+            ],
+            "type": "choice"
+        },
+        {
+            "default": "participant",
+            "description": "Roles permitted for guest accounts: 'participant' (Menti.com style: audience votes without login, moderators must register) or 'moderator,participant'.",
+            "id": "PARTICIFY_GUEST_ALLOWED_ROLES",
+            "label": "Guest Allowed Roles",
+            "options": [
+                "participant",
+                "moderator,participant"
+            ],
+            "type": "choice"
+        },
+        {
+            "default": "Particify",
+            "description": "Display title for the built-in account login provider.",
+            "id": "PARTICIFY_AUTH_TITLE",
+            "label": "Login Provider Title",
+            "type": "text"
+        },
+        {
+            "default": "*",
+            "description": "Comma-separated list of email domains allowed to register accounts (e.g. 'example.com' or '*' for all).",
+            "id": "PARTICIFY_ALLOWED_EMAIL_DOMAINS",
+            "label": "Allowed Registration Email Domains",
+            "type": "text"
+        },
+        {
+            "default": "ChangeMeParticifyJwtSecretKey32CharsMin2026!",
+            "description": "Strong secret key (minimum 32 characters) used to sign authentication JWT tokens across Particify microservices. Change before production use.",
+            "id": "PARTICIFY_JWT_SECRET",
+            "label": "JWT Signing Secret",
+            "required": "always",
+            "type": "password"
+        },
+        {
+            "default": "ChangeMeParticifyDatabasePassword2026!",
+            "description": "Password securing Particify internal CouchDB and PostgreSQL (auth & comments) databases.",
+            "id": "PARTICIFY_DB_PASSWORD",
+            "label": "Internal Database Password",
+            "required": "always",
+            "type": "password"
+        },
+        {
+            "default": "",
+            "description": "Optional Content-Security-Policy frame-ancestors origins allowed to embed Particify (leave empty to disallow framing).",
+            "id": "PARTICIFY_CSP_FRAME_ANCESTORS",
+            "label": "CSP Frame Ancestors (Optional)",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "Optional SMTP server hostname for sending account registration and password reset emails.",
+            "id": "PARTICIFY_MAIL_HOST",
+            "label": "SMTP Mail Host (Optional)",
+            "type": "text"
+        },
+        {
+            "default": "25",
+            "description": "SMTP server port (e.g. 25, 465, or 587).",
+            "id": "PARTICIFY_MAIL_PORT",
+            "label": "SMTP Mail Port",
+            "type": "text"
+        },
+        {
+            "default": "false",
+            "description": "Set to true for implicit TLS (port 465) or false for STARTTLS/plain.",
+            "id": "PARTICIFY_MAIL_IMPLICITTLS",
+            "label": "SMTP Implicit TLS",
+            "options": [
+                "false",
+                "true"
+            ],
+            "type": "choice"
+        },
+        {
+            "default": "",
+            "description": "Optional SMTP authentication username.",
+            "id": "PARTICIFY_MAIL_USERNAME",
+            "label": "SMTP Username (Optional)",
+            "type": "text"
+        },
+        {
+            "default": "",
+            "description": "Optional SMTP authentication password.",
+            "id": "PARTICIFY_MAIL_PASSWORD",
+            "label": "SMTP Password (Optional)",
+            "type": "password"
+        },
+        {
+            "default": "Particify",
+            "description": "Display name shown on outgoing Particify emails.",
+            "id": "PARTICIFY_MAIL_SENDERNAME",
+            "label": "Email Sender Name",
+            "type": "text"
+        },
+        {
+            "default": "particify@example.com",
+            "description": "Sender email address for outgoing Particify emails.",
+            "id": "PARTICIFY_MAIL_SENDERADDRESS",
+            "label": "Email Sender Address",
+            "type": "text"
+        }
+    ]
+}

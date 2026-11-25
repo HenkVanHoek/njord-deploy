@@ -82,6 +82,7 @@ PROTECTED_PRODUCTION_IPS = {
     "192.168.178.160",  # NedFact Productie (VM 160)
     "192.168.178.170",  # Forgejo Git Server (LXC 106)
     "192.168.178.185",  # Raspberry Pi 4 Backupserver
+    "192.168.178.205",  # Particify Productie (LXC 141 - particify.literatuurwijk.nl)
 }
 
 
